@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University of Bamberg - Wrapper</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="wrapper-header">
+        <div class="header-content">
+            <h1>University of Bamberg Portal</h1>
+            <p class="subtitle">Enhanced viewing experience</p>
+        </div>
+        <div class="controls">
+            <button id="refresh-btn" class="btn">Refresh</button>
+            <button id="toggle-theme" class="btn">Toggle Theme</button>
+            <select id="view-mode" class="btn">
+                <option value="full">Full View</option>
+                <option value="mobile">Mobile View</option>
+                <option value="tablet">Tablet View</option>
+            </select>
+        </div>
+    </header>
+
+    <main class="wrapper-main">
+        <div class="sidebar">
+            <h3>Quick Links</h3>
+            <ul class="quick-links">
+                <li><a href="https://www.uni-bamberg.de" target="content-frame">Home</a></li>
+                <li><a href="https://www.uni-bamberg.de/en/" target="content-frame">English Version</a></li>
+                <li><a href="https://www.uni-bamberg.de/studium/" target="content-frame">Studies</a></li>
+                <li><a href="https://www.uni-bamberg.de/forschung/" target="content-frame">Research</a></li>
+                <li><a href="https://www.uni-bamberg.de/universitaet/" target="content-frame">University</a></li>
+            </ul>
+
+            <div class="info-box">
+                <h4>About This Portal</h4>
+                <p>This is a wrapper interface that provides enhanced viewing capabilities for the University of Bamberg website.</p>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div class="loading-overlay" id="loading">
+                <div class="spinner"></div>
+                <p>Loading content...</p>
+            </div>
+            <iframe
+                id="content-frame"
+                name="content-frame"
+                src="https://www.uni-bamberg.de"
+                frameborder="0"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+            ></iframe>
+        </div>
+    </main>
+
+    <footer class="wrapper-footer">
+        <p>&copy; 2025 University of Bamberg Wrapper | Original content belongs to <a href="https://www.uni-bamberg.de" target="_blank">uni-bamberg.de</a></p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
