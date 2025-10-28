@@ -1,41 +1,75 @@
-# University of Bamberg Wrapper
+# University of Bamberg Web Wrapper
 
-A modern, responsive wrapper interface for viewing the University of Bamberg website with enhanced features and improved user experience.
+A clean, text-focused wrapper for the University of Bamberg website with async content fetching, smart caching, and custom styling.
 
 ## Features
 
-- **Modern UI**: Clean and intuitive interface with smooth animations
-- **Dark Mode**: Toggle between light and dark themes
-- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
-- **View Modes**: Switch between full, tablet, and mobile viewport sizes
-- **Quick Links**: Easy access to important university sections
-- **Keyboard Shortcuts**: Quick navigation and control
-- **Persistent Settings**: Theme and view preferences are saved locally
+- ✅ **Async Content Fetching**: Fetches content via custom CORS proxy
+- ✅ **Smart Caching**: 1-hour cache with timestamp display
+- ✅ **Clean Text Display**: No images, ads, or clutter - just content
+- ✅ **Hyphenation**: Automatic hyphenation for German and English
+- ✅ **Accordion Lists**: Large link lists (study programs) collapse into accordions
+- ✅ **Beautiful Tables**: Professional table styling with hover effects
+- ✅ **News Boxes**: Grouped date, heading, and teaser display
+- ✅ **Dark Mode**: Toggle between light and dark themes
+- ✅ **View Modes**: Full, tablet, and mobile view options
+- ✅ **Multi-language**: German, English, Spanish support
+- ✅ **Keyboard Shortcuts**: Quick navigation and control
 
-## Usage
+## Quick Start
 
-### Opening the Application
-
-Simply open `index.html` in your web browser:
+### 1. Set up Virtual Environment (first time only)
 
 ```bash
-# Option 1: Direct file opening
-open index.html
+# Create virtual environment
+python3 -m venv venv
 
-# Option 2: Using a local server (recommended)
-python3 -m http.server 8000
-# Then visit: http://localhost:8000
+# Activate it
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-### Controls
+### 2. Run the CORS Proxy
 
-#### Buttons
-- **Refresh**: Reload the iframe content
+**Option A: Using the start script**
+```bash
+./start-proxy.sh
+```
+
+**Option B: Manual start**
+```bash
+source venv/bin/activate
+python3 cors-proxy.py
+```
+
+The proxy will run on `http://localhost:5000`
+
+### 3. Open the Wrapper (in a new terminal)
+
+Serve the files with a web server:
+
+```bash
+# Python 3
+python3 -m http.server 8080
+
+# Or with Node.js
+npx http-server -p 8080
+```
+
+Visit `http://localhost:8080` in your browser
+
+## Controls
+
+### Buttons
+- **Language Selector**: Switch between Deutsch, English, Español
+- **Refresh**: Force reload content (bypasses cache)
 - **Toggle Theme**: Switch between light and dark modes
 - **View Mode Dropdown**: Select Full, Tablet, or Mobile view
 
-#### Keyboard Shortcuts
-- `Ctrl/Cmd + R`: Refresh iframe
+### Keyboard Shortcuts
+- `Ctrl/Cmd + R`: Refresh content (bypasses cache)
 - `Ctrl/Cmd + D`: Toggle dark mode
 - `Ctrl/Cmd + 1`: Full view
 - `Ctrl/Cmd + 2`: Tablet view
@@ -43,101 +77,150 @@ python3 -m http.server 8000
 
 ### Quick Links Sidebar
 
-The sidebar provides quick access to main sections:
-- Home
-- English Version
-- Studies
-- Research
-- University Information
+Navigate university sections without leaving the wrapper:
+- 🏠 Home
+- 🌍 English Version
+- 📚 Studium (Studies)
+- 🔬 Forschung (Research)
+- 👨‍🏫 Lehre (Teaching)
+- 🏛️ Universität (University)
+- 🎓 Fakultäten (Faculties)
+- ✈️ International
+
+Internal links keep you in the wrapper, external links open in new tabs.
+
+## Configuration
+
+### Change Proxy URL
+
+Edit `script.js` line 17:
+
+```javascript
+// For local development
+const PROXY_URL = 'http://localhost:5000/fetch';
+
+// For production
+const PROXY_URL = 'https://main.psi.uni-bamberg.de/cors-proxy/fetch';
+```
+
+### Adjust Cache Duration
+
+Edit `script.js` line 20:
+
+```javascript
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
+```
+
+## Deployment
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions on deploying the CORS proxy to production servers.
 
 ## Technical Details
 
-### Structure
+### File Structure
 
 ```
 uni-bamberg-wrapper/
 ├── index.html          # Main HTML file
-├── styles.css          # Styling and theming
-├── script.js           # Interactive functionality
+├── styles.css          # All styling and theming
+├── script.js           # Content fetching and display logic
+├── cors-proxy.py       # Python CORS proxy server
+├── requirements.txt    # Python dependencies
+├── DEPLOYMENT.md       # Deployment instructions
 └── README.md          # This file
 ```
 
+### How It Works
+
+1. **Fetch**: User clicks a link → JavaScript fetches via CORS proxy
+2. **Cache**: Content stored in localStorage with timestamp
+3. **Parse**: HTML parsed with DOMParser
+4. **Extract**: Remove images, scripts, navigation - keep text content
+5. **Display**: Render clean content with custom styling
+6. **Links**: Internal links stay in wrapper, external open in new tabs
+
 ### Browser Compatibility
 
-- Modern browsers (Chrome, Firefox, Safari, Edge)
-- Requires JavaScript enabled
-- CSS Grid and Flexbox support
+- ✅ Chrome/Edge: Full support
+- ✅ Firefox: Full support
+- ✅ Safari: Full support
+- ✅ Mobile browsers: Responsive design
 
 ### Technologies Used
 
+**Frontend:**
 - HTML5
-- CSS3 (with CSS Variables for theming)
+- CSS3 (CSS Variables, Flexbox, Grid)
 - Vanilla JavaScript (ES6+)
-- Local Storage for persistence
+- DOMParser API
+- LocalStorage API
 
-## Features in Detail
-
-### Theme System
-The wrapper includes a sophisticated theming system that:
-- Uses CSS custom properties for easy customization
-- Persists theme preference in localStorage
-- Smoothly transitions between themes
-- Adapts all UI elements including shadows and borders
-
-### Responsive Layout
-- Desktop: Sidebar + content area side by side
-- Tablet/Mobile: Stacked layout with collapsible sidebar
-- Fluid typography and spacing
-- Touch-friendly interface elements
-
-### View Modes
-Switch between different viewport sizes to:
-- Test responsive behavior
-- View mobile version of the website
-- Optimize screen real estate
+**Backend:**
+- Python 3
+- Flask (CORS proxy)
+- Requests library
 
 ## Customization
 
 ### Changing Colors
 
-Edit the CSS variables in `styles.css`:
+Edit CSS variables in `styles.css`:
 
 ```css
 :root {
-    --primary-color: #003366;
-    --secondary-color: #0066cc;
-    --accent-color: #ff9900;
-    /* ... more variables */
+    --primary-color: #003366;      /* University blue */
+    --secondary-color: #005a9c;
+    --accent-color: #c8102e;       /* Accent red */
+    --bg-color: #f8f9fa;
 }
 ```
 
-### Adding More Quick Links
+### Adding Quick Links
 
-Edit the sidebar section in `index.html`:
+Edit the sidebar in `index.html`:
 
 ```html
 <ul class="quick-links">
-    <li><a href="YOUR_URL" target="content-frame">Link Text</a></li>
+    <li><a href="URL" class="fetch-link">🔗 Link Text</a></li>
 </ul>
 ```
 
-## Limitations
+### Customizing Content Extraction
 
-- **Cross-Origin Restrictions**: Some websites may prevent iframe embedding due to X-Frame-Options headers
-- **JavaScript Access**: Cannot access iframe content if cross-origin restrictions apply
-- **Authentication**: May not work with sites requiring authentication
-- **Cookies**: Cookie handling depends on browser security policies
+Modify `displayExtractedContent()` in `script.js` to adjust what content is extracted and how it's displayed.
+
+## Cache Management
+
+The wrapper automatically:
+- Caches fetched content for 1 hour
+- Shows cache timestamp on pages
+- Clears old cache when storage is full
+- Bypasses cache on manual refresh
+
+## Security Considerations
+
+The CORS proxy:
+- ✅ Only allows uni-bamberg.de domains
+- ✅ No authentication stored or transmitted
+- ⚠️ Add rate limiting for production
+- ⚠️ Consider adding authentication if needed
+- ⚠️ Monitor logs for abuse
 
 ## License
 
-This is a demonstration project. The University of Bamberg website and its content belong to their respective owners.
+MIT License - Free to use and modify.
 
-## Future Enhancements
+University of Bamberg website content belongs to the university.
 
-Potential improvements:
-- Bookmark system
-- History navigation
-- Screenshot capability
-- Custom CSS injection
-- Translation features
-- Search functionality
+## Contributing
+
+Contributions welcome! Please:
+- Test thoroughly
+- Follow existing code style
+- Update documentation
+- Add comments for complex logic
+
+## Support
+
+- Wrapper issues: Open a GitHub issue
+- University website content: Contact the university
