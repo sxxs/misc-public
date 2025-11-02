@@ -1,5 +1,5 @@
 // Game Version
-const VERSION = 'v1.0.8 - 2025-01-02';
+const VERSION = 'v1.0.9 - 2025-01-02';
 
 // Cache-busting: Redirect to random version parameter on reload
 if (!window.location.search.match(/[?&]v=/)) {
@@ -14,7 +14,7 @@ const CONFIG = {
     CANVAS_HEIGHT: 600,
     PLAYER_Y: 520,
     PLAYER_X: 400,
-    FALL_TIME_SECONDS: 15, // Time for a block to reach the bottom (15 seconds = easier)
+    FALL_TIME_SECONDS: 20, // Time for a block to reach the bottom (20 seconds = easier)
     SPEED_INCREASE_PER_LEVEL: 1.05, // 5% faster each level
     TASKS_PER_LEVEL: 5, // Level up every 5 tasks
     SPAWN_INTERVAL: 3000,
@@ -199,8 +199,8 @@ class Game {
                 CONFIG.CANVAS_WIDTH = FIXED_WIDTH;
                 CONFIG.CANVAS_HEIGHT = FIXED_HEIGHT;
 
-                // Update player position to near bottom (92% down)
-                CONFIG.PLAYER_Y = Math.floor(CONFIG.CANVAS_HEIGHT * 0.92);
+                // Update player position higher up (85% down) so it's visible
+                CONFIG.PLAYER_Y = Math.floor(CONFIG.CANVAS_HEIGHT * 0.85);
                 CONFIG.PLAYER_X = Math.floor(CONFIG.CANVAS_WIDTH / 2);
 
                 // Recalculate speeds based on new canvas height
@@ -339,8 +339,8 @@ class Game {
         this.tasks.forEach(task => {
             task.update();
 
-            // Check collision with player (at head level, slightly above player base)
-            const collisionY = CONFIG.PLAYER_Y - 40;
+            // Check collision with player (at head level - adjusted for smaller player at 85%)
+            const collisionY = CONFIG.PLAYER_Y - 30;
             if (task.y >= collisionY) {
                 this.loseLife();
                 this.removeTask(task);
@@ -399,7 +399,7 @@ class Game {
     }
 
     drawDangerZone() {
-        const dangerY = CONFIG.PLAYER_Y - 40;
+        const dangerY = CONFIG.PLAYER_Y - 30;
         this.ctx.strokeStyle = '#FF6B3566';
         this.ctx.lineWidth = 2;
         this.ctx.setLineDash([5, 5]);
@@ -468,25 +468,28 @@ class Game {
             this.userTyping = false; // Reset to avoid constant changes
         }
 
-        // AUTO-CHECK: Check answer when input matches expected answer length
+        // AUTO-CHECK: Sliding window - check last N digits against expected answer
         const input = document.getElementById('answerInput');
-        const answer = parseInt(input.value);
 
         if (!this.currentTargetTask || !this.tasks.includes(this.currentTargetTask)) {
             return;
         }
 
-        // Check if the answer has the correct number of digits
+        // Get expected answer and its length
         const expectedAnswer = this.currentTargetTask.correctAnswer;
         const expectedLength = expectedAnswer.toString().length;
-        const inputLength = input.value.length;
 
-        // Auto-check when we have enough digits
-        if (inputLength >= expectedLength && inputLength <= 3) {
-            if (answer === expectedAnswer) {
+        // If we have at least expectedLength digits, check the last N digits
+        if (this.digitHistory.length >= expectedLength) {
+            // Get last N digits from the sliding window
+            const lastNDigits = this.digitHistory.slice(-expectedLength);
+            const lastNAsNumber = parseInt(lastNDigits);
+
+            if (lastNAsNumber === expectedAnswer) {
+                // Correct! Check answer immediately
                 this.checkAnswer();
-            } else if (inputLength === 3) {
-                // If 3 digits and still wrong, check anyway (max length reached)
+            } else if (this.digitHistory.length >= 3) {
+                // We have 3 digits and it's still wrong, check anyway
                 this.checkAnswer();
             }
         }
@@ -666,8 +669,8 @@ class Player {
             this.hitAnimation--;
         }
 
-        // Scale player based on canvas height
-        const scale = Math.min(1, CONFIG.CANVAS_HEIGHT / 500);
+        // Scale player smaller (0.6x) so it's fully visible
+        const scale = 0.6 * Math.min(1, CONFIG.CANVAS_HEIGHT / 500);
         const headRadius = 15 * scale;
         const bodyLength = 20 * scale;
         const armLength = 20 * scale;
