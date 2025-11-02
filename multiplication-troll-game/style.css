@@ -87,25 +87,19 @@ body {
     touch-action: none;
 }
 
-/* Pause button overlay */
-.pause-overlay {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    z-index: 100;
-    padding: 10px 20px;
-    min-width: 80px;
-    font-size: 1em;
-    opacity: 0.9;
-    display: none; /* Hidden by default */
+/* Pause button in input area */
+.pause-btn {
+    flex: 0 0 auto;
+    padding: 12px 20px;
+    min-width: 60px;
+    font-size: clamp(1.2em, 4vw, 1.6em);
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    letter-spacing: 2px;
 }
 
-.pause-overlay:not(.hidden):not(:disabled) {
-    display: block;
-}
-
-.pause-overlay:hover:not(:disabled) {
-    opacity: 1;
+.pause-btn.hidden {
+    display: none;
 }
 
 .input-area {
@@ -459,11 +453,6 @@ button:disabled {
     box-shadow: 0 0 0 #00B4D8, 0 0 20px rgba(255, 215, 0, 0.6);
     background: linear-gradient(135deg, #FF6B35, #FF8800);
     border-color: #FFD700;
-}
-
-.key-btn:focus {
-    outline: none;
-    box-shadow: 0 3px 0 #00B4D8, 0 0 10px rgba(0, 217, 255, 0.3);
 }
 
 /* Right-aligned layout */

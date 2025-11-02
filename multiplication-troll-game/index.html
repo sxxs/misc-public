@@ -4,13 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multiplication Troll Game - Kleines 1x1</title>
-    <link rel="stylesheet" href="style.css?v=1.1.6">
+    <link rel="stylesheet" href="style.css?v=1.1.7">
 </head>
 <body>
     <div class="game-container">
-        <!-- Pause button overlay -->
-        <button id="pauseBtn" class="pause-overlay" disabled>PAUSE</button>
-
         <div class="header">
             <div class="stats">
                 <span>SCORE: <span id="score">0</span></span>
@@ -25,14 +22,7 @@
             <div class="current-task">
                 <span id="currentTask">Bereit?</span>
             </div>
-            <input
-                type="text"
-                inputmode="numeric"
-                pattern="[0-9]*"
-                id="answerInput"
-                placeholder="Antwort..."
-                autocomplete="off"
-            >
+            <button id="pauseBtn" class="pause-btn" disabled>||</button>
         </div>
 
         <div class="controls">
@@ -72,6 +62,6 @@
     <audio id="sfx_wrong" src="es_wrong.mp3" preload="auto"></audio>
     <audio id="sfx_game_over" src="es_game_over.mp3" preload="auto"></audio>
 
-    <script src="game.js?v=1.1.6"></script>
+    <script src="game.js?v=1.1.7"></script>
 </body>
 </html>

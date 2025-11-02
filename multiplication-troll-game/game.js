@@ -1,5 +1,5 @@
 // Game Version
-const VERSION = 'v1.1.6 - 2025-11-02';
+const VERSION = 'v1.1.7 - 2025-11-02';
 
 // Cache-busting: Always generate new version parameter on fresh page load
 (function() {
@@ -232,28 +232,16 @@ class Game {
         const startBtn = document.getElementById('startBtn');
         const pauseBtn = document.getElementById('pauseBtn');
         const restartBtn = document.getElementById('restartBtn');
-        const answerInput = document.getElementById('answerInput');
 
         startBtn.addEventListener('click', () => this.start());
         pauseBtn.addEventListener('click', () => this.togglePause());
         restartBtn.addEventListener('click', () => this.restart());
-
-        answerInput.addEventListener('input', (e) => this.handleInput(e));
-
-        // Detect when user starts typing for troll mechanics
-        answerInput.addEventListener('focus', () => {
-            this.userTyping = true;
-        });
     }
 
     setupMobileKeyboard() {
         if (!isMobile) return;
 
-        const answerInput = document.getElementById('answerInput');
         const mobileKeyboard = document.getElementById('mobileKeyboard');
-
-        // Make input readonly on mobile to prevent native keyboard
-        answerInput.setAttribute('readonly', 'readonly');
 
         // Show mobile keyboard
         mobileKeyboard.classList.remove('hidden');
@@ -265,14 +253,14 @@ class Game {
                 e.preventDefault();
                 const key = btn.dataset.key;
 
+                // Mark as typing for troll mechanics
+                this.userTyping = true;
+
                 // Add digit to history (unlimited)
                 this.digitHistory += key;
 
-                // Update input field with current window
-                answerInput.value = this.digitHistory;
-
-                // Trigger input event for auto-check
-                answerInput.dispatchEvent(new Event('input'));
+                // Check for auto-accept
+                this.handleInput();
 
                 // Remove focus from button to prevent it staying highlighted
                 btn.blur();
@@ -290,8 +278,6 @@ class Game {
         document.getElementById('pauseBtn').disabled = false;
         document.getElementById('pauseBtn').classList.remove('hidden');
 
-        document.getElementById('answerInput').focus();
-
         this.musicManager.start();
         this.lastSpawnTime = Date.now();
         this.spawnTask();
@@ -304,7 +290,7 @@ class Game {
 
     togglePause() {
         this.isPaused = !this.isPaused;
-        document.getElementById('pauseBtn').textContent = this.isPaused ? 'WEITER' : 'PAUSE';
+        document.getElementById('pauseBtn').textContent = this.isPaused ? '▶' : '||';
         if (this.isPaused) {
             this.musicManager.pause();
         } else {
@@ -341,9 +327,9 @@ class Game {
             const collisionY = CONFIG.PLAYER_Y - 30;
             if (task.y >= collisionY) {
                 // Wrong! Block reached player
+                this.player.shake();
                 this.sfxManager.playWrong();
                 this.digitHistory = '';
-                document.getElementById('answerInput').value = '';
                 this.loseLife();
                 this.removeTask(task);
             }
@@ -419,14 +405,17 @@ class Game {
         this.ctx.fillStyle = '#FFD700';
         this.ctx.font = 'bold 40px Courier New';
         this.ctx.textAlign = 'center';
-        this.ctx.fillText('BEREIT ZUM RECHNEN?', CONFIG.CANVAS_WIDTH / 2, CONFIG.CANVAS_HEIGHT / 2 - 50);
+        this.ctx.fillText('BEREIT ZUM', CONFIG.CANVAS_WIDTH / 2, CONFIG.CANVAS_HEIGHT / 2 - 70);
+        this.ctx.fillText('RECHNEN?', CONFIG.CANVAS_WIDTH / 2, CONFIG.CANVAS_HEIGHT / 2 - 30);
 
         this.ctx.fillStyle = '#00D9FF';
         this.ctx.font = '20px Courier New';
-        this.ctx.fillText('Löse die Aufgaben bevor sie dich erreichen!', CONFIG.CANVAS_WIDTH / 2, CONFIG.CANVAS_HEIGHT / 2);
+        this.ctx.fillText('Löse die Aufgaben', CONFIG.CANVAS_WIDTH / 2, CONFIG.CANVAS_HEIGHT / 2 + 10);
+        this.ctx.fillText('bevor sie dich erreichen!', CONFIG.CANVAS_WIDTH / 2, CONFIG.CANVAS_HEIGHT / 2 + 35);
 
         this.ctx.fillStyle = '#FF8800';
-        this.ctx.fillText('Aber Vorsicht: Sie werden sich manchmal ändern!', CONFIG.CANVAS_WIDTH / 2, CONFIG.CANVAS_HEIGHT / 2 + 30);
+        this.ctx.fillText('Aber Vorsicht: Sie werden', CONFIG.CANVAS_WIDTH / 2, CONFIG.CANVAS_HEIGHT / 2 + 65);
+        this.ctx.fillText('sich manchmal ändern!', CONFIG.CANVAS_WIDTH / 2, CONFIG.CANVAS_HEIGHT / 2 + 90);
 
         // Version display
         this.ctx.fillStyle = '#00D9FF';
@@ -492,13 +481,10 @@ class Game {
     }
 
     acceptAnswer() {
-        const input = document.getElementById('answerInput');
-
         // Remove highlight from all keyboard buttons
         document.querySelectorAll('.key-btn').forEach(btn => btn.blur());
 
         if (!this.currentTargetTask || !this.tasks.includes(this.currentTargetTask)) {
-            input.value = '';
             this.digitHistory = '';
             return;
         }
@@ -508,10 +494,10 @@ class Game {
         this.updateUI();
         this.removeTask(this.currentTargetTask);
 
-        // Play success sound (no visual feedback)
+        // Play success sound and celebration animation
+        this.player.celebrate();
         this.sfxManager.playCorrect();
 
-        input.value = '';
         this.digitHistory = ''; // Reset sliding window
         this.userTyping = true;
     }
@@ -550,7 +536,7 @@ class Game {
                 this.setCurrentTask(lowestTask);
             } else {
                 this.currentTargetTask = null;
-                document.getElementById('currentTask').textContent = 'Warte auf neue Aufgabe...';
+                // Keep showing the last task instead of "Warte auf neue Aufgabe..."
             }
         }
     }
@@ -612,7 +598,6 @@ class Game {
         this.calculateSpeed();
 
         document.getElementById('gameOver').classList.add('hidden');
-        document.getElementById('answerInput').value = '';
         this.digitHistory = ''; // Reset sliding window
 
         // Show start button again, hide pause button
@@ -621,7 +606,7 @@ class Game {
         document.getElementById('startBtn').disabled = false;
         document.getElementById('pauseBtn').disabled = true;
         document.getElementById('pauseBtn').classList.add('hidden');
-        document.getElementById('pauseBtn').textContent = 'PAUSE';
+        document.getElementById('pauseBtn').textContent = '||';
 
         this.updateUI();
 
@@ -819,11 +804,13 @@ class Task {
         ctx.lineWidth = this.isTarget ? 3 : 2;
         ctx.strokeRect(drawX - boxWidth / 2, drawY - boxHeight / 2, boxWidth, boxHeight);
 
-        // Text
+        // Text (dim non-target tasks)
+        ctx.globalAlpha = this.isTarget ? 1.0 : 0.4;
         ctx.fillStyle = this.color;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(text, drawX, drawY);
+        ctx.globalAlpha = 1.0;
 
         // Target indicator
         if (this.isTarget) {
