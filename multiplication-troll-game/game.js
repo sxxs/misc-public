@@ -22,6 +22,11 @@ class SFXManager {
         this.sfx_correct = document.getElementById('sfx_correct');
         this.sfx_wrong = document.getElementById('sfx_wrong');
         this.sfx_game_over = document.getElementById('sfx_game_over');
+
+        // Set SFX volume higher for better audibility
+        this.sfx_correct.volume = 0.8;
+        this.sfx_wrong.volume = 0.8;
+        this.sfx_game_over.volume = 0.9;
     }
 
     playCorrect() {
@@ -51,6 +56,10 @@ class MusicManager {
         this.playCount = 0;
         this.maxPlays = 3;
         this.isPlaying = false;
+
+        // Set music volume lower so SFX are more audible
+        this.music1.volume = 0.3;
+        this.music2.volume = 0.3;
 
         // Setup event listeners
         this.music1.addEventListener('ended', () => this.onTrackEnded());
@@ -358,6 +367,9 @@ class Game {
             if (this.currentTargetTask && this.tasks.includes(this.currentTargetTask)) {
                 this.currentTargetTask.troll();
                 document.getElementById('currentTask').textContent = this.currentTargetTask.getDisplayText();
+
+                // Clear input when task changes
+                document.getElementById('answerInput').value = '';
             }
             this.userTyping = false; // Reset to avoid constant changes
         }
@@ -604,6 +616,7 @@ class Task {
         this.speed = speed + Math.random() * 0.5;
         this.isTarget = false;
         this.trolled = false;
+        this.shakeAnimation = 0;
 
         // Generate multiplication task (kleines 1x1)
         const maxNum = Math.min(10, 5 + level);
@@ -655,6 +668,9 @@ class Task {
         this.trolled = true;
         this.color = '#FF1493'; // Pink to indicate troll
 
+        // Trigger shake animation
+        this.shakeAnimation = 15;
+
         setTimeout(() => {
             this.color = this.getRandomColor();
         }, 500);
@@ -662,6 +678,15 @@ class Task {
 
     draw(ctx) {
         ctx.save();
+
+        // Apply shake animation when trolled
+        let shakeOffsetX = 0;
+        let shakeOffsetY = 0;
+        if (this.shakeAnimation > 0) {
+            shakeOffsetX = Math.sin(this.shakeAnimation * 2) * 8;
+            shakeOffsetY = Math.cos(this.shakeAnimation * 2) * 8;
+            this.shakeAnimation--;
+        }
 
         // Draw task box
         const text = this.getDisplayText();
@@ -671,27 +696,30 @@ class Task {
         const boxWidth = textWidth + padding * 2;
         const boxHeight = 40;
 
+        const drawX = this.x + shakeOffsetX;
+        const drawY = this.y + shakeOffsetY;
+
         // Background
         ctx.fillStyle = this.isTarget ? 'rgba(255, 136, 0, 0.3)' : 'rgba(0, 217, 255, 0.15)';
-        ctx.fillRect(this.x - boxWidth / 2, this.y - boxHeight / 2, boxWidth, boxHeight);
+        ctx.fillRect(drawX - boxWidth / 2, drawY - boxHeight / 2, boxWidth, boxHeight);
 
         // Border
         ctx.strokeStyle = this.isTarget ? '#FFD700' : this.color;
         ctx.lineWidth = this.isTarget ? 3 : 2;
-        ctx.strokeRect(this.x - boxWidth / 2, this.y - boxHeight / 2, boxWidth, boxHeight);
+        ctx.strokeRect(drawX - boxWidth / 2, drawY - boxHeight / 2, boxWidth, boxHeight);
 
         // Text
         ctx.fillStyle = this.color;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(text, this.x, this.y);
+        ctx.fillText(text, drawX, drawY);
 
         // Target indicator
         if (this.isTarget) {
             ctx.strokeStyle = '#FFD700';
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.arc(this.x - boxWidth / 2 - 15, this.y, 5, 0, Math.PI * 2);
+            ctx.arc(drawX - boxWidth / 2 - 15, drawY, 5, 0, Math.PI * 2);
             ctx.stroke();
         }
 
