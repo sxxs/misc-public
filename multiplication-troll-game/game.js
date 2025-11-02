@@ -1,5 +1,12 @@
 // Game Version
-const VERSION = 'v1.0.4 - 2025-01-02';
+const VERSION = 'v1.0.5 - 2025-01-02';
+
+// Cache-busting: Redirect to random version parameter on reload
+if (!window.location.search.match(/[?&]v=/)) {
+    const randomVersion = Math.random().toString(36).substring(2, 10);
+    const separator = window.location.search ? '&' : '?';
+    window.location.replace(window.location.pathname + window.location.search + separator + 'v=' + randomVersion);
+}
 
 // Game Configuration
 const CONFIG = {
@@ -172,9 +179,14 @@ class Game {
         requestAnimationFrame(() => {
             // Get the actual rendered height from CSS (flexbox handles this now)
             const rect = this.canvas.getBoundingClientRect();
-            const height = Math.floor(rect.height);
+            const displayHeight = Math.floor(rect.height);
 
-            // Update canvas internal resolution to match display size
+            // Limit internal canvas resolution to prevent content from becoming too large
+            // The CSS will scale up the canvas display if needed
+            const MAX_INTERNAL_HEIGHT = 700;
+            const height = Math.min(displayHeight, MAX_INTERNAL_HEIGHT);
+
+            // Update canvas internal resolution
             if (height > 0 && height !== this.canvas.height) {
                 this.canvas.height = height;
                 CONFIG.CANVAS_HEIGHT = height;
@@ -249,6 +261,9 @@ class Game {
 
                 // Trigger input event for auto-check
                 answerInput.dispatchEvent(new Event('input'));
+
+                // Remove focus from button to prevent it staying highlighted
+                btn.blur();
             });
         });
     }
