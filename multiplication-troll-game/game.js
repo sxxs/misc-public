@@ -1,5 +1,5 @@
 // Game Version
-const VERSION = 'v1.1.2 - 2025-01-02';
+const VERSION = 'v1.1.3 - 2025-11-02';
 
 // Cache-busting: Always generate new version parameter on fresh page load
 (function() {

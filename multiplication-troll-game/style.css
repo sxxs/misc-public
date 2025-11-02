@@ -416,6 +416,9 @@ button:disabled {
     background: transparent;
     border: none;
     flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    width: 100%;
 }
 
 .mobile-keyboard.hidden {
@@ -424,11 +427,13 @@ button:disabled {
 
 .keyboard-grid {
     display: grid;
-    grid-template-columns: repeat(4, 50px);
-    grid-template-rows: repeat(3, 48px);
-    gap: 4px;
-    justify-content: flex-start;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, minmax(48px, 60px));
+    gap: 6px;
+    justify-content: stretch;
     margin: 0;
+    width: 100%;
+    max-width: 280px;
 }
 
 .key-btn {
@@ -477,12 +482,13 @@ button:disabled {
 
 @media (max-width: 480px) {
     .keyboard-grid {
-        grid-template-columns: repeat(4, 48px);
-        grid-template-rows: repeat(3, 46px);
-        gap: 3px;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(3, minmax(44px, 56px));
+        gap: 4px;
+        max-width: 100%;
     }
 
     .key-btn {
-        font-size: 1.2em;
+        font-size: clamp(1.1em, 4vw, 1.3em);
     }
 }
