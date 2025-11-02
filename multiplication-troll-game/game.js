@@ -1,5 +1,5 @@
 // Game Version
-const VERSION = 'v1.0.0 - 2025-01-02';
+const VERSION = 'v1.0.1 - 2025-01-02';
 
 // Game Configuration
 const CONFIG = {
@@ -168,38 +168,55 @@ class Game {
     }
 
     resizeCanvas() {
-        // Calculate available height
-        const header = document.querySelector('.header');
-        const inputArea = document.querySelector('.input-area');
-        const controls = document.querySelector('.controls');
-        const keyboard = document.getElementById('mobileKeyboard');
+        // Force layout calculation
+        requestAnimationFrame(() => {
+            // Mobile vs desktop padding
+            const isMobileView = window.innerWidth <= 768;
+            const bodyPadding = isMobileView ? 6 : 10; // 3px * 2
+            const containerPadding = isMobileView ? 16 : 20; // 8px * 2 or 10px * 2
+            const containerBorder = isMobileView ? 6 : 8; // 3px * 2 or 4px * 2
 
-        const headerHeight = header ? header.offsetHeight : 0;
-        const inputHeight = inputArea ? inputArea.offsetHeight : 0;
-        const controlsHeight = controls && !controls.classList.contains('hidden') ? controls.offsetHeight : 0;
-        const keyboardHeight = keyboard && !keyboard.classList.contains('hidden') ? keyboard.offsetHeight : 0;
+            // Get actual heights from DOM
+            const header = document.querySelector('.header');
+            const inputArea = document.querySelector('.input-area');
+            const controls = document.querySelector('.controls');
+            const keyboard = document.getElementById('mobileKeyboard');
 
-        const padding = 40; // Reduced padding for mobile
-        const availableHeight = window.innerHeight - headerHeight - inputHeight - controlsHeight - keyboardHeight - padding;
+            // Measure heights using getBoundingClientRect for accuracy
+            const headerHeight = header ? header.getBoundingClientRect().height : 0;
+            const inputHeight = inputArea ? inputArea.getBoundingClientRect().height : 0;
+            const controlsHeight = controls && !controls.classList.contains('hidden') ? controls.getBoundingClientRect().height : 0;
+            const keyboardHeight = keyboard && !keyboard.classList.contains('hidden') ? keyboard.getBoundingClientRect().height : 0;
 
-        // Use available height directly (max 600px on desktop)
-        const height = Math.min(600, Math.max(250, availableHeight));
+            // Calculate margins between elements
+            const elementMargins = isMobileView ? 16 : 25;
 
-        this.canvas.height = height;
-        CONFIG.CANVAS_HEIGHT = height;
+            // Total occupied height
+            const occupiedHeight = headerHeight + inputHeight + controlsHeight + keyboardHeight +
+                                   containerPadding + containerBorder + bodyPadding + elementMargins;
 
-        // Update player position dynamically (75% down, leaving room for player legs)
-        CONFIG.PLAYER_Y = Math.floor(CONFIG.CANVAS_HEIGHT * 0.75);
+            // Available height for canvas
+            const availableHeight = window.innerHeight - occupiedHeight;
 
-        // Recalculate speeds based on new canvas height
-        this.calculateSpeed();
+            // Use as much space as possible (min 180px, max 600px)
+            const height = Math.min(600, Math.max(180, availableHeight));
 
-        // Redraw if game is running
-        if (this.isRunning && !this.isPaused) {
-            this.draw();
-        } else {
-            this.drawWelcomeScreen();
-        }
+            this.canvas.height = height;
+            CONFIG.CANVAS_HEIGHT = height;
+
+            // Update player position dynamically (75% down, leaving room for player legs)
+            CONFIG.PLAYER_Y = Math.floor(CONFIG.CANVAS_HEIGHT * 0.75);
+
+            // Recalculate speeds based on new canvas height
+            this.calculateSpeed();
+
+            // Redraw if game is running
+            if (this.isRunning && !this.isPaused) {
+                this.draw();
+            } else {
+                this.drawWelcomeScreen();
+            }
+        });
     }
 
     setupEventListeners() {
