@@ -1,5 +1,5 @@
 // Game Version
-const VERSION = 'v1.0.6 - 2025-01-02';
+const VERSION = 'v1.0.7 - 2025-01-02';
 
 // Cache-busting: Redirect to random version parameter on reload
 if (!window.location.search.match(/[?&]v=/)) {
@@ -14,7 +14,7 @@ const CONFIG = {
     CANVAS_HEIGHT: 600,
     PLAYER_Y: 520,
     PLAYER_X: 400,
-    FALL_TIME_SECONDS: 10, // Time for a block to reach the bottom
+    FALL_TIME_SECONDS: 15, // Time for a block to reach the bottom (15 seconds = easier)
     SPEED_INCREASE_PER_LEVEL: 1.05, // 5% faster each level
     TASKS_PER_LEVEL: 5, // Level up every 5 tasks
     SPAWN_INTERVAL: 3000,
@@ -484,6 +484,9 @@ class Game {
     checkAnswer() {
         const input = document.getElementById('answerInput');
         const answer = parseInt(input.value);
+
+        // Remove highlight from all keyboard buttons
+        document.querySelectorAll('.key-btn').forEach(btn => btn.blur());
 
         if (!this.currentTargetTask || !this.tasks.includes(this.currentTargetTask)) {
             input.value = '';
