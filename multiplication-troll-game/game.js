@@ -1,5 +1,5 @@
 // Game Version
-const VERSION = 'v1.1.10 - 2025-11-02';
+const VERSION = 'v1.1.11 - 2025-11-02';
 
 // Cache-busting: Always generate new version parameter on fresh page load
 (function() {
@@ -30,9 +30,9 @@ const CONFIG = {
     PLAYER_Y: 520,
     PLAYER_X: 96, // 12% of 800 = 96 (will be recalculated on resize)
     FALL_TIME_SECONDS: 100, // Much slower falling for easier gameplay
-    SPEED_INCREASE_PER_LEVEL: 1.02, // 2% faster each level (gentler progression)
+    SPEED_INCREASE_PER_LEVEL: 1.01, // 1% faster each level (very gentle progression)
     TASKS_PER_LEVEL: 5, // Level up every 5 tasks
-    SPAWN_INTERVAL: 3000,
+    SPAWN_INTERVAL: 4000, // Constant 4 seconds between spawns
     TROLL_CHANCE: 0.3, // 30% chance for troll mechanics
     MAX_TASKS_ON_SCREEN: 5
 };
@@ -315,8 +315,8 @@ class Game {
     update() {
         const currentTime = Date.now();
 
-        // Spawn new tasks (gentler increase: 100ms per level, min 2000ms)
-        const spawnInterval = Math.max(2000, CONFIG.SPAWN_INTERVAL - (this.level * 100));
+        // Spawn new tasks (constant interval - no increase with level)
+        const spawnInterval = CONFIG.SPAWN_INTERVAL;
         if (currentTime - this.lastSpawnTime > spawnInterval &&
             this.tasks.length < CONFIG.MAX_TASKS_ON_SCREEN) {
             this.spawnTask();
