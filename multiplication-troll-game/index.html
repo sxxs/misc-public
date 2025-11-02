@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplication Troll Game - Kleines 1x1</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>MULTIPLICATION TROLL</h1>
+            <div class="stats">
+                <span>SCORE: <span id="score">0</span></span>
+                <span>LEBEN: <span id="lives">3</span></span>
+                <span>LEVEL: <span id="level">1</span></span>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+        <div class="input-area">
+            <div class="current-task">
+                <span id="currentTask">Bereit?</span>
+            </div>
+            <input
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                id="answerInput"
+                placeholder="Antwort eingeben..."
+                autocomplete="off"
+                maxlength="3"
+            >
+        </div>
+
+        <div class="controls">
+            <button id="startBtn">SPIEL STARTEN</button>
+            <button id="pauseBtn" disabled>PAUSE</button>
+        </div>
+
+        <div id="gameOver" class="game-over hidden">
+            <h2>GAME OVER!</h2>
+            <p>Du wurdest von den Aufgaben überrannt!</p>
+            <p>Finaler Score: <span id="finalScore">0</span></p>
+            <button id="restartBtn">NOCHMAL SPIELEN</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
