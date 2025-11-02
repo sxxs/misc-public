@@ -1,5 +1,5 @@
 // Game Version
-const VERSION = 'v1.0.1 - 2025-01-02';
+const VERSION = 'v1.0.2 - 2025-01-02';
 
 // Game Configuration
 const CONFIG = {
@@ -168,54 +168,65 @@ class Game {
     }
 
     resizeCanvas() {
-        // Force layout calculation
+        // Force layout calculation with double RAF for more accuracy
         requestAnimationFrame(() => {
-            // Mobile vs desktop padding
-            const isMobileView = window.innerWidth <= 768;
-            const bodyPadding = isMobileView ? 6 : 10; // 3px * 2
-            const containerPadding = isMobileView ? 16 : 20; // 8px * 2 or 10px * 2
-            const containerBorder = isMobileView ? 6 : 8; // 3px * 2 or 4px * 2
+            requestAnimationFrame(() => {
+                // Mobile vs desktop padding
+                const isMobileView = window.innerWidth <= 768;
+                const bodyPadding = isMobileView ? 6 : 10; // 3px * 2
+                const containerPadding = isMobileView ? 16 : 20; // 8px * 2 or 10px * 2
+                const containerBorder = isMobileView ? 6 : 8; // 3px * 2 or 4px * 2
 
-            // Get actual heights from DOM
-            const header = document.querySelector('.header');
-            const inputArea = document.querySelector('.input-area');
-            const controls = document.querySelector('.controls');
-            const keyboard = document.getElementById('mobileKeyboard');
+                // Get actual heights from DOM
+                const header = document.querySelector('.header');
+                const inputArea = document.querySelector('.input-area');
+                const controls = document.querySelector('.controls');
+                const keyboard = document.getElementById('mobileKeyboard');
 
-            // Measure heights using getBoundingClientRect for accuracy
-            const headerHeight = header ? header.getBoundingClientRect().height : 0;
-            const inputHeight = inputArea ? inputArea.getBoundingClientRect().height : 0;
-            const controlsHeight = controls && !controls.classList.contains('hidden') ? controls.getBoundingClientRect().height : 0;
-            const keyboardHeight = keyboard && !keyboard.classList.contains('hidden') ? keyboard.getBoundingClientRect().height : 0;
+                // Measure heights using getBoundingClientRect for accuracy
+                const headerHeight = header ? header.getBoundingClientRect().height : 0;
+                const inputHeight = inputArea ? inputArea.getBoundingClientRect().height : 0;
+                const controlsHeight = controls && !controls.classList.contains('hidden') ? controls.getBoundingClientRect().height : 0;
+                const keyboardHeight = keyboard && !keyboard.classList.contains('hidden') ? keyboard.getBoundingClientRect().height : 0;
 
-            // Calculate margins between elements
-            const elementMargins = isMobileView ? 16 : 25;
+                // Measure actual margins from styles
+                const headerStyle = header ? getComputedStyle(header) : null;
+                const inputStyle = inputArea ? getComputedStyle(inputArea) : null;
+                const canvasMargins = isMobileView ? 0 : 0; // Canvas has no margin
 
-            // Total occupied height
-            const occupiedHeight = headerHeight + inputHeight + controlsHeight + keyboardHeight +
-                                   containerPadding + containerBorder + bodyPadding + elementMargins;
+                const headerMarginBottom = headerStyle ? parseFloat(headerStyle.marginBottom) : 0;
+                const inputMarginTop = inputStyle ? parseFloat(inputStyle.marginTop) : 0;
+                const inputMarginBottom = inputStyle ? parseFloat(inputStyle.marginBottom) : 0;
 
-            // Available height for canvas
-            const availableHeight = window.innerHeight - occupiedHeight;
+                // Total occupied height with actual margins
+                const occupiedHeight = headerHeight + headerMarginBottom +
+                                       inputHeight + inputMarginTop + inputMarginBottom +
+                                       controlsHeight +
+                                       keyboardHeight +
+                                       containerPadding + containerBorder + bodyPadding;
 
-            // Use as much space as possible (min 180px, max 600px)
-            const height = Math.min(600, Math.max(180, availableHeight));
+                // Available height for canvas
+                const availableHeight = window.innerHeight - occupiedHeight;
 
-            this.canvas.height = height;
-            CONFIG.CANVAS_HEIGHT = height;
+                // Use as much space as possible (min 180px, max 600px)
+                const height = Math.min(600, Math.max(180, availableHeight));
 
-            // Update player position dynamically (75% down, leaving room for player legs)
-            CONFIG.PLAYER_Y = Math.floor(CONFIG.CANVAS_HEIGHT * 0.75);
+                this.canvas.height = height;
+                CONFIG.CANVAS_HEIGHT = height;
 
-            // Recalculate speeds based on new canvas height
-            this.calculateSpeed();
+                // Update player position dynamically (75% down, leaving room for player legs)
+                CONFIG.PLAYER_Y = Math.floor(CONFIG.CANVAS_HEIGHT * 0.75);
 
-            // Redraw if game is running
-            if (this.isRunning && !this.isPaused) {
-                this.draw();
-            } else {
-                this.drawWelcomeScreen();
-            }
+                // Recalculate speeds based on new canvas height
+                this.calculateSpeed();
+
+                // Redraw if game is running
+                if (this.isRunning && !this.isPaused) {
+                    this.draw();
+                } else {
+                    this.drawWelcomeScreen();
+                }
+            });
         });
     }
 
@@ -293,8 +304,14 @@ class Game {
         this.lastSpawnTime = Date.now();
         this.spawnTask();
 
-        // Resize canvas now that controls are hidden
-        setTimeout(() => this.resizeCanvas(), 100);
+        // Resize canvas multiple times to ensure it grows after controls are hidden
+        // First resize immediately
+        this.resizeCanvas();
+
+        // Then resize again after layout has settled
+        setTimeout(() => this.resizeCanvas(), 50);
+        setTimeout(() => this.resizeCanvas(), 150);
+        setTimeout(() => this.resizeCanvas(), 300);
 
         this.gameLoop();
     }
@@ -624,8 +641,11 @@ class Game {
 
         this.updateUI();
 
-        // Resize canvas now that controls are visible again
-        setTimeout(() => this.resizeCanvas(), 100);
+        // Resize canvas multiple times now that controls are visible again
+        this.resizeCanvas();
+        setTimeout(() => this.resizeCanvas(), 50);
+        setTimeout(() => this.resizeCanvas(), 150);
+        setTimeout(() => this.resizeCanvas(), 300);
 
         this.drawWelcomeScreen();
     }
