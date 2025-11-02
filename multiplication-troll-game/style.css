@@ -385,9 +385,9 @@ button:disabled {
     }
 }
 
-/* Prevent zoom on input focus (iOS) */
+/* Prevent zoom on input focus (iOS) - exclude .key-btn to preserve responsive sizing */
 @supports (-webkit-touch-callout: none) {
-    input, button {
+    input, button:not(.key-btn) {
         font-size: 16px !important;
     }
 }
@@ -425,6 +425,10 @@ button:disabled {
     grid-template-rows: repeat(3, minmax(48px, 60px));
     gap: 6px;
     max-width: 252px;
+    /* Visual centering: Grid is mathematically centered, but appears off-center
+       because row 1 has empty column 1 (numbers 7,8,9 only). This -24px compensates
+       for the asymmetric layout and creates better visual balance. */
+    margin-left: -24px;
 }
 
 .key-btn {
@@ -439,7 +443,6 @@ button:disabled {
     transition: all 0.15s;
     box-shadow: 0 3px 0 #00B4D8, 0 0 10px rgba(0, 217, 255, 0.3);
     text-shadow: 0 0 10px #FFD700;
-    touch-action: manipulation;
     user-select: none;
     -webkit-user-select: none;
     outline: none;
@@ -451,6 +454,31 @@ button:disabled {
     box-shadow: 0 0 0 #00B4D8, 0 0 20px rgba(255, 215, 0, 0.6);
     background: linear-gradient(135deg, #FF6B35, #FF8800);
     border-color: #FFD700;
+}
+
+/* Disable all default browser button states for key buttons */
+.key-btn:hover {
+    background: linear-gradient(135deg, #1A1F2E, #0F1419);
+    border-color: #00D9FF;
+    box-shadow: 0 3px 0 #00B4D8, 0 0 10px rgba(0, 217, 255, 0.3);
+}
+
+.key-btn:active {
+    transform: none;
+    background: linear-gradient(135deg, #1A1F2E, #0F1419);
+    border-color: #00D9FF;
+    box-shadow: 0 3px 0 #00B4D8, 0 0 10px rgba(0, 217, 255, 0.3);
+}
+
+.key-btn:focus {
+    outline: none;
+    background: linear-gradient(135deg, #1A1F2E, #0F1419);
+    border-color: #00D9FF;
+    box-shadow: 0 3px 0 #00B4D8, 0 0 10px rgba(0, 217, 255, 0.3);
+}
+
+.key-btn:focus-visible {
+    outline: none;
 }
 
 /* Right-aligned layout */
