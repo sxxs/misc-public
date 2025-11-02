@@ -1,12 +1,27 @@
 // Game Version
-const VERSION = 'v1.1.0 - 2025-01-02';
+const VERSION = 'v1.1.1 - 2025-01-02';
 
-// Cache-busting: Redirect to random version parameter on reload
-if (!window.location.search.match(/[?&]v=/)) {
-    const randomVersion = Math.random().toString(36).substring(2, 10);
-    const separator = window.location.search ? '&' : '?';
-    window.location.replace(window.location.pathname + window.location.search + separator + 'v=' + randomVersion);
-}
+// Cache-busting: Always generate new version parameter on fresh page load
+(function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentVersion = urlParams.get('v');
+    const newVersion = Math.random().toString(36).substring(2, 10);
+
+    // Check if this is a fresh load (not from our redirect)
+    const lastVersion = sessionStorage.getItem('lastCacheBustVersion');
+
+    if (currentVersion !== lastVersion || !currentVersion) {
+        // Store the new version and redirect
+        sessionStorage.setItem('lastCacheBustVersion', newVersion);
+
+        // Update or add the v parameter
+        urlParams.set('v', newVersion);
+
+        // Redirect to the new URL
+        const newUrl = window.location.pathname + '?' + urlParams.toString();
+        window.location.replace(newUrl);
+    }
+})();
 
 // Game Configuration
 const CONFIG = {
