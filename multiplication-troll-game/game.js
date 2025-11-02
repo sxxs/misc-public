@@ -1,5 +1,5 @@
 // Game Version
-const VERSION = 'v1.1.7 - 2025-11-02';
+const VERSION = 'v1.1.8 - 2025-11-02';
 
 // Cache-busting: Always generate new version parameter on fresh page load
 (function() {
@@ -210,9 +210,9 @@ class Game {
                     CONFIG.CANVAS_WIDTH = displayWidth;
                     CONFIG.CANVAS_HEIGHT = displayHeight;
 
-                    // Update player position (85% down, 30% from left)
+                    // Update player position (85% down, 24% from left)
                     CONFIG.PLAYER_Y = Math.floor(CONFIG.CANVAS_HEIGHT * 0.85);
-                    CONFIG.PLAYER_X = Math.floor(CONFIG.CANVAS_WIDTH * 0.3);
+                    CONFIG.PLAYER_X = Math.floor(CONFIG.CANVAS_WIDTH * 0.24);
 
                     // Recalculate speeds based on new canvas height
                     this.calculateSpeed();
@@ -311,8 +311,8 @@ class Game {
     update() {
         const currentTime = Date.now();
 
-        // Spawn new tasks
-        const spawnInterval = Math.max(1500, CONFIG.SPAWN_INTERVAL - (this.level * 200));
+        // Spawn new tasks (gentler increase: 100ms per level, min 2000ms)
+        const spawnInterval = Math.max(2000, CONFIG.SPAWN_INTERVAL - (this.level * 100));
         if (currentTime - this.lastSpawnTime > spawnInterval &&
             this.tasks.length < CONFIG.MAX_TASKS_ON_SCREEN) {
             this.spawnTask();
@@ -554,14 +554,16 @@ class Game {
 
     showLevelUp() {
         const taskDisplay = document.getElementById('currentTask');
-        const originalText = taskDisplay.textContent;
 
         taskDisplay.textContent = `LEVEL ${this.level}!`;
         taskDisplay.style.color = '#FFD700';
 
         setTimeout(() => {
             taskDisplay.style.color = '#FFD700';
-            taskDisplay.textContent = originalText;
+            // Always read current task instead of saved snapshot to prevent desync
+            if (this.currentTargetTask) {
+                taskDisplay.textContent = this.currentTargetTask.getDisplayText();
+            }
         }, 1000);
     }
 
