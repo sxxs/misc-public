@@ -11,6 +11,74 @@ const CONFIG = {
     MAX_TASKS_ON_SCREEN: 5
 };
 
+// Music Manager - alternates between two loops, 3 plays each
+class MusicManager {
+    constructor() {
+        this.music1 = document.getElementById('music1');
+        this.music2 = document.getElementById('music2');
+        this.currentTrack = 1;
+        this.playCount = 0;
+        this.maxPlays = 3;
+        this.isPlaying = false;
+
+        // Setup event listeners
+        this.music1.addEventListener('ended', () => this.onTrackEnded());
+        this.music2.addEventListener('ended', () => this.onTrackEnded());
+    }
+
+    start() {
+        this.currentTrack = 1;
+        this.playCount = 0;
+        this.isPlaying = true;
+        this.playCurrentTrack();
+    }
+
+    stop() {
+        this.isPlaying = false;
+        this.music1.pause();
+        this.music2.pause();
+        this.music1.currentTime = 0;
+        this.music2.currentTime = 0;
+    }
+
+    playCurrentTrack() {
+        if (!this.isPlaying) return;
+
+        const track = this.currentTrack === 1 ? this.music1 : this.music2;
+        track.currentTime = 0;
+        track.play().catch(err => console.log('Audio play error:', err));
+    }
+
+    onTrackEnded() {
+        if (!this.isPlaying) return;
+
+        this.playCount++;
+
+        if (this.playCount >= this.maxPlays) {
+            // Switch to the other track
+            this.currentTrack = this.currentTrack === 1 ? 2 : 1;
+            this.playCount = 0;
+        }
+
+        this.playCurrentTrack();
+    }
+
+    pause() {
+        if (this.currentTrack === 1) {
+            this.music1.pause();
+        } else {
+            this.music2.pause();
+        }
+    }
+
+    resume() {
+        if (!this.isPlaying) return;
+
+        const track = this.currentTrack === 1 ? this.music1 : this.music2;
+        track.play().catch(err => console.log('Audio play error:', err));
+    }
+}
+
 // Game State
 class Game {
     constructor() {
@@ -28,6 +96,7 @@ class Game {
         this.taskSpeed = CONFIG.INITIAL_TASK_SPEED;
         this.animationId = null;
         this.userTyping = false;
+        this.musicManager = new MusicManager();
 
         this.init();
     }
@@ -67,6 +136,7 @@ class Game {
         document.getElementById('pauseBtn').disabled = false;
         document.getElementById('answerInput').focus();
 
+        this.musicManager.start();
         this.lastSpawnTime = Date.now();
         this.spawnTask();
         this.gameLoop();
@@ -75,7 +145,10 @@ class Game {
     togglePause() {
         this.isPaused = !this.isPaused;
         document.getElementById('pauseBtn').textContent = this.isPaused ? 'WEITER' : 'PAUSE';
-        if (!this.isPaused) {
+        if (this.isPaused) {
+            this.musicManager.pause();
+        } else {
+            this.musicManager.resume();
             this.gameLoop();
         }
     }
@@ -321,6 +394,7 @@ class Game {
 
     gameOver() {
         this.isRunning = false;
+        this.musicManager.stop();
         cancelAnimationFrame(this.animationId);
 
         document.getElementById('finalScore').textContent = this.score;
@@ -339,6 +413,7 @@ class Game {
         this.taskSpeed = CONFIG.INITIAL_TASK_SPEED;
         this.isRunning = false;
         this.isPaused = false;
+        this.musicManager.stop();
 
         document.getElementById('gameOver').classList.add('hidden');
         document.getElementById('answerInput').value = '';
