@@ -1,5 +1,5 @@
 // Game Version
-const VERSION = 'v1.0.7 - 2025-01-02';
+const VERSION = 'v1.0.8 - 2025-01-02';
 
 // Cache-busting: Redirect to random version parameter on reload
 if (!window.location.search.match(/[?&]v=/)) {
@@ -72,9 +72,13 @@ class MusicManager {
         this.music1.volume = 0.3;
         this.music2.volume = 0.3;
 
-        // Setup event listeners
-        this.music1.addEventListener('ended', () => this.onTrackEnded());
-        this.music2.addEventListener('ended', () => this.onTrackEnded());
+        // Setup event listeners (bind to specific tracks to avoid conflicts)
+        this.music1.addEventListener('ended', () => {
+            if (this.currentTrack === 1) this.onTrackEnded();
+        });
+        this.music2.addEventListener('ended', () => {
+            if (this.currentTrack === 2) this.onTrackEnded();
+        });
     }
 
     start() {
@@ -148,6 +152,7 @@ class Game {
         this.taskSpeed = 0; // Current speed with level multiplier
         this.animationId = null;
         this.userTyping = false;
+        this.digitHistory = ''; // Sliding window for last 3 digits
         this.musicManager = new MusicManager();
         this.sfxManager = new SFXManager();
 
@@ -250,18 +255,23 @@ class Game {
         // Show mobile keyboard
         mobileKeyboard.classList.remove('hidden');
 
-        // Setup keyboard buttons
+        // Setup keyboard buttons with sliding window logic
         const keyButtons = document.querySelectorAll('.key-btn');
         keyButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 const key = btn.dataset.key;
 
-                if (key === 'backspace') {
-                    answerInput.value = answerInput.value.slice(0, -1);
-                } else if (answerInput.value.length < 3) {
-                    answerInput.value += key;
+                // Add digit to history
+                this.digitHistory += key;
+
+                // Keep only last 3 digits (sliding window)
+                if (this.digitHistory.length > 3) {
+                    this.digitHistory = this.digitHistory.slice(-3);
                 }
+
+                // Update input field with current window
+                answerInput.value = this.digitHistory;
 
                 // Trigger input event for auto-check
                 answerInput.dispatchEvent(new Event('input'));
@@ -453,6 +463,7 @@ class Game {
 
                 // Clear input when task changes
                 document.getElementById('answerInput').value = '';
+                this.digitHistory = ''; // Reset sliding window
             }
             this.userTyping = false; // Reset to avoid constant changes
         }
@@ -511,6 +522,7 @@ class Game {
         }
 
         input.value = '';
+        this.digitHistory = ''; // Reset sliding window
         this.userTyping = true;
     }
 
@@ -611,6 +623,7 @@ class Game {
 
         document.getElementById('gameOver').classList.add('hidden');
         document.getElementById('answerInput').value = '';
+        this.digitHistory = ''; // Reset sliding window
 
         // Show start button again, hide pause button
         const controls = document.querySelector('.controls');
