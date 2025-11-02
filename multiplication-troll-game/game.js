@@ -1,11 +1,15 @@
+// Game Version
+const VERSION = 'v1.0.0 - 2025-01-02';
+
 // Game Configuration
 const CONFIG = {
     CANVAS_WIDTH: 800,
     CANVAS_HEIGHT: 600,
     PLAYER_Y: 520,
     PLAYER_X: 400,
-    INITIAL_TASK_SPEED: 0.5,
-    SPEED_INCREMENT: 0.1,
+    FALL_TIME_SECONDS: 10, // Time for a block to reach the bottom
+    SPEED_INCREASE_PER_LEVEL: 1.05, // 5% faster each level
+    TASKS_PER_LEVEL: 5, // Level up every 5 tasks
     SPAWN_INTERVAL: 3000,
     TROLL_CHANCE: 0.3, // 30% chance for troll mechanics
     MAX_TASKS_ON_SCREEN: 5
@@ -133,7 +137,8 @@ class Game {
         this.player = new Player();
         this.currentTargetTask = null;
         this.lastSpawnTime = 0;
-        this.taskSpeed = CONFIG.INITIAL_TASK_SPEED;
+        this.baseSpeed = 0; // Will be calculated based on canvas height
+        this.taskSpeed = 0; // Current speed with level multiplier
         this.animationId = null;
         this.userTyping = false;
         this.musicManager = new MusicManager();
@@ -150,6 +155,16 @@ class Game {
 
         // Handle window resize
         window.addEventListener('resize', () => this.resizeCanvas());
+    }
+
+    calculateSpeed() {
+        // Calculate base speed so a block takes CONFIG.FALL_TIME_SECONDS to reach bottom
+        // Assuming ~60 FPS: speed = height / (fps * seconds)
+        this.baseSpeed = CONFIG.CANVAS_HEIGHT / (60 * CONFIG.FALL_TIME_SECONDS);
+
+        // Apply level multiplier
+        const levelMultiplier = Math.pow(CONFIG.SPEED_INCREASE_PER_LEVEL, this.level - 1);
+        this.taskSpeed = this.baseSpeed * levelMultiplier;
     }
 
     resizeCanvas() {
@@ -174,6 +189,9 @@ class Game {
 
         this.canvas.height = height;
         CONFIG.CANVAS_HEIGHT = height;
+
+        // Recalculate speeds based on new canvas height
+        this.calculateSpeed();
 
         // Redraw if game is running
         if (this.isRunning && !this.isPaused) {
@@ -305,12 +323,13 @@ class Game {
             }
         });
 
-        // Update level
-        if (this.score > 0 && this.score % 10 === 0) {
-            const newLevel = Math.floor(this.score / 10) + 1;
+        // Update level - every CONFIG.TASKS_PER_LEVEL tasks
+        if (this.score > 0 && this.score % CONFIG.TASKS_PER_LEVEL === 0) {
+            const newLevel = Math.floor(this.score / CONFIG.TASKS_PER_LEVEL) + 1;
             if (newLevel > this.level) {
                 this.level = newLevel;
-                this.taskSpeed += CONFIG.SPEED_INCREMENT;
+                // Recalculate speed with new level multiplier (5% faster)
+                this.calculateSpeed();
                 this.showLevelUp();
             }
         }
@@ -382,6 +401,12 @@ class Game {
 
         this.ctx.fillStyle = '#FF8800';
         this.ctx.fillText('Aber Vorsicht: Sie werden sich manchmal ändern!', CONFIG.CANVAS_WIDTH / 2, CONFIG.CANVAS_HEIGHT / 2 + 30);
+
+        // Version display
+        this.ctx.fillStyle = '#00D9FF88';
+        this.ctx.font = '14px Courier New';
+        this.ctx.textAlign = 'right';
+        this.ctx.fillText(VERSION, CONFIG.CANVAS_WIDTH - 10, CONFIG.CANVAS_HEIGHT - 10);
     }
 
     spawnTask() {
@@ -560,10 +585,12 @@ class Game {
         this.level = 1;
         this.tasks = [];
         this.currentTargetTask = null;
-        this.taskSpeed = CONFIG.INITIAL_TASK_SPEED;
         this.isRunning = false;
         this.isPaused = false;
         this.musicManager.stop();
+
+        // Reset speed to level 1
+        this.calculateSpeed();
 
         document.getElementById('gameOver').classList.add('hidden');
         document.getElementById('answerInput').value = '';
