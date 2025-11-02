@@ -1,5 +1,5 @@
 // Game Version
-const VERSION = 'v1.1.8 - 2025-11-02';
+const VERSION = 'v1.1.9 - 2025-11-02';
 
 // Cache-busting: Always generate new version parameter on fresh page load
 (function() {
@@ -29,8 +29,8 @@ const CONFIG = {
     CANVAS_HEIGHT: 600,
     PLAYER_Y: 520,
     PLAYER_X: 400,
-    FALL_TIME_SECONDS: 70, // Base time - halved speed from v1.1.4 for easier gameplay
-    SPEED_INCREASE_PER_LEVEL: 1.03, // 3% faster each level
+    FALL_TIME_SECONDS: 100, // Much slower falling for easier gameplay
+    SPEED_INCREASE_PER_LEVEL: 1.02, // 2% faster each level (gentler progression)
     TASKS_PER_LEVEL: 5, // Level up every 5 tasks
     SPAWN_INTERVAL: 3000,
     TROLL_CHANCE: 0.3, // 30% chance for troll mechanics
@@ -210,9 +210,9 @@ class Game {
                     CONFIG.CANVAS_WIDTH = displayWidth;
                     CONFIG.CANVAS_HEIGHT = displayHeight;
 
-                    // Update player position (85% down, 24% from left)
+                    // Update player position (85% down, 12% from left)
                     CONFIG.PLAYER_Y = Math.floor(CONFIG.CANVAS_HEIGHT * 0.85);
-                    CONFIG.PLAYER_X = Math.floor(CONFIG.CANVAS_WIDTH * 0.24);
+                    CONFIG.PLAYER_X = Math.floor(CONFIG.CANVAS_WIDTH * 0.12);
 
                     // Recalculate speeds based on new canvas height
                     this.calculateSpeed();
