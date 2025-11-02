@@ -410,8 +410,8 @@ button:disabled {
 
 /* Mobile On-Screen Keyboard */
 .mobile-keyboard {
-    margin-top: 15px;
-    padding: 15px;
+    margin-top: 10px;
+    padding: 10px;
     background: rgba(0, 180, 216, 0.1);
     border: 3px solid #00D9FF;
     border-radius: 12px;
@@ -423,20 +423,15 @@ button:disabled {
     display: none;
 }
 
-.keyboard-row {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-bottom: 10px;
-}
-
-.keyboard-row:last-child {
-    margin-bottom: 0;
+.keyboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 8px;
 }
 
 .key-btn {
-    min-width: 70px;
-    min-height: 60px;
+    min-height: 55px;
     padding: 0;
     font-size: 1.8em;
     font-weight: bold;
@@ -460,19 +455,9 @@ button:disabled {
     border-color: #FFD700;
 }
 
-/* Calculator-style layout: 0 under 2, backspace next to it */
-.keyboard-row-bottom {
-    justify-content: center;
-    gap: 10px;
-    padding: 0 calc(70px + 10px); /* Offset to center 0 under 2 */
-}
-
-.key-zero {
-    min-width: 70px;
-}
-
 .key-backspace {
-    min-width: 70px;
+    grid-column: 4;
+    grid-row: 1 / 4;
     font-size: 1.5em;
     background: linear-gradient(135deg, #FF6B35, #FF4500);
     border-color: #FF8800;
@@ -484,21 +469,15 @@ button:disabled {
 
 @media (max-width: 480px) {
     .mobile-keyboard {
-        padding: 10px;
+        padding: 8px;
     }
 
-    .keyboard-row {
-        gap: 8px;
-        margin-bottom: 8px;
-    }
-
-    .keyboard-row-bottom {
-        padding: 0 calc(60px + 8px); /* Adjust for smaller buttons */
+    .keyboard-grid {
+        gap: 6px;
     }
 
     .key-btn {
-        min-width: 60px;
-        min-height: 50px;
+        min-height: 48px;
         font-size: 1.5em;
     }
 }
