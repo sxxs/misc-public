@@ -16,6 +16,32 @@ const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/
                  ('ontouchstart' in window) ||
                  (navigator.maxTouchPoints > 0);
 
+// Sound Effects Manager
+class SFXManager {
+    constructor() {
+        this.sfx_correct = document.getElementById('sfx_correct');
+        this.sfx_wrong = document.getElementById('sfx_wrong');
+        this.sfx_game_over = document.getElementById('sfx_game_over');
+    }
+
+    playCorrect() {
+        this.play(this.sfx_correct);
+    }
+
+    playWrong() {
+        this.play(this.sfx_wrong);
+    }
+
+    playGameOver() {
+        this.play(this.sfx_game_over);
+    }
+
+    play(audio) {
+        audio.currentTime = 0;
+        audio.play().catch(err => console.log('SFX play error:', err));
+    }
+}
+
 // Music Manager - alternates between two loops, 3 plays each
 class MusicManager {
     constructor() {
@@ -102,6 +128,7 @@ class Game {
         this.animationId = null;
         this.userTyping = false;
         this.musicManager = new MusicManager();
+        this.sfxManager = new SFXManager();
 
         this.init();
     }
@@ -375,12 +402,14 @@ class Game {
             this.removeTask(this.currentTargetTask);
             this.showFeedback('RICHTIG!', '#00D9FF');
 
-            // Play success animation
+            // Play success animation and sound
             this.player.celebrate();
+            this.sfxManager.playCorrect();
         } else {
             // Wrong answer
             this.showFeedback('FALSCH!', '#FF6B35');
             this.player.shake();
+            this.sfxManager.playWrong();
         }
 
         input.value = '';
@@ -459,6 +488,7 @@ class Game {
     gameOver() {
         this.isRunning = false;
         this.musicManager.stop();
+        this.sfxManager.playGameOver();
         cancelAnimationFrame(this.animationId);
 
         document.getElementById('finalScore').textContent = this.score;
