@@ -179,16 +179,17 @@ class Game {
         const controlsHeight = controls && !controls.classList.contains('hidden') ? controls.offsetHeight : 0;
         const keyboardHeight = keyboard && !keyboard.classList.contains('hidden') ? keyboard.offsetHeight : 0;
 
-        const padding = 80; // Total padding and margins
+        const padding = 40; // Reduced padding for mobile
         const availableHeight = window.innerHeight - headerHeight - inputHeight - controlsHeight - keyboardHeight - padding;
 
-        // Set canvas height (maintain 4:3 aspect ratio, max 600px)
-        const maxHeight = Math.min(600, availableHeight);
-        const width = this.canvas.offsetWidth;
-        const height = Math.min(maxHeight, width * 0.75); // 4:3 aspect ratio
+        // Use available height directly (max 600px on desktop)
+        const height = Math.min(600, Math.max(250, availableHeight));
 
         this.canvas.height = height;
         CONFIG.CANVAS_HEIGHT = height;
+
+        // Update player position dynamically (75% down, leaving room for player legs)
+        CONFIG.PLAYER_Y = Math.floor(CONFIG.CANVAS_HEIGHT * 0.75);
 
         // Recalculate speeds based on new canvas height
         this.calculateSpeed();
@@ -316,8 +317,9 @@ class Game {
         this.tasks.forEach(task => {
             task.update();
 
-            // Check collision with player
-            if (task.y >= CONFIG.PLAYER_Y - 30) {
+            // Check collision with player (head level, ~10% above player base)
+            const collisionY = CONFIG.PLAYER_Y - (CONFIG.CANVAS_HEIGHT * 0.1);
+            if (task.y >= collisionY) {
                 this.loseLife();
                 this.removeTask(task);
             }
@@ -403,8 +405,8 @@ class Game {
         this.ctx.fillText('Aber Vorsicht: Sie werden sich manchmal ändern!', CONFIG.CANVAS_WIDTH / 2, CONFIG.CANVAS_HEIGHT / 2 + 30);
 
         // Version display
-        this.ctx.fillStyle = '#00D9FF88';
-        this.ctx.font = '14px Courier New';
+        this.ctx.fillStyle = '#00D9FF';
+        this.ctx.font = 'bold 18px Courier New';
         this.ctx.textAlign = 'right';
         this.ctx.fillText(VERSION, CONFIG.CANVAS_WIDTH - 10, CONFIG.CANVAS_HEIGHT - 10);
     }
@@ -636,37 +638,43 @@ class Player {
             this.hitAnimation--;
         }
 
-        const headY = this.celebrateAnimation > 0 ? this.y - 30 - Math.sin(this.celebrateAnimation / 5) * 10 : this.y - 30;
+        // Scale player based on canvas height
+        const scale = Math.min(1, CONFIG.CANVAS_HEIGHT / 500);
+        const headRadius = 15 * scale;
+        const bodyLength = 20 * scale;
+        const armLength = 20 * scale;
+        const legLength = Math.min(50 * scale, CONFIG.CANVAS_HEIGHT - this.y - bodyLength);
+
+        const headY = this.celebrateAnimation > 0 ? this.y - 30 * scale - Math.sin(this.celebrateAnimation / 5) * 10 : this.y - 30 * scale;
 
         // Draw stick figure
         ctx.strokeStyle = '#FFD700';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 3 * scale;
         ctx.lineCap = 'round';
 
         // Head
         ctx.beginPath();
-        ctx.arc(this.x, headY, 15, 0, Math.PI * 2);
+        ctx.arc(this.x, headY, headRadius, 0, Math.PI * 2);
         ctx.stroke();
 
         // Body
         ctx.beginPath();
-        ctx.moveTo(this.x, headY + 15);
-        ctx.lineTo(this.x, this.y + 20);
+        ctx.moveTo(this.x, headY + headRadius);
+        ctx.lineTo(this.x, this.y + bodyLength);
         ctx.stroke();
 
         // Arms
-        const armAngle = this.celebrateAnimation > 0 ? Math.PI / 4 : Math.PI / 6;
         ctx.beginPath();
-        ctx.moveTo(this.x - 20, headY + 25);
-        ctx.lineTo(this.x, headY + 20);
-        ctx.lineTo(this.x + 20, headY + 25);
+        ctx.moveTo(this.x - armLength, headY + 25 * scale);
+        ctx.lineTo(this.x, headY + 20 * scale);
+        ctx.lineTo(this.x + armLength, headY + 25 * scale);
         ctx.stroke();
 
         // Legs
         ctx.beginPath();
-        ctx.moveTo(this.x - 15, this.y + 50);
-        ctx.lineTo(this.x, this.y + 20);
-        ctx.lineTo(this.x + 15, this.y + 50);
+        ctx.moveTo(this.x - 15 * scale, this.y + bodyLength + legLength);
+        ctx.lineTo(this.x, this.y + bodyLength);
+        ctx.lineTo(this.x + 15 * scale, this.y + bodyLength + legLength);
         ctx.stroke();
 
         if (this.celebrateAnimation > 0) {
@@ -771,11 +779,15 @@ class Task {
 
         // Draw task box
         const text = this.getDisplayText();
-        ctx.font = 'bold 24px Courier New';
+
+        // Dynamic font size based on canvas height (4% of height, min 18px, max 28px)
+        const fontSize = Math.min(28, Math.max(18, CONFIG.CANVAS_HEIGHT * 0.04));
+        ctx.font = `bold ${fontSize}px Courier New`;
+
         const textWidth = ctx.measureText(text).width;
-        const padding = 15;
+        const padding = Math.max(12, fontSize * 0.6);
         const boxWidth = textWidth + padding * 2;
-        const boxHeight = 40;
+        const boxHeight = Math.max(35, fontSize * 1.8);
 
         const drawX = this.x + shakeOffsetX;
         const drawY = this.y + shakeOffsetY;
