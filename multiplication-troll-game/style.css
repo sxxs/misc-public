@@ -11,10 +11,11 @@ body {
     color: #00D9FF;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     min-height: 100vh;
+    height: 100vh;
     padding: 10px;
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 .game-container {
@@ -69,7 +70,6 @@ body {
     display: block;
     width: 100%;
     height: auto;
-    max-height: 600px;
     background: #000000;
     border: 3px solid #00D9FF;
     border-radius: 8px;
@@ -80,19 +80,42 @@ body {
     touch-action: none;
 }
 
+/* Pause button overlay */
+.pause-overlay {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 100;
+    padding: 10px 20px;
+    min-width: 80px;
+    font-size: 1em;
+    opacity: 0.9;
+    display: none; /* Hidden by default */
+}
+
+.pause-overlay:not(.hidden):not(:disabled) {
+    display: block;
+}
+
+.pause-overlay:hover:not(:disabled) {
+    opacity: 1;
+}
+
 .input-area {
-    margin: 15px 0;
-    text-align: center;
+    margin: 10px 0;
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
 }
 
 .current-task {
-    font-size: clamp(1.3em, 4vw, 2em);
-    margin-bottom: 12px;
-    padding: 15px;
+    flex: 1;
+    font-size: clamp(1.2em, 4vw, 1.6em);
+    padding: 12px;
     background: rgba(255, 107, 53, 0.1);
     border: 3px solid #FF8800;
     border-radius: 8px;
-    min-height: 60px;
+    min-height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -107,10 +130,10 @@ body {
 }
 
 #answerInput {
-    width: 100%;
-    max-width: 400px;
-    padding: 15px;
-    font-size: clamp(1.2em, 4vw, 1.8em);
+    flex: 1;
+    max-width: 200px;
+    padding: 12px;
+    font-size: clamp(1.2em, 4vw, 1.6em);
     font-family: 'Courier New', monospace;
     background: #1A1F2E;
     border: 3px solid #00D9FF;
@@ -137,8 +160,12 @@ body {
     display: flex;
     gap: 10px;
     justify-content: center;
-    margin-top: 15px;
+    margin-top: 10px;
     flex-wrap: wrap;
+}
+
+.controls.hidden {
+    display: none;
 }
 
 button {
@@ -415,14 +442,19 @@ button:disabled {
     border-color: #FFD700;
 }
 
+/* Calculator-style layout: 0 under 2, backspace next to it */
+.keyboard-row-bottom {
+    justify-content: center;
+    gap: 10px;
+    padding: 0 calc(70px + 10px); /* Offset to center 0 under 2 */
+}
+
 .key-zero {
-    flex: 1;
-    max-width: 150px;
+    min-width: 70px;
 }
 
 .key-backspace {
-    flex: 1;
-    max-width: 150px;
+    min-width: 70px;
     font-size: 1.5em;
     background: linear-gradient(135deg, #FF6B35, #FF4500);
     border-color: #FF8800;
@@ -442,9 +474,21 @@ button:disabled {
         margin-bottom: 8px;
     }
 
+    .keyboard-row-bottom {
+        padding: 0 calc(60px + 8px); /* Adjust for smaller buttons */
+    }
+
     .key-btn {
         min-width: 60px;
         min-height: 50px;
         font-size: 1.5em;
+    }
+
+    .input-area {
+        flex-direction: column;
+    }
+
+    #answerInput {
+        max-width: 100%;
     }
 }
