@@ -11,6 +11,11 @@ const CONFIG = {
     MAX_TASKS_ON_SCREEN: 5
 };
 
+// Mobile Detection
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                 ('ontouchstart' in window) ||
+                 (navigator.maxTouchPoints > 0);
+
 // Music Manager - alternates between two loops, 3 plays each
 class MusicManager {
     constructor() {
@@ -103,6 +108,7 @@ class Game {
 
     init() {
         this.setupEventListeners();
+        this.setupMobileKeyboard();
         this.drawWelcomeScreen();
     }
 
@@ -117,15 +123,50 @@ class Game {
         restartBtn.addEventListener('click', () => this.restart());
 
         answerInput.addEventListener('input', (e) => this.handleInput(e));
-        answerInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && this.isRunning) {
-                this.checkAnswer();
-            }
-        });
+
+        // Only check for Enter on desktop
+        if (!isMobile) {
+            answerInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && this.isRunning) {
+                    this.checkAnswer();
+                }
+            });
+        }
 
         // Detect when user starts typing for troll mechanics
         answerInput.addEventListener('focus', () => {
             this.userTyping = true;
+        });
+    }
+
+    setupMobileKeyboard() {
+        if (!isMobile) return;
+
+        const answerInput = document.getElementById('answerInput');
+        const mobileKeyboard = document.getElementById('mobileKeyboard');
+
+        // Make input readonly on mobile to prevent native keyboard
+        answerInput.setAttribute('readonly', 'readonly');
+
+        // Show mobile keyboard
+        mobileKeyboard.classList.remove('hidden');
+
+        // Setup keyboard buttons
+        const keyButtons = document.querySelectorAll('.key-btn');
+        keyButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const key = btn.dataset.key;
+
+                if (key === 'backspace') {
+                    answerInput.value = answerInput.value.slice(0, -1);
+                } else if (answerInput.value.length < 3) {
+                    answerInput.value += key;
+                }
+
+                // Trigger input event for auto-check
+                answerInput.dispatchEvent(new Event('input'));
+            });
         });
     }
 
@@ -292,6 +333,29 @@ class Game {
                 document.getElementById('currentTask').textContent = this.currentTargetTask.getDisplayText();
             }
             this.userTyping = false; // Reset to avoid constant changes
+        }
+
+        // AUTO-CHECK: Check answer when input matches expected answer length
+        const input = document.getElementById('answerInput');
+        const answer = parseInt(input.value);
+
+        if (!this.currentTargetTask || !this.tasks.includes(this.currentTargetTask)) {
+            return;
+        }
+
+        // Check if the answer has the correct number of digits
+        const expectedAnswer = this.currentTargetTask.correctAnswer;
+        const expectedLength = expectedAnswer.toString().length;
+        const inputLength = input.value.length;
+
+        // Auto-check when we have enough digits
+        if (inputLength >= expectedLength && inputLength <= 3) {
+            if (answer === expectedAnswer) {
+                this.checkAnswer();
+            } else if (inputLength === 3) {
+                // If 3 digits and still wrong, check anyway (max length reached)
+                this.checkAnswer();
+            }
         }
     }
 

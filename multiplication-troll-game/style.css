@@ -363,3 +363,88 @@ button:disabled {
     -webkit-appearance: none;
     margin: 0;
 }
+
+/* Mobile On-Screen Keyboard */
+.mobile-keyboard {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(0, 180, 216, 0.1);
+    border: 3px solid #00D9FF;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+}
+
+.mobile-keyboard.hidden {
+    display: none;
+}
+
+.keyboard-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.keyboard-row:last-child {
+    margin-bottom: 0;
+}
+
+.key-btn {
+    min-width: 70px;
+    min-height: 60px;
+    padding: 0;
+    font-size: 1.8em;
+    font-weight: bold;
+    background: linear-gradient(135deg, #1A1F2E, #0F1419);
+    border: 3px solid #00D9FF;
+    border-radius: 10px;
+    color: #FFD700;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 4px 0 #00B4D8, 0 0 15px rgba(0, 217, 255, 0.3);
+    text-shadow: 0 0 10px #FFD700;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.key-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #00B4D8, 0 0 20px rgba(255, 215, 0, 0.6);
+    background: linear-gradient(135deg, #FF6B35, #FF8800);
+    border-color: #FFD700;
+}
+
+.key-zero {
+    flex: 1;
+    max-width: 150px;
+}
+
+.key-backspace {
+    flex: 1;
+    max-width: 150px;
+    font-size: 1.5em;
+    background: linear-gradient(135deg, #FF6B35, #FF4500);
+    border-color: #FF8800;
+}
+
+.key-backspace:active {
+    background: linear-gradient(135deg, #FF1493, #FF6B35);
+}
+
+@media (max-width: 480px) {
+    .mobile-keyboard {
+        padding: 10px;
+    }
+
+    .keyboard-row {
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .key-btn {
+        min-width: 60px;
+        min-height: 50px;
+        font-size: 1.5em;
+    }
+}
