@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multiplication Troll Game - Kleines 1x1</title>
-    <link rel="stylesheet" href="style.css?v=1.0.6">
+    <link rel="stylesheet" href="style.css?v=1.0.7">
 </head>
 <body>
     <div class="game-container">
@@ -12,7 +12,6 @@
         <button id="pauseBtn" class="pause-overlay" disabled>PAUSE</button>
 
         <div class="header">
-            <h1>MULTIPLICATION TROLL</h1>
             <div class="stats">
                 <span>SCORE: <span id="score">0</span></span>
                 <span>LEBEN: <span id="lives">3</span></span>
@@ -43,23 +42,17 @@
 
         <!-- Mobile On-Screen Keyboard -->
         <div id="mobileKeyboard" class="mobile-keyboard hidden">
-            <div class="keyboard-row">
+            <div class="keyboard-grid">
                 <button class="key-btn" data-key="7">7</button>
                 <button class="key-btn" data-key="8">8</button>
                 <button class="key-btn" data-key="9">9</button>
-            </div>
-            <div class="keyboard-row">
                 <button class="key-btn" data-key="4">4</button>
                 <button class="key-btn" data-key="5">5</button>
                 <button class="key-btn" data-key="6">6</button>
-            </div>
-            <div class="keyboard-row">
+                <button class="key-btn" data-key="0">0</button>
                 <button class="key-btn" data-key="1">1</button>
                 <button class="key-btn" data-key="2">2</button>
                 <button class="key-btn" data-key="3">3</button>
-            </div>
-            <div class="keyboard-row keyboard-row-bottom">
-                <button class="key-btn key-zero" data-key="0">0</button>
                 <button class="key-btn key-backspace" data-key="backspace">⌫</button>
             </div>
         </div>
@@ -81,6 +74,6 @@
     <audio id="sfx_wrong" src="es_wrong.mp3" preload="auto"></audio>
     <audio id="sfx_game_over" src="es_game_over.mp3" preload="auto"></audio>
 
-    <script src="game.js?v=1.0.6"></script>
+    <script src="game.js?v=1.0.7"></script>
 </body>
 </html>
