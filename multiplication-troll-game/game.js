@@ -1,5 +1,5 @@
 // Game Version
-const VERSION = 'v1.0.3 - 2025-01-02';
+const VERSION = 'v1.0.4 - 2025-01-02';
 
 // Game Configuration
 const CONFIG = {
@@ -168,51 +168,14 @@ class Game {
     }
 
     resizeCanvas() {
-        // Simple and direct approach: measure what's actually there
+        // Let CSS flexbox handle the layout, just sync the canvas dimensions
         requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                const gameContainer = document.querySelector('.game-container');
-                const header = document.querySelector('.header');
-                const inputArea = document.querySelector('.input-area');
-                const controls = document.querySelector('.controls');
-                const keyboard = document.getElementById('mobileKeyboard');
-                const canvas = this.canvas;
+            // Get the actual rendered height from CSS (flexbox handles this now)
+            const rect = this.canvas.getBoundingClientRect();
+            const height = Math.floor(rect.height);
 
-                if (!gameContainer) return;
-
-                // Get the actual available space in the viewport
-                const viewportHeight = window.innerHeight;
-
-                // Measure all non-canvas elements
-                const headerRect = header ? header.getBoundingClientRect() : { height: 0 };
-                const inputRect = inputArea ? inputArea.getBoundingClientRect() : { height: 0 };
-                const controlsRect = controls && !controls.classList.contains('hidden') ? controls.getBoundingClientRect() : { height: 0 };
-                const keyboardRect = keyboard && !keyboard.classList.contains('hidden') ? keyboard.getBoundingClientRect() : { height: 0 };
-
-                // Sum up all the space used by non-canvas elements
-                const usedHeight = headerRect.height + inputRect.height + controlsRect.height + keyboardRect.height;
-
-                // Account for container padding, borders, and body padding
-                const containerStyle = getComputedStyle(gameContainer);
-                const containerPaddingTop = parseFloat(containerStyle.paddingTop) || 0;
-                const containerPaddingBottom = parseFloat(containerStyle.paddingBottom) || 0;
-                const containerBorderTop = parseFloat(containerStyle.borderTopWidth) || 0;
-                const containerBorderBottom = parseFloat(containerStyle.borderBottomWidth) || 0;
-
-                const bodyStyle = getComputedStyle(document.body);
-                const bodyPaddingTop = parseFloat(bodyStyle.paddingTop) || 0;
-                const bodyPaddingBottom = parseFloat(bodyStyle.paddingBottom) || 0;
-
-                const totalPadding = containerPaddingTop + containerPaddingBottom +
-                                   containerBorderTop + containerBorderBottom +
-                                   bodyPaddingTop + bodyPaddingBottom;
-
-                // Calculate available height for canvas (be aggressive!)
-                const availableHeight = viewportHeight - usedHeight - totalPadding - 20; // 20px safety margin
-
-                // Use maximum available space
-                const height = Math.min(600, Math.max(150, availableHeight));
-
+            // Update canvas internal resolution to match display size
+            if (height > 0 && height !== this.canvas.height) {
                 this.canvas.height = height;
                 CONFIG.CANVAS_HEIGHT = height;
 
@@ -228,7 +191,7 @@ class Game {
                 } else {
                     this.drawWelcomeScreen();
                 }
-            });
+            }
         });
     }
 
@@ -306,14 +269,8 @@ class Game {
         this.lastSpawnTime = Date.now();
         this.spawnTask();
 
-        // Resize canvas multiple times to ensure it grows after controls are hidden
-        // First resize immediately
-        this.resizeCanvas();
-
-        // Then resize again after layout has settled
-        setTimeout(() => this.resizeCanvas(), 50);
-        setTimeout(() => this.resizeCanvas(), 150);
-        setTimeout(() => this.resizeCanvas(), 300);
+        // Resize canvas after controls are hidden (CSS flexbox handles the layout)
+        setTimeout(() => this.resizeCanvas(), 100);
 
         this.gameLoop();
     }
@@ -643,11 +600,8 @@ class Game {
 
         this.updateUI();
 
-        // Resize canvas multiple times now that controls are visible again
-        this.resizeCanvas();
-        setTimeout(() => this.resizeCanvas(), 50);
-        setTimeout(() => this.resizeCanvas(), 150);
-        setTimeout(() => this.resizeCanvas(), 300);
+        // Resize canvas now that controls are visible again (CSS flexbox handles the layout)
+        setTimeout(() => this.resizeCanvas(), 100);
 
         this.drawWelcomeScreen();
     }
