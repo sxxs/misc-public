@@ -1,5 +1,5 @@
 // Game Version
-const VERSION = 'v1.1.5 - 2025-11-02';
+const VERSION = 'v1.1.6 - 2025-11-02';
 
 // Cache-busting: Always generate new version parameter on fresh page load
 (function() {
@@ -30,7 +30,7 @@ const CONFIG = {
     PLAYER_Y: 520,
     PLAYER_X: 400,
     FALL_TIME_SECONDS: 70, // Base time - halved speed from v1.1.4 for easier gameplay
-    SPEED_INCREASE_PER_LEVEL: 1.05, // 5% faster each level
+    SPEED_INCREASE_PER_LEVEL: 1.03, // 3% faster each level
     TASKS_PER_LEVEL: 5, // Level up every 5 tasks
     SPAWN_INTERVAL: 3000,
     TROLL_CHANCE: 0.3, // 30% chance for troll mechanics
@@ -210,9 +210,9 @@ class Game {
                     CONFIG.CANVAS_WIDTH = displayWidth;
                     CONFIG.CANVAS_HEIGHT = displayHeight;
 
-                    // Update player position (85% down)
+                    // Update player position (85% down, 30% from left)
                     CONFIG.PLAYER_Y = Math.floor(CONFIG.CANVAS_HEIGHT * 0.85);
-                    CONFIG.PLAYER_X = Math.floor(CONFIG.CANVAS_WIDTH / 2);
+                    CONFIG.PLAYER_X = Math.floor(CONFIG.CANVAS_WIDTH * 0.3);
 
                     // Recalculate speeds based on new canvas height
                     this.calculateSpeed();
@@ -240,15 +240,6 @@ class Game {
 
         answerInput.addEventListener('input', (e) => this.handleInput(e));
 
-        // Only check for Enter on desktop
-        if (!isMobile) {
-            answerInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && this.isRunning) {
-                    this.checkAnswer();
-                }
-            });
-        }
-
         // Detect when user starts typing for troll mechanics
         answerInput.addEventListener('focus', () => {
             this.userTyping = true;
@@ -274,13 +265,8 @@ class Game {
                 e.preventDefault();
                 const key = btn.dataset.key;
 
-                // Add digit to history
+                // Add digit to history (unlimited)
                 this.digitHistory += key;
-
-                // Keep only last 3 digits (sliding window)
-                if (this.digitHistory.length > 3) {
-                    this.digitHistory = this.digitHistory.slice(-3);
-                }
 
                 // Update input field with current window
                 answerInput.value = this.digitHistory;
@@ -354,6 +340,10 @@ class Game {
             // Check collision with player (at head level - adjusted for smaller player at 85%)
             const collisionY = CONFIG.PLAYER_Y - 30;
             if (task.y >= collisionY) {
+                // Wrong! Block reached player
+                this.sfxManager.playWrong();
+                this.digitHistory = '';
+                document.getElementById('answerInput').value = '';
                 this.loseLife();
                 this.removeTask(task);
             }
@@ -476,11 +466,8 @@ class Game {
         if (this.userTyping && Math.random() < 0.2) {
             this.currentTargetTask.troll();
             document.getElementById('currentTask').textContent = this.currentTargetTask.getDisplayText();
-
-            // Clear input when task changes
-            document.getElementById('answerInput').value = '';
-            this.digitHistory = '';
             this.userTyping = false;
+            // Don't reset digitHistory - let it continue!
             return; // Don't check answer after troll
         }
         this.userTyping = false;
@@ -498,24 +485,13 @@ class Game {
             // Check if the last N digits match the expected answer
             if (lastNAsNumber === expectedAnswer) {
                 // Correct! Accept immediately
-                this.checkAnswer();
+                this.acceptAnswer();
                 return;
-            }
-        }
-
-        // If we have 3 digits and still haven't matched, it's wrong
-        if (this.digitHistory.length >= 3) {
-            const lastNDigits = this.digitHistory.slice(-expectedLength);
-            const lastNAsNumber = parseInt(lastNDigits);
-
-            if (lastNAsNumber !== expectedAnswer) {
-                // Wrong after 3 digits
-                this.checkAnswer();
             }
         }
     }
 
-    checkAnswer() {
+    acceptAnswer() {
         const input = document.getElementById('answerInput');
 
         // Remove highlight from all keyboard buttons
@@ -527,28 +503,13 @@ class Game {
             return;
         }
 
-        // Get expected answer and check LAST N DIGITS from sliding window
-        const expectedAnswer = this.currentTargetTask.correctAnswer;
-        const expectedLength = expectedAnswer.toString().length;
-        const lastNDigits = this.digitHistory.slice(-expectedLength);
-        const answer = parseInt(lastNDigits);
+        // Correct answer! (this method only called for correct answers now)
+        this.score++;
+        this.updateUI();
+        this.removeTask(this.currentTargetTask);
 
-        if (answer === expectedAnswer) {
-            // Correct answer!
-            this.score++;
-            this.updateUI();
-            this.removeTask(this.currentTargetTask);
-            this.showFeedback('RICHTIG!', '#00D9FF');
-
-            // Play success animation and sound
-            this.player.celebrate();
-            this.sfxManager.playCorrect();
-        } else {
-            // Wrong answer
-            this.showFeedback('FALSCH!', '#FF6B35');
-            this.player.shake();
-            this.sfxManager.playWrong();
-        }
+        // Play success sound (no visual feedback)
+        this.sfxManager.playCorrect();
 
         input.value = '';
         this.digitHistory = ''; // Reset sliding window
@@ -782,7 +743,7 @@ class Task {
     update() {
         // TROLL MECHANIC: Sometimes speed up randomly
         if (Math.random() < 0.01) {
-            this.speed *= 1.2;
+            this.speed *= 1.1;
         }
 
         this.y += this.speed;
