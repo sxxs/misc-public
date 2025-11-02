@@ -1,5 +1,5 @@
 // Game Version
-const VERSION = 'v1.1.1 - 2025-01-02';
+const VERSION = 'v1.1.2 - 2025-01-02';
 
 // Cache-busting: Always generate new version parameter on fresh page load
 (function() {
@@ -195,37 +195,34 @@ class Game {
     }
 
     resizeCanvas() {
-        // Let CSS flexbox handle the layout, just sync the canvas dimensions
+        // Let CSS flexbox handle the layout, match canvas resolution to display size
         requestAnimationFrame(() => {
             // Get the actual rendered size from CSS (flexbox handles this now)
             const rect = this.canvas.getBoundingClientRect();
             const displayWidth = Math.floor(rect.width);
             const displayHeight = Math.floor(rect.height);
 
-            // Use fixed internal resolution to prevent stretching
-            // CSS will scale this up/down maintaining quality
-            const FIXED_WIDTH = 600;
-            const FIXED_HEIGHT = 500;
+            // Set canvas internal resolution to match display size (no scaling)
+            if (displayWidth > 0 && displayHeight > 0) {
+                if (this.canvas.width !== displayWidth || this.canvas.height !== displayHeight) {
+                    this.canvas.width = displayWidth;
+                    this.canvas.height = displayHeight;
+                    CONFIG.CANVAS_WIDTH = displayWidth;
+                    CONFIG.CANVAS_HEIGHT = displayHeight;
 
-            // Update canvas internal resolution
-            if (this.canvas.width !== FIXED_WIDTH || this.canvas.height !== FIXED_HEIGHT) {
-                this.canvas.width = FIXED_WIDTH;
-                this.canvas.height = FIXED_HEIGHT;
-                CONFIG.CANVAS_WIDTH = FIXED_WIDTH;
-                CONFIG.CANVAS_HEIGHT = FIXED_HEIGHT;
+                    // Update player position (85% down)
+                    CONFIG.PLAYER_Y = Math.floor(CONFIG.CANVAS_HEIGHT * 0.85);
+                    CONFIG.PLAYER_X = Math.floor(CONFIG.CANVAS_WIDTH / 2);
 
-                // Update player position higher up (85% down) so it's visible
-                CONFIG.PLAYER_Y = Math.floor(CONFIG.CANVAS_HEIGHT * 0.85);
-                CONFIG.PLAYER_X = Math.floor(CONFIG.CANVAS_WIDTH / 2);
+                    // Recalculate speeds based on new canvas height
+                    this.calculateSpeed();
 
-                // Recalculate speeds based on new canvas height
-                this.calculateSpeed();
-
-                // Redraw if game is running
-                if (this.isRunning && !this.isPaused) {
-                    this.draw();
-                } else {
-                    this.drawWelcomeScreen();
+                    // Redraw if game is running
+                    if (this.isRunning && !this.isPaused) {
+                        this.draw();
+                    } else {
+                        this.drawWelcomeScreen();
+                    }
                 }
             }
         });
@@ -520,17 +517,23 @@ class Game {
 
     checkAnswer() {
         const input = document.getElementById('answerInput');
-        const answer = parseInt(input.value);
 
         // Remove highlight from all keyboard buttons
         document.querySelectorAll('.key-btn').forEach(btn => btn.blur());
 
         if (!this.currentTargetTask || !this.tasks.includes(this.currentTargetTask)) {
             input.value = '';
+            this.digitHistory = '';
             return;
         }
 
-        if (answer === this.currentTargetTask.correctAnswer) {
+        // Get expected answer and check LAST N DIGITS from sliding window
+        const expectedAnswer = this.currentTargetTask.correctAnswer;
+        const expectedLength = expectedAnswer.toString().length;
+        const lastNDigits = this.digitHistory.slice(-expectedLength);
+        const answer = parseInt(lastNDigits);
+
+        if (answer === expectedAnswer) {
             // Correct answer!
             this.score++;
             this.updateUI();
