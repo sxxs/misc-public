@@ -1,5 +1,5 @@
 // Game Version
-const VERSION = 'v1.1.3 - 2025-11-02';
+const VERSION = 'v1.1.4 - 2025-11-02';
 
 // Cache-busting: Always generate new version parameter on fresh page load
 (function() {
@@ -29,7 +29,7 @@ const CONFIG = {
     CANVAS_HEIGHT: 600,
     PLAYER_Y: 520,
     PLAYER_X: 400,
-    FALL_TIME_SECONDS: 20, // Time for a block to reach the bottom (20 seconds = easier)
+    FALL_TIME_SECONDS: 35, // Base time - actual will be ~20s in level 1 after speed modifiers
     SPEED_INCREASE_PER_LEVEL: 1.05, // 5% faster each level
     TASKS_PER_LEVEL: 5, // Level up every 5 tasks
     SPAWN_INTERVAL: 3000,
