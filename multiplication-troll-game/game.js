@@ -1,5 +1,5 @@
 // Game Version
-const VERSION = 'v1.0.9 - 2025-01-02';
+const VERSION = 'v1.1.0 - 2025-01-02';
 
 // Cache-busting: Redirect to random version parameter on reload
 if (!window.location.search.match(/[?&]v=/)) {
@@ -455,41 +455,49 @@ class Game {
     }
 
     handleInput(e) {
-        // TROLL MECHANIC: Sometimes change the task when user starts typing
-        if (this.userTyping && Math.random() < 0.2) {
-            if (this.currentTargetTask && this.tasks.includes(this.currentTargetTask)) {
-                this.currentTargetTask.troll();
-                document.getElementById('currentTask').textContent = this.currentTargetTask.getDisplayText();
-
-                // Clear input when task changes
-                document.getElementById('answerInput').value = '';
-                this.digitHistory = ''; // Reset sliding window
-            }
-            this.userTyping = false; // Reset to avoid constant changes
-        }
-
-        // AUTO-CHECK: Sliding window - check last N digits against expected answer
-        const input = document.getElementById('answerInput');
-
+        // Skip check if no current task
         if (!this.currentTargetTask || !this.tasks.includes(this.currentTargetTask)) {
             return;
         }
+
+        // TROLL MECHANIC: Sometimes change the task when user starts typing
+        if (this.userTyping && Math.random() < 0.2) {
+            this.currentTargetTask.troll();
+            document.getElementById('currentTask').textContent = this.currentTargetTask.getDisplayText();
+
+            // Clear input when task changes
+            document.getElementById('answerInput').value = '';
+            this.digitHistory = '';
+            this.userTyping = false;
+            return; // Don't check answer after troll
+        }
+        this.userTyping = false;
 
         // Get expected answer and its length
         const expectedAnswer = this.currentTargetTask.correctAnswer;
         const expectedLength = expectedAnswer.toString().length;
 
-        // If we have at least expectedLength digits, check the last N digits
+        // Always check if we have enough digits
         if (this.digitHistory.length >= expectedLength) {
             // Get last N digits from the sliding window
             const lastNDigits = this.digitHistory.slice(-expectedLength);
             const lastNAsNumber = parseInt(lastNDigits);
 
+            // Check if the last N digits match the expected answer
             if (lastNAsNumber === expectedAnswer) {
-                // Correct! Check answer immediately
+                // Correct! Accept immediately
                 this.checkAnswer();
-            } else if (this.digitHistory.length >= 3) {
-                // We have 3 digits and it's still wrong, check anyway
+                return;
+            }
+        }
+
+        // If we have 3 digits and still haven't matched, it's wrong
+        if (this.digitHistory.length >= 3) {
+            const lastNDigits = this.digitHistory.slice(-expectedLength);
+            const lastNAsNumber = parseInt(lastNDigits);
+
+            if (lastNAsNumber !== expectedAnswer) {
+                // Wrong after 3 digits
                 this.checkAnswer();
             }
         }
