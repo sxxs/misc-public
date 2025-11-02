@@ -75,14 +75,15 @@ body {
 #gameCanvas {
     display: block;
     width: 100%;
-    height: 100%;
     flex: 1 1 auto;
     min-height: 0;
+    max-height: 100%;
     background: #000000;
     border: 3px solid #00D9FF;
     border-radius: 8px;
     box-shadow: inset 0 0 40px rgba(255, 107, 53, 0.3),
                 0 0 20px rgba(0, 217, 255, 0.3);
+    object-fit: contain;
     image-rendering: auto;
     touch-action: none;
 }
@@ -424,11 +425,10 @@ button:disabled {
 
 .keyboard-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(3, 48px);
-    gap: 4px;
-    width: 100%;
-    max-width: 280px;
+    grid-template-columns: repeat(4, 60px);
+    grid-template-rows: repeat(3, 50px);
+    gap: 5px;
+    justify-content: center;
     margin: 0 auto;
 }
 
@@ -478,13 +478,12 @@ button:disabled {
 
 @media (max-width: 480px) {
     .keyboard-grid {
-        grid-template-columns: repeat(4, 1fr);
-        grid-template-rows: repeat(3, 44px);
-        gap: 3px;
-        max-width: 260px;
+        grid-template-columns: repeat(4, 55px);
+        grid-template-rows: repeat(3, 48px);
+        gap: 4px;
     }
 
     .key-btn {
-        font-size: 1.2em;
+        font-size: 1.3em;
     }
 }
