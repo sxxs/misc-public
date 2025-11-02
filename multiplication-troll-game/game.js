@@ -1,5 +1,5 @@
 // Game Version
-const VERSION = 'v1.1.9 - 2025-11-02';
+const VERSION = 'v1.1.10 - 2025-11-02';
 
 // Cache-busting: Always generate new version parameter on fresh page load
 (function() {
@@ -28,7 +28,7 @@ const CONFIG = {
     CANVAS_WIDTH: 800,
     CANVAS_HEIGHT: 600,
     PLAYER_Y: 520,
-    PLAYER_X: 400,
+    PLAYER_X: 96, // 12% of 800 = 96 (will be recalculated on resize)
     FALL_TIME_SECONDS: 100, // Much slower falling for easier gameplay
     SPEED_INCREASE_PER_LEVEL: 1.02, // 2% faster each level (gentler progression)
     TASKS_PER_LEVEL: 5, // Level up every 5 tasks
@@ -214,6 +214,9 @@ class Game {
                     CONFIG.PLAYER_Y = Math.floor(CONFIG.CANVAS_HEIGHT * 0.85);
                     CONFIG.PLAYER_X = Math.floor(CONFIG.CANVAS_WIDTH * 0.12);
 
+                    // Update player instance position
+                    this.player.updatePosition();
+
                     // Recalculate speeds based on new canvas height
                     this.calculateSpeed();
 
@@ -264,6 +267,7 @@ class Game {
 
                 // Remove focus from button to prevent it staying highlighted
                 btn.blur();
+                setTimeout(() => btn.blur(), 0);
             });
         });
     }
@@ -627,6 +631,11 @@ class Player {
         this.celebrateAnimation = 0;
         this.shakeAnimation = 0;
         this.hitAnimation = 0;
+    }
+
+    updatePosition() {
+        this.x = CONFIG.PLAYER_X;
+        this.y = CONFIG.PLAYER_Y;
     }
 
     draw(ctx) {
