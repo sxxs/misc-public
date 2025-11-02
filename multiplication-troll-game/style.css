@@ -493,12 +493,4 @@ button:disabled {
         min-height: 50px;
         font-size: 1.5em;
     }
-
-    .input-area {
-        flex-direction: column;
-    }
-
-    #answerInput {
-        max-width: 100%;
-    }
 }

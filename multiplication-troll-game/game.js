@@ -1,5 +1,5 @@
 // Game Version
-const VERSION = 'v1.0.2 - 2025-01-02';
+const VERSION = 'v1.0.3 - 2025-01-02';
 
 // Game Configuration
 const CONFIG = {
@@ -168,48 +168,50 @@ class Game {
     }
 
     resizeCanvas() {
-        // Force layout calculation with double RAF for more accuracy
+        // Simple and direct approach: measure what's actually there
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-                // Mobile vs desktop padding
-                const isMobileView = window.innerWidth <= 768;
-                const bodyPadding = isMobileView ? 6 : 10; // 3px * 2
-                const containerPadding = isMobileView ? 16 : 20; // 8px * 2 or 10px * 2
-                const containerBorder = isMobileView ? 6 : 8; // 3px * 2 or 4px * 2
-
-                // Get actual heights from DOM
+                const gameContainer = document.querySelector('.game-container');
                 const header = document.querySelector('.header');
                 const inputArea = document.querySelector('.input-area');
                 const controls = document.querySelector('.controls');
                 const keyboard = document.getElementById('mobileKeyboard');
+                const canvas = this.canvas;
 
-                // Measure heights using getBoundingClientRect for accuracy
-                const headerHeight = header ? header.getBoundingClientRect().height : 0;
-                const inputHeight = inputArea ? inputArea.getBoundingClientRect().height : 0;
-                const controlsHeight = controls && !controls.classList.contains('hidden') ? controls.getBoundingClientRect().height : 0;
-                const keyboardHeight = keyboard && !keyboard.classList.contains('hidden') ? keyboard.getBoundingClientRect().height : 0;
+                if (!gameContainer) return;
 
-                // Measure actual margins from styles
-                const headerStyle = header ? getComputedStyle(header) : null;
-                const inputStyle = inputArea ? getComputedStyle(inputArea) : null;
-                const canvasMargins = isMobileView ? 0 : 0; // Canvas has no margin
+                // Get the actual available space in the viewport
+                const viewportHeight = window.innerHeight;
 
-                const headerMarginBottom = headerStyle ? parseFloat(headerStyle.marginBottom) : 0;
-                const inputMarginTop = inputStyle ? parseFloat(inputStyle.marginTop) : 0;
-                const inputMarginBottom = inputStyle ? parseFloat(inputStyle.marginBottom) : 0;
+                // Measure all non-canvas elements
+                const headerRect = header ? header.getBoundingClientRect() : { height: 0 };
+                const inputRect = inputArea ? inputArea.getBoundingClientRect() : { height: 0 };
+                const controlsRect = controls && !controls.classList.contains('hidden') ? controls.getBoundingClientRect() : { height: 0 };
+                const keyboardRect = keyboard && !keyboard.classList.contains('hidden') ? keyboard.getBoundingClientRect() : { height: 0 };
 
-                // Total occupied height with actual margins
-                const occupiedHeight = headerHeight + headerMarginBottom +
-                                       inputHeight + inputMarginTop + inputMarginBottom +
-                                       controlsHeight +
-                                       keyboardHeight +
-                                       containerPadding + containerBorder + bodyPadding;
+                // Sum up all the space used by non-canvas elements
+                const usedHeight = headerRect.height + inputRect.height + controlsRect.height + keyboardRect.height;
 
-                // Available height for canvas
-                const availableHeight = window.innerHeight - occupiedHeight;
+                // Account for container padding, borders, and body padding
+                const containerStyle = getComputedStyle(gameContainer);
+                const containerPaddingTop = parseFloat(containerStyle.paddingTop) || 0;
+                const containerPaddingBottom = parseFloat(containerStyle.paddingBottom) || 0;
+                const containerBorderTop = parseFloat(containerStyle.borderTopWidth) || 0;
+                const containerBorderBottom = parseFloat(containerStyle.borderBottomWidth) || 0;
 
-                // Use as much space as possible (min 180px, max 600px)
-                const height = Math.min(600, Math.max(180, availableHeight));
+                const bodyStyle = getComputedStyle(document.body);
+                const bodyPaddingTop = parseFloat(bodyStyle.paddingTop) || 0;
+                const bodyPaddingBottom = parseFloat(bodyStyle.paddingBottom) || 0;
+
+                const totalPadding = containerPaddingTop + containerPaddingBottom +
+                                   containerBorderTop + containerBorderBottom +
+                                   bodyPaddingTop + bodyPaddingBottom;
+
+                // Calculate available height for canvas (be aggressive!)
+                const availableHeight = viewportHeight - usedHeight - totalPadding - 20; // 20px safety margin
+
+                // Use maximum available space
+                const height = Math.min(600, Math.max(150, availableHeight));
 
                 this.canvas.height = height;
                 CONFIG.CANVAS_HEIGHT = height;
