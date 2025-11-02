@@ -1,5 +1,5 @@
 // Game Version
-const VERSION = 'v1.0.5 - 2025-01-02';
+const VERSION = 'v1.0.6 - 2025-01-02';
 
 // Cache-busting: Redirect to random version parameter on reload
 if (!window.location.search.match(/[?&]v=/)) {
@@ -177,22 +177,26 @@ class Game {
     resizeCanvas() {
         // Let CSS flexbox handle the layout, just sync the canvas dimensions
         requestAnimationFrame(() => {
-            // Get the actual rendered height from CSS (flexbox handles this now)
+            // Get the actual rendered size from CSS (flexbox handles this now)
             const rect = this.canvas.getBoundingClientRect();
+            const displayWidth = Math.floor(rect.width);
             const displayHeight = Math.floor(rect.height);
 
-            // Limit internal canvas resolution to prevent content from becoming too large
-            // The CSS will scale up the canvas display if needed
-            const MAX_INTERNAL_HEIGHT = 700;
-            const height = Math.min(displayHeight, MAX_INTERNAL_HEIGHT);
+            // Use fixed internal resolution to prevent stretching
+            // CSS will scale this up/down maintaining quality
+            const FIXED_WIDTH = 600;
+            const FIXED_HEIGHT = 500;
 
             // Update canvas internal resolution
-            if (height > 0 && height !== this.canvas.height) {
-                this.canvas.height = height;
-                CONFIG.CANVAS_HEIGHT = height;
+            if (this.canvas.width !== FIXED_WIDTH || this.canvas.height !== FIXED_HEIGHT) {
+                this.canvas.width = FIXED_WIDTH;
+                this.canvas.height = FIXED_HEIGHT;
+                CONFIG.CANVAS_WIDTH = FIXED_WIDTH;
+                CONFIG.CANVAS_HEIGHT = FIXED_HEIGHT;
 
-                // Update player position dynamically (75% down, leaving room for player legs)
-                CONFIG.PLAYER_Y = Math.floor(CONFIG.CANVAS_HEIGHT * 0.75);
+                // Update player position to near bottom (92% down)
+                CONFIG.PLAYER_Y = Math.floor(CONFIG.CANVAS_HEIGHT * 0.92);
+                CONFIG.PLAYER_X = Math.floor(CONFIG.CANVAS_WIDTH / 2);
 
                 // Recalculate speeds based on new canvas height
                 this.calculateSpeed();
@@ -325,8 +329,8 @@ class Game {
         this.tasks.forEach(task => {
             task.update();
 
-            // Check collision with player (head level, ~10% above player base)
-            const collisionY = CONFIG.PLAYER_Y - (CONFIG.CANVAS_HEIGHT * 0.1);
+            // Check collision with player (at head level, slightly above player base)
+            const collisionY = CONFIG.PLAYER_Y - 40;
             if (task.y >= collisionY) {
                 this.loseLife();
                 this.removeTask(task);
@@ -385,7 +389,7 @@ class Game {
     }
 
     drawDangerZone() {
-        const dangerY = CONFIG.PLAYER_Y - 50;
+        const dangerY = CONFIG.PLAYER_Y - 40;
         this.ctx.strokeStyle = '#FF6B3566';
         this.ctx.lineWidth = 2;
         this.ctx.setLineDash([5, 5]);
