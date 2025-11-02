@@ -8,6 +8,9 @@
 </head>
 <body>
     <div class="game-container">
+        <!-- Pause button overlay -->
+        <button id="pauseBtn" class="pause-overlay" disabled>PAUSE</button>
+
         <div class="header">
             <h1>MULTIPLICATION TROLL</h1>
             <div class="stats">
@@ -28,7 +31,7 @@
                 inputmode="numeric"
                 pattern="[0-9]*"
                 id="answerInput"
-                placeholder="Antwort eingeben..."
+                placeholder="Antwort..."
                 autocomplete="off"
                 maxlength="3"
             >
@@ -36,7 +39,6 @@
 
         <div class="controls">
             <button id="startBtn">SPIEL STARTEN</button>
-            <button id="pauseBtn" disabled>PAUSE</button>
         </div>
 
         <!-- Mobile On-Screen Keyboard -->
@@ -56,7 +58,7 @@
                 <button class="key-btn" data-key="2">2</button>
                 <button class="key-btn" data-key="3">3</button>
             </div>
-            <div class="keyboard-row">
+            <div class="keyboard-row keyboard-row-bottom">
                 <button class="key-btn key-zero" data-key="0">0</button>
                 <button class="key-btn key-backspace" data-key="backspace">⌫</button>
             </div>
