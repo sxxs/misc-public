@@ -145,7 +145,42 @@ class Game {
     init() {
         this.setupEventListeners();
         this.setupMobileKeyboard();
+        this.resizeCanvas();
         this.drawWelcomeScreen();
+
+        // Handle window resize
+        window.addEventListener('resize', () => this.resizeCanvas());
+    }
+
+    resizeCanvas() {
+        // Calculate available height
+        const header = document.querySelector('.header');
+        const inputArea = document.querySelector('.input-area');
+        const controls = document.querySelector('.controls');
+        const keyboard = document.getElementById('mobileKeyboard');
+
+        const headerHeight = header ? header.offsetHeight : 0;
+        const inputHeight = inputArea ? inputArea.offsetHeight : 0;
+        const controlsHeight = controls && !controls.classList.contains('hidden') ? controls.offsetHeight : 0;
+        const keyboardHeight = keyboard && !keyboard.classList.contains('hidden') ? keyboard.offsetHeight : 0;
+
+        const padding = 80; // Total padding and margins
+        const availableHeight = window.innerHeight - headerHeight - inputHeight - controlsHeight - keyboardHeight - padding;
+
+        // Set canvas height (maintain 4:3 aspect ratio, max 600px)
+        const maxHeight = Math.min(600, availableHeight);
+        const width = this.canvas.offsetWidth;
+        const height = Math.min(maxHeight, width * 0.75); // 4:3 aspect ratio
+
+        this.canvas.height = height;
+        CONFIG.CANVAS_HEIGHT = height;
+
+        // Redraw if game is running
+        if (this.isRunning && !this.isPaused) {
+            this.draw();
+        } else {
+            this.drawWelcomeScreen();
+        }
     }
 
     setupEventListeners() {
@@ -209,13 +244,22 @@ class Game {
     start() {
         this.isRunning = true;
         this.isPaused = false;
-        document.getElementById('startBtn').disabled = true;
+
+        // Hide start button, show pause button
+        const controls = document.querySelector('.controls');
+        controls.classList.add('hidden');
         document.getElementById('pauseBtn').disabled = false;
+        document.getElementById('pauseBtn').classList.remove('hidden');
+
         document.getElementById('answerInput').focus();
 
         this.musicManager.start();
         this.lastSpawnTime = Date.now();
         this.spawnTask();
+
+        // Resize canvas now that controls are hidden
+        setTimeout(() => this.resizeCanvas(), 100);
+
         this.gameLoop();
     }
 
@@ -523,10 +567,20 @@ class Game {
 
         document.getElementById('gameOver').classList.add('hidden');
         document.getElementById('answerInput').value = '';
+
+        // Show start button again, hide pause button
+        const controls = document.querySelector('.controls');
+        controls.classList.remove('hidden');
         document.getElementById('startBtn').disabled = false;
         document.getElementById('pauseBtn').disabled = true;
+        document.getElementById('pauseBtn').classList.add('hidden');
+        document.getElementById('pauseBtn').textContent = 'PAUSE';
 
         this.updateUI();
+
+        // Resize canvas now that controls are visible again
+        setTimeout(() => this.resizeCanvas(), 100);
+
         this.drawWelcomeScreen();
     }
 }
