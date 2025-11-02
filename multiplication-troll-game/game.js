@@ -1,5 +1,5 @@
 // Game Version
-const VERSION = 'v1.1.11 - 2025-11-02';
+const VERSION = 'v1.1.12 - 2025-11-02';
 
 // Cache-busting: Always generate new version parameter on fresh page load
 (function() {
@@ -210,9 +210,13 @@ class Game {
                     CONFIG.CANVAS_WIDTH = displayWidth;
                     CONFIG.CANVAS_HEIGHT = displayHeight;
 
-                    // Update player position (85% down, 12% from left)
+                    // Update player position (85% down)
                     CONFIG.PLAYER_Y = Math.floor(CONFIG.CANVAS_HEIGHT * 0.85);
-                    CONFIG.PLAYER_X = Math.floor(CONFIG.CANVAS_WIDTH * 0.12);
+
+                    // Only reset X position if game is not running (keep random position during game)
+                    if (!this.isRunning) {
+                        CONFIG.PLAYER_X = Math.floor(CONFIG.CANVAS_WIDTH * 0.12);
+                    }
 
                     // Update player instance position
                     this.player.updatePosition();
@@ -254,6 +258,11 @@ class Game {
         keyButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
+
+                // Add pressed class for visual feedback
+                btn.classList.add('pressed');
+                setTimeout(() => btn.classList.remove('pressed'), 150);
+
                 const key = btn.dataset.key;
 
                 // Mark as typing for troll mechanics
@@ -265,16 +274,25 @@ class Game {
                 // Check for auto-accept
                 this.handleInput();
 
-                // Remove focus from button to prevent it staying highlighted
+                // Remove focus from button
                 btn.blur();
-                setTimeout(() => btn.blur(), 0);
             });
         });
     }
 
     start() {
+        console.log('[GAME] Starting game...');
+
         this.isRunning = true;
         this.isPaused = false;
+
+        // Random player position: 10% - 40% from left
+        const randomX = Math.random() * 0.3 + 0.1;
+        CONFIG.PLAYER_X = Math.floor(CONFIG.CANVAS_WIDTH * randomX);
+        this.player.updatePosition();
+
+        console.log(`[GAME] Player spawned at ${(randomX * 100).toFixed(0)}% (${CONFIG.PLAYER_X}px of ${CONFIG.CANVAS_WIDTH}px)`);
+        console.log(`[CONFIG] Canvas: ${CONFIG.CANVAS_WIDTH}x${CONFIG.CANVAS_HEIGHT}`);
 
         // Hide start button, show pause button
         const controls = document.querySelector('.controls');
@@ -431,10 +449,12 @@ class Game {
     spawnTask() {
         const task = new Task(this.taskSpeed, this.level);
         this.tasks.push(task);
+        console.log(`[SPAWN] New task at (${Math.floor(task.x)}, ${Math.floor(task.y)}): ${task.getDisplayText()} | Total tasks: ${this.tasks.length}`);
 
         // Set as current target if none exists
         if (!this.currentTargetTask || !this.tasks.includes(this.currentTargetTask)) {
             this.setCurrentTask(task);
+            console.log(`[SPAWN] Set as current target: ${task.getDisplayText()}`);
         }
     }
 
@@ -469,15 +489,20 @@ class Game {
         const expectedAnswer = this.currentTargetTask.correctAnswer;
         const expectedLength = expectedAnswer.toString().length;
 
+        console.log(`[INPUT] digitHistory: "${this.digitHistory}" | Expected: ${expectedAnswer} (length: ${expectedLength})`);
+
         // Always check if we have enough digits
         if (this.digitHistory.length >= expectedLength) {
             // Get last N digits from the sliding window
             const lastNDigits = this.digitHistory.slice(-expectedLength);
             const lastNAsNumber = parseInt(lastNDigits);
 
+            console.log(`[INPUT] Checking last ${expectedLength} digits: "${lastNDigits}" = ${lastNAsNumber}`);
+
             // Check if the last N digits match the expected answer
             if (lastNAsNumber === expectedAnswer) {
                 // Correct! Accept immediately
+                console.log('[INPUT] ✓ MATCH! Accepting answer...');
                 this.acceptAnswer();
                 return;
             }
@@ -492,6 +517,8 @@ class Game {
             this.digitHistory = '';
             return;
         }
+
+        console.log(`[ACCEPT] Correct answer for ${this.currentTargetTask.getDisplayText()} | Score: ${this.score} → ${this.score + 1}`);
 
         // Correct answer! (this method only called for correct answers now)
         this.score++;
@@ -530,6 +557,8 @@ class Game {
             this.tasks.splice(index, 1);
         }
 
+        console.log(`[REMOVE] Task removed. Remaining: ${this.tasks.length}`);
+
         // Set new current task
         if (task === this.currentTargetTask) {
             if (this.tasks.length > 0) {
@@ -538,9 +567,12 @@ class Game {
                     current.y > lowest.y ? current : lowest
                 );
                 this.setCurrentTask(lowestTask);
+                console.log(`[REMOVE] New current task: ${lowestTask.getDisplayText()}`);
             } else {
                 this.currentTargetTask = null;
-                // Keep showing the last task instead of "Warte auf neue Aufgabe..."
+                // Clear display when no tasks remain
+                document.getElementById('currentTask').textContent = '';
+                console.log('[REMOVE] No tasks remaining, cleared display');
             }
         }
     }

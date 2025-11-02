@@ -424,7 +424,6 @@ button:disabled {
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(3, minmax(48px, 60px));
     gap: 6px;
-    margin: 0 auto;
     max-width: 252px;
 }
 
@@ -446,21 +445,12 @@ button:disabled {
     outline: none;
 }
 
-.key-btn:active {
+/* Class-based pressed state (managed by JavaScript) */
+.key-btn.pressed {
     transform: translateY(3px);
     box-shadow: 0 0 0 #00B4D8, 0 0 20px rgba(255, 215, 0, 0.6);
     background: linear-gradient(135deg, #FF6B35, #FF8800);
     border-color: #FFD700;
-}
-
-.key-btn:focus,
-.key-btn:focus-visible,
-.key-btn:focus-within,
-.key-btn:hover {
-    outline: none !important;
-    background: linear-gradient(135deg, #1A1F2E, #0F1419) !important;
-    border: 2px solid #00D9FF !important;
-    box-shadow: 0 3px 0 #00B4D8, 0 0 10px rgba(0, 217, 255, 0.3) !important;
 }
 
 /* Right-aligned layout */
