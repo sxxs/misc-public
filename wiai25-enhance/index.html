@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WIAI 25 – Collective Enhance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="nav">
+        <div class="nav-brand">WIAI<span class="accent">25</span></div>
+        <nav class="nav-links">
+            <a href="#exponate">Exponate</a>
+            <a href="#programm">Programm</a>
+            <a href="#historie">Historie</a>
+            <a href="#kontakt">Kontakt</a>
+        </nav>
+    </header>
+
+    <main class="hero">
+        <div class="level-info">
+            <div class="level-badge">
+                <span class="level-label">Level</span>
+                <span class="level-number" id="levelNumber">1</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text">
+                    <span id="progressCurrent">0</span> / <span id="progressTotal">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="enhanceCanvas"></canvas>
+            <div class="shimmer-overlay" id="shimmerOverlay"></div>
+        </div>
+
+        <div class="mode-indicator">
+            <span class="mode-dot" id="modeDot"></span>
+            <span class="mode-text" id="modeText">Adding pixels</span>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat">
+                <span class="stat-value" id="statContributions">0</span>
+                <span class="stat-label">Beiträge</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" id="statResolution">8px</span>
+                <span class="stat-label">Auflösung</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" id="statOnline">1</span>
+                <span class="stat-label">Gerade hier</span>
+            </div>
+        </div>
+
+        <div class="title-section">
+            <h1 class="main-title">Jahre WIAI</h1>
+            <p class="subtitle">Fakultät Wirtschaftsinformatik & Angewandte Informatik</p>
+        </div>
+
+        <div class="activity-panel" id="activityPanel">
+            <div class="activity-feed" id="activityFeed"></div>
+        </div>
+
+        <div class="contribution-panel" id="contributionPanel">
+            <span class="contribution-text" id="contributionText"></span>
+        </div>
+    </main>
+
+    <section class="demo-section">
+        <h2 class="demo-title">Demo Controls</h2>
+        <p class="demo-subtitle">Simulate visitor contributions</p>
+
+        <div class="demo-controls">
+            <div class="button-group">
+                <button class="demo-btn" id="btnAddOne">+ Besucher</button>
+                <button class="demo-btn" id="btnAdd10">+ 10</button>
+                <button class="demo-btn" id="btnAdd50">+ 50</button>
+                <button class="demo-btn" id="btnFillLevel">Level füllen</button>
+            </div>
+            <div class="button-group">
+                <button class="demo-btn demo-btn-accent" id="btnContinuous">▶ Continuous</button>
+                <button class="demo-btn demo-btn-danger" id="btnReset">↺ Reset</button>
+            </div>
+        </div>
+
+        <div class="sliders-grid">
+            <div class="slider-control">
+                <label for="sliderSpeed">Geschwindigkeit</label>
+                <div class="slider-row">
+                    <input type="range" id="sliderSpeed" min="10" max="500" value="50">
+                    <span class="slider-value" id="speedValue">50ms</span>
+                </div>
+            </div>
+            <div class="slider-control">
+                <label for="sliderRefineOpacity">Refine Opacity</label>
+                <div class="slider-row">
+                    <input type="range" id="sliderRefineOpacity" min="50" max="100" value="90">
+                    <span class="slider-value" id="refineValue">90%</span>
+                </div>
+            </div>
+            <div class="slider-control">
+                <label for="sliderDecay">Decay Factor</label>
+                <div class="slider-row">
+                    <input type="range" id="sliderDecay" min="0" max="100" value="50">
+                    <span class="slider-value" id="decayValue">50%</span>
+                </div>
+            </div>
+            <div class="slider-control">
+                <label for="sliderRedraw">Redraw Threshold</label>
+                <div class="slider-row">
+                    <input type="range" id="sliderRedraw" min="0" max="100" value="30">
+                    <span class="slider-value" id="redrawValue">30%</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="enhance.js"></script>
+</body>
+</html>
