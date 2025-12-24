@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Studienberatung und Ansprechpartner der Fakultat WIAI">
+    <title>Beratung & Ansprechpartner | Fakultat WIAI | Universitat Bamberg</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Vollkorn:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" type="image/svg+xml" href="../crawler/output/www.uni-bamberg.de/_frontend/siteunibamberg/favicon/favicon.svg">
+</head>
+<body class="subpage fakultaet-page">
+    <!-- Skip Links -->
+    <nav class="skip-links" aria-label="Sprungnavigation">
+        <a href="#main-nav" class="skip-link">Zur Hauptnavigation</a>
+        <a href="#main-content" class="skip-link">Zum Inhalt</a>
+        <a href="#footer" class="skip-link">Zur Fusszeile</a>
+    </nav>
+
+    <!-- Header -->
+    <header class="site-header" role="banner">
+        <div class="header-inner">
+            <a href="../index.html" class="logo" aria-label="Universitat Bamberg Startseite">
+                <img src="../uba-social-media-cropped-transparent.png" alt="" class="logo-icon" aria-hidden="true">
+                <span class="logo-text">
+                    <span class="logo-main">Universitat Bamberg</span>
+                </span>
+            </a>
+
+            <nav class="nav-primary" id="main-nav" aria-label="Hauptnavigation">
+                <ul class="nav-list" role="list">
+                    <li><a href="../index.html#universitaet">Universitat</a></li>
+                    <li><a href="../index.html#fakultaeten" class="active" aria-current="page">Fakultaten</a></li>
+                    <li><a href="../studium.html">Studium</a></li>
+                    <li><a href="../index.html#forschung">Forschung</a></li>
+                    <li><a href="../index.html#international">International</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-actions">
+                <button class="btn-search" aria-label="Suche offnen" id="search-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                </button>
+                <div class="lang-switch">
+                    <a href="#" class="lang-link active" aria-current="page" hreflang="de">DE</a>
+                    <span class="lang-divider" aria-hidden="true">/</span>
+                    <a href="#" class="lang-link" hreflang="en">EN</a>
+                </div>
+                <button class="btn-menu" aria-label="Menu offnen" aria-expanded="false" id="menu-toggle">
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav-overlay" id="mobile-nav" aria-hidden="true">
+        <nav class="mobile-nav" aria-label="Mobile Navigation">
+            <ul class="mobile-nav-list" role="list">
+                <li><a href="../index.html#universitaet">Universitat</a></li>
+                <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
+                <li><a href="../studium.html">Studium</a></li>
+                <li><a href="../index.html#forschung">Forschung</a></li>
+                <li><a href="../index.html#international">International</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Search Overlay -->
+    <div class="search-overlay" id="search-overlay" aria-hidden="true">
+        <div class="search-container">
+            <form class="search-form" role="search" action="/suche">
+                <label for="search-input" class="visually-hidden">Suchbegriff eingeben</label>
+                <input type="search" id="search-input" class="search-input" placeholder="Suchen..." autocomplete="off">
+                <button type="submit" class="search-submit" aria-label="Suche starten">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </form>
+            <button class="search-close" aria-label="Suche schliessen" id="search-close">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <div class="container">
+            <ol class="breadcrumb-list">
+                <li><a href="../index.html">Startseite</a></li>
+                <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
+                <li><a href="../fakultaet-wiai.html">WIAI</a></li>
+                
+                <li aria-current="page">Beratung</li>
+            </ol>
+        </div>
+    </nav>
+
+    <!-- WIAI Subnavigation -->
+    <nav class="subnav" aria-label="WIAI Navigation">
+        <div class="container">
+            <div class="subnav-wrapper">
+                <ul class="subnav-list">
+                    <li><a href="../fakultaet-wiai.html">Übersicht</a></li>
+                    <li><a href="studium.html">Studium</a></li>
+                    <li><a href="studiengaenge.html">Studiengänge</a></li>
+                    <li><a href="forschung.html">Forschung</a></li>
+                    <li><a href="karriere.html">Karriere</a></li>
+                </ul>
+                <div class="subnav-quick">
+                    <a href="faq.html" class="subnav-quick-link">FAQ</a>
+                    <a href="bewerbung.html" class="subnav-quick-link">Bewerbung</a>
+                    <a href="kontakt.html" class="subnav-quick-link">Kontakt</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- Page Hero -->
+        <section class="page-hero page-hero--fakultaet" style="--fakultaet-color: var(--color-primary);">
+            <div class="container">
+                <div class="page-hero-content">
+                    <span class="page-hero-label">WIAI Studium</span>
+                    <h1 class="page-hero-title">Beratung & Ansprechpartner</h1>
+                    <p class="page-hero-subtitle">Wir helfen dir bei allen Fragen rund ums Studium - persönlich und kompetent</p>
+                </div>
+            </div>
+            <div class="page-hero-accent"></div>
+        </section>
+
+        <!-- Schnellkontakt -->
+        <section class="content-section" style="padding-block: var(--space-6);">
+            <div class="container">
+                <div class="quick-contact-bar">
+                    <div class="quick-contact-item">
+                        <svg class="quick-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                        </svg>
+                        <div>
+                            <span class="quick-contact-label">Telefon</span>
+                            <a href="tel:+499518632500" class="quick-contact-value">+49 951 863-2500</a>
+                        </div>
+                    </div>
+                    <div class="quick-contact-item">
+                        <svg class="quick-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                        <div>
+                            <span class="quick-contact-label">E-Mail</span>
+                            <a href="mailto:studienberatung.wiai@uni-bamberg.de" class="quick-contact-value">studienberatung.wiai@uni-bamberg.de</a>
+                        </div>
+                    </div>
+                    <div class="quick-contact-item">
+                        <svg class="quick-contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <div>
+                            <span class="quick-contact-label">Sprechstunde</span>
+                            <span class="quick-contact-value">Di & Do, 10-12 Uhr</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Studienberatung -->
+        <section class="content-section bg-subtle">
+            <div class="container">
+                <h2 class="section-title">Studienberatung WIAI</h2>
+                <p class="section-intro">Allgemeine Fragen zum Studium an der WIAI? Unser Beratungsteam hilft dir weiter.</p>
+
+                <div class="card-grid card-grid--3">
+                    <div class="person-card">
+                        <div class="person-image">
+                            <div class="person-placeholder">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="person-info">
+                            <span class="person-role">Studienberatung</span>
+                            <h3>Dr. Maria Schmidt</h3>
+                            <p>Allgemeine Studienberatung, Studiengangswechsel, Auslandssemester</p>
+                        </div>
+                        <div class="person-contact">
+                            <a href="mailto:maria.schmidt@uni-bamberg.de" class="person-contact-link">E-Mail senden</a>
+                        </div>
+                    </div>
+
+                    <div class="person-card">
+                        <div class="person-image">
+                            <div class="person-placeholder">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="person-info">
+                            <span class="person-role">Studienberatung</span>
+                            <h3>Thomas Weber</h3>
+                            <p>Bewerbung, Zulassung, Einschreibung, BAföG-Bescheinigungen</p>
+                        </div>
+                        <div class="person-contact">
+                            <a href="mailto:thomas.weber@uni-bamberg.de" class="person-contact-link">E-Mail senden</a>
+                        </div>
+                    </div>
+
+                    <div class="person-card">
+                        <div class="person-image">
+                            <div class="person-placeholder">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="person-info">
+                            <span class="person-role">Studienberatung</span>
+                            <h3>Lisa Müller</h3>
+                            <p>Master-Bewerbungen, internationale Studierende</p>
+                        </div>
+                        <div class="person-contact">
+                            <a href="mailto:lisa.mueller@uni-bamberg.de" class="person-contact-link">E-Mail senden</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Fachstudienberatung -->
+        <section class="content-section">
+            <div class="container">
+                <h2 class="section-title">Fachstudienberatung</h2>
+                <p class="section-intro">Fragen zu Studieninhalten, Modulwahl oder Prüfungen? Wende dich an die Fachberater deines Studiengangs.</p>
+
+                <div class="advisor-list">
+                    <div class="advisor-item">
+                        <div class="advisor-info">
+                            <h3 class="advisor-name">Prof. Dr. Andreas Henrich</h3>
+                            <p class="advisor-programs">B.Sc. Angewandte Informatik, M.Sc. Angewandte Informatik</p>
+                        </div>
+                        <a href="mailto:andreas.henrich@uni-bamberg.de" class="advisor-contact">Kontakt</a>
+                    </div>
+
+                    <div class="advisor-item">
+                        <div class="advisor-info">
+                            <h3 class="advisor-name">Prof. Dr. Sven Overhage</h3>
+                            <p class="advisor-programs">B.Sc. Wirtschaftsinformatik, M.Sc. Wirtschaftsinformatik</p>
+                        </div>
+                        <a href="mailto:sven.overhage@uni-bamberg.de" class="advisor-contact">Kontakt</a>
+                    </div>
+
+                    <div class="advisor-item">
+                        <div class="advisor-info">
+                            <h3 class="advisor-name">Prof. Dr. Ute Schmid</h3>
+                            <p class="advisor-programs">B.Sc. Software Systems Science, M.Sc. Computing in the Humanities</p>
+                        </div>
+                        <a href="mailto:ute.schmid@uni-bamberg.de" class="advisor-contact">Kontakt</a>
+                    </div>
+
+                    <div class="advisor-item">
+                        <div class="advisor-info">
+                            <h3 class="advisor-name">Prof. Dr. Tim Weitzel</h3>
+                            <p class="advisor-programs">B.Sc. IISM, M.Sc. International Information Systems Management</p>
+                        </div>
+                        <a href="mailto:tim.weitzel@uni-bamberg.de" class="advisor-contact">Kontakt</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Prüfungsausschuss -->
+        <section class="content-section bg-subtle">
+            <div class="container">
+                <h2 class="section-title">Prüfungsausschuss</h2>
+                <p class="section-intro">Anträge auf Prüfungswiederholung, Anerkennung von Leistungen oder Fristverlängerung.</p>
+
+                <div class="card-grid card-grid--2" style="max-width: 800px;">
+                    <div class="info-card">
+                        <div class="info-card-header">
+                            <h3 class="info-card-title">Vorsitz</h3>
+                        </div>
+                        <div class="info-card-body">
+                            <p><strong>Prof. Dr. Daniela Nicklas</strong></p>
+                            <p class="text-muted">Sprechstunde nach Vereinbarung</p>
+                            <a href="mailto:pruefungsausschuss.wiai@uni-bamberg.de">pruefungsausschuss.wiai@uni-bamberg.de</a>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-card-header">
+                            <h3 class="info-card-title">Prüfungsamt</h3>
+                        </div>
+                        <div class="info-card-body">
+                            <p><strong>Frau Sabine Fischer</strong></p>
+                            <p class="text-muted">Mo-Fr, 9-12 Uhr | WE5/02.003</p>
+                            <a href="mailto:pruefungsamt.wiai@uni-bamberg.de">pruefungsamt.wiai@uni-bamberg.de</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Fachschaft -->
+        <section class="content-section">
+            <div class="container">
+                <div class="feature-spotlight feature-spotlight--right">
+                    <div class="feature-spotlight-image">
+                        <img src="../img/fachschaft-wiai.jpg" alt="Fachschaft WIAI" loading="lazy">
+                    </div>
+                    <div class="feature-spotlight-content">
+                        <span class="feature-spotlight-label">Von Studierenden für Studierende</span>
+                        <h2 class="feature-spotlight-title">Fachschaft WIAI</h2>
+                        <p class="feature-spotlight-text">Die Fachschaft vertritt eure Interessen in den Gremien der Fakultät und organisiert Events wie die Erstsemestereinführung, Stammtische und Spieleabende.</p>
+                        <ul class="feature-spotlight-list">
+                            <li>Tipps von Studierenden, die es wissen</li>
+                            <li>Altklausuren und Lerngruppen</li>
+                            <li>Feste, Partys und Networking</li>
+                        </ul>
+                        <div style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+                            <a href="https://fachschaft-wiai.de" class="btn btn-primary" target="_blank" rel="noopener">Website besuchen</a>
+                            <a href="mailto:fachschaft-wiai@uni-bamberg.de" class="btn btn-secondary">E-Mail senden</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="cta-banner">
+            <div class="container">
+                <div class="cta-banner-content">
+                    <h2 class="cta-banner-title">Noch nicht die richtige Antwort gefunden?</h2>
+                    <p class="cta-banner-text">Schau in unsere FAQ oder vereinbare einen persönlichen Beratungstermin.</p>
+                    <div class="cta-banner-actions">
+                        <a href="faq.html" class="btn btn-primary btn-lg">Häufige Fragen</a>
+                        <a href="mailto:studienberatung.wiai@uni-bamberg.de" class="btn btn-secondary btn-lg">Termin anfragen</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    <!-- Footer -->
+    <footer class="site-footer" id="footer" role="contentinfo">
+        <div class="footer-main">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-brand">
+                        <a href="../index.html" class="footer-logo">
+                            <img src="../uba-social-media-cropped-transparent-white.png" alt="" class="logo-icon" aria-hidden="true">
+                            <span class="footer-logo-text">Universitat Bamberg</span>
+                        </a>
+                        <p class="footer-tagline">Studieren im Welterbe</p>
+                    </div>
+                    <nav class="footer-nav" aria-label="Schnellzugriff">
+                        <h3>Schnellzugriff</h3>
+                        <ul>
+                            <li><a href="../studium.html">Studium</a></li>
+                            <li><a href="../index.html#forschung">Forschung</a></li>
+                            <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
+                            <li><a href="../index.html#international">International</a></li>
+                        </ul>
+                    </nav>
+                    <nav class="footer-nav" aria-label="Service">
+                        <h3>Service</h3>
+                        <ul>
+                            <li><a href="#">Bibliothek</a></li>
+                            <li><a href="#">IT-Service</a></li>
+                            <li><a href="#">Mensa</a></li>
+                            <li><a href="#">Stellenangebote</a></li>
+                        </ul>
+                    </nav>
+                    <div class="footer-contact">
+                        <h3>Kontakt</h3>
+                        <address>
+                            <p>Otto-Friedrich-Universitat Bamberg</p>
+                            <p>Kapuzinerstrasse 16</p>
+                            <p>96047 Bamberg</p>
+                        </address>
+                        <p><a href="tel:+499518630">+49 951 863-0</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <nav class="footer-legal" aria-label="Rechtliches">
+                    <ul>
+                        <li><a href="#">Impressum</a></li>
+                        <li><a href="#">Datenschutz</a></li>
+                        <li><a href="#">Barrierefreiheit</a></li>
+                    </ul>
+                </nav>
+                <p class="footer-copyright">Otto-Friedrich-Universitat Bamberg</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+</html>

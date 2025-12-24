@@ -2,6 +2,8 @@
 const contentDisplay = document.getElementById('content-display');
 const loading = document.getElementById('loading');
 const refreshBtn = document.getElementById('refresh-btn');
+const backBtn = document.getElementById('back-btn');
+const forwardBtn = document.getElementById('forward-btn');
 const toggleThemeBtn = document.getElementById('toggle-theme');
 const viewModeSelect = document.getElementById('view-mode');
 const languageSelector = document.getElementById('language-selector');
@@ -9,6 +11,10 @@ const contentArea = document.querySelector('.content-area');
 
 // Current URL being displayed
 let currentUrl = '';
+
+// Navigation history
+let navigationHistory = [];
+let historyIndex = -1;
 
 // CORS Proxy Configuration
 // For local development: 'http://localhost:5000/fetch'
@@ -108,10 +114,41 @@ const hideLoading = () => {
     loading.classList.remove('active');
 };
 
+// Update navigation button states
+const updateNavigationButtons = () => {
+    backBtn.disabled = historyIndex <= 0;
+    forwardBtn.disabled = historyIndex >= navigationHistory.length - 1;
+};
+
+// Add URL to history
+const addToHistory = (url) => {
+    // If we're not at the end of history, remove everything after current position
+    if (historyIndex < navigationHistory.length - 1) {
+        navigationHistory = navigationHistory.slice(0, historyIndex + 1);
+    }
+
+    // Add new URL to history
+    navigationHistory.push(url);
+    historyIndex = navigationHistory.length - 1;
+
+    // Update browser history with pushState
+    const state = { url: url };
+    const title = `Uni Bamberg - ${url}`;
+    const newUrl = `?url=${encodeURIComponent(url)}`;
+    window.history.pushState(state, title, newUrl);
+
+    updateNavigationButtons();
+};
+
 // Fetch and display content
-const fetchAndDisplayContent = async (url, forceRefresh = false) => {
+const fetchAndDisplayContent = async (url, forceRefresh = false, addToHistoryFlag = true) => {
     showLoading();
     currentUrl = url;
+
+    // Add to history if this is a new navigation (not back/forward)
+    if (addToHistoryFlag) {
+        addToHistory(url);
+    }
 
     try {
         let htmlContent;
@@ -216,7 +253,7 @@ const displayExtractedContent = (doc, sourceUrl) => {
             minute: '2-digit'
         });
 
-        cacheInfo.innerHTML = `<small>📦 Cached version from ${formattedDate} (${timeAgo})</small>`;
+        cacheInfo.innerHTML = `<small>Cached: ${formattedDate} (${timeAgo})</small>`;
         extracted.appendChild(cacheInfo);
     }
 
@@ -357,6 +394,40 @@ const changeLanguage = (lang) => {
     localStorage.setItem('language', lang);
 };
 
+// Navigate back in history
+const navigateBack = () => {
+    if (historyIndex > 0) {
+        historyIndex--;
+        const url = navigationHistory[historyIndex];
+
+        // Update browser history
+        const state = { url: url };
+        const title = `Uni Bamberg - ${url}`;
+        const newUrl = `?url=${encodeURIComponent(url)}`;
+        window.history.pushState(state, title, newUrl);
+
+        fetchAndDisplayContent(url, false, false); // Don't add to history
+        updateNavigationButtons();
+    }
+};
+
+// Navigate forward in history
+const navigateForward = () => {
+    if (historyIndex < navigationHistory.length - 1) {
+        historyIndex++;
+        const url = navigationHistory[historyIndex];
+
+        // Update browser history
+        const state = { url: url };
+        const title = `Uni Bamberg - ${url}`;
+        const newUrl = `?url=${encodeURIComponent(url)}`;
+        window.history.pushState(state, title, newUrl);
+
+        fetchAndDisplayContent(url, false, false); // Don't add to history
+        updateNavigationButtons();
+    }
+};
+
 // Handle click on fetch-link elements
 const handleFetchLinkClick = (e) => {
     e.preventDefault();
@@ -371,6 +442,8 @@ const handleFetchLinkClick = (e) => {
 
 // Event listeners
 refreshBtn.addEventListener('click', refreshContent);
+backBtn.addEventListener('click', navigateBack);
+forwardBtn.addEventListener('click', navigateForward);
 toggleThemeBtn.addEventListener('click', toggleTheme);
 viewModeSelect.addEventListener('change', (e) => {
     changeViewMode(e.target.value);
@@ -378,6 +451,12 @@ viewModeSelect.addEventListener('change', (e) => {
 languageSelector.addEventListener('change', (e) => {
     changeLanguage(e.target.value);
 });
+
+// Get URL from query parameter
+const getUrlFromQuery = () => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('url');
+};
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -404,17 +483,57 @@ document.addEventListener('DOMContentLoaded', () => {
         link.addEventListener('click', handleFetchLinkClick);
     });
 
-    // Load home page by default
-    const languageUrls = {
-        'de': 'https://www.uni-bamberg.de',
-        'en': 'https://www.uni-bamberg.de/en/',
-        'es': 'https://www.uni-bamberg.de/es/'
-    };
-    const homeUrl = languageUrls[savedLanguage];
-    fetchAndDisplayContent(homeUrl);
+    // Check if there's a URL in the query parameter
+    const urlFromQuery = getUrlFromQuery();
+    let initialUrl;
+
+    if (urlFromQuery) {
+        // Load URL from query parameter
+        initialUrl = urlFromQuery;
+    } else {
+        // Load home page by default
+        const languageUrls = {
+            'de': 'https://www.uni-bamberg.de',
+            'en': 'https://www.uni-bamberg.de/en/',
+            'es': 'https://www.uni-bamberg.de/es/'
+        };
+        initialUrl = languageUrls[savedLanguage];
+    }
+
+    // If no URL in query, set initial state in browser history
+    if (!urlFromQuery) {
+        const state = { url: initialUrl };
+        const title = `Uni Bamberg - ${initialUrl}`;
+        const newUrl = `?url=${encodeURIComponent(initialUrl)}`;
+        window.history.replaceState(state, title, newUrl);
+    }
+
+    fetchAndDisplayContent(initialUrl);
 
     console.log('University of Bamberg Wrapper initialized');
-    console.log('Fetching:', homeUrl);
+    console.log('Fetching:', initialUrl);
+});
+
+// Handle browser back/forward buttons
+window.addEventListener('popstate', (event) => {
+    if (event.state && event.state.url) {
+        // Browser back/forward was used
+        const url = event.state.url;
+
+        // Find this URL in our history
+        const index = navigationHistory.indexOf(url);
+        if (index !== -1) {
+            historyIndex = index;
+            fetchAndDisplayContent(url, false, false); // Don't add to history
+            updateNavigationButtons();
+        }
+    } else {
+        // Check URL parameter
+        const urlFromQuery = getUrlFromQuery();
+        if (urlFromQuery) {
+            fetchAndDisplayContent(urlFromQuery, false, false);
+        }
+    }
 });
 
 // Add keyboard shortcuts
@@ -429,6 +548,18 @@ document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
         e.preventDefault();
         toggleTheme();
+    }
+
+    // Alt/Option + Left: Navigate back
+    if (e.altKey && e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigateBack();
+    }
+
+    // Alt/Option + Right: Navigate forward
+    if (e.altKey && e.key === 'ArrowRight') {
+        e.preventDefault();
+        navigateForward();
     }
 
     // Ctrl/Cmd + 1/2/3: Change view mode
@@ -461,6 +592,7 @@ if (!localStorage.getItem('shortcuts-shown')) {
         console.log('%c Otto-Friedrich-Universität Bamberg - Keyboard Shortcuts ', 'background: #003366; color: white; padding: 10px; font-size: 14px; font-weight: bold');
         console.log('%c Ctrl/Cmd + R: Refresh content ', 'padding: 5px');
         console.log('%c Ctrl/Cmd + D: Toggle dark mode ', 'padding: 5px');
+        console.log('%c Alt + ←/→: Navigate back/forward ', 'padding: 5px');
         console.log('%c Ctrl/Cmd + 1/2/3: Full/Tablet/Mobile view ', 'padding: 5px');
         console.log('%c Use language selector to switch between Deutsch, English, and Español ', 'padding: 5px');
         localStorage.setItem('shortcuts-shown', 'true');

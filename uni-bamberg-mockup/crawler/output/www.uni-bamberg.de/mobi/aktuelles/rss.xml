@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+    <rss version="2.0"
+         xmlns:content="http://purl.org/rss/1.0/modules/content/"
+         xmlns:atom="http://www.w3.org/2005/Atom">
+        <channel>
+            <title>Uni Bamberg News</title>
+            <link>https://www.uni-bamberg.de</link>
+            <description>Latest news | Aktuelle Informationen</description>
+            <language>de-de</language>
+            
+                <copyright>Uni Bamberg</copyright>
+            
+            
+            <pubDate>Sat, 20 Dec 2025 12:04:29 +0100</pubDate>
+            <lastBuildDate>Sat, 20 Dec 2025 12:04:29 +0100</lastBuildDate>
+            
+            <atom:link href="https://www.uni-bamberg.de/mobi/aktuelles/rss.xml" rel="self" type="application/rss+xml" />
+            <generator>TYPO3</generator>
+            
+                
+                    <item>
+                        <guid isPermaLink="false">news-29009</guid>
+                        <pubDate>Wed, 11 Jun 2025 12:02:27 +0200</pubDate>
+                        <title>PerBamberg open for registration!</title>
+                        <link>https://www.uni-bamberg.de/mobi/aktuelles/artikel/perbamberg-open-for-registration/</link>
+                        <description>The international collaboration workshop &quot;PerBamberg 2025&quot; is now open for registration.
+
+</description>
+                        <content:encoded><![CDATA[<p>The international collaboration workshop &quot;PerBamberg 2025&quot; is now open for registration.</p>
+<p>See <a href="/mobi/perbamberg2025/">https://www.uni-bamberg.de/mobi/perbamberg2025/</a> for details!</p>]]></content:encoded>
+                        
+                        
+                            
+                            <enclosure url="https://www.uni-bamberg.de/fileadmin/mobi/Bilder/PerBambergBanner-web.png" length="0" type="image/png"/>
+                        
+                    </item>
+                
+                    <item>
+                        <guid isPermaLink="false">news-28076</guid>
+                        <pubDate>Tue, 28 Jan 2025 14:14:45 +0100</pubDate>
+                        <title>Summer of Research</title>
+                        <link>https://www.uni-bamberg.de/mobi/aktuelles/artikel/summer-of-research/</link>
+                        <description>This is your chance to participate significantly in an interdisciplinary research project!
+
+We are building an interdisciplinary group of students to support us during summer term 2025 in conducting a large-scale field study on intermodal mobility data and tracking.</description>
+                        <content:encoded><![CDATA[<h2>We are …</h2><ul><li>three research groups of the University of Bamberg: Chair of Mobile Systems (Daniela Nicklas), Chair of Privacy and Security in Information Systems (Dominik Herrmann), Chair of Personality Psychology and Psychological Assessment (Astrid Schütz) and their teams</li><li>a BMBF-funded interdisciplinary research project: <a href="/explanym/">explanym – Explainable Anonymization of Intermodal Mobility Data</a></li><li>open for your ideas, contributions, and application!</li></ul><h2>You are …</h2><ul><li>an intrinsic motivated student of computer science (or comparable), psychology (or comparable) with a Bachelor degree or a fresh Master degree</li><li>interested in practical research</li><li>open for a substantial work contract during the summer term (half-time or even full-time if you are on a semester on leave (Urlaubssemester))</li></ul><h2>“Support the field study” could mean that you or your team members …</h2><ul><li>&nbsp;organize mobility data collection campaigns, e.g., on bicycle data<br>assemble open-source sensor systems to collect data</li><li>collect mobility data yourself using different transportation modes in Bamberg</li><li>anonymize, analyze, and visualize intermodal mobility data<br>conduct surveys and interviews</li></ul><h2>We offer …</h2><ul><li>multiple positions for research assistants and graduate assistants (E12 for students with Bachelor, E13 with Master) starting from 50% for 6 months (1.4.-30.9.2025), depending on your situation, qualification, and remaining study load</li><li>a work place in the MOBI lab at the WE5 building</li></ul><h2>Your application …&nbsp;</h2><ul><li>should contain a short motivation letter containing your preferred contract option (research assistant (“Wimi”) or graduate assistant (“Hiwi”) and if you prefer part-time or full-time), a CV, and a transcript of record, preferable in a combined PDF</li><li>should be send until February 3rd via e-mail to: <a href="#" data-mailto-token="kygjrm8gldm,cvnjylwkYslg+zykzcpe,bc" data-mailto-vector="-2">info.explanym(at)uni-bamberg.de</a><br>&nbsp;</li></ul><p>We will provide feedback for your application before February 15th 2025 the latest.</p>
+<p>While, due to the nature of the funding, we cannot guarantee follow-up contracts or PhD positions, we consider this project an excellent opportunity to gain a sneak peek into research!</p>
+<p>&nbsp;</p>]]></content:encoded>
+                        
+                        
+                    </item>
+                
+                    <item>
+                        <guid isPermaLink="false">news-23448</guid>
+                        <pubDate>Thu, 13 Jul 2023 15:43:19 +0200</pubDate>
+                        <title>Abschlusspräsentation Mobi Projekte</title>
+                        <link>https://www.uni-bamberg.de/mobi/aktuelles/artikel/abschlusspraesentation-mobi-projekte/</link>
+                        <description>17.07.2023 zwischen 11:00 und 13:45 im Foyer (Haupteingang zur Bibliothek)</description>
+                        <content:encoded><![CDATA[<p>Liebe Freundinnen und Freunde,</p>
+<p>der Lehrstuhl für Mobile Softwaresysteme von Prof. Dr. Daniela Nicklas lädt am Montag den 17.07.2023 zur Abschlusspräsentation der Ergebnisse unserer Projekte im Sommersemester ein. Dazu stellen die Studierenden ihre Ergebnisse in einer Poster-Präsentation vor.</p>
+<p>Im Sommersemester war der Schwerpunkt unserer Projekte Digital Health. Die speziellen Themen der einzelnen Ausstellungen sind:</p><ul><li><span>MEDTALK: Sprache-zu-Text Applikation in Arztpraxen</span></li><li><span>Accessiwheel: Routenplaner für Menschen mit Mobilitätseinschränkungen</span></li><li><span>Snappoll: Umfragetool für sozialwissenschaftliche Studien</span></li></ul><p>Die Abschlusspräsentation findet am 17.07.2023 zwischen 11:00 und 13:45 im Foyer (Haupteingang zur Bibliothek) an der Erba (an der Weberei 5) statt. Wenn ihr noch Fragen habt, meldet euch bitte.</p>
+<p>Die Veranstaltung ist öffentlich. Die Einladung darf gerne geteilt werden</p>]]></content:encoded>
+                        
+                        
+                    </item>
+                
+                    <item>
+                        <guid isPermaLink="false">news-22451</guid>
+                        <pubDate>Mon, 20 Mar 2023 12:51:02 +0100</pubDate>
+                        <title>Daniela Nicklas hält Keynote auf der IEEE PerCom</title>
+                        <link>https://www.uni-bamberg.de/mobi/aktuelles/artikel/daniela-nicklas-haelt-vortrag-auf-der-ieee-percom/</link>
+                        <description>https://sites.google.com/view/perawarecity2023/</description>
+                        <content:encoded><![CDATA[<p>Am 17.3.23 hält Prof. Dr. Daniela Nicklas eine Keynote&nbsp;<span lang="DE">auf dem Workshop &quot;Pervasive Context-Aware Smart Cities and Intelligent Transportation Systems&quot; der IEEE PerCom: Mehr Informationen unter&nbsp;<a href="https://sites.google.com/view/perawarecity2023/" target="_blank" rel="noreferrer">https://sites.google.com/view/perawarecity2023/</a></span></p>]]></content:encoded>
+                        
+                        
+                    </item>
+                
+                    <item>
+                        <guid isPermaLink="false">news-20328</guid>
+                        <pubDate>Tue, 19 Jul 2022 14:20:02 +0200</pubDate>
+                        <title>Stellenausschreibung wissenschaftliche Mitarbeiter (m/w/d)</title>
+                        <link>https://www.uni-bamberg.de/mobi/aktuelles/artikel/stellenausschreibung-8/</link>
+                        <description>Wir suchen Verstärkung als Elternzeitvertretung zum nächstmöglichen Zeitpunkt.</description>
+                        <content:encoded><![CDATA[<p>Am Lehrstuhl für Informatik, insbes. Mobile Softwaresysteme/Mobilität der Otto-Friedrich-Universität Bamberg ist zum nächstmöglichen Zeitpunkt die Stelle einer/eines Wissenschaftlihen Mitarbeiterin / Mitarbeiters (m/w/d) (100% der regelmäßigen Arbeitszeit, Entgeltgruppe 13 TV-L) zunächst befristet auf ein Jahr als Elternzeitvertretung zu besetzen.</p>
+<p><a href="/abt-personal/stellenausschreibung/wissenschaftliches-personal/">Hier geht's zur Ausschreibungsseite der Universität </a>bzw. <a href="/fileadmin/mobi/slidesPDF/2022-08-21_WIAI_LS_Informatik_Mobile_Systeme_Elternzeitvertretung.pdf">direkt zur Stellenausschreibung.</a> <span class="filesize">(130.3 KB)</span></p>]]></content:encoded>
+                        
+                        
+                    </item>
+                
+                    <item>
+                        <guid isPermaLink="false">news-18018</guid>
+                        <pubDate>Wed, 13 Oct 2021 18:00:00 +0200</pubDate>
+                        <title>Einladung zum Podiumsabend &quot;und jetzt? Zukunft im Dialog&quot; </title>
+                        <link>https://www.uni-bamberg.de/mobi/aktuelles/artikel/einladung-zum-podiumsabend-und-jetzt-zukunft-im-dialog/</link>
+                        <description>Wann: Mittwoch, 13.10.2021; 18:00 – 20:00 Uhr 
+Wo: Kulturboden Hallstadt</description>
+                        <content:encoded><![CDATA[<p>Bereits im vergangenen Herbst sollte die Veranstaltung ‚Und jetzt? Zukunft im Dialog‘ stattfinden, leider musste sie dann pandemiebedingt verschoben werden. Nun freuen wir uns, Ihnen mitteilen zu können, dass die Veranstaltung nachgeholt wird.<br /> &nbsp;<br /> Alle Entscheidungen, die heute in Politik und Gesellschaft getroffen werden, betreffen die nachfolgenden Generationen hautnah.<br /> Aus diesem Grund ist es umso wichtiger, dass junge Menschen angehört werden, mitreden, mitgestalten und vor allem auch mitentscheiden können.<br /> &nbsp;<br /> Um jungen Menschen eine Stimme zu geben, veranstalten wir im Rahmen des Projekts ‚Demokratie leben!‘ für den Landkreis Bamberg ein Podium, bei dem Jugendliche Fragen und Themen formulieren können.<br /> Vertreter:innen aus Forschung, Wirtschaft und Gesellschaft beziehen hierzu Stellung und diskutieren diese.<br /> &nbsp;<br /> Auf dem Podium diskutieren werden<br /> Dr. Ulrich Schneider - Hauptgeschäftsführer Paritätischer Wohlfahrtsverband Gesamtverband e.V.<br /> Prof. Dr. Daniela Nicklas - Lehrstuhlinhaberin für Informatik, insbesondere Mobile Softwaresysteme/Mobilität an der Uni Bamberg<br /> Michael Stammberger - Leiter Ausbildung Brose Gruppe | Vorsitz AK Schule-Wirtschaft Bamberg<br /> Ab sofort können Sie sich hier für die Veranstaltung anmelden: <a href="https://demokratie-leben-ist.de/2021/09/21/13-10-21-und-jetzt-zukunft-im-dialog/" target="_blank" rel="noreferrer">https://demokratie-leben-ist.de/2021/09/21/13-10-21-und-jetzt-zukunft-im-dialog/</a></p>
+<p>Die Diskussion wird aufgezeichnet und steht im Nachgang auf unserer Homepage und unserem YouTube-Channel zur Verfügung.<br /> Leiten Sie die Einladung auch gerne an andere Interessierte weiter.<br /> <br /> &nbsp;<br /> Die Veranstaltung wird von der Partnerschaft für Demokratie im Landkreis Bamberg im Rahmen des Bundesprogramms ‚Demokratie leben!‘ gefördert.</p>
+<p>&nbsp;</p>]]></content:encoded>
+                        
+                        
+                    </item>
+                
+                    <item>
+                        <guid isPermaLink="false">news-16408</guid>
+                        <pubDate>Thu, 28 Jan 2021 09:09:23 +0100</pubDate>
+                        <title>Stellenausschreibung wissenschaftlicher Mitarbeiter (m/w/d)</title>
+                        <link>https://www.uni-bamberg.de/mobi/aktuelles/artikel/stellenausschreibung-wissenschaftlicher-mitarbeiterin/</link>
+                        <description>Wir suchen Verstärkung für das Smart City Lab zum nächstmöglichen Zeitpunkt.
+</description>
+                        <content:encoded><![CDATA[<p>Für das Smart City Research Lab suchen wir zum nächstmöglichen Termin einen wissenschaftlichen Mitarbeiter (m/w/d).</p>
+<p>Hier geht's zur <a href="/abt-personal/stellenausschreibung/wissenschaftliches-personal/">Ausschreibungsseite der Universität</a> bzw. direkt zur <a href="/fileadmin/mobi/slidesPDF/2021-02-15_Smart_City_Research_Lab.pdf">Stellenausschreibung</a> <span class="filesize">(78.7 KB)</span>.</p>]]></content:encoded>
+                        
+                        
+                    </item>
+                
+                    <item>
+                        <guid isPermaLink="false">news-15592</guid>
+                        <pubDate>Mon, 23 Nov 2020 14:16:52 +0100</pubDate>
+                        <title>Universität unterstützt Stadt Bamberg auf dem Weg zur Smart City</title>
+                        <link>https://www.uni-bamberg.de/mobi/aktuelles/artikel/universitaet-unterstuetzt-stadt-bamberg-auf-dem-weg-zur-smart-city-1/</link>
+                        <description>In einem interdisziplinären Labor werden Projekte rund um die Smart City wissenschaftlich begleitet.</description>
+                        <content:encoded><![CDATA[<h1>Universität unterstützt Stadt Bamberg auf dem Weg zur Smart City</h1>
+<p>In einem interdisziplinären Labor werden Projekte rund um die Smart City wissenschaftlich begleitet.</p>
+<p>Bamberg erhält in den nächsten sieben Jahren insgesamt 15,75 Millionen Euro für die Entwicklung und Umsetzung des <a href="https://www.stadt.bamberg.de/smartcity" target="external" rel="noreferrer">Programms „Smart City Bamberg“</a>, das Teil der <em><a href="https://www.bmi.bund.de/SharedDocs/pressemitteilungen/DE/2020/09/smart-cities.html" target="external" rel="noreferrer"><em>Modellprojekte Smart Cities</em></a></em> des Bundesinnenministeriums ist. Mit den Fördergeldern will sich die Welterbestadt fit für die digitale Zukunft machen. In den ersten zwei Jahren steht die gemeinsame Entwicklung einer gesamtstädtischen Smart City-Strategie im Mittelpunkt. Dort, wo es möglich ist, werden schon erste Projekte realisiert. Dann folgt von 2023 bis 2027 eine fünfjährige Umsetzungsphase, in der die gemeinsam festgelegten Ziele und Projekte der Strategie Wirklichkeit werden.</p>
+<p>Neben der Stadtverwaltung, den Stadtwerken, der Stadtbau Bamberg, dem Welterbezentrum und über 150 Bürgerinnen und Bürgern hat auch der <a href="/mobi/">Lehrstuhl für Informatik, insbesondere Mobile Softwaresysteme/Mobilität</a> der Universität Bamberg die Bewerbung mitgestaltet. Unter der Leitung von Lehrstuhlinhaberin <a href="/mobi/">Prof. Dr. Daniela Nicklas</a> wird, gemeinsam mit <a href="/geo1/lehrstuhlteam/redepenning/">Prof. Dr. Marc Redepenning</a> vom <a href="/geo1/">Lehrstuhl Geographie I (Kulturgeographie)</a><a href="/geo1/" target="_blank" rel="noopener noreferrer">,</a> in den nächsten Jahren ein interdisziplinäres <em>Smart City Research Lab </em>eingerichtet.</p>
+<h2><strong>Wissenschaftliche Begleitforschung soll optimales Kosten-Nutzen-Verhältnis und nachhaltige Investitionen der Smart City-Projekte gewährleisten</strong></h2>
+<p>In diesem Labor werden zum Beispiel Doktorandinnen und Doktoranden Digitalisierungsprojekte, die im Rahmen des geförderten Programms <em>Modellprojekte Smart City</em> entstehen, in kleinen Testläufen und mit Bürgerbeteiligung erproben und wissenschaftlich validieren, um ein optimales Kosten-Nutzen-Verhältnis und nachhaltige Investitionen in den einzelnen Bereichen zu gewährleisten. Dabei sollen auch Studierende im Rahmen von Lehrprojekten mit einbezogen werden – oft sind sie selbst auch Bürgerinnen und Bürger der Stadt Bamberg. „Die Modellprojekte zur Smart City werden wichtige Bausteine für eine nachhaltige und integrierte Stadtentwicklung liefern“, sagt Marc Redepenning.</p>
+<p>„Die heute verfügbaren Technologien bieten ein enormes Potenzial. Fachkräfte und externe Berater sind jedoch wichtig für die Entscheidungsprozesse in Smart-City-Anwendungen, insbesondere dann, wenn die Verwaltungen selbst über keine Fachexperten verfügen“, so Daniela Nicklas. „Durch das Smart City Research Lab können wir der Stadt Bamberg und ihren Bürgerinnen und Bürgern die konkret benötigten Expertisen zur Verfügung stellen und zugleich unserem wissenschaftlichen Nachwuchs die Möglichkeit eröffnen, praxisnah zu forschen und zu lernen. Eine tolle Win-Win-Situation.“</p>]]></content:encoded>
+                        
+                        
+                    </item>
+                
+                    <item>
+                        <guid isPermaLink="false">news-14790</guid>
+                        <pubDate>Fri, 10 Jul 2020 10:10:00 +0200</pubDate>
+                        <title>Invited Lecture about Exasol</title>
+                        <link>https://www.uni-bamberg.de/mobi/aktuelles/artikel/invited-lecture-about-exasol/</link>
+                        <description>Live webinar about the fastest analytical database 
+Tuesday, 2020-14-07 
+17:00 o´clock</description>
+                        <content:encoded><![CDATA[<p>Exasol is an analytical database. You will learn all fundamentals and a lot of features in this interactive 90-minute lecture. Exasol is a distributed column-oriented in-memory database. The lecture is live, you can use the chat to ask questions, you're invited to participate in little quizzes, and solve SQL-based exercises on a real Exasol cluster directly in your web browser.</p>
+<p>Prof. Johannes Schildgen is a professor for databases and Big Data analytics at the Regensburg University of Applied Sciences (OTH<br /> Regensburg) since this semester. Before, he worked for Exasol in Nuremberg for three years.</p>
+<p>You can attend this lecture here:<br /> <a href="https://www.youtube.com/watch?v=3PaTN_-GJ18" target="_blank" rel="noreferrer">https://www.youtube.com/watch?v=3PaTN_-GJ18</a></p>
+<p>The contents of the course are relevant for the MOBI-ADM-M exam.</p>]]></content:encoded>
+                        
+                        
+                    </item>
+                
+                    <item>
+                        <guid isPermaLink="false">news-12850</guid>
+                        <pubDate>Tue, 19 Nov 2019 14:11:00 +0100</pubDate>
+                        <title>Guest lecture of Johann-von-Spix-Guestprofessor, Prof. Brent Lagesse, PhD</title>
+                        <link>https://www.uni-bamberg.de/mobi/aktuelles/artikel/guestlectureofprofbrentlagessephd/</link>
+                        <description>Privacy in a World with Billions of Cameras 
+Mo, 02.12.2019 |18:15-19:45 o´clock|WE5/00.022
+</description>
+                        <content:encoded><![CDATA[<p>Ever-growing access to inexpensive, wireless camera technology presents people with an opportunity to record more of our lives than ever before.</p>
+<p>These devices have enabled us to stay more connected with friends and family, archive parts of our lives that might otherwise be forgotten, and help bring to light incidents of illegal and unethical activities; however, along with these opportunities come additional privacy risks that must be addressed.&nbsp; In the past few years, there have been numerous incidents reported where people have deployed hidden cameras or remotely compromised devices with existing cameras to spy on others.&nbsp; This talk will present the techniques that we have developed to detect hidden Wi-Fi cameras with mobile phones.&nbsp; Additionally, we will discuss new opportunities in privacy-preserving video sharing and crowdsourced auditing of video databases.&nbsp; With this work, we are striving to create systems that enable the potential of pervasive technology while simultaneously limiting the privacy risks of that technology.</p>
+<p>We would like to invite you to a talk given by our guest researcher on Monday, December, 2nd at 18:15 o´clock in our lecture room (WE5/00.022).</p>
+<p>After the lecture there will be a small reception in the foyer with mulled wine, children's punch and gingerbread.</p>
+<p>&nbsp;</p>]]></content:encoded>
+                        
+                        
+                    </item>
+                
+            
+        </channel>
+    </rss>
+

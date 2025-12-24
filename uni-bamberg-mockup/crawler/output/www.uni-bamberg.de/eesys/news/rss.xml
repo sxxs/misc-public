@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+    <rss version="2.0"
+         xmlns:content="http://purl.org/rss/1.0/modules/content/"
+         xmlns:atom="http://www.w3.org/2005/Atom">
+        <channel>
+            <title>Uni Bamberg News</title>
+            <link>https://www.uni-bamberg.de</link>
+            <description>Latest news | Aktuelle Informationen</description>
+            <language>de-de</language>
+            
+                <copyright>Uni Bamberg</copyright>
+            
+            
+            <pubDate>Sat, 20 Dec 2025 14:06:16 +0100</pubDate>
+            <lastBuildDate>Sat, 20 Dec 2025 14:06:16 +0100</lastBuildDate>
+            
+            <atom:link href="https://www.uni-bamberg.de/eesys/news/rss.xml" rel="self" type="application/rss+xml" />
+            <generator>TYPO3</generator>
+            
+                
+                    <item>
+                        <guid isPermaLink="false">news-28276</guid>
+                        <pubDate>Mon, 08 Sep 2025 12:15:29 +0200</pubDate>
+                        <title>Lehrangebot WS 2025/2026</title>
+                        <link>https://www.uni-bamberg.de/eesys/studium/lehrveranstaltungen/</link>
+                        <description></description>
+                        <content:encoded><![CDATA[]]></content:encoded>
+                        
+                        
+                    </item>
+                
+                    <item>
+                        <guid isPermaLink="false">news-28351</guid>
+                        <pubDate>Wed, 05 Mar 2025 20:08:56 +0100</pubDate>
+                        <title>Neuer Artikel in JIT zur Einbindung von KI in die Wissensarbeit hybrider Teams</title>
+                        <link>https://www.uni-bamberg.de/eesys/news/artikel/neuer-artikel-in-jit-zur-einbindung-von-ki-in-die-wissensarbeit-hybrider-teams/</link>
+                        <description>Ein Beispiel, wie Theorien des Wissensmanagements bei der Gestaltung von KI-Systemen helfen</description>
+                        <content:encoded><![CDATA[<p>Wir freuen uns über unsere Publikation in der neusten Ausgabe des <i>Journal of Information Technology&nbsp;</i>(Vol. 40 Issue 1). Der Artikel <i>„The group mind of hybrid teams with humans and intelligent agents in knowledge-intense work“</i> untersucht, wie hybride Teams – bestehend aus Menschen und intelligenten Agenten – ein gemeinsames Gruppengedächtnis aufbauen können. Das in der empirischen Studie entwickelte Konzept der <i>Transactive Intelligent Memory Systems (TIMS)</i> demonstriert, dass intelligente Agenten nicht nur als externes Gedächtnis zum Speichern von Informationen (wie z. B. klassische IT-Systeme) fungieren, sondern aktiv zur gemeinsamen Wissensverarbeitung beitragen. Dies ist insbesondere erfolgreich, wenn System der künstlichen Intelligenz (KI) ihren menschlichen Teammitgliedern in Fähigkeiten überlegen sind, also beispielsweise auf Basis maschineller Lernverfahren bessere Vorhersagen als Menschen treffen oder deutlich umfangreichere Daten verarbeiten können.&nbsp;</p>
+<p>An der Publikation waren neben <a href="/eesys/team/konstantin-hopf/">Dr. Konstantin Hopf</a> und <a href="/eesys/team/prof-dr-thorsten-staake/">Prof. Thorsten Staake</a> auch die Kollegin Prof. Nora Nahr und der Kollege Prof. Franz Lehner der Universität Passau an der Studie beteiligt.</p>
+<p>Der Artikel ist als <a href="https://journals.sagepub.com/doi/full/10.1177/02683962241296883" target="_blank" title="Open Access Volltext" rel="noreferrer">Open Access im <i>Journal of Information Technology</i></a> verfügbar.</p>]]></content:encoded>
+                        
+                        
+                    </item>
+                
+                    <item>
+                        <guid isPermaLink="false">news-26798</guid>
+                        <pubDate>Mon, 23 Sep 2024 11:37:48 +0200</pubDate>
+                        <title>WI2024 Best Paper Award geht erneut nach Bamberg</title>
+                        <link>https://www.uni-bamberg.de/eesys/news/artikel/wi2024-best-paper-award-geht-erneut-nach-bamberg/</link>
+                        <description>Der Beitrag von N. Rahlmeier und K. Hopf untersucht, wie Data Scientists mit Fachabteilungen zusammenarbeiten. </description>
+                        <content:encoded><![CDATA[<p>Die Wirtschaftsinformatik der Universität Bamberg feiert einen weiteren Erfolg: Auf der <a href="https://wi2024.de/best-paper-nominierungen/" target="_blank" title="Link zur WI2024 (Best Paper Nominierungen)" rel="noreferrer">Internationalen Tagung Wirtschaftsinformatik 2024 in Würzburg</a> wurde erneut ein Autorenteam des Lehrstuhls für Wirtschaftsinformatik, insbesondere Energieeffiziente Systeme, mit dem Best Paper Award für ein Full Paper ausgezeichnet.</p>
+<h2><strong>Effektive Zusammenarbeit in Data-Science-Projekten durch Boundary Objects</strong></h2>
+<p>Der ausgezeichnete Beitrag mit dem Titel <i>&quot;Bridging Fields of Practice: How Boundary Objects Enable Collaboration in Data Science Initiatives&quot;</i>, verfasst von Nils Rahlmeier und Dr. Konstantin Hopf, befasst sich mit den Herausforderungen und Erfolgsfaktoren der Zusammenarbeit in datenintensiven Projekten. Die Hauptfrage des Papiers lautet: Wie können Data-Science-Teams erfolgreich mit anderen Fachabteilungen kooperieren, um die oft enttäuschenden Ergebnisse solcher Projekte zu verbessern? Basierend auf Interviews in sechs verschiedenen Data-Science-Initiativen in Unternehmen identifiziert die Studie sechs Archetypen von <i>Boundary Objects</i> – Hilfsmittel, die den Austausch zwischen Fachbereichen erleichtern. Diese Archetypen, darunter <i>Alignment</i>, <i>Collaboration</i>, und <i>Upskilling</i>, helfen dabei, die Zusammenarbeit in den verschiedenen Phasen des Datenwertschöpfungsprozesses zu strukturieren und zu verbessern.</p>
+<h2><strong>Wissenschaftliche Exzellenz mit Praxisbezug</strong></h2>
+<p>„<i>Die entwickelten Archetypen und Mechanismen bieten sowohl theoretische als auch praktische Ansätze, um die Umsetzung von Data Science-Projekten besser zu steuern</i>“, erklärt Dr. Konstantin Hopf. „<i>Unsere Ergebnisse unterstützen das Management solcher Initiativen und helfen, die Zusammenarbeit zwischen Data-Science- und Business-Teams zu optimieren</i>“, ergänzt Nils Rahlmeier.</p>
+<p>Das Papier ist das Ergebnis einer sehr guten Masterarbeit von Nils Rahlmeier, die er am Lehrstuhl für Wirtschaftsinformatik, insbesondere Energieeffiziente Systeme, der Universität Bamberg eingereicht hat. Der Erstautor ist heute Associate bei der auf die Energiewirtschaft spezialisierten Strategieberatung <a href="https://e-vc.org/" target="_blank" rel="noreferrer">e.venture consulting</a> in Berlin.</p>
+<h2><strong>Erfolgsgeschichte wiederholt sich</strong></h2>
+<p>Besonders hervorzuheben ist, dass der Lehrstuhl <a href="https://www.uni-bamberg.de/eesys/news/artikel/best-paper-award-der-18-internationalen-tagung-wirtschaftsinformatik/" target="_blank">bereits im vergangenen Jahr den Best Paper Award der Hauptkonferenz der Wirtschaftsinformatik (WI 2023) </a>erhalten hat, damals mit dem Beitrag „<a href="https://aisel.aisnet.org/wi2023/74/" target="_blank" rel="noreferrer">Addressing Learners' Heterogeneity in Higher Education: An Explainable AI-based Feedback Artifact for Digital Learning Environments</a>“ von Felix Haag, Sebastian Günther, Konstantin Hopf, Philipp Handschuh, Maria Klose, Thorsten Staake.</p>
+<p>&nbsp;</p>]]></content:encoded>
+                        
+                        
+                    </item>
+                
+                    <item>
+                        <guid isPermaLink="false">news-26026</guid>
+                        <pubDate>Fri, 17 May 2024 14:43:22 +0200</pubDate>
+                        <title>Forschungstransfer zu KI-Wertschöpfung in Unternehmen</title>
+                        <link>https://www.uni-bamberg.de/eesys/news/artikel/aktiv-im-forschungstransfer/</link>
+                        <description>Dr. Konstantin Hopf referiert bei Unternehmen und Praxiskonferenzen</description>
+                        <content:encoded><![CDATA[<p>Am Lehrstuhl für Wirtschaftsinformatik insb. Energieeffiziente Systeme hat <a href="/eesys/team/konstantin-hopf/" target="_blank" title="Link zur persönlichen Homepage von Dr. Konstantin Hopf">Dr. Konstantin Hopf</a> ein Forschungsthema im KI-Wertschöpfung in Unternehmen etabliert. Zusammen mit internationalen Kolleginnen und Kollegen hat er empirisch aufgezeigt, mit welchen Mechanismen Unternehmen mit maschinellen Lernverfahren Wert schaffen können. Darüber hinaus erforscht er strategische Fragen in Bezug auf Data Science in Unternehmen. Neben den wissenschaftlichen Publikationen, die u.a. im <a href="https://www.sciencedirect.com/science/article/pii/S0963868722000300" target="_blank" title="Link zum Artikel: Shifting ML value creation mechanisms: A process model of ML value creation" rel="noreferrer">Journal of Strategic Information Systems</a> und in <a href="https://journals.sagepub.com/doi/10.1177/00081256231197445" target="_blank" title="Link zum Artikel: Organizational Implementation of AI: Craft and Mechanical Work" rel="noreferrer">California Management Review</a> erschienen und mehrere Preise erhielten, betreibt Konstantin Hopf aktiven Wissenstransfer in Unternehmen. Jüngste Transferaktivitäten umfassen:</p>
+<p><strong>DOAG.tv</strong></p><ul> 	<li><strong>Interview </strong>von <a href="https://www.doag.org/de/home/news/doagtv-mit-dr-konstantin-hopf-und-dr-benjamin-linnik-ueber-wertschoepfung-in-unternehmen/" target="_blank" rel="noreferrer">Dr. Konstantin Hopf zusammen mit Dr. Benjamin Linnik</a></li> </ul><p><strong>Telekom LEX Learning from Experts</strong></p><ul> 	<li><strong>Vortragsreihe </strong>&quot;<i><a href="https://www.linkedin.com/posts/shakilawan_ki-machinelearning-learningfromexperts-activity-7186736940640010241-Gta4?utm_source=share&amp;utm_medium=member_desktop" target="_blank" title="Link zur Ankündigung auf LinkedIn" rel="noreferrer">KI Evolution statt Revolution – Ein Prozessmodell für die betriebliche Wertschöpfung durch Machine-Learning-Anwendungen</a></i>&quot;</li> 	<li>08. und 15. Mai 2024, mit jeweils ca. 90 Teilnehmenden, Online</li> </ul><p><strong>QualityMinds Lunch &amp; Learn</strong></p><ul> 	<li><strong>Vortrag </strong>&quot;<i>Value Creation with Machine Learning</i>&quot;</li> 	<li>10. April 2014, mit ca. 25 Teilnehmenden, Online</li> </ul><p><strong>DOAG KI Navigator Konferenz</strong></p><ul> 	<li><strong>Programmbeitrag </strong>&quot;<i><a href="https://meine.doag.org/events/ki/2023/agenda/#agendaId.3531" target="_blank" title="Link zum Programmbeitrag bei der KI Navigator Konferenz 2023" rel="noreferrer">Von der Theorie zur Praxis: Fallstudien zur KI-Wertschöpfung in Unternehmen</a></i>&quot; zusammen mit Dr. Benjamin Linnik</li> 	<li>22. November 2023, mit ca. 80 Fachbesuchern, Messe Nürnberg</li> </ul><p><strong>SAP Inspiration Sessions </strong></p><ul> 	<li><strong>Keynote </strong>&quot;<i>Process Model for Machine Learning Value Creation in Organizations</i>&quot;</li> 	<li>15. November 2023, mit ca. 250 internationalen Teilnehmenden, Online</li> </ul><ul> </ul><p>In den Praxisvorträgen werden die Forschungserkenntnisse anhand praktischer Beispiele erläutert. Interessenten an weiteren Vorträgen oder Workshops im Bereich KI Wertschöpfung wenden sich bitte direkt an <a href="/eesys/team/konstantin-hopf/">Konstantin Hopf</a>.</p>
+<p>Lehrstuhlinhaber <a href="/eesys/team/prof-dr-thorsten-staake/">Prof. Dr. Thorsten Staake</a> und <a href="/eesys/team/konstantin-hopf/">Dr. Konstantin Hopf</a> sind Mitglied im <a href="/bacai/organisation/mitglieder/" target="_blank" title="Link zum BaCAI">Bamberger Zentrum für Künstliche Intelligenz (BaCAI)</a>.</p>]]></content:encoded>
+                        
+                        
+                    </item>
+                
+                    <item>
+                        <guid isPermaLink="false">news-26046</guid>
+                        <pubDate>Fri, 15 Dec 2023 11:05:00 +0100</pubDate>
+                        <title>Publikationspreise für Forschung zu KI-Wertschöpfung in Unternehmen</title>
+                        <link>https://www.uni-bamberg.de/eesys/news/artikel/publikationspreise-fuer-forschung-zu-ki-wertschoepfung-in-unternehmen/</link>
+                        <description>Das Journal of Strategic Information Systems und die AIS Senior Scholars zeichnen Forschungsarbeit von Dr. Konstantin Hopf aus</description>
+                        <content:encoded><![CDATA[<p>Wie können Unternehmen aus ihren Initiativen zur künstlichen Intelligenz Wert schaffen? Dieser Frage ist <a href="/eesys/team/konstantin-hopf/">Dr. Konstantin Hopf</a> in einem internationalen Forschungsprojekt zusammen mit Prof. Arisa Shollo (Copenhagen Business School, Dänemark), Prof. Dr. Oliver Müller (Universität Paderborn) und Dr. Tiemo Thiess (IT Universität Kopenhagen) nachgegangen. Der aus der Studie resultierende Artikel <a href="https://www.sciencedirect.com/science/article/pii/S0963868722000300" target="_blank" title="Link zur Publikation im Journal of Strategic Information Systems" rel="noreferrer">&quot;Shifting ML value creation mechanisms: A process model of ML value creation&quot;, im Journal of Strategic Information Systems 31 (101734)</a>, hat kürzlich zwei Auszeichnungen erhalten:</p><ul> 	<li>Die Zeitschrift <i>The Journal of Strategic Information Systems</i> hat das Papier zum <a href="https://www.sciencedirect.com/journal/the-journal-of-strategic-information-systems/about/news#jsis-2022-best-paper-award" target="_blank" title="Link zur News des JSIS Best Paper 2022" rel="noreferrer">Best Paper 2022</a> gekürt</li> 	<li>Die <i>Association for Information Systems</i> hat den Artikel im Jahr 2023 als <a href="https://ishistory.aisnet.org/awards/ais-best-information-systems-publications-awards/" target="_blank" title="Link zur Association for Information Systems: Best Information Systems Publications Awards" rel="noreferrer">Senior Scholars' Best Information Systems Paper</a> ausgezeichnet.</li> </ul><p>Der uni.blog berichtete im Sommer über das Forschungsprojekt mit dem Beitrag &quot;<a href="https://blog.uni-bamberg.de/forschung/2023/ki-wertschoepfung-in-unternehmen/" target="_blank" title="Link zum Beitrag im uni.blog">Wie können Unternehmen mit KI Wert generieren?</a>&quot;.</p>]]></content:encoded>
+                        
+                        
+                    </item>
+                
+                    <item>
+                        <guid isPermaLink="false">news-24878</guid>
+                        <pubDate>Fri, 24 Nov 2023 11:07:14 +0100</pubDate>
+                        <title>Forschungsteam findet auffällige Komplementaritäten bei digitalen Verhaltensinterventionen. Mehr im Journal of Public Economics</title>
+                        <link>https://www.uni-bamberg.de/eesys/news/artikel/forschungsteam-findet-auffaellige-komplementaritaeten-bei-digitalen-verhaltensinterventionen-mehr-im-journal-of-public-economics/</link>
+                        <description></description>
+                        <content:encoded><![CDATA[<p>Mehr Informationen dazu finden Sie im <a href="https://www.sciencedirect.com/science/article/pii/S0047272723002104" target="_blank" rel="noreferrer">Journal of Public Economics</a></p>]]></content:encoded>
+                        
+                        
+                    </item>
+                
+                    <item>
+                        <guid isPermaLink="false">news-24182</guid>
+                        <pubDate>Mon, 25 Sep 2023 17:04:00 +0200</pubDate>
+                        <title>Best Paper Award der 18. Internationalen Tagung Wirtschaftsinformatik</title>
+                        <link>https://www.uni-bamberg.de/eesys/news/artikel/best-paper-award-der-18-internationalen-tagung-wirtschaftsinformatik/</link>
+                        <description></description>
+                        <content:encoded><![CDATA[<p>Auf der 18. Internationalen Tagung Wirtschaftsinformatik (WI) wurde der Artikel „<a href="https://aisel.aisnet.org/wi2023/74/" target="_blank" rel="noreferrer">Addressing Learners' Heterogeneity in Higher Education: An Explainable AI-based Feedback Artifact for Digital Learning Environments</a>“, der aus einer Zusammenarbeit des LifBi (Philipp Handschuh, Maria Klose) und der Universität Bamberg (Felix Haag, Sebastian Günther, Konstantin Hopf, Thorsten Staake) hervorgegangen ist, mit dem <a href="https://wi2023.de/awards/" target="_blank" rel="noreferrer">Best Paper Award</a> ausgezeichnet. Die WI Konferenz gilt als die bedeutendste wissenschaftliche Konferenz für Wirtschaftsinformatik im deutschsprachigen Raum und fand in diesem Jahr in Paderborn unter dem Leitmotto „Digital Responsibility: Social, Ethical, Ecological Implications of IS“ statt. Mit der Auszeichnung würdigt die Konferenz die&nbsp;Exzellenz der Beiträge des prämierten Artikels.</p>
+<p><strong>Abstract</strong>:&nbsp;Due to the advent of digital learning environments and the freedom they offer for learners, new challenges arise for students' self-regulated learning. To overcome these challenges, the provision of feedback has led to excellent results, such as less procrastination and improved academic performance. Yet, current feedback artifacts neglect learners’ heterogeneity when it comes to prescriptive feedback that should meet personal characteristics and self-regulated learning skills. In this paper, we derive requirements from self-regulated learning theory for a feedback artifact that takes learners’ heterogeneity into account. Based on these requirements, we design, instantiate, and evaluate an Explainable AI-based approach. The results demonstrate that our artifact is able to detect promising patterns in data on learners' behaviors and characteristics. Moreover, our evaluation suggests that learners perceive our feedback as valuable. Ultimately, our study informs Information Systems research in the design of future Explainable AI-based feedback artifacts that seek to address learners' heterogeneity.</p>
+<p>[<a href="https://aisel.aisnet.org/wi2023/74/" target="_blank" rel="noreferrer">Link zum Artikel</a>]</p>
+<p>&nbsp;</p>]]></content:encoded>
+                        
+                        
+                    </item>
+                
+                    <item>
+                        <guid isPermaLink="false">news-21757</guid>
+                        <pubDate>Fri, 20 Jan 2023 10:59:56 +0100</pubDate>
+                        <title>Zwei Masterarbeiten des Bits-to-Energy-Labs mit einem Förderpreis der Stiftung Energieinformatik ausgezeichnet</title>
+                        <link>https://www.uni-bamberg.de/eesys/news/artikel/zwei-masterarbeiten-des-bits-to-energy-labs-mit-dem-foerderpreis-der-stiftung-energieinformatik-ausgezeichnet/</link>
+                        <description></description>
+                        <content:encoded><![CDATA[<p>Die <a href="https://energie-informatik.de/" target="_blank" rel="noreferrer">Stiftung Energieinformatik</a> zeichnet jährlich exzellente Bachelor- und Masterarbeiten aus, die einen Beitrag zur Gestaltung des Energiesystems von morgen leisten. Die Stiftung hat dabei gleich zwei Abschlussarbeiten des <a href="https://www.bitstoenergy.com/" target="_blank" rel="noreferrer">Bits-to-Energy-Labs</a> in Folge&nbsp;(jeweils in den Jahren 2021 und 2022) mit einem Förderpreis in der <strong>Kategorie</strong>&nbsp;&quot;<strong>Beste Masterarbeit</strong>&quot;&nbsp;ausgezeichnet.</p>
+<p>Die Masterarbeit von<strong> Elena Giacomazzi </strong>zum Thema &quot;<strong>Forecast of electricity demand and load peaks in the distribution network with LSTM and transformer architectures</strong>&quot; gewann einen Förderpreis im Jahr 2022.</p>
+<p>Kurzzusammenfassung der Masterarbeit:</p>
+<p><i>Short-term load forecasting is an essential problem for the electric power industry. It contributes to operating power systems efficiently and making them more adaptable for using renewable energy. This thesis evaluates the performances of a long-short term memory (LSTM) neural network, a basic Transformer model, and the Temporal Fusion Transformer (TFT) on an hourly day-ahead and week-ahead forecasting task. Additionally, the models are evaluated for their accuracy in predicting load peaks. This thesis contributes to the literature by applying Transformer-based architectures to short-term load forecasting, which are relatively new to the field. Experiments are conducted on a data set of German household loads which is aggregated to the distribution network level. This work finds that the LSTM architecture performs best for the day-ahead horizon with MAPE = 6.09%, while the TFT performs best for the week-ahead forecast with MAPE = 6.46%. Although the results demonstrate the value of modern deep learning methods for load forecasting, further work is necessary to validate the methods on other data se</i>ts.</p>
+<p><strong>Felix Haag</strong> gewann einen Förderpreis im Jahr 2021 für seine Masterarbeit zum Thema &quot;<strong>Explainable AI for in-depth benchmarking of domestic electricity consumption</strong>&quot;.</p>
+<p>Kurzzusammenfassung der Masterarbeit:</p>
+<p><i>Machine learning models have made strong advances in improving modeling capabilities. Such models can detect patterns in data and provide precise predictions, but are usually—compared to more traditional statistical methods such as linear regression—non-interpretable to humans. Motivated by this tension, research has put forth Explainable Artificial Intelligence (XAI) techniques that represent patterns discovered by machine learning in a human-readable way. One application area that can benefit from high predictive performance and the explanation of patterns in data is energy benchmarking. In the field, feedback of energy benchmarks has so far been limited to a single performance score. Thus, it remains unclear to feedback recipients which building and household characteristics affect their specific consumption. Taking a linear regression model as baseline, this thesis tests the applicability of XAI methods for energy benchmarking in the context of domestic electricity use in order to determine influencing factors. The results of this work show that XAI is able to identify building and household characteristics that are, according to a machine learning model, relevant for electricity consumption. Notably, XAI in combination with machine learning offers a higher predictive performance compared to a statistical approach while maintaining explainability. Energy benchmarking providers should therefore use XAI to offer additional information on performance ratings to improve the feedback given.</i></p>]]></content:encoded>
+                        
+                        
+                    </item>
+                
+                    <item>
+                        <guid isPermaLink="false">news-21741</guid>
+                        <pubDate>Thu, 19 Jan 2023 09:34:45 +0100</pubDate>
+                        <title>Praxisvortrag vor Data Science und ML Experten: Prozessmodell für ML Wertschöpfungsmechanismen</title>
+                        <link>https://www.uni-bamberg.de/eesys/news/artikel/praxisvortrag-vor-data-science-und-ml-experten-prozessmodell-fuer-ml-wertschoepfungsmechanismen/</link>
+                        <description>Dr. Konstantin Hopf stellt Forschungsergebnisse vor</description>
+                        <content:encoded><![CDATA[<p>Viele Firmen sind aktuell auf der Suche, wie sie die Vielzahl von KI-Projekten strukturieren, sich im Hinblick auf aktuelle Entwicklungen im Bereich des maschinellen Lernens (ML) strategisch ausrichten und wie sie Wert aus diesen Investitionen generieren. In einer <a href="https://www.sciencedirect.com/science/article/pii/S0963868722000300" target="_blank" title="Link zur Veröffentlichung &quot;Shifting ML value creation mechanisms: A process model of ML value creation&quot;" rel="noreferrer">empirischen Studie, die jüngst im Journal of Strategic Information Systems</a> erschienen ist, schlagen die Autoren um Arisa Shollo (Copenhagen Business School), <a href="/eesys/team/konstantin-hopf/">Konstantin Hopf (Universität Bamberg)</a> und Oliver Müller (Universität Paderborn) ein Prozessmodell der ML-Wertschöpfung vor.</p>
+<p>Die Veröffentlichung &quot;<span class="title-text"></span><span class="title-text">Shifting ML value creation mechanisms: A process model of ML value creation</span><span class="title-text">&quot; ist als <a href="/zentraler-kontakt/?mechanisms%3A=&amp;cHash=2ebc5695081eef73f53c0195c1525a73" target="_top" title="creation" class="value">Volltext (open access)</a> verfügbar.</span></p>
+<p>Die Ergebnisse dieser Studie konnte Dr. Konstantin Hopf am Dienstag, den 17.01.2023, einem interessierten Fachpublikum aus Data Scientists und ML-Experten beim <a href="https://www.meetup.com/de-DE/nuernberg-data-science/" target="_blank" title="Link zur Veranstaltungsreihe" rel="noreferrer">Nuremberg Data Science &amp; AI Meetup</a> in Nürnberg vorstellen und diskutieren. Die knapp 50 Praxisvertreter engagierten sich rege in der Diskussion die bis in den Abend hinein dauerte.</p>]]></content:encoded>
+                        
+                        
+                            
+                            <enclosure url="https://www.uni-bamberg.de/fileadmin/_processed_/5/3/csm_IMG-20230118-WA0008_ae08bfdf2e.jpg" length="0" type="image/jpeg"/>
+                        
+                    </item>
+                
+                    <item>
+                        <guid isPermaLink="false">news-20791</guid>
+                        <pubDate>Wed, 28 Sep 2022 16:51:22 +0200</pubDate>
+                        <title>Andreas Weigert et al. veröffentlichen Artikel in Energy Policy, einer Top-Zeitschrift im Bereich Energie</title>
+                        <link>https://www.uni-bamberg.de/eesys/news/artikel/andreas-weigert-et-al-veroeffentlichen-artikel-in-energy-policy-einer-top-zeitschrift-im-bereich-energie/</link>
+                        <description></description>
+                        <content:encoded><![CDATA[<p>Wir freuen uns, bekannt geben zu können, dass unser Manuskript &quot;<i>Heat Pump Inspections Result In Large Energy Savings When A Pre-Selection of Households Is Performed: A Promising Use Case of Smart Meter Data</i>&quot; von der Zeitschrift Energy Policy angenommen wurde. Das Papier wurde von Andreas Weigert, Konstantin Hopf, Sebastian Günther, und Thorsten Staake verfasst.</p>
+<p>Die Studie untersucht, wie viel Einsparung bei einer typischen Energiesparkampagne für Wärmepumpen erzielt werden kann und wie Daten von intelligenten Stromzählern dabei helfen können, Wärmepumpen mit besonders hohem Energiesparpotential gezielt für die Beratung zu selektieren.</p>
+<p>Wärmepumpen gelten als das Heizsystem der Zukunft und werden in immer mehr Gebäuden eingebaut. Gleichzeitig ist diese Heiztechnologie aber anfällig für Planungs-, Installations-, und Einstellungsfehler, was in vielen Fällen zu einer Verringerung der Effizienz und damit zu einem Anstieg im Stromverbrauch und entsprechenden laufenden Kosten führt. Energiesparberater können in vielen Fällen auch im Nachhinein die Einstellungen der Wärmepumpe optimieren und Effizienzpotentiale heben, benötigen aber vorab Hinweise, welche Installationen besonders von einer Beratung profitieren können.</p>
+<p>Unsere Studie deutet darauf hin, dass man schon heute ineffizient operierende Wärmepumpen mit der weit verbreiteten Smart-Meter-Messinfrastruktur identifizieren kann und zeigt beispielhaft auf, was für ein Potenzial in der Digitalisierung der Energieberatung von Wärmepumpen steckt.</p>
+<p><a href="https://www.sciencedirect.com/science/article/pii/S0301421522003810" target="_blank" rel="noreferrer">Link zur Veröffentlichung</a></p>]]></content:encoded>
+                        
+                        
+                    </item>
+                
+            
+        </channel>
+    </rss>
+

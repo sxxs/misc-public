@@ -1,0 +1,77 @@
+.social-gdpr-youtube-video,
+.social-gdpr-vimeo-video,
+.social-gdpr-google-maps,
+.social-gdpr-osm-map {
+    position: relative;
+    min-width: 315px;
+    min-height: 315px;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    background-position: 50% 50%;
+    background-size: cover;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+.social-gdpr-google-maps,
+.social-gdpr-osm-map {
+    background-color: #90dfaa;
+}
+
+.social-gdpr-youtube-video img.videostub,
+.social-gdpr-vimeo-video img.videostub,
+.social-gdpr-google-maps img.mapstub,
+.social-gdpr-osm-map img.mapstub {
+    position: absolute;
+    height: 100px;
+    width: 100px;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.social-gdpr-youtube-iframe-notice,
+.social-gdpr-vimeo-iframe-notice,
+.social-gdpr-google-maps-iframe-notice,
+.social-gdpr-osm-iframe-notice {
+    position: absolute;
+    bottom: 0;
+    padding: 2.5% 5% 3% 5%;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #ffffff;
+}
+
+.social-gdpr-youtube-iframe-notice p,
+.social-gdpr-vimeo-iframe-notice p,
+.social-gdpr-google-maps-iframe-notice p,
+.social-gdpr-osm-iframe-notice p {
+    font-size: inherit;
+}
+
+@media screen and (max-width: 520px) {
+    .social-gdpr-youtube-iframe-notice,
+    .social-gdpr-vimeo-iframe-notice,
+    .social-gdpr-google-maps-iframe-notice,
+    .social-gdpr-osm-iframe-notice {
+        font-size: 75%;
+    }
+
+    .social-gdpr-youtube-video img.videostub,
+    .social-gdpr-vimeo-video img.videostub,
+    .social-gdpr-google-maps img.mapstub,
+    .social-gdpr-osm-map img.mapstub {
+        height: auto;
+        width: 75px;
+        top: 30%;
+    }
+}
+
+@media screen and (max-width: 320px) {
+    .social-gdpr-youtube-video img.videostub,
+    .social-gdpr-vimeo-video img.videostub,
+    .social-gdpr-google-maps-video img.mapstub {
+        width: 50px;
+    }
+}

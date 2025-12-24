@@ -1,0 +1,5 @@
+# Zusammenfassung: B. Sc. Informatik
+
+Der Bachelorstudiengang Informatik (ehemals Software Systems Science) wurde ab dem Wintersemester 2024/25 grundlegend erneuert. Mit 180 ECTS über 6 Semester bietet er eine moderne Informatikausbildung für die Entwicklung komplexer, verteilter und zuverlässiger Systeme. Der Studiengang ist nicht zulassungsbeschränkt und kann zum Winter- und Sommersemester begonnen werden.
+
+Die Neuerungen umfassen erweiterte Wahlmöglichkeiten, einen neuen Namen "B. Sc. Informatik" und drei wählbare Schwerpunkte: Software, Systemarchitektur oder neu - Theoretische Informatik. Das Pflichtprogramm orientiert sich an GI-Standards und schafft mehr Raum für individuelle Interessen und Anrechnungen. Die Studiengangsbeauftragte ist Prof. Dr. Daniela Nicklas, Fachstudienberater Robin Lichtenthäler. Absolventen qualifizieren sich für Bereiche wie Softwareentwicklung und Beratung, Softwarearchitektur, Entwicklung von IT-Infrastrukturen sowie kritische und sicherheitskritische Systeme. Die praxisorientierte Ausrichtung mit Team-Projekten bereitet optimal auf das dynamische Berufsleben vor.

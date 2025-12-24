@@ -1,0 +1,19 @@
+User-agent: sogou spider
+Disallow: /
+User-agent: Mj12bot
+Disallow: /
+User-agent: SemrushBot
+Disallow: /
+User-agent: Ahrefsbot
+Disallow: /
+User-agent: DomainCrawler
+Disallow: /
+
+User-agent: *
+Disallow: /typo3/
+Disallow: /*?type=3132
+
+Sitemap: https://www.uni-bamberg.de/sitemap.xml
+Sitemap: https://www.uni-bamberg.de/en/sitemap.xml
+Sitemap: https://www.uni-bamberg.de/es/universidad-de-bamberg/sitemap.xml
+Sitemap: https://blog.uni-bamberg.de/sitemap.xml

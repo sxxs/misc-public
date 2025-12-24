@@ -1,0 +1,65 @@
+{
+  "wiai/studium": {
+    "title": "Studium | Fakultät WIAI",
+    "description": "Studieren an der Fakultät WIAI - Bachelor, Master und Promotion",
+    "body_class": "fakultaet-page",
+    "subnav": "subnav-wiai",
+    "nav_fak": true,
+    "breadcrumb_current": "Studium",
+    "subnav_studium": true
+  },
+  "wiai/faq": {
+    "title": "FAQ | Fakultat WIAI",
+    "description": "Haufig gestellte Fragen zu Studiengangen der Fakultat WIAI",
+    "body_class": "fakultaet-page",
+    "subnav": "subnav-wiai",
+    "nav_fak": true,
+    "breadcrumb_current": "FAQ",
+    "subnav_faq": true
+  },
+  "wiai/bewerbung": {
+    "title": "Bewerbung & Zulassung | Fakultat WIAI",
+    "description": "Informationen zur Bewerbung und Zulassung fur Studiengange der WIAI",
+    "body_class": "fakultaet-page",
+    "subnav": "subnav-wiai",
+    "nav_fak": true,
+    "breadcrumb_current": "Bewerbung",
+    "subnav_bewerbung": true
+  },
+  "wiai/beratung": {
+    "title": "Beratung & Ansprechpartner | Fakultat WIAI",
+    "description": "Studienberatung und Ansprechpartner der Fakultat WIAI",
+    "body_class": "fakultaet-page",
+    "subnav": "subnav-wiai",
+    "nav_fak": true,
+    "breadcrumb_current": "Beratung",
+    "subnav_beratung": true
+  },
+  "wiai/im-studium": {
+    "title": "Im Studium | Fakultat WIAI",
+    "description": "Informationen und Services fur Studierende der WIAI",
+    "body_class": "fakultaet-page",
+    "subnav": "subnav-wiai",
+    "nav_fak": true,
+    "breadcrumb_current": "Im Studium",
+    "subnav_im_studium": true
+  },
+  "wiai/karriere": {
+    "title": "Karriere | Fakultat WIAI",
+    "description": "Karrieremoglichkeiten und Berufseinstieg fur WIAI-Absolventen",
+    "body_class": "fakultaet-page",
+    "subnav": "subnav-wiai",
+    "nav_fak": true,
+    "breadcrumb_current": "Karriere",
+    "subnav_karriere": true
+  },
+  "wiai/kontakt": {
+    "title": "Kontakt | Fakultät WIAI",
+    "description": "Kontaktinformationen der Fakultät WIAI",
+    "body_class": "fakultaet-page",
+    "subnav": "subnav-wiai",
+    "nav_fak": true,
+    "breadcrumb_current": "Kontakt",
+    "subnav_kontakt": true
+  }
+}

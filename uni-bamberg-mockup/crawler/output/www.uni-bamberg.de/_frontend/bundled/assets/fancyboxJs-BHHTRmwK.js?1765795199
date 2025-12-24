@@ -1,0 +1,5 @@
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./@fancyapps-CioPNnE4.js","./@fancyapps-DTpptOfq.css"])))=>i.map(i=>d[i]);
+import{_ as s}from"./preload-helper-Dp1pzeXC.js";import{O as m,o as u}from"./@fancyapps-CioPNnE4.js";const i=document.documentElement.lang;async function d(){if(i==="de"){const{de:r}=await s(async()=>{const{de:n}=await import("./@fancyapps-CioPNnE4.js").then(t=>t.d);return{de:n}},__vite__mapDeps([0,1]),import.meta.url);return r}if(i==="es"){const{en:r}=await s(async()=>{const{en:n}=await import("./@fancyapps-CioPNnE4.js").then(t=>t.e);return{en:n}},__vite__mapDeps([0,1]),import.meta.url);return r}return u}d().then(r=>{m.bind("[data-fancybox]",{on:{reveal:(n,t)=>{var a,o;const e=(o=(a=t.triggerEl)==null?void 0:a.querySelector("[data-cr]"))==null?void 0:o.dataset.cr;if(e){const c=`<span class="fancybox-copyright">© ${e}</span>`;t.contentEl.insertAdjacentHTML("beforeend",c)}}},Images:{content:(n,t)=>{let e="<picture>";const a=t.media.split(";");return t.sources.split(";").map((o,c)=>{e+=`<source
+          media="${a[c]||""}"
+          srcset="${o}"
+        />`}),e+=`<img src="${t.src}" alt="" />`,e+="</picture>",e}},l10n:r})});

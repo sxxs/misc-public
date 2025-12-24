@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Haufig gestellte Fragen zu Studiengangen der Fakultat WIAI">
+    <title>FAQ | Fakultat WIAI | Universitat Bamberg</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Vollkorn:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" type="image/svg+xml" href="../crawler/output/www.uni-bamberg.de/_frontend/siteunibamberg/favicon/favicon.svg">
+</head>
+<body class="subpage fakultaet-page">
+    <!-- Skip Links -->
+    <nav class="skip-links" aria-label="Sprungnavigation">
+        <a href="#main-nav" class="skip-link">Zur Hauptnavigation</a>
+        <a href="#main-content" class="skip-link">Zum Inhalt</a>
+        <a href="#footer" class="skip-link">Zur Fusszeile</a>
+    </nav>
+
+    <!-- Header -->
+    <header class="site-header" role="banner">
+        <div class="header-inner">
+            <a href="../index.html" class="logo" aria-label="Universitat Bamberg Startseite">
+                <img src="../uba-social-media-cropped-transparent.png" alt="" class="logo-icon" aria-hidden="true">
+                <span class="logo-text">
+                    <span class="logo-main">Universitat Bamberg</span>
+                </span>
+            </a>
+
+            <nav class="nav-primary" id="main-nav" aria-label="Hauptnavigation">
+                <ul class="nav-list" role="list">
+                    <li><a href="../index.html#universitaet">Universitat</a></li>
+                    <li><a href="../index.html#fakultaeten" class="active" aria-current="page">Fakultaten</a></li>
+                    <li><a href="../studium.html">Studium</a></li>
+                    <li><a href="../index.html#forschung">Forschung</a></li>
+                    <li><a href="../index.html#international">International</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-actions">
+                <button class="btn-search" aria-label="Suche offnen" id="search-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                </button>
+                <div class="lang-switch">
+                    <a href="#" class="lang-link active" aria-current="page" hreflang="de">DE</a>
+                    <span class="lang-divider" aria-hidden="true">/</span>
+                    <a href="#" class="lang-link" hreflang="en">EN</a>
+                </div>
+                <button class="btn-menu" aria-label="Menu offnen" aria-expanded="false" id="menu-toggle">
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav-overlay" id="mobile-nav" aria-hidden="true">
+        <nav class="mobile-nav" aria-label="Mobile Navigation">
+            <ul class="mobile-nav-list" role="list">
+                <li><a href="../index.html#universitaet">Universitat</a></li>
+                <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
+                <li><a href="../studium.html">Studium</a></li>
+                <li><a href="../index.html#forschung">Forschung</a></li>
+                <li><a href="../index.html#international">International</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Search Overlay -->
+    <div class="search-overlay" id="search-overlay" aria-hidden="true">
+        <div class="search-container">
+            <form class="search-form" role="search" action="/suche">
+                <label for="search-input" class="visually-hidden">Suchbegriff eingeben</label>
+                <input type="search" id="search-input" class="search-input" placeholder="Suchen..." autocomplete="off">
+                <button type="submit" class="search-submit" aria-label="Suche starten">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </form>
+            <button class="search-close" aria-label="Suche schliessen" id="search-close">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <div class="container">
+            <ol class="breadcrumb-list">
+                <li><a href="../index.html">Startseite</a></li>
+                <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
+                <li><a href="../fakultaet-wiai.html">WIAI</a></li>
+                
+                <li aria-current="page">FAQ</li>
+            </ol>
+        </div>
+    </nav>
+
+    <!-- WIAI Subnavigation -->
+    <nav class="subnav" aria-label="WIAI Navigation">
+        <div class="container">
+            <div class="subnav-wrapper">
+                <ul class="subnav-list">
+                    <li><a href="../fakultaet-wiai.html">Übersicht</a></li>
+                    <li><a href="studium.html">Studium</a></li>
+                    <li><a href="studiengaenge.html">Studiengänge</a></li>
+                    <li><a href="forschung.html">Forschung</a></li>
+                    <li><a href="karriere.html">Karriere</a></li>
+                </ul>
+                <div class="subnav-quick">
+                    <a href="faq.html" class="subnav-quick-link">FAQ</a>
+                    <a href="bewerbung.html" class="subnav-quick-link">Bewerbung</a>
+                    <a href="kontakt.html" class="subnav-quick-link">Kontakt</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- Page Hero -->
+        <section class="page-hero page-hero--fakultaet" style="--fakultaet-color: var(--color-primary);">
+            <div class="container">
+                <div class="page-hero-content">
+                    <span class="page-hero-label">WIAI Studium</span>
+                    <h1 class="page-hero-title">Haufig gestellte Fragen</h1>
+                    <p class="page-hero-subtitle">Antworten auf die wichtigsten Fragen rund um das Studium an der WIAI</p>
+                </div>
+            </div>
+            <div class="page-hero-accent"></div>
+        </section>
+
+        <!-- Filter Section -->
+        <section class="filter-section">
+            <div class="container">
+                <div class="filter-bar">
+                    <span class="filter-label">Kategorie:</span>
+                    <div class="filter-chips">
+                        <button class="filter-chip active">Alle</button>
+                        <button class="filter-chip">Bewerbung</button>
+                        <button class="filter-chip">Studium</button>
+                        <button class="filter-chip">Prufungen</button>
+                        <button class="filter-chip">Karriere</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Content -->
+        <section class="content-section">
+            <div class="container">
+                <div style="max-width: 800px;">
+                    <!-- Bewerbung -->
+                    <h2 class="section-title" style="margin-bottom: var(--space-6);">Bewerbung & Zulassung</h2>
+
+                    <div class="accordion" style="margin-bottom: var(--space-12);">
+                        <div class="accordion-item">
+                            <button class="accordion-trigger" aria-expanded="false">
+                                <span>Wie bewerbe ich mich fur einen Studiengang?</span>
+                                <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Die Bewerbung erfolgt online uber das Bewerbungsportal der Universitat Bamberg. Fur zulassungsfreie Studiengange (Bachelor Angewandte Informatik, Bachelor Software Systems Science) konnen Sie sich direkt einschreiben. Fur zulassungsbeschrankte Studiengange mussen Sie sich bewerben.</p>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-trigger" aria-expanded="false">
+                                <span>Wann sind die Bewerbungsfristen?</span>
+                                <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </button>
+                            <div class="accordion-content">
+                                <p><strong>Wintersemester:</strong> 15. Juli (fur Bachelor und Master)</p>
+                                <p><strong>Sommersemester:</strong> 15. Januar (nur fur Master-Studiengange)</p>
+                                <p>Fur internationale Bewerber gelten fruhere Fristen - bitte informieren Sie sich beim International Office.</p>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-trigger" aria-expanded="false">
+                                <span>Welche Unterlagen benotige ich?</span>
+                                <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </button>
+                            <div class="accordion-content">
+                                <p><strong>Bachelor:</strong></p>
+                                <ul style="margin-left: var(--space-4); margin-bottom: var(--space-4);">
+                                    <li>Hochschulzugangsberechtigung (Abitur)</li>
+                                    <li>Lebenslauf</li>
+                                </ul>
+                                <p><strong>Master:</strong></p>
+                                <ul style="margin-left: var(--space-4);">
+                                    <li>Bachelor-Zeugnis (oder vorlaufige Bescheinigung)</li>
+                                    <li>Transcript of Records</li>
+                                    <li>Je nach Studiengang: Motivationsschreiben</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-trigger" aria-expanded="false">
+                                <span>Gibt es einen NC fur die Studiengange?</span>
+                                <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Die meisten Studiengange der WIAI sind zulassungsfrei, d.h. es gibt keinen NC. Zulassungsbeschrankt sind derzeit nur:</p>
+                                <ul style="margin-left: var(--space-4);">
+                                    <li>B.Sc. Wirtschaftsinformatik</li>
+                                    <li>B.Sc. International Information Systems Management</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Studium -->
+                    <h2 class="section-title" style="margin-bottom: var(--space-6);">Studium & Organisation</h2>
+
+                    <div class="accordion" style="margin-bottom: var(--space-12);">
+                        <div class="accordion-item">
+                            <button class="accordion-trigger" aria-expanded="false">
+                                <span>Wie ist das Studium aufgebaut?</span>
+                                <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Bachelor-Studiengange umfassen 180 ECTS-Punkte (6 Semester Regelstudienzeit). Master-Studiengange umfassen 120 ECTS-Punkte (4 Semester).</p>
+                                <p>Das Studium ist modular aufgebaut: Sie wahlen aus Pflicht- und Wahlpflichtmodulen und konnen so individuelle Schwerpunkte setzen.</p>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-trigger" aria-expanded="false">
+                                <span>Kann ich in Teilzeit studieren?</span>
+                                <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Ja, ein Teilzeitstudium ist moglich. Die Regelstudienzeit verlangert sich entsprechend. Bitte informieren Sie sich bei der Studienberatung uber die genauen Modalitaten.</p>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-trigger" aria-expanded="false">
+                                <span>Wie melde ich mich fur Prufungen an?</span>
+                                <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Die Prufungsanmeldung erfolgt uber FlexNow. Die Anmeldefristen werden rechtzeitig per E-Mail und auf der Website bekannt gegeben.</p>
+                                <p><strong>Wichtig:</strong> Ohne Anmeldung konnen Sie nicht an Prufungen teilnehmen!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Prufungen -->
+                    <h2 class="section-title" style="margin-bottom: var(--space-6);">Prufungen</h2>
+
+                    <div class="accordion" style="margin-bottom: var(--space-12);">
+                        <div class="accordion-item">
+                            <button class="accordion-trigger" aria-expanded="false">
+                                <span>Wie oft kann ich eine Prufung wiederholen?</span>
+                                <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Nicht bestandene Prufungen konnen zweimal wiederholt werden. Die dritte Wiederholung (Hartefallregelung) bedarf eines Antrags beim Prufungsausschuss.</p>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-trigger" aria-expanded="false">
+                                <span>Wie bekomme ich eine BAfoG-Bescheinigung?</span>
+                                <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Die BAfoG-Bescheinigung (Formblatt 5) konnen Sie beim Prufungsausschuss beantragen. Sie benotigen mindestens die Halfte der fur Ihr Fachsemester vorgesehenen ECTS-Punkte.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CTA -->
+                <div class="cta-box" style="max-width: 800px;">
+                    <div>
+                        <h3 class="cta-title">Noch Fragen?</h3>
+                        <p class="cta-text">Unsere Studienberatung hilft Ihnen gerne weiter.</p>
+                    </div>
+                    <a href="beratung.html" class="btn btn-primary">Beratung kontaktieren</a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    <!-- Footer -->
+    <footer class="site-footer" id="footer" role="contentinfo">
+        <div class="footer-main">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-brand">
+                        <a href="../index.html" class="footer-logo">
+                            <img src="../uba-social-media-cropped-transparent-white.png" alt="" class="logo-icon" aria-hidden="true">
+                            <span class="footer-logo-text">Universitat Bamberg</span>
+                        </a>
+                        <p class="footer-tagline">Studieren im Welterbe</p>
+                    </div>
+                    <nav class="footer-nav" aria-label="Schnellzugriff">
+                        <h3>Schnellzugriff</h3>
+                        <ul>
+                            <li><a href="../studium.html">Studium</a></li>
+                            <li><a href="../index.html#forschung">Forschung</a></li>
+                            <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
+                            <li><a href="../index.html#international">International</a></li>
+                        </ul>
+                    </nav>
+                    <nav class="footer-nav" aria-label="Service">
+                        <h3>Service</h3>
+                        <ul>
+                            <li><a href="#">Bibliothek</a></li>
+                            <li><a href="#">IT-Service</a></li>
+                            <li><a href="#">Mensa</a></li>
+                            <li><a href="#">Stellenangebote</a></li>
+                        </ul>
+                    </nav>
+                    <div class="footer-contact">
+                        <h3>Kontakt</h3>
+                        <address>
+                            <p>Otto-Friedrich-Universitat Bamberg</p>
+                            <p>Kapuzinerstrasse 16</p>
+                            <p>96047 Bamberg</p>
+                        </address>
+                        <p><a href="tel:+499518630">+49 951 863-0</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <nav class="footer-legal" aria-label="Rechtliches">
+                    <ul>
+                        <li><a href="#">Impressum</a></li>
+                        <li><a href="#">Datenschutz</a></li>
+                        <li><a href="#">Barrierefreiheit</a></li>
+                    </ul>
+                </nav>
+                <p class="footer-copyright">Otto-Friedrich-Universitat Bamberg</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+</html>

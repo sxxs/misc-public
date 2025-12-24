@@ -1,0 +1,2409 @@
+{
+  "missing": [
+    {
+      "url": "/ba-wi/faq",
+      "count": 95,
+      "referenced_from": [
+        "ma-wipaed-wi/index.html",
+        "wiai/index.html",
+        "ba-wi/index.html",
+        "ba-nf-ai/index.html",
+        "wiai/wiaicommunity/index.html"
+      ],
+      "category": "ba-wi"
+    },
+    {
+      "url": "/ma-wi/faq",
+      "count": 95,
+      "referenced_from": [
+        "wiai/index.html",
+        "ba-nf-ai/index.html",
+        "wiai/wiaicommunity/index.html",
+        "wiai/fakultaetsleitung-und-dekanat/index.html",
+        "wiai/personen-einrichtungen/index.html"
+      ],
+      "category": "ma-wi"
+    },
+    {
+      "url": "/ba-iism/faq",
+      "count": 94,
+      "referenced_from": [
+        "ba-iism/index.html",
+        "wiai/index.html",
+        "ba-nf-ai/index.html",
+        "ba-iism/profil/index.html",
+        "ba-iism/teilzeitstudium/index.html"
+      ],
+      "category": "ba-iism"
+    },
+    {
+      "url": "/ma-iism/faq",
+      "count": 94,
+      "referenced_from": [
+        "wiai/index.html",
+        "ba-nf-ai/index.html",
+        "ma-iism/index.html",
+        "wiai/wiaicommunity/index.html",
+        "wiai/fakultaetsleitung-und-dekanat/index.html"
+      ],
+      "category": "ma-iism"
+    },
+    {
+      "url": "/ddt/studium/leben-in-bamberg/bilder-multimedia/bildergalerie-uni-standorte",
+      "count": 89,
+      "referenced_from": [
+        "ddt/index.html",
+        "ddt/veranstaltungen/index.html",
+        "ddt/transfer/index.html",
+        "ddt/studium/index.html",
+        "ddt/ausleihe/index.html"
+      ],
+      "category": "ddt"
+    },
+    {
+      "url": "/qm/siegelvergabe-intern/urkunden-und-berichte",
+      "count": 86,
+      "referenced_from": [
+        "ma-psychologie/index.html",
+        "ma-wipaed-wi/index.html",
+        "ma-arabistik/index.html",
+        "ba-kulturgutsicherung/index.html",
+        "ma-psy-klippt/index.html"
+      ],
+      "category": "qm"
+    },
+    {
+      "url": "/denkmalpflege/forschung/projekte/laufende-projekte/rubiacum",
+      "count": 60,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "denkmalpflege"
+    },
+    {
+      "url": "/ma-digitale-denkmaltechnologien/aktuelles/lehrangebot",
+      "count": 60,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "ma-digitale-denkmaltechnologien"
+    },
+    {
+      "url": "/denkmalpflege/forschung/projekte/laufende-projekte/nacherfassung-oberes-mittelrheintal",
+      "count": 60,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "denkmalpflege"
+    },
+    {
+      "url": "/denkmalpflege/forschung/projekte/abgeschlossene-projekte/architektur-und-planungskollektive-der-ddr",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "denkmalpflege"
+    },
+    {
+      "url": "/ma-digitale-denkmaltechnologien/leben-in-bamberg/wohnen",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "ma-digitale-denkmaltechnologien"
+    },
+    {
+      "url": "/ma-digitale-denkmaltechnologien/aktuelles/exkursionen",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "ma-digitale-denkmaltechnologien"
+    },
+    {
+      "url": "/ma-digitale-denkmaltechnologien/kontakt/ma-digitale-denkmaltechnologien-kontakt-pruefungsausschuss",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "ma-digitale-denkmaltechnologien"
+    },
+    {
+      "url": "/denkmalpflege/forschung/projekte/laufende-projekte/emotion-und-erbe",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "denkmalpflege"
+    },
+    {
+      "url": "/denkmalpflege/forschung/projekte/abgeschlossene-projekte/architecture-and-democratization",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "denkmalpflege"
+    },
+    {
+      "url": "/denkmalpflege/forschung/projekte/abgeschlossene-projekte/mittelalterbilder",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "denkmalpflege"
+    },
+    {
+      "url": "/denkmalpflege/forschung/projekte/abgeschlossene-projekte/gustavo-giovannoni",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "denkmalpflege"
+    },
+    {
+      "url": "/denkmalpflege/forschung/projekte/abgeschlossene-projekte/das-digitale-und-die-denkmalpflege",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "denkmalpflege"
+    },
+    {
+      "url": "/ma-digitale-denkmaltechnologien/aktuelles/masterarbeiten",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "ma-digitale-denkmaltechnologien"
+    },
+    {
+      "url": "/denkmalpflege/forschung/projekte/laufende-projekte/burgen-als-objekte-hegemonialer-identitaetspolitik",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "denkmalpflege"
+    },
+    {
+      "url": "/ma-digitale-denkmaltechnologien/leben-in-bamberg/bilder-multimedia",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "ma-digitale-denkmaltechnologien"
+    },
+    {
+      "url": "/denkmalpflege/kontaktnavigation/kontakt",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "denkmalpflege"
+    },
+    {
+      "url": "/ma-digitale-denkmaltechnologien/leben-in-bamberg/freizeit-engagement",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "ma-digitale-denkmaltechnologien"
+    },
+    {
+      "url": "/ma-digitale-denkmaltechnologien/leben-in-bamberg/mobil",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "ma-digitale-denkmaltechnologien"
+    },
+    {
+      "url": "/ma-digitale-denkmaltechnologien/leben-in-bamberg/freizeit",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "ma-digitale-denkmaltechnologien"
+    },
+    {
+      "url": "/ma-digitale-denkmaltechnologien/aktuelles/news",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "ma-digitale-denkmaltechnologien"
+    },
+    {
+      "url": "/denkmalpflege/forschung/projekte/laufende-projekte/woodfeauture",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "denkmalpflege"
+    },
+    {
+      "url": "/denkmalpflege/forschung/projekte/laufende-projekte/urbanmetamapping",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "denkmalpflege"
+    },
+    {
+      "url": "/denkmalpflege/forschung/projekte/abgeschlossene-projekte/digitalisierung-des-dendrochronologischen-archivs",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "denkmalpflege"
+    },
+    {
+      "url": "/denkmalpflege/forschung/projekte/laufende-projekte/heritage-transformation-at-the-periphery",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "denkmalpflege"
+    },
+    {
+      "url": "/denkmalpflege/forschung/projekte/laufende-projekte/making-dorf",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "denkmalpflege"
+    },
+    {
+      "url": "/denkmalpflege/kontaktnavigation/impressum",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "denkmalpflege"
+    },
+    {
+      "url": "/denkmalpflege/forschung/projekte/abgeschlossene-projekte/schadensaufnahmen",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "denkmalpflege"
+    },
+    {
+      "url": "/ma-digitale-denkmaltechnologien/leben-in-bamberg/kultur",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "ma-digitale-denkmaltechnologien"
+    },
+    {
+      "url": "/ma-digitale-denkmaltechnologien/aktuelles/digitaler-studieninformationstag",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "ma-digitale-denkmaltechnologien"
+    },
+    {
+      "url": "/denkmalpflege/forschung/projekte/abgeschlossene-projekte/kommunales-denkmalkonzept",
+      "count": 59,
+      "referenced_from": [
+        "ba-kulturgutsicherung/index.html",
+        "ma-digitale-denkmaltechnologien/index.html",
+        "ma-denkmalpflege/index.html",
+        "denkmalpflege/index.html",
+        "erstsemestereinfuehrung/index.html"
+      ],
+      "category": "denkmalpflege"
+    },
+    {
+      "url": "/restaurierungswissenschaft/kontaktnavigation/kontakt",
+      "count": 56,
+      "referenced_from": [
+        "restaurierungswissenschaft/index.html",
+        "restaurierungswissenschaft/bild-des-monats/index.html",
+        "restaurierungswissenschaft/plattform-konswiss/index.html",
+        "restaurierungswissenschaft/transfer/index.html",
+        "restaurierungswissenschaft/studium/index.html"
+      ],
+      "category": "restaurierungswissenschaft"
+    },
+    {
+      "url": "/restaurierungswissenschaft/kontaktnavigation/impressum",
+      "count": 56,
+      "referenced_from": [
+        "restaurierungswissenschaft/index.html",
+        "restaurierungswissenschaft/bild-des-monats/index.html",
+        "restaurierungswissenschaft/plattform-konswiss/index.html",
+        "restaurierungswissenschaft/transfer/index.html",
+        "restaurierungswissenschaft/studium/index.html"
+      ],
+      "category": "restaurierungswissenschaft"
+    },
+    {
+      "url": "/restaurierungswissenschaft/forschung/forschungsprojekte/kleiner-40/umfrage-kleiner-40",
+      "count": 56,
+      "referenced_from": [
+        "restaurierungswissenschaft/index.html",
+        "restaurierungswissenschaft/bild-des-monats/index.html",
+        "restaurierungswissenschaft/plattform-konswiss/index.html",
+        "restaurierungswissenschaft/transfer/index.html",
+        "restaurierungswissenschaft/studium/index.html"
+      ],
+      "category": "restaurierungswissenschaft"
+    },
+    {
+      "url": "/studium/interesse/bewerben/bewerbung-fuer-einen-masterstudiengang/master-bewerbung",
+      "count": 50,
+      "referenced_from": [
+        "fruehstudium/index.html",
+        "bachelor/index.html",
+        "ma-iranistik/index.html",
+        "auslandsstudium/index.html",
+        "studienangebot/index.html"
+      ],
+      "category": "studium"
+    },
+    {
+      "url": "/ma-amanz/ansprechpersonen",
+      "count": 49,
+      "referenced_from": [
+        "amanz/index.html",
+        "ma-amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html"
+      ],
+      "category": "ma-amanz"
+    },
+    {
+      "url": "/ma-amanz/leben-in-bamberg",
+      "count": 49,
+      "referenced_from": [
+        "amanz/index.html",
+        "ma-amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html"
+      ],
+      "category": "ma-amanz"
+    },
+    {
+      "url": "/ma-amanz/ordnungen-und-dokumente",
+      "count": 49,
+      "referenced_from": [
+        "amanz/index.html",
+        "ma-amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html"
+      ],
+      "category": "ma-amanz"
+    },
+    {
+      "url": "/ma-amanz/zulassung-und-einschreibung",
+      "count": 49,
+      "referenced_from": [
+        "amanz/index.html",
+        "ma-amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html"
+      ],
+      "category": "ma-amanz"
+    },
+    {
+      "url": "/ma-amanz/qualifikationsziele",
+      "count": 49,
+      "referenced_from": [
+        "amanz/index.html",
+        "ma-amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html"
+      ],
+      "category": "ma-amanz"
+    },
+    {
+      "url": "/ma-amanz/gute-gruende",
+      "count": 49,
+      "referenced_from": [
+        "amanz/index.html",
+        "ma-amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html"
+      ],
+      "category": "ma-amanz"
+    },
+    {
+      "url": "/ma-amanz/teilzeitstudium",
+      "count": 49,
+      "referenced_from": [
+        "amanz/index.html",
+        "ma-amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html"
+      ],
+      "category": "ma-amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/2011-ausgrabungen-am-kranen-14",
+      "count": 49,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/ma-amanz/berufsperspektiven",
+      "count": 49,
+      "referenced_from": [
+        "amanz/index.html",
+        "ma-amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html"
+      ],
+      "category": "ma-amanz"
+    },
+    {
+      "url": "/ma-amanz/profil-des-studiengangs",
+      "count": 49,
+      "referenced_from": [
+        "amanz/index.html",
+        "ma-amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html"
+      ],
+      "category": "ma-amanz"
+    },
+    {
+      "url": "/ma-amanz/struktur-und-inhalt",
+      "count": 49,
+      "referenced_from": [
+        "amanz/index.html",
+        "ma-amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html"
+      ],
+      "category": "ma-amanz"
+    },
+    {
+      "url": "/ma-amanz/leben-in-bamberg/freizeit-engagement",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "ma-amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html"
+      ],
+      "category": "ma-amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/1995-2002-das-fruehmittelalterliche-graeberfeld-von-altenerding-und-die-ethnogenese-der-baiern",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/2006-stadtkernarchaeologie-in-forchheim",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/kontaktnavigation/kontakt",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "ma-amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/2007-2015-bischofspfalz-und-wuestung-lindelach-bei-gerolzhofen-landkreis-schweinfurt",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/kulturlandschaft-fatschenbrunn",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/1997-2001-auswertung-der-ausgrabungen-an-der-katholischen-pfarrkirche-st-kunibert-in-zuelpich-sinzenich",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/ma-amanz/leben-in-bamberg/freizeit",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "ma-amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html"
+      ],
+      "category": "ma-amanz"
+    },
+    {
+      "url": "/ma-amanz/leben-in-bamberg/bilder-multimedia",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "ma-amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html"
+      ],
+      "category": "ma-amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/2003-2006-herman-wirth-und-die-deutsche-archaeologie-im-umfeld-des-nationalsozialismus",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/mittelalterliches-und-fruehneuzeitliches-faehrwesen-an-main-und-neckar",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/studium/eindruecke-aus-dem-studium/beteiligung-an-forschung",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/lehrstuhlteam/prof-dr-rainer-schreg/publikationen-r-schreg",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/2015-2019-forchheim-in-der-karolingerzeit",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/laufende-forschungsprojekte/siedlungsentwicklung-im-vergleich",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/lehrstuhlteam/ehemalige-mitarbeiter/simon-dupper-ma",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/studium/eindruecke-aus-dem-studium/examensarbeiten",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/studium/eindruecke-aus-dem-studium/studienreisen",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/rotschmiede-in-nuernberg-vom-15-18-jahrhundert",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/dorfwuestung-bei-milikov-miltigau-im-kaiserwald",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/laufende-forschungsprojekte/das-flusssystem-der-wiesent-in-der-noerdlichen-frankenalb",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/1983-2006-wehrbaugenese-des-suedwestlichen-ostseeraumes",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/2013-2014-bauopfer-der-kathedrale-von-chur-kanton-graubuenden-ch-funde-aus-gebaeuden-des-mittelalters-und-der-neuzeit",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/laufende-forschungsprojekte/archaeologiemanagement-in-hoechstadt-an-der-aisch",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/transfer-archaeologische-akademie/abgeschlossene-ausstellungsprojekte/ausstellungsprojekt-kleine-funde-grosse-geschichten",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/ma-amanz/leben-in-bamberg/kultur",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "ma-amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html"
+      ],
+      "category": "ma-amanz"
+    },
+    {
+      "url": "/amanz/kontaktnavigation/impressum",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "ma-amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/2013-2014-ausgrabungen-am-bamberger-domkranz",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/2000-2004-das-muehlberg-ensemble-in-kempten-allgaeu-sachkultur-und-sozialtopographie-einer-stadt-des-spaetmittelalters-im-spiegel-neu-entdeckter-archaeologischer-und-schriftlicher-quellen",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/lehrstuhlteam/ehemalige-mitarbeiter/andrea-bischof-ma",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/transfer-archaeologische-akademie/abgeschlossene-ausstellungsprojekte/ausstellung-rueckspiegel",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/laufende-forschungsprojekte/die-fruehmittelalterliche-slawische-nekropole-bei-iffelsdorf",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/lehrstuhlteam/ehemalige-mitarbeiter/marius-kroener-ma",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/treppenhauer",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/transfer-archaeologische-akademie/abgeschlossene-ausstellungsprojekte/ausstellungsprojekt-der-letzte-weg",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/die-mittelalterlich-fruehneuzeitliche-dorfwuestung-lindelach",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/laufende-forschungsprojekte/arch-keramikforschung",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/auswertung-der-archaeologischen-ausgrabungen-im-bamberger-dom-1969-72",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/lehrstuhlteam/ehemalige-mitarbeiter/matthias-hoffmann-ma",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/laufende-forschungsprojekte/alte-synagoge-muehlausen-mfr",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/1996-2004-stadtarchaeologie-seligenstadt",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/ma-amanz/leben-in-bamberg/wohnen",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "ma-amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html"
+      ],
+      "category": "ma-amanz"
+    },
+    {
+      "url": "/ma-amanz/leben-in-bamberg/mobil",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "ma-amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html"
+      ],
+      "category": "ma-amanz"
+    },
+    {
+      "url": "/amanz/lehrstuhlteam/ehemalige-mitarbeiter/aika-katharina-diesch-ma",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/laufende-forschungsprojekte/amanz-forschung-vor-der-haustuer-archaeologische-ausgrabungen-im-bamberger-dom-werden-endlich-ausgewertet",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/1999-2002-grab-und-begraebnis-tod-und-sterben-von-der-karolingerzeit-bis-zum-dreissigjaehrigen-krieg",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/wissenschaftliche-arbeiten/archiv-abgeschlossener-arbeiten",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/lehrstuhlteam/ehemalige-mitarbeiter/annette-zeischka-kenzler-ma",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/1989-2006-stadtkernarchaeologie-in-bamberg",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/laufende-forschungsprojekte/pommern",
+      "count": 48,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/studium/eindruecke-aus-dem-studium/studienreisen/74265",
+      "count": 47,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/kulturlandschaft-fatschenbrunn/fragestellungen-und-methodik",
+      "count": 47,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/studium/eindruecke-aus-dem-studium/studienreisen/suedfrankreich-2022",
+      "count": 47,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/studium/eindruecke-aus-dem-studium/studienreisen/benelux-2019",
+      "count": 47,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/forschung/abgeschlossene-forschungsprojekte/kulturlandschaft-fatschenbrunn/untersuchungsgebiet",
+      "count": 47,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/studium/eindruecke-aus-dem-studium/studienreisen/italien-2011",
+      "count": 47,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/studium/eindruecke-aus-dem-studium/studienreisen/england-2010",
+      "count": 47,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/studium/eindruecke-aus-dem-studium/studienreisen/polen-2023",
+      "count": 47,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/studium/eindruecke-aus-dem-studium/studienreisen/tirol-2017",
+      "count": 47,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/studium/eindruecke-aus-dem-studium/studienreisen/niedersachsen-2018",
+      "count": 47,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/transfer-archaeologische-akademie/abgeschlossene-ausstellungsprojekte/ausstellungsprojekt-der-letzte-weg/medienstation-der-ausstellung-die-letzte-reise-tod-und-bestattung-in-mittelalter-und-neuzeit",
+      "count": 47,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/amanz/studium/eindruecke-aus-dem-studium/studienreisen/suedostalpenraum-2022",
+      "count": 47,
+      "referenced_from": [
+        "amanz/index.html",
+        "amanz/transfer-archaeologische-akademie/index.html",
+        "amanz/studierende/index.html",
+        "amanz/lehrstuhlteam/index.html",
+        "amanz/studium/index.html"
+      ],
+      "category": "amanz"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/digitales-stadtmodell/4d",
+      "count": 44,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bagracs",
+      "count": 44,
+      "referenced_from": [
+        "ma-psychologie/index.html",
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "psychologie/index.html",
+        "kompetenzzentren/index.html"
+      ],
+      "category": "bagracs"
+    },
+    {
+      "url": "/zemas/studium",
+      "count": 44,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "ma-ms/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html"
+      ],
+      "category": "zemas"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/bamberger-dom/der-bamberger-dom-digital",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/bamberger-dom/das-vierungsdachwerk",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/veste-heldburg/der-heidenbau",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/bamberger-dom/der-nordostturm",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/ingenieurwissenschaftliche-bauwerksanalyse-kdwt/bauforscherische-analysemethoden-in-bauaufsichtlichen-verfahren-kdwt",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/bamberger-dom/die-langhausgewoelbe-2008",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/veste-heldburg/die-heldburg",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/kontaktinformation/impressum",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/intrabau/team",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/intrabau/veranstaltungen",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/bamberger-dom/modellbau",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/digitalisierung-in-der-bauforschung-und-baudenkmalpflege-kdwt/visualisierte-analyse-kdwt",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/kontaktinformation/kontakt",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/intrabau/experten-beirat",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/digitalisierung-in-der-bauforschung-und-baudenkmalpflege-kdwt/plattformen-standards-vernetzung-kdwt",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/bamberger-dom/die-mittelschiffsgewoelbe",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/digitales-stadtmodell/3d",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/ingenieurwissenschaftliche-bauwerksanalyse-kdwt/wissenspool-baudenkmalpflege-kdwt",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/digitalisierung-in-der-bauforschung-und-baudenkmalpflege-kdwt/burgenlandschaft-altmuehltal-kdwt",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/ingenieurwissenschaftliche-bauwerksanalyse-kdwt/thermographie-in-der-bauforschung-kdwt",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/intrabau/presse",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/intrabau/dokumente",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/veste-heldburg/der-franzoesische-bau",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/forschung/projekte/intrabau/projekte",
+      "count": 43,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bamberg-graduate-schools-promotionsprogramme/bagss",
+      "count": 43,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bamberg-graduate-schools-promotionsprogramme"
+    },
+    {
+      "url": "/econ-rtg",
+      "count": 43,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "econ-rtg"
+    },
+    {
+      "url": "/bagsb",
+      "count": 42,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagsb"
+    },
+    {
+      "url": "/bagrams",
+      "count": 42,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "zemas/index.html"
+      ],
+      "category": "bagrams"
+    },
+    {
+      "url": "/bauforschung/inhaber-der-professur",
+      "count": 41,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/bauforschung/sekretariat",
+      "count": 41,
+      "referenced_from": [
+        "bauforschung/index.html",
+        "bauforschung/transfer/index.html",
+        "bauforschung/studium/index.html",
+        "bauforschung/news/index.html",
+        "bauforschung/team/index.html"
+      ],
+      "category": "bauforschung"
+    },
+    {
+      "url": "/scrl/ringvorlesung",
+      "count": 41,
+      "referenced_from": [
+        "scrl/index.html",
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html"
+      ],
+      "category": "scrl"
+    },
+    {
+      "url": "/bagralcm",
+      "count": 41,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagralcm"
+    },
+    {
+      "url": "/bacai/news",
+      "count": 41,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bacai"
+    },
+    {
+      "url": "/bagrahist",
+      "count": 41,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagrahist"
+    },
+    {
+      "url": "/baces",
+      "count": 41,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "baces"
+    },
+    {
+      "url": "/zis",
+      "count": 41,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "zis"
+    },
+    {
+      "url": "/bamberg-graduate-schools-promotionsprogramme/baywiss-verbundkolleg-sozialer-wandel",
+      "count": 41,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bamberg-graduate-schools-promotionsprogramme"
+    },
+    {
+      "url": "/bagl",
+      "count": 41,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagl"
+    },
+    {
+      "url": "/bagscis",
+      "count": 41,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagscis"
+    },
+    {
+      "url": "/zemas/publikationen",
+      "count": 41,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "zemas/index.html"
+      ],
+      "category": "zemas"
+    },
+    {
+      "url": "/bagos",
+      "count": 41,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagos"
+    },
+    {
+      "url": "/gbwiss/wir-ueber-uns/netzwerke",
+      "count": 40,
+      "referenced_from": [
+        "kuratorium/index.html",
+        "organe-und-einrichtungen/index.html",
+        "beauftragte/index.html",
+        "familienbuero/index.html",
+        "vertretungen/index.html"
+      ],
+      "category": "gbwiss"
+    },
+    {
+      "url": "/gbwiss/wir-ueber-uns",
+      "count": 40,
+      "referenced_from": [
+        "kuratorium/index.html",
+        "organe-und-einrichtungen/index.html",
+        "beauftragte/index.html",
+        "familienbuero/index.html",
+        "vertretungen/index.html"
+      ],
+      "category": "gbwiss"
+    },
+    {
+      "url": "/bafbs/informationen/baulich-technische-gegebenheiten",
+      "count": 40,
+      "referenced_from": [
+        "kuratorium/index.html",
+        "organe-und-einrichtungen/index.html",
+        "beauftragte/index.html",
+        "familienbuero/index.html",
+        "vertretungen/index.html"
+      ],
+      "category": "bafbs"
+    },
+    {
+      "url": "/gbwiss/foerderung/bettina-paetzold-preis",
+      "count": 40,
+      "referenced_from": [
+        "kuratorium/index.html",
+        "organe-und-einrichtungen/index.html",
+        "beauftragte/index.html",
+        "familienbuero/index.html",
+        "amerikanistik/index.html"
+      ],
+      "category": "gbwiss"
+    },
+    {
+      "url": "/gbwiss/informationen-beratung/berufungsverfahren",
+      "count": 40,
+      "referenced_from": [
+        "kuratorium/index.html",
+        "organe-und-einrichtungen/index.html",
+        "beauftragte/index.html",
+        "familienbuero/index.html",
+        "vertretungen/index.html"
+      ],
+      "category": "gbwiss"
+    },
+    {
+      "url": "/scrl/projektideen",
+      "count": 40,
+      "referenced_from": [
+        "scrl/index.html",
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html"
+      ],
+      "category": "scrl"
+    },
+    {
+      "url": "/scrl/team",
+      "count": 40,
+      "referenced_from": [
+        "scrl/index.html",
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html"
+      ],
+      "category": "scrl"
+    },
+    {
+      "url": "/scrl/projekte",
+      "count": 40,
+      "referenced_from": [
+        "scrl/index.html",
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html"
+      ],
+      "category": "scrl"
+    },
+    {
+      "url": "/scrl/start",
+      "count": 40,
+      "referenced_from": [
+        "scrl/index.html",
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html"
+      ],
+      "category": "scrl"
+    },
+    {
+      "url": "/scrl/projektarchiv",
+      "count": 40,
+      "referenced_from": [
+        "scrl/index.html",
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html"
+      ],
+      "category": "scrl"
+    },
+    {
+      "url": "/scrl/bagscis",
+      "count": 40,
+      "referenced_from": [
+        "scrl/index.html",
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html"
+      ],
+      "category": "scrl"
+    },
+    {
+      "url": "/scrl/news-scrl",
+      "count": 40,
+      "referenced_from": [
+        "scrl/index.html",
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html"
+      ],
+      "category": "scrl"
+    },
+    {
+      "url": "/scrl/veroeffentlichungen",
+      "count": 40,
+      "referenced_from": [
+        "scrl/index.html",
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html"
+      ],
+      "category": "scrl"
+    },
+    {
+      "url": "/zemas/service",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "zemas/index.html"
+      ],
+      "category": "zemas"
+    },
+    {
+      "url": "/bagrams/organisation",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagrams"
+    },
+    {
+      "url": "/bagrahist/mitglieder-und-personen",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagrahist"
+    },
+    {
+      "url": "/bagl/beteiligte-wissenschaftlerinnen-und-wissenschaftler",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagl"
+    },
+    {
+      "url": "/bagsb/aufgabe-und-arbeit",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagsb"
+    },
+    {
+      "url": "/bamberg-graduate-schools-promotionsprogramme/baywiss-verbundkolleg-sozialer-wandel/forschungsprogramm",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bamberg-graduate-schools-promotionsprogramme"
+    },
+    {
+      "url": "/bagl/kontakt",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagl"
+    },
+    {
+      "url": "/bamberg-graduate-schools-promotionsprogramme/baywiss-verbundkolleg-sozialer-wandel/personen",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bamberg-graduate-schools-promotionsprogramme"
+    },
+    {
+      "url": "/econ-rtg/news",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "econ-rtg"
+    },
+    {
+      "url": "/econ-rtg/veranstaltungen",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "econ-rtg"
+    },
+    {
+      "url": "/bagrahist/ordnungen",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagrahist"
+    },
+    {
+      "url": "/bagracs/fellows",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagracs"
+    },
+    {
+      "url": "/bagsb/forum",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagsb"
+    },
+    {
+      "url": "/econ-rtg/promovierende",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "econ-rtg"
+    },
+    {
+      "url": "/bagracs/archiv",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagracs"
+    },
+    {
+      "url": "/bagos/news",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagos"
+    },
+    {
+      "url": "/bagsb/informationen",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagsb"
+    },
+    {
+      "url": "/bagrahist/ueber-bagrahist",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagrahist"
+    },
+    {
+      "url": "/econ-rtg/struktur-des-programms",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "econ-rtg"
+    },
+    {
+      "url": "/bagrahist/ausbildungsprogramm",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagrahist"
+    },
+    {
+      "url": "/bagralcm/betreuer",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagralcm"
+    },
+    {
+      "url": "/bagracs/ueber-bagracs",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagracs"
+    },
+    {
+      "url": "/arbeitsstellen/arbeitsstelle-zur-geschichte-des-deutschen-als-fremdsprache",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "arbeitsstellen"
+    },
+    {
+      "url": "/bagl/news",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagl"
+    },
+    {
+      "url": "/econ-rtg/mitarbeiter",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "econ-rtg"
+    },
+    {
+      "url": "/bagracs/profil",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagracs"
+    },
+    {
+      "url": "/bagos/forschung",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagos"
+    },
+    {
+      "url": "/bagralcm/ordnungen-und-dokumente",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagralcm"
+    },
+    {
+      "url": "/bagl/meta-ling-tagung-2023",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "arbeitsstellen/index.html"
+      ],
+      "category": "bagl"
+    },
+    {
+      "url": "/zemas/news",
+      "count": 40,
+      "referenced_from": [
+        "lehr-lern-labs/index.html",
+        "zentren/index.html",
+        "kompetenzzentren/index.html",
+        "forschungsstellen/index.html",
+        "zemas/index.html"
+      ],
+      "category": "zemas"
+    }
+  ],
+  "stats": {
+    "total_links": 20983,
+    "crawled": 2030,
+    "missing": 16940
+  }
+}

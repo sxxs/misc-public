@@ -6,6 +6,9 @@ A clean, text-focused wrapper for the University of Bamberg website with async c
 
 - ✅ **Async Content Fetching**: Fetches content via custom CORS proxy
 - ✅ **Smart Caching**: 1-hour cache with timestamp display
+- ✅ **Browser History Integration**: Browser back/forward buttons work seamlessly
+- ✅ **Navigation Buttons**: Custom back/forward buttons with keyboard shortcuts
+- ✅ **Shareable URLs**: Each page has a unique URL you can copy and share
 - ✅ **Clean Text Display**: No images, ads, or clutter - just content
 - ✅ **Hyphenation**: Automatic hyphenation for German and English
 - ✅ **Accordion Lists**: Large link lists (study programs) collapse into accordions
@@ -64,6 +67,7 @@ Visit `http://localhost:8080` in your browser
 
 ### Buttons
 - **Language Selector**: Switch between Deutsch, English, Español
+- **← Back / Forward →**: Navigate through browsing history
 - **Refresh**: Force reload content (bypasses cache)
 - **Toggle Theme**: Switch between light and dark modes
 - **View Mode Dropdown**: Select Full, Tablet, or Mobile view
@@ -71,6 +75,8 @@ Visit `http://localhost:8080` in your browser
 ### Keyboard Shortcuts
 - `Ctrl/Cmd + R`: Refresh content (bypasses cache)
 - `Ctrl/Cmd + D`: Toggle dark mode
+- `Alt + ←`: Navigate back
+- `Alt + →`: Navigate forward
 - `Ctrl/Cmd + 1`: Full view
 - `Ctrl/Cmd + 2`: Tablet view
 - `Ctrl/Cmd + 3`: Mobile view
@@ -137,7 +143,18 @@ uni-bamberg-wrapper/
 3. **Parse**: HTML parsed with DOMParser
 4. **Extract**: Remove images, scripts, navigation - keep text content
 5. **Display**: Render clean content with custom styling
-6. **Links**: Internal links stay in wrapper, external open in new tabs
+6. **History**: Browser URL updates with `?url=...` parameter using History API
+7. **Links**: Internal links stay in wrapper, external open in new tabs
+
+### Browser History Integration
+
+The wrapper uses the HTML5 History API to sync with your browser:
+
+- **URL Format**: `http://localhost:8080/?url=https://www.uni-bamberg.de/studium/`
+- **Browser Buttons**: Native back/forward buttons work perfectly
+- **Shareable**: Copy the URL to share a specific page
+- **Bookmarkable**: Bookmark any page and it loads correctly
+- **State Sync**: Custom buttons stay in sync with browser buttons
 
 ### Browser Compatibility
 

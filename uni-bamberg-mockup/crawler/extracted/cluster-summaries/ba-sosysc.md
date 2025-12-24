@@ -1,0 +1,5 @@
+# Zusammenfassung: B. Sc. Informatik: Software Systems Science
+
+Der Bachelorstudiengang Informatik: Software Systems Science (180 ECTS, 6 Semester) ist ein auslaufender Studiengang - Neueinschreibungen sind nicht mehr möglich. Bestehende Studierende können in den neuen B. Sc. Informatik wechseln. Der bisherige Studiengang konzentrierte sich auf die Entwicklung komplexer und verteilter Softwaresysteme mit modernen Methoden.
+
+Die bisherige Struktur umfasste acht Modulgruppen: Mathematische Grundlagen (30 ECTS), Grundlagen der Informatik (42 ECTS), Programmierung und Softwareentwicklung (24-36 ECTS), Komplexe und verteilte Systeme (15-27 ECTS), Profilbildung (8-16 ECTS), Kontextstudium (6-18 ECTS), Seminare und Projekte (18-24 ECTS) sowie die Bachelorarbeit (12 ECTS). Studierende konnten Schwerpunkte in Programmierung & Softwaretechnik oder Komplexe & verteilte Systeme setzen. Die Studiengangsbeauftragte ist Prof. Dr. Daniela Nicklas, Fachstudienberater Robin Lichtenthäler. Der neue B. Sc. Informatik bietet mehr Wahlmöglichkeiten und einen zusätzlichen Schwerpunkt Theoretische Informatik.

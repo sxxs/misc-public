@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Studieren an der Universität Bamberg - Uber 100 Studiengänge in 4 Fakultäten. Informationen zu Bewerbung, Studienangebot und Studienalltag.">
+    <title>Studium | Universität Bamberg</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Vollkorn:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/svg+xml" href="crawler/output/www.uni-bamberg.de/_frontend/siteunibamberg/favicon/favicon.svg">
+</head>
+<body class="subpage">
+    <!-- Skip Links -->
+    <nav class="skip-links" aria-label="Sprungnavigation">
+        <a href="#main-nav" class="skip-link">Zur Hauptnavigation</a>
+        <a href="#main-content" class="skip-link">Zum Inhalt</a>
+        <a href="#footer" class="skip-link">Zur Fußzeile</a>
+    </nav>
+
+    <!-- Header -->
+    <header class="site-header" role="banner">
+        <div class="header-inner">
+            <a href="index.html" class="logo" aria-label="Universität Bamberg Startseite">
+                <img src="uba-social-media-cropped-transparent.png" alt="" class="logo-icon" aria-hidden="true">
+                <span class="logo-text">
+                    <span class="logo-main">Universität Bamberg</span>
+                </span>
+            </a>
+
+            <nav class="nav-primary" id="main-nav" aria-label="Hauptnavigation">
+                <ul class="nav-list" role="list">
+                    <li><a href="index.html#universitaet">Universität</a></li>
+                    <li><a href="index.html#fakultaeten">Fakultäten</a></li>
+                    <li><a href="studium.html" class="active" aria-current="page">Studium</a></li>
+                    <li><a href="index.html#forschung">Forschung</a></li>
+                    <li><a href="index.html#international">International</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-actions">
+                <button class="btn-search" aria-label="Suche öffnen" id="search-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                </button>
+                <div class="lang-switch">
+                    <a href="#" class="lang-link active" aria-current="page" hreflang="de">DE</a>
+                    <span class="lang-divider" aria-hidden="true">/</span>
+                    <a href="#" class="lang-link" hreflang="en">EN</a>
+                </div>
+                <button class="btn-menu" aria-label="Menu öffnen" aria-expanded="false" id="menu-toggle">
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav-overlay" id="mobile-nav" aria-hidden="true">
+        <nav class="mobile-nav" aria-label="Mobile Navigation">
+            <ul class="mobile-nav-list" role="list">
+                <li><a href="index.html#universitaet">Universität</a></li>
+                <li><a href="index.html#fakultaeten">Fakultäten</a></li>
+                <li><a href="studium.html" class="active">Studium</a></li>
+                <li><a href="index.html#forschung">Forschung</a></li>
+                <li><a href="index.html#international">International</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Search Overlay -->
+    <div class="search-overlay" id="search-overlay" aria-hidden="true">
+        <div class="search-container">
+            <form class="search-form" role="search" action="/suche">
+                <label for="search-input" class="visually-hidden">Suchbegriff eingeben</label>
+                <input type="search" id="search-input" class="search-input" placeholder="Suchen..." autocomplete="off">
+                <button type="submit" class="search-submit" aria-label="Suche starten">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </form>
+            <button class="search-close" aria-label="Suche schließen" id="search-close">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <div class="container">
+            <ol class="breadcrumb-list">
+                <li><a href="index.html">Startseite</a></li>
+                <li aria-current="page">Studium</li>
+            </ol>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content" role="main">
+
+        <!-- Page Hero -->
+        <section class="page-hero page-hero--with-image">
+            <div class="page-hero-bg">
+                <img
+                    src="crawler/output/www.uni-bamberg.de/fileadmin/_processed_/e/2/csm_2024-04-11_STOCKPHOTOS-23-450_d75fe86374.webp"
+                    alt=""
+                    loading="eager"
+                >
+                <div class="page-hero-overlay" aria-hidden="true"></div>
+            </div>
+            <div class="container">
+                <h1 class="page-title">Studium</h1>
+                <p class="page-intro">Rund 100 Studiengänge in den Geistes-, Sozial-, Human- und Wirtschaftswissenschaften sowie Informatik. Studieren im UNESCO-Welterbe mit kurzen Wegen und personlicher Atmosphare.</p>
+            </div>
+        </section>
+
+        <!-- Quick Navigation -->
+        <nav class="page-nav" aria-label="Seitennavigation">
+            <div class="container">
+                <ul class="page-nav-list">
+                    <li><a href="#studienangebot">Studienangebot</a></li>
+                    <li><a href="#vor-dem-studium">Vor dem Studium</a></li>
+                    <li><a href="#im-studium">Im Studium</a></li>
+                    <li><a href="#nach-dem-studium">Nach dem Studium</a></li>
+                    <li><a href="#international">International</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Studienangebot -->
+        <section class="content-section" id="studienangebot">
+            <div class="container">
+                <header class="content-header">
+                    <span class="content-number" aria-hidden="true">01</span>
+                    <h2 class="content-title">Studienangebot</h2>
+                    <p class="content-intro">Von Anglistik bis Wirtschaftsinformatik: Entdecken Sie unser vielfältiges Studienangebot mit Bachelor-, Master- und Lehramtsstudiengangen.</p>
+                </header>
+
+                <div class="program-grid">
+                    <article class="program-card">
+                        <div class="program-icon">
+                            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="8" y="6" width="32" height="36" rx="2"/>
+                                <path d="M14 14h20M14 22h20M14 30h12"/>
+                            </svg>
+                        </div>
+                        <h3 class="program-type">Bachelor</h3>
+                        <p class="program-count">29 Studiengänge</p>
+                        <p class="program-desc">Grundständige Studiengänge mit einer Regelstudienzeit von 6 Semestern.</p>
+                        <a href="#" class="program-link">Alle Bachelor-Studiengänge</a>
+                    </article>
+
+                    <article class="program-card">
+                        <div class="program-icon">
+                            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M8 38l16-8 16 8"/>
+                                <path d="M24 30V14"/>
+                                <circle cx="24" cy="10" r="4"/>
+                                <path d="M12 42h24"/>
+                            </svg>
+                        </div>
+                        <h3 class="program-type">Master</h3>
+                        <p class="program-count">54 Studiengänge</p>
+                        <p class="program-desc">Weiterführende Studiengänge zur Vertiefung und Spezialisierung.</p>
+                        <a href="#" class="program-link">Alle Master-Studiengänge</a>
+                    </article>
+
+                    <article class="program-card">
+                        <div class="program-icon">
+                            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="6" y="12" width="36" height="28" rx="2"/>
+                                <path d="M6 20h36"/>
+                                <circle cx="24" cy="32" r="6"/>
+                                <path d="M24 29v6M21 32h6"/>
+                            </svg>
+                        </div>
+                        <h3 class="program-type">Lehramt</h3>
+                        <p class="program-count">25 Facher</p>
+                        <p class="program-desc">Lehramtsstudiengange für Gymnasium, Realschule, Grundschule und Mittelschule.</p>
+                        <a href="#" class="program-link">Alle Lehramtsfacher</a>
+                    </article>
+
+                    <article class="program-card">
+                        <div class="program-icon">
+                            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="24" cy="24" r="16"/>
+                                <path d="M24 14v10l6 6"/>
+                            </svg>
+                        </div>
+                        <h3 class="program-type">Weiterbildung</h3>
+                        <p class="program-count">12 Angebote</p>
+                        <p class="program-desc">Berufsbegleitende Master und Zertifikatsprogramme.</p>
+                        <a href="#" class="program-link">Alle Weiterbildungsangebote</a>
+                    </article>
+                </div>
+
+                <div class="cta-box">
+                    <div class="cta-content">
+                        <h3 class="cta-title">Studiengangs-Finder</h3>
+                        <p class="cta-text">Finden Sie den passenden Studiengang mit unserem interaktiven Tool.</p>
+                    </div>
+                    <a href="#" class="btn btn-primary">Zum Studiengangs-Finder</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Vor dem Studium -->
+        <section class="content-section content-section--alt" id="vor-dem-studium">
+            <div class="container">
+                <header class="content-header">
+                    <span class="content-number" aria-hidden="true">02</span>
+                    <h2 class="content-title">Vor dem Studium</h2>
+                    <p class="content-intro">Informationen für Studieninteressierte: Von der Orientierung bis zur Bewerbung.</p>
+                </header>
+
+                <div class="info-grid">
+                    <article class="info-card">
+                        <h3 class="info-title">Studienorientierung</h3>
+                        <p class="info-desc">Welcher Studiengang passt zu mir? Unsere Beratungsangebote helfen bei der Entscheidung.</p>
+                        <ul class="info-links">
+                            <li><a href="#">Online-Selbsttests</a></li>
+                            <li><a href="#">Studienberatung</a></li>
+                            <li><a href="#">Schnupperstudium</a></li>
+                            <li><a href="#">Studieninfotag</a></li>
+                        </ul>
+                    </article>
+
+                    <article class="info-card">
+                        <h3 class="info-title">Bewerbung & Zulassung</h3>
+                        <p class="info-desc">Alle Informationen zu Bewerbungsfristen, Zulassungsvoraussetzungen und dem Bewerbungsprozess.</p>
+                        <ul class="info-links">
+                            <li><a href="#">Bewerbungsfristen</a></li>
+                            <li><a href="#">Online-Bewerbung</a></li>
+                            <li><a href="#">Zulassungsvoraussetzungen</a></li>
+                            <li><a href="#">Internationale Bewerber</a></li>
+                        </ul>
+                    </article>
+
+                    <article class="info-card">
+                        <h3 class="info-title">Studienstart</h3>
+                        <p class="info-desc">Gut vorbereitet ins Studium: Einfuhrungsveranstaltungen, Vorkurse und Tipps für Erstsemester.</p>
+                        <ul class="info-links">
+                            <li><a href="#">Erstsemester-Einfuhrung</a></li>
+                            <li><a href="#">Vorkurse</a></li>
+                            <li><a href="#">Stundenplan erstellen</a></li>
+                            <li><a href="#">Campus-Tour</a></li>
+                        </ul>
+                    </article>
+                </div>
+
+                <!-- Timeline: Bewerbung -->
+                <div class="timeline">
+                    <h3 class="timeline-title">Bewerbungszeitraume</h3>
+                    <div class="timeline-items">
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <span class="timeline-date">15. November - 15. Januar</span>
+                                <h4 class="timeline-heading">Sommersemester</h4>
+                                <p class="timeline-text">Bewerbung für zulassungsbeschrankte Studiengänge</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <span class="timeline-date">15. Mai - 15. Juli</span>
+                                <h4 class="timeline-heading">Wintersemester</h4>
+                                <p class="timeline-text">Bewerbung für zulassungsbeschrankte Studiengänge</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <span class="timeline-date">Bis Vorlesungsbeginn</span>
+                                <h4 class="timeline-heading">Zulassungsfreie Studiengänge</h4>
+                                <p class="timeline-text">Einschreibung ohne vorherige Bewerbung möglich</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Im Studium -->
+        <section class="content-section" id="im-studium">
+            <div class="container">
+                <header class="content-header">
+                    <span class="content-number" aria-hidden="true">03</span>
+                    <h2 class="content-title">Im Studium</h2>
+                    <p class="content-intro">Alles für den Studienalltag: Prufungen, Beratung, Services und mehr.</p>
+                </header>
+
+                <div class="feature-grid">
+                    <a href="#" class="feature-card">
+                        <span class="feature-icon">
+                            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="4" y="4" width="24" height="24" rx="2"/>
+                                <path d="M4 12h24"/>
+                                <path d="M10 8v0M14 8v0M18 8v0"/>
+                                <path d="M8 18h6M8 22h10"/>
+                            </svg>
+                        </span>
+                        <span class="feature-label">Vorlesungsverzeichnis</span>
+                    </a>
+                    <a href="#" class="feature-card">
+                        <span class="feature-icon">
+                            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M16 4l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6z"/>
+                            </svg>
+                        </span>
+                        <span class="feature-label">Prufungen</span>
+                    </a>
+                    <a href="#" class="feature-card">
+                        <span class="feature-icon">
+                            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="6" y="4" width="20" height="24" rx="2"/>
+                                <path d="M10 10h12M10 14h12M10 18h8"/>
+                            </svg>
+                        </span>
+                        <span class="feature-label">Studienordnungen</span>
+                    </a>
+                    <a href="#" class="feature-card">
+                        <span class="feature-icon">
+                            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="16" cy="12" r="6"/>
+                                <path d="M6 28c0-5.523 4.477-10 10-10s10 4.477 10 10"/>
+                            </svg>
+                        </span>
+                        <span class="feature-label">Studienberatung</span>
+                    </a>
+                    <a href="#" class="feature-card">
+                        <span class="feature-icon">
+                            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="4" y="8" width="24" height="18" rx="2"/>
+                                <path d="M4 12l12 7 12-7"/>
+                            </svg>
+                        </span>
+                        <span class="feature-label">Studierendenkanzlei</span>
+                    </a>
+                    <a href="#" class="feature-card">
+                        <span class="feature-icon">
+                            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M4 24h24"/>
+                                <path d="M6 24V12l10-6 10 6v12"/>
+                                <rect x="12" y="16" width="8" height="8"/>
+                            </svg>
+                        </span>
+                        <span class="feature-label">Bibliothek</span>
+                    </a>
+                    <a href="#" class="feature-card">
+                        <span class="feature-icon">
+                            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="6" y="6" width="20" height="20" rx="2"/>
+                                <path d="M6 12h20"/>
+                                <path d="M12 6v6"/>
+                            </svg>
+                        </span>
+                        <span class="feature-label">Semestertermine</span>
+                    </a>
+                    <a href="#" class="feature-card">
+                        <span class="feature-icon">
+                            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="16" cy="16" r="10"/>
+                                <path d="M12 16l3 3 6-6"/>
+                            </svg>
+                        </span>
+                        <span class="feature-label">BAfoG & Finanzierung</span>
+                    </a>
+                </div>
+
+                <!-- Student Life -->
+                <div class="highlight-box">
+                    <div class="highlight-media">
+                        <img
+                            src="crawler/output/www.uni-bamberg.de/fileadmin/_processed_/5/8/csm_705_MitMachKlima_zeigt_Wirkung3_862b7ce096.webp"
+                            alt="Gruner Campus der Universität Bamberg"
+                            loading="lazy"
+                        >
+                    </div>
+                    <div class="highlight-content">
+                        <h3 class="highlight-title">Campus & Studierendenleben</h3>
+                        <p class="highlight-text">Die Universität Bamberg ist eine Campus-Universität mit kurzen Wegen - die meisten Gebaude liegen im Herzen der historischen Altstadt. Mensa, Bibliotheken, Sport und Kultur sind fussläufig erreichbar.</p>
+                        <div class="highlight-links">
+                            <a href="#">Hochschulsport</a>
+                            <a href="#">Studentische Initiativen</a>
+                            <a href="#">Wohnen in Bamberg</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Nach dem Studium -->
+        <section class="content-section content-section--alt" id="nach-dem-studium">
+            <div class="container">
+                <header class="content-header">
+                    <span class="content-number" aria-hidden="true">04</span>
+                    <h2 class="content-title">Nach dem Studium</h2>
+                    <p class="content-intro">Karrierestart, Weiterbildung oder Promotion - wir begleiten Sie auch nach dem Abschluss.</p>
+                </header>
+
+                <div class="cards-row">
+                    <article class="text-card">
+                        <h3 class="text-card-title">Karriere & Berufseinstieg</h3>
+                        <p class="text-card-desc">Der Career Service unterstutzt Sie bei Bewerbungen, Praktika und dem Berufseinstieg mit individueller Beratung und Workshops.</p>
+                        <a href="#" class="text-card-link">Career Service</a>
+                    </article>
+                    <article class="text-card">
+                        <h3 class="text-card-title">Promotion</h3>
+                        <p class="text-card-desc">Forschen und promovieren in Bamberg: Informationen zu Promotionsmöglichkeiten und Graduiertenprogrammen.</p>
+                        <a href="#" class="text-card-link">Promotionsstudium</a>
+                    </article>
+                    <article class="text-card">
+                        <h3 class="text-card-title">Alumni-Netzwerk</h3>
+                        <p class="text-card-desc">Bleiben Sie Teil der Bamberger Uni-Familie: Events, Mentoring und lebenslanges Netzwerken.</p>
+                        <a href="#" class="text-card-link">Alumni-Portal</a>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- International -->
+        <section class="content-section" id="international">
+            <div class="container">
+                <header class="content-header">
+                    <span class="content-number" aria-hidden="true">05</span>
+                    <h2 class="content-title">International studieren</h2>
+                    <p class="content-intro">Auslandssemester, internationale Studiengänge und Austauschprogramme.</p>
+                </header>
+
+                <div class="split-content">
+                    <div class="split-text">
+                        <h3>Ins Ausland gehen</h3>
+                        <p>Mit über 350 Partnerhochschulen weltweit bietet Bamberg exzellente Möglichkeiten für Auslandsaufenthalte. ERASMUS+, Ubersee-Austausch oder Praktika im Ausland - das International Office berat Sie gerne.</p>
+                        <ul class="check-list">
+                            <li>ERASMUS+ Programm</li>
+                            <li>Ubersee-Austausch (USA, Asien, Australien)</li>
+                            <li>Auslandspraktika</li>
+                            <li>Summer Schools</li>
+                        </ul>
+                        <a href="#" class="btn btn-primary">International Office</a>
+                    </div>
+                    <div class="split-stats">
+                        <div class="stat-card">
+                            <span class="stat-card-number">350+</span>
+                            <span class="stat-card-label">Partnerhochschulen</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-card-number">65+</span>
+                            <span class="stat-card-label">Lander</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-card-number">800+</span>
+                            <span class="stat-card-label">Outgoings pro Jahr</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section class="contact-section">
+            <div class="container">
+                <div class="contact-grid">
+                    <div class="contact-card">
+                        <h3 class="contact-title">Allgemeine Studienberatung</h3>
+                        <p class="contact-desc">Fragen zu Studienwahl, Bewerbung und Studienalltag</p>
+                        <address class="contact-info">
+                            <p><strong>Zentrale Studienberatung</strong></p>
+                            <p>Kapuzinerstraße 25</p>
+                            <p>96047 Bamberg</p>
+                            <p><a href="mailto:studienberatung@uni-bamberg.de">studienberatung@uni-bamberg.de</a></p>
+                            <p><a href="tel:+499518631054">+49 951 863-1054</a></p>
+                        </address>
+                    </div>
+                    <div class="contact-card">
+                        <h3 class="contact-title">Studierendenkanzlei</h3>
+                        <p class="contact-desc">Bewerbung, Einschreibung, Ruckmeldung</p>
+                        <address class="contact-info">
+                            <p><strong>Studierendenkanzlei</strong></p>
+                            <p>Kapuzinerstraße 25</p>
+                            <p>96047 Bamberg</p>
+                            <p><a href="mailto:studierendenkanzlei@uni-bamberg.de">studierendenkanzlei@uni-bamberg.de</a></p>
+                            <p><a href="tel:+499518631111">+49 951 863-1111</a></p>
+                        </address>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer id="footer" class="site-footer" role="contentinfo">
+        <div class="footer-main">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-brand">
+                        <a href="index.html" class="footer-logo" aria-label="Universität Bamberg">
+                            <img src="uba-social-media-cropped-transparent-white.png" alt="" class="logo-icon" aria-hidden="true">
+                            <span class="footer-logo-text">Universität Bamberg</span>
+                        </a>
+                        <address class="footer-address">
+                            Kapuzinerstraße 16<br>
+                            96047 Bamberg<br>
+                            <a href="tel:+499518630">+49 951 863-0</a>
+                        </address>
+                    </div>
+                    <nav class="footer-nav" aria-label="Schnellzugang">
+                        <h3 class="footer-heading">Schnellzugang</h3>
+                        <ul class="footer-links">
+                            <li><a href="studium.html">Studium</a></li>
+                            <li><a href="index.html#forschung">Forschung</a></li>
+                            <li><a href="#">Einrichtungen</a></li>
+                            <li><a href="index.html#international">International</a></li>
+                        </ul>
+                    </nav>
+                    <nav class="footer-nav" aria-label="Service">
+                        <h3 class="footer-heading">Service</h3>
+                        <ul class="footer-links">
+                            <li><a href="#">Bibliothek</a></li>
+                            <li><a href="#">Rechenzentrum</a></li>
+                            <li><a href="#">Sprachenzentrum</a></li>
+                            <li><a href="#">Karriere</a></li>
+                        </ul>
+                    </nav>
+                    <div class="footer-social">
+                        <h3 class="footer-heading">Folgen Sie uns</h3>
+                        <div class="social-links">
+                            <a href="https://www.instagram.com/uni.bamberg/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                                    <rect x="2" y="2" width="20" height="20" rx="5"/>
+                                    <circle cx="12" cy="12" r="4"/>
+                                    <circle cx="18" cy="6" r="1" fill="currentColor"/>
+                                </svg>
+                            </a>
+                            <a href="https://bsky.app/profile/uni-bamberg.de" target="_blank" rel="noopener noreferrer" aria-label="Bluesky">
+                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.5 14.5c-1 1-2.5 1.5-4.5 1.5s-3.5-.5-4.5-1.5c-1-1-1.5-2.5-1.5-4.5s.5-3.5 1.5-4.5c1-1 2.5-1.5 4.5-1.5s3.5.5 4.5 1.5c1 1 1.5 2.5 1.5 4.5s-.5 3.5-1.5 4.5z"/>
+                                </svg>
+                            </a>
+                            <a href="https://www.youtube.com/@unibamberg" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M23 9.71a8.5 8.5 0 00-.91-4.13 2.92 2.92 0 00-1.72-1.12A87.58 87.58 0 0012 4a87.58 87.58 0 00-8.37.46 2.92 2.92 0 00-1.72 1.12A8.5 8.5 0 001 9.71a57.76 57.76 0 000 4.58 8.5 8.5 0 00.91 4.13 2.92 2.92 0 001.72 1.12c2.74.31 5.53.46 8.37.46s5.63-.15 8.37-.46a2.92 2.92 0 001.72-1.12 8.5 8.5 0 00.91-4.13 57.76 57.76 0 000-4.58zM9.68 15.23V8.77L15.9 12l-6.22 3.23z"/>
+                                </svg>
+                            </a>
+                            <a href="https://www.linkedin.com/school/uni-bamberg/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-legal">
+            <div class="container">
+                <p class="copyright">Otto-Friedrich-Universität Bamberg</p>
+                <nav class="legal-links" aria-label="Rechtliche Hinweise">
+                    <a href="#">Impressum</a>
+                    <a href="#">Datenschutz</a>
+                    <a href="#">Barrierefreiheit</a>
+                </nav>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js" defer></script>
+</body>
+</html>

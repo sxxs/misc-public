@@ -1,0 +1,5 @@
+# Zusammenfassung: B. Sc. Angewandte Informatik
+
+Der Bachelorstudiengang Angewandte Informatik (180 ECTS, 6 Semester) an der Fakultät WIAI bietet eine fundierte Informatikausbildung mit Schwerpunkt auf der Schnittstelle zwischen Mensch und Computer. Der Studiengang kann zum Winter- und Sommersemester begonnen werden und ist nicht zulassungsbeschränkt. Studierende können aus vier Schwerpunktprofilen wählen: Medien/Computergrafik/Gestalten, Interaktion & Visualisierung, Maschinelles Lernen/Text/Dialog oder Maschinelles Lernen/Wissen/Robotik.
+
+Das Studium kombiniert mathematische Grundlagen und Kerninformatik mit angewandten Gebieten wie Computergrafik, Sprachverarbeitung, Informationsvisualisierung und Maschinellem Lernen. Im Wahlbereich Anwendungsgebiete können Module aus Wirtschaftswissenschaften, Kommunikationswissenschaften, Psychologie oder Kultur und Medien belegt werden. Die Studiengangsbeauftragter ist Prof. Dr. Andreas Henrich, Fachstudienberaterin Sonja Lachner, M.Sc. Absolventen qualifizieren sich für Tätigkeiten in der IT-Branche oder weiterführende Masterstudiengänge. Das Studium kann auch als Nebenfach mit 45 oder 30 ECTS studiert werden.

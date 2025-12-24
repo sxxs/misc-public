@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Informationen und Services fur Studierende der WIAI">
+    <title>Im Studium | Fakultat WIAI | Universitat Bamberg</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Vollkorn:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" type="image/svg+xml" href="../crawler/output/www.uni-bamberg.de/_frontend/siteunibamberg/favicon/favicon.svg">
+</head>
+<body class="subpage fakultaet-page">
+    <!-- Skip Links -->
+    <nav class="skip-links" aria-label="Sprungnavigation">
+        <a href="#main-nav" class="skip-link">Zur Hauptnavigation</a>
+        <a href="#main-content" class="skip-link">Zum Inhalt</a>
+        <a href="#footer" class="skip-link">Zur Fusszeile</a>
+    </nav>
+
+    <!-- Header -->
+    <header class="site-header" role="banner">
+        <div class="header-inner">
+            <a href="../index.html" class="logo" aria-label="Universitat Bamberg Startseite">
+                <img src="../uba-social-media-cropped-transparent.png" alt="" class="logo-icon" aria-hidden="true">
+                <span class="logo-text">
+                    <span class="logo-main">Universitat Bamberg</span>
+                </span>
+            </a>
+
+            <nav class="nav-primary" id="main-nav" aria-label="Hauptnavigation">
+                <ul class="nav-list" role="list">
+                    <li><a href="../index.html#universitaet">Universitat</a></li>
+                    <li><a href="../index.html#fakultaeten" class="active" aria-current="page">Fakultaten</a></li>
+                    <li><a href="../studium.html">Studium</a></li>
+                    <li><a href="../index.html#forschung">Forschung</a></li>
+                    <li><a href="../index.html#international">International</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-actions">
+                <button class="btn-search" aria-label="Suche offnen" id="search-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                </button>
+                <div class="lang-switch">
+                    <a href="#" class="lang-link active" aria-current="page" hreflang="de">DE</a>
+                    <span class="lang-divider" aria-hidden="true">/</span>
+                    <a href="#" class="lang-link" hreflang="en">EN</a>
+                </div>
+                <button class="btn-menu" aria-label="Menu offnen" aria-expanded="false" id="menu-toggle">
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav-overlay" id="mobile-nav" aria-hidden="true">
+        <nav class="mobile-nav" aria-label="Mobile Navigation">
+            <ul class="mobile-nav-list" role="list">
+                <li><a href="../index.html#universitaet">Universitat</a></li>
+                <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
+                <li><a href="../studium.html">Studium</a></li>
+                <li><a href="../index.html#forschung">Forschung</a></li>
+                <li><a href="../index.html#international">International</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Search Overlay -->
+    <div class="search-overlay" id="search-overlay" aria-hidden="true">
+        <div class="search-container">
+            <form class="search-form" role="search" action="/suche">
+                <label for="search-input" class="visually-hidden">Suchbegriff eingeben</label>
+                <input type="search" id="search-input" class="search-input" placeholder="Suchen..." autocomplete="off">
+                <button type="submit" class="search-submit" aria-label="Suche starten">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </form>
+            <button class="search-close" aria-label="Suche schliessen" id="search-close">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <div class="container">
+            <ol class="breadcrumb-list">
+                <li><a href="../index.html">Startseite</a></li>
+                <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
+                <li><a href="../fakultaet-wiai.html">WIAI</a></li>
+                
+                <li aria-current="page">Im Studium</li>
+            </ol>
+        </div>
+    </nav>
+
+    <!-- WIAI Subnavigation -->
+    <nav class="subnav" aria-label="WIAI Navigation">
+        <div class="container">
+            <div class="subnav-wrapper">
+                <ul class="subnav-list">
+                    <li><a href="../fakultaet-wiai.html">Übersicht</a></li>
+                    <li><a href="studium.html">Studium</a></li>
+                    <li><a href="studiengaenge.html">Studiengänge</a></li>
+                    <li><a href="forschung.html">Forschung</a></li>
+                    <li><a href="karriere.html">Karriere</a></li>
+                </ul>
+                <div class="subnav-quick">
+                    <a href="faq.html" class="subnav-quick-link">FAQ</a>
+                    <a href="bewerbung.html" class="subnav-quick-link">Bewerbung</a>
+                    <a href="kontakt.html" class="subnav-quick-link">Kontakt</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- Page Hero -->
+        <section class="page-hero page-hero--fakultaet" style="--fakultaet-color: var(--color-primary);">
+            <div class="container">
+                <div class="page-hero-content">
+                    <span class="page-hero-label">WIAI Studium</span>
+                    <h1 class="page-hero-title">Im Studium</h1>
+                    <p class="page-hero-subtitle">Alle wichtigen Services und Informationen für dein Studium an der WIAI</p>
+                </div>
+            </div>
+            <div class="page-hero-accent"></div>
+        </section>
+
+        <!-- Quick Links -->
+        <section class="content-section" style="padding-block: var(--space-6);">
+            <div class="container">
+                <div class="card-grid card-grid--4">
+                    <a href="#pruefungen" class="quick-action-card">
+                        <svg class="quick-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 11l3 3L22 4"/>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                        </svg>
+                        <span class="quick-action-label">Prüfungen</span>
+                    </a>
+                    <a href="#module" class="quick-action-card">
+                        <svg class="quick-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                        </svg>
+                        <span class="quick-action-label">Dokumente</span>
+                    </a>
+                    <a href="#ausland" class="quick-action-card">
+                        <svg class="quick-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="2" y1="12" x2="22" y2="12"/>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                        </svg>
+                        <span class="quick-action-label">Ausland</span>
+                    </a>
+                    <a href="#abschluss" class="quick-action-card">
+                        <svg class="quick-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                        </svg>
+                        <span class="quick-action-label">Abschluss</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Prüfungen -->
+        <section class="content-section bg-subtle" id="pruefungen">
+            <div class="container">
+                <h2 class="section-title">Prüfungen & FlexNow</h2>
+
+                <div class="card-grid card-grid--2" style="max-width: 900px;">
+                    <div class="info-card">
+                        <div class="info-card-header">
+                            <h3 class="info-card-title">Prüfungsanmeldung</h3>
+                            <span class="info-card-badge">FlexNow</span>
+                        </div>
+                        <div class="info-card-body">
+                            <p>Die Anmeldung zu Prüfungen erfolgt ausschließlich über FlexNow. Ohne Anmeldung keine Prüfungsteilnahme!</p>
+                            <dl class="info-card-list" style="margin-top: var(--space-4);">
+                                <dt>Wintersemester</dt>
+                                <dd>Anmeldung: 15. Nov - 20. Dez</dd>
+                                <dt>Sommersemester</dt>
+                                <dd>Anmeldung: 15. Mai - 20. Juni</dd>
+                            </dl>
+                            <a href="https://www.uni-bamberg.de/flexnow" class="btn btn-primary" style="margin-top: var(--space-4);" target="_blank" rel="noopener">Zu FlexNow</a>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-card-header">
+                            <h3 class="info-card-title">Prüfungstermine</h3>
+                        </div>
+                        <div class="info-card-body">
+                            <p>Die Prüfungstermine werden zu Semesterbeginn in UnivIS veröffentlicht. Klausuren finden in der Regel in den letzten beiden Semesterwochen statt.</p>
+                            <ul style="margin: var(--space-4) 0 0 var(--space-4);">
+                                <li>Klausuren: Prüfungswochen</li>
+                                <li>Mündliche Prüfungen: nach Vereinbarung</li>
+                                <li>Seminararbeiten: individuelle Fristen</li>
+                            </ul>
+                            <a href="https://univis.uni-bamberg.de" class="btn btn-secondary" style="margin-top: var(--space-4);" target="_blank" rel="noopener">Zu UnivIS</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion" style="max-width: 900px; margin-top: var(--space-8);">
+                    <div class="accordion-item">
+                        <button class="accordion-trigger" aria-expanded="false">
+                            <span>Prüfung nicht bestanden - was nun?</span>
+                            <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </button>
+                        <div class="accordion-content">
+                            <p>Du kannst jede Prüfung <strong>zweimal wiederholen</strong>. Die Wiederholungsprüfung findet in der Regel im Folgesemester statt.</p>
+                            <p>Bei der dritten Wiederholung (Härtefallregelung) musst du einen Antrag beim Prüfungsausschuss stellen.</p>
+                            <a href="beratung.html">Kontakt zum Prüfungsausschuss</a>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <button class="accordion-trigger" aria-expanded="false">
+                            <span>Krankmeldung bei Prüfungen</span>
+                            <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </button>
+                        <div class="accordion-content">
+                            <p>Bei Krankheit am Prüfungstag:</p>
+                            <ol style="margin-left: var(--space-4);">
+                                <li>Arzt aufsuchen und Attest ausstellen lassen</li>
+                                <li>Attest innerhalb von 3 Werktagen beim Prüfungsamt einreichen</li>
+                                <li>Prüfung gilt als nicht angetreten (kein Fehlversuch)</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dokumente -->
+        <section class="content-section" id="module">
+            <div class="container">
+                <h2 class="section-title">Studien- & Prüfungsordnungen</h2>
+                <p class="section-intro">Alle offiziellen Dokumente zu deinem Studiengang.</p>
+
+                <div class="document-grid">
+                    <div class="document-group">
+                        <h3 class="document-group-title">Bachelor-Studiengänge</h3>
+                        <ul class="document-list">
+                            <li>
+                                <a href="#" class="document-link">
+                                    <span class="document-name">B.Sc. Angewandte Informatik</span>
+                                    <span class="document-meta">Modulhandbuch, SPO, Studienverlaufsplan</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="document-link">
+                                    <span class="document-name">B.Sc. Wirtschaftsinformatik</span>
+                                    <span class="document-meta">Modulhandbuch, SPO, Studienverlaufsplan</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="document-link">
+                                    <span class="document-name">B.Sc. Software Systems Science</span>
+                                    <span class="document-meta">Modulhandbuch, SPO, Studienverlaufsplan</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="document-link">
+                                    <span class="document-name">B.Sc. IISM</span>
+                                    <span class="document-meta">Modulhandbuch, SPO, Studienverlaufsplan</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="document-group">
+                        <h3 class="document-group-title">Master-Studiengänge</h3>
+                        <ul class="document-list">
+                            <li>
+                                <a href="#" class="document-link">
+                                    <span class="document-name">M.Sc. Angewandte Informatik</span>
+                                    <span class="document-meta">Modulhandbuch, SPO</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="document-link">
+                                    <span class="document-name">M.Sc. Wirtschaftsinformatik</span>
+                                    <span class="document-meta">Modulhandbuch, SPO</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="document-link">
+                                    <span class="document-name">M.Sc. Computing in the Humanities</span>
+                                    <span class="document-meta">Modulhandbuch, SPO</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="document-link">
+                                    <span class="document-name">M.Sc. IISM</span>
+                                    <span class="document-meta">Modulhandbuch, SPO</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ausland -->
+        <section class="content-section bg-subtle" id="ausland">
+            <div class="container">
+                <div class="feature-spotlight">
+                    <div class="feature-spotlight-image">
+                        <img src="../img/auslandssemester.jpg" alt="Studierende im Ausland" loading="lazy">
+                    </div>
+                    <div class="feature-spotlight-content">
+                        <span class="feature-spotlight-label">Erasmus+ & mehr</span>
+                        <h2 class="feature-spotlight-title">Auslandssemester</h2>
+                        <p class="feature-spotlight-text">Ein Auslandssemester erweitert deinen Horizont und macht sich gut im Lebenslauf. Die WIAI hat Partnerschaften mit Universitäten in ganz Europa und darüber hinaus.</p>
+                        <ul class="feature-spotlight-list">
+                            <li>Erasmus+-Stipendien für EU-Länder</li>
+                            <li>Partnerhochschulen weltweit</li>
+                            <li>Volle Anerkennung der Leistungen</li>
+                        </ul>
+                        <div style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+                            <a href="https://www.uni-bamberg.de/io" class="btn btn-primary" target="_blank" rel="noopener">International Office</a>
+                            <a href="beratung.html" class="btn btn-secondary">Beratung</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Praktikum -->
+        <section class="content-section">
+            <div class="container">
+                <h2 class="section-title">Praktikum</h2>
+                <p class="section-intro">In vielen Studiengängen ist ein Praktikum Pflicht oder wird empfohlen.</p>
+
+                <div class="card-grid card-grid--3" style="max-width: 900px;">
+                    <div class="service-card">
+                        <h3 class="service-card-title">Praktikumsordnung</h3>
+                        <p class="service-card-text">Anforderungen, Dauer und Anerkennung je nach Studiengang.</p>
+                    </div>
+                    <div class="service-card">
+                        <h3 class="service-card-title">Praktikumsbörse</h3>
+                        <p class="service-card-text">Aktuelle Angebote von Unternehmen aus der Region und deutschlandweit.</p>
+                    </div>
+                    <div class="service-card">
+                        <h3 class="service-card-title">Praktikumsbericht</h3>
+                        <p class="service-card-text">Vorlage und Hinweise für den Praktikumsbericht.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Abschluss -->
+        <section class="content-section bg-subtle" id="abschluss">
+            <div class="container">
+                <h2 class="section-title">Abschlussarbeit</h2>
+
+                <div class="timeline" style="max-width: 800px;">
+                    <h3 class="timeline-title">So läuft's ab</h3>
+
+                    <div class="timeline-items">
+                        <div class="timeline-item">
+                            <div class="timeline-marker">1</div>
+                            <div class="timeline-content">
+                                <h4 class="timeline-heading">Thema finden</h4>
+                                <p class="timeline-text">Sprich frühzeitig mit Professoren über mögliche Themen. Eigene Ideen sind willkommen!</p>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-marker">2</div>
+                            <div class="timeline-content">
+                                <h4 class="timeline-heading">Anmeldung</h4>
+                                <p class="timeline-text">Melde deine Arbeit beim Prüfungsamt an. Ab dann läuft die Bearbeitungszeit.</p>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-marker">3</div>
+                            <div class="timeline-content">
+                                <h4 class="timeline-heading">Bearbeitung</h4>
+                                <p class="timeline-text">Bachelor: 3 Monate | Master: 6 Monate. Regelmäßige Besprechungen mit dem Betreuer.</p>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-marker">4</div>
+                            <div class="timeline-content">
+                                <h4 class="timeline-heading">Abgabe & Verteidigung</h4>
+                                <p class="timeline-text">Arbeit abgeben (gedruckt + digital). Bei Master-Arbeiten folgt eine mündliche Verteidigung.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BAföG -->
+        <section class="content-section">
+            <div class="container">
+                <h2 class="section-title">BAföG & Bescheinigungen</h2>
+
+                <div class="card-grid card-grid--2" style="max-width: 800px;">
+                    <div class="info-card">
+                        <div class="info-card-header">
+                            <h3 class="info-card-title">BAföG-Bescheinigung</h3>
+                            <span class="info-card-badge">Formblatt 5</span>
+                        </div>
+                        <div class="info-card-body">
+                            <p>Die BAföG-Bescheinigung (Formblatt 5) erhältst du beim Prüfungsausschuss.</p>
+                            <p style="margin-top: var(--space-3);"><strong>Voraussetzung:</strong> Mind. 50% der ECTS für dein Fachsemester.</p>
+                            <a href="beratung.html#pruefungsausschuss" style="margin-top: var(--space-3); display: inline-block;">Zum Prüfungsausschuss</a>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-card-header">
+                            <h3 class="info-card-title">Weitere Bescheinigungen</h3>
+                        </div>
+                        <div class="info-card-body">
+                            <ul style="margin: 0; padding-left: var(--space-4);">
+                                <li>Immatrikulationsbescheinigung: FlexNow</li>
+                                <li>Transcript of Records: FlexNow</li>
+                                <li>Leistungsübersicht: FlexNow</li>
+                                <li>Exmatrikulation: Studierendenkanzlei</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="cta-banner cta-banner--secondary">
+            <div class="container">
+                <div class="cta-banner-content">
+                    <h2 class="cta-banner-title">Fragen zum Studium?</h2>
+                    <p class="cta-banner-text">Die Studienberatung und die Fachschaft helfen dir gerne weiter.</p>
+                    <div class="cta-banner-actions">
+                        <a href="beratung.html" class="btn btn-primary btn-lg">Zur Beratung</a>
+                        <a href="faq.html" class="btn btn-secondary btn-lg">FAQ</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    <!-- Footer -->
+    <footer class="site-footer" id="footer" role="contentinfo">
+        <div class="footer-main">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-brand">
+                        <a href="../index.html" class="footer-logo">
+                            <img src="../uba-social-media-cropped-transparent-white.png" alt="" class="logo-icon" aria-hidden="true">
+                            <span class="footer-logo-text">Universitat Bamberg</span>
+                        </a>
+                        <p class="footer-tagline">Studieren im Welterbe</p>
+                    </div>
+                    <nav class="footer-nav" aria-label="Schnellzugriff">
+                        <h3>Schnellzugriff</h3>
+                        <ul>
+                            <li><a href="../studium.html">Studium</a></li>
+                            <li><a href="../index.html#forschung">Forschung</a></li>
+                            <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
+                            <li><a href="../index.html#international">International</a></li>
+                        </ul>
+                    </nav>
+                    <nav class="footer-nav" aria-label="Service">
+                        <h3>Service</h3>
+                        <ul>
+                            <li><a href="#">Bibliothek</a></li>
+                            <li><a href="#">IT-Service</a></li>
+                            <li><a href="#">Mensa</a></li>
+                            <li><a href="#">Stellenangebote</a></li>
+                        </ul>
+                    </nav>
+                    <div class="footer-contact">
+                        <h3>Kontakt</h3>
+                        <address>
+                            <p>Otto-Friedrich-Universitat Bamberg</p>
+                            <p>Kapuzinerstrasse 16</p>
+                            <p>96047 Bamberg</p>
+                        </address>
+                        <p><a href="tel:+499518630">+49 951 863-0</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <nav class="footer-legal" aria-label="Rechtliches">
+                    <ul>
+                        <li><a href="#">Impressum</a></li>
+                        <li><a href="#">Datenschutz</a></li>
+                        <li><a href="#">Barrierefreiheit</a></li>
+                    </ul>
+                </nav>
+                <p class="footer-copyright">Otto-Friedrich-Universitat Bamberg</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+</html>
