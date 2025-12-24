@@ -1,0 +1,15 @@
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <div class="container">
+            <ol class="breadcrumb-list">
+                {{#breadcrumb_items}}
+                <li>{{#url}}<a href="{{url}}">{{label}}</a>{{/url}}{{^url}}{{label}}{{/url}}</li>
+                {{/breadcrumb_items}}
+                {{^breadcrumb_items}}
+                <li><a href="{{root_path}}index.html">Startseite</a></li>
+                {{#breadcrumb_parent}}<li><a href="{{breadcrumb_parent_url}}">{{breadcrumb_parent}}</a></li>{{/breadcrumb_parent}}
+                {{#breadcrumb_current}}<li aria-current="page">{{breadcrumb_current}}</li>{{/breadcrumb_current}}
+                {{/breadcrumb_items}}
+            </ol>
+        </div>
+    </nav>

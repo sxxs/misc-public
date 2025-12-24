@@ -1,8 +1,14 @@
 {
+  "index": {
+    "title": "Universität Bamberg",
+    "description": "Otto-Friedrich-Universität Bamberg - Studium, Forschung und Wissenstransfer in einer UNESCO-Welterbestadt",
+    "full_page": true
+  },
   "wiai/studium": {
     "title": "Studium | Fakultät WIAI",
     "description": "Studieren an der Fakultät WIAI - Bachelor, Master und Promotion",
     "body_class": "fakultaet-page",
+    "breadcrumb": "breadcrumb-wiai",
     "subnav": "subnav-wiai",
     "nav_fak": true,
     "breadcrumb_current": "Studium",
@@ -12,6 +18,7 @@
     "title": "FAQ | Fakultat WIAI",
     "description": "Haufig gestellte Fragen zu Studiengangen der Fakultat WIAI",
     "body_class": "fakultaet-page",
+    "breadcrumb": "breadcrumb-wiai",
     "subnav": "subnav-wiai",
     "nav_fak": true,
     "breadcrumb_current": "FAQ",
@@ -21,6 +28,7 @@
     "title": "Bewerbung & Zulassung | Fakultat WIAI",
     "description": "Informationen zur Bewerbung und Zulassung fur Studiengange der WIAI",
     "body_class": "fakultaet-page",
+    "breadcrumb": "breadcrumb-wiai",
     "subnav": "subnav-wiai",
     "nav_fak": true,
     "breadcrumb_current": "Bewerbung",
@@ -30,6 +38,7 @@
     "title": "Beratung & Ansprechpartner | Fakultat WIAI",
     "description": "Studienberatung und Ansprechpartner der Fakultat WIAI",
     "body_class": "fakultaet-page",
+    "breadcrumb": "breadcrumb-wiai",
     "subnav": "subnav-wiai",
     "nav_fak": true,
     "breadcrumb_current": "Beratung",
@@ -39,6 +48,7 @@
     "title": "Im Studium | Fakultat WIAI",
     "description": "Informationen und Services fur Studierende der WIAI",
     "body_class": "fakultaet-page",
+    "breadcrumb": "breadcrumb-wiai",
     "subnav": "subnav-wiai",
     "nav_fak": true,
     "breadcrumb_current": "Im Studium",
@@ -48,6 +58,7 @@
     "title": "Karriere | Fakultat WIAI",
     "description": "Karrieremoglichkeiten und Berufseinstieg fur WIAI-Absolventen",
     "body_class": "fakultaet-page",
+    "breadcrumb": "breadcrumb-wiai",
     "subnav": "subnav-wiai",
     "nav_fak": true,
     "breadcrumb_current": "Karriere",
@@ -57,9 +68,34 @@
     "title": "Kontakt | Fakultät WIAI",
     "description": "Kontaktinformationen der Fakultät WIAI",
     "body_class": "fakultaet-page",
+    "breadcrumb": "breadcrumb-wiai",
     "subnav": "subnav-wiai",
     "nav_fak": true,
     "breadcrumb_current": "Kontakt",
     "subnav_kontakt": true
+  },
+  "studium": {
+    "title": "Studium",
+    "description": "Studieren an der Universität Bamberg - Über 100 Studiengänge in 4 Fakultäten",
+    "body_class": "subpage",
+    "nav_studium": true,
+    "breadcrumb_current": "Studium"
+  },
+  "artikel": {
+    "title": "Nachhaltigkeit an der Uni Bamberg",
+    "description": "Was bedeutet Nachhaltigkeit für die Universität Bamberg? Von Mülltrennung bis zur Fairtrade-Zertifizierung",
+    "body_class": "subpage article-page",
+    "breadcrumb_parent": "Aktuelles",
+    "breadcrumb_parent_url": "index.html#aktuelles",
+    "breadcrumb_current": "Nachhaltigkeit an der Uni Bamberg"
+  },
+  "fakultaet-wiai": {
+    "title": "Fakultät WIAI",
+    "description": "Fakultät Wirtschaftsinformatik und Angewandte Informatik der Universität Bamberg",
+    "body_class": "subpage fakultaet-page",
+    "nav_fak": true,
+    "inline_styles_file": "styles-fakultaet-wiai.css",
+    "custom_structure": true,
+    "no_breadcrumb": true
   }
 }
