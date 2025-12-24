@@ -1691,36 +1691,49 @@ body.subpage {
     background: var(--color-border-subtle);
 }
 
-/* Page Hero (Smaller) */
+/* Page Hero - Basis (Kompakt, ohne Bild) */
 .page-hero {
     position: relative;
+    padding: var(--space-10) 0 var(--space-8);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    color: white;
+    overflow: hidden;
+}
+
+.page-hero .container {
+    position: relative;
+    z-index: 1;
+}
+
+/* Hero Modifier: Mit Hintergrundbild */
+.page-hero--with-image {
     padding: var(--space-16) 0 var(--space-10);
     min-height: 280px;
     display: flex;
     align-items: flex-end;
-    overflow: hidden;
+    background: none;
 }
 
 @media (min-width: 768px) {
-    .page-hero {
+    .page-hero--with-image {
         min-height: 320px;
         padding: var(--space-20) 0 var(--space-12);
     }
 }
 
-.page-hero-bg {
+.page-hero--with-image .page-hero-bg {
     position: absolute;
     inset: 0;
 }
 
-.page-hero-bg img {
+.page-hero--with-image .page-hero-bg img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: center 40%;
 }
 
-.page-hero-overlay {
+.page-hero--with-image .page-hero-overlay {
     position: absolute;
     inset: 0;
     background: linear-gradient(
@@ -1731,14 +1744,27 @@ body.subpage {
     );
 }
 
-.page-hero .container {
-    position: relative;
-    z-index: 1;
+/* Hero Modifier: Immersiv (für Artikel) */
+.page-hero--immersive {
+    min-height: 50vh;
+    padding: var(--space-20) 0 var(--space-12);
+    display: flex;
+    align-items: flex-end;
+    background: none;
+}
+
+@media (min-width: 768px) {
+    .page-hero--immersive {
+        min-height: 60vh;
+        padding: var(--space-24) 0 var(--space-16);
+    }
 }
 
 /* Breadcrumb */
 .breadcrumb {
-    margin-bottom: 0;
+    padding: var(--space-4) 0;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
 }
 
 /* Breadcrumb followed by subnav - no extra space needed */
@@ -1746,7 +1772,8 @@ body.subpage {
     margin-top: 0;
 }
 
-.breadcrumb ol {
+.breadcrumb ol,
+.breadcrumb .breadcrumb-list {
     display: flex;
     align-items: center;
     gap: var(--space-2);
@@ -1758,25 +1785,26 @@ body.subpage {
     align-items: center;
     gap: var(--space-2);
     font-size: var(--text-sm);
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-text-muted);
 }
 
 .breadcrumb li:not(:last-child)::after {
     content: '/';
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--color-border);
 }
 
 .breadcrumb a {
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-text-secondary);
     transition: color var(--transition-fast);
 }
 
 .breadcrumb a:hover {
-    color: white;
+    color: var(--color-primary);
 }
 
 .breadcrumb li[aria-current="page"] {
-    color: white;
+    color: var(--color-text);
+    font-weight: 500;
 }
 
 /* Page Title */
@@ -2605,15 +2633,13 @@ body.subpage {
 /* ============================================
    Fakultat Page Styles
    ============================================ */
-.fakultaet-page .page-hero {
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
-    color: white;
+
+/* Hero Modifier: Fakultät-Hero */
+.page-hero--fakultaet {
     padding: var(--space-10) 0 var(--space-12);
-    position: relative;
-    overflow: hidden;
 }
 
-.fakultaet-page .page-hero::before {
+.page-hero--fakultaet::before {
     content: '';
     position: absolute;
     top: 0;

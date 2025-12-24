@@ -91,9 +91,36 @@ def build_page(content_path: Path, config: dict) -> str:
         **config,
     }
 
+    # Wenn "full_page: true", ist der Content bereits eine komplette Seite
+    if config.get("full_page"):
+        # Nur Variablen im Content ersetzen
+        return render_template(content, context)
+
+    # Standard-Seitenaufbau mit Partials
     # Partials laden und rendern
     header = render_template(load_partial("header"), context)
     footer = render_template(load_partial("footer"), context)
+
+    # Optionale Inline-Styles (für Spezialseiten wie fakultaet-wiai)
+    inline_styles = ""
+    if config.get("inline_styles"):
+        inline_styles = config.get("inline_styles")
+    elif config.get("inline_styles_file"):
+        # Inline styles aus Datei laden
+        styles_path = PARTIALS_DIR / config["inline_styles_file"]
+        if styles_path.exists():
+            inline_styles = styles_path.read_text(encoding="utf-8")
+
+    # Header anpassen wenn inline_styles vorhanden
+    if inline_styles:
+        # Inline styles vor </head> einfügen
+        header = header.replace("</head>", f"\n    <style>\n{inline_styles}\n    </style>\n</head>")
+
+    # Optionale Breadcrumb (Standard: generisch, kann überschrieben werden)
+    breadcrumb = ""
+    if not config.get("no_breadcrumb"):
+        breadcrumb_partial = config.get("breadcrumb", "breadcrumb")
+        breadcrumb = render_template(load_partial(breadcrumb_partial), context)
 
     # Optionales Subnav
     subnav = ""
@@ -101,7 +128,12 @@ def build_page(content_path: Path, config: dict) -> str:
         subnav = render_template(load_partial(config["subnav"]), context)
 
     # Seite zusammenbauen
-    page = header + subnav + "\n    <!-- Main Content -->\n    <main id=\"main-content\">\n" + content + "\n    </main>\n" + footer
+    # Bei custom_structure enthält content bereits alles (Hero, Subnav, Main)
+    if config.get("custom_structure"):
+        page = header + content + footer
+    else:
+        # Standard: Content wird in <main> gewrappt
+        page = header + breadcrumb + subnav + "\n    <!-- Main Content -->\n    <main id=\"main-content\">\n" + content + "\n    </main>\n" + footer
 
     return page
 
