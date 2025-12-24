@@ -38,25 +38,25 @@
 - [x] Rotate-Hint nur auf sehr kleinen Portrait-Screens zeigen (<500px Höhe)
 - [x] Touch-Targets vergrößern und responsive machen
 
-### 🔄 Phase 3: Cache-Busting (ausstehend)
-- [ ] VERSION-Konstante am Anfang von game.js
-- [ ] sessionStorage-basiertes Redirect-System
-- [ ] Random `v=` Parameter beim Laden der Startseite
-- [ ] Versionsnummern in HTML-Links (style.css?v=, game.js?v=)
+### ✅ Phase 3: Cache-Busting (erledigt)
+- [x] VERSION-Konstante am Anfang von game.js
+- [x] sessionStorage-basiertes Redirect-System
+- [x] Random `v=` Parameter beim Laden der Startseite
+- [x] Versionsnummern in HTML-Links (style.css?v=, game.js?v=)
 
-### 🔄 Phase 4: Verbessertes Touch-Panning (ausstehend)
-- [ ] 1-Finger-Panning auf Canvas ermöglichen
-- [ ] Unterscheidung: kurzer Tap = Aktion, Wischen = Pan
-- [ ] Pan-Hint beim ersten Start anzeigen ("Wischen zum Verschieben")
+### ✅ Phase 4: Verbessertes Touch-Panning (erledigt)
+- [x] 1-Finger-Panning auf Canvas ermöglichen
+- [x] Unterscheidung: kurzer Tap = Aktion, Wischen = Pan
+- [x] Pan-Hint beim ersten Start anzeigen ("Wischen zum Verschieben")
 - [ ] Pinch-to-Zoom für Canvas implementieren (optional)
 
-### 🔄 Phase 5: Tile-Size Optimierung (ausstehend)
-- [ ] Dynamischere TILE_SIZE Berechnung
-- [ ] Minimum Tile-Size auf 28px reduzieren für kleine Screens
-- [ ] Auto-Zentrierung wenn Grid auf Screen passt
-- [ ] Sanftes Clamping der Viewport-Grenzen
+### ✅ Phase 5: Tile-Size Optimierung (erledigt)
+- [x] Dynamischere TILE_SIZE Berechnung
+- [x] Minimum Tile-Size auf 28px reduzieren für kleine Screens
+- [x] Auto-Zentrierung wenn Grid auf Screen passt
+- [x] Sanftes Clamping der Viewport-Grenzen
 
-### 🔄 Phase 6: Weitere Mobile-Optimierungen (ausstehend)
+### 🔄 Phase 6: Weitere Mobile-Optimierungen (optional)
 - [ ] Toolbar horizontal scrollbar mit Scroll-Indicator
 - [ ] Ability-Buttons Position anpassen bei Überlappung
 - [ ] Landscape-Lock Option (optional)
@@ -108,7 +108,7 @@ const VERSION = '1.0.0';
 |-------|--------|---------|
 | Setup | ✅ Erledigt | index.html, style.css |
 | Viewport | ✅ Erledigt | index.html, style.css |
-| Cache-Busting | 🔄 Ausstehend | game.js |
-| Touch-Panning | 🔄 Ausstehend | game.js |
-| Tile-Size | 🔄 Ausstehend | game.js |
-| Mobile-UI | 🔄 Ausstehend | style.css, game.js |
+| Cache-Busting | ✅ Erledigt | game.js |
+| Touch-Panning | ✅ Erledigt | game.js |
+| Tile-Size | ✅ Erledigt | game.js |
+| Mobile-UI | 🔄 Optional | style.css, game.js |

@@ -20,9 +20,12 @@
 }
 
 html, body {
-    /* IMPROVED: Allow scroll/zoom on the page level */
     overflow: hidden;
     overscroll-behavior: none;
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    touch-action: none;
 }
 
 body {
@@ -31,6 +34,7 @@ body {
     color: #eee;
     min-height: 100vh;
     min-height: 100dvh;
+    min-height: -webkit-fill-available;
     transition: background 0.8s ease;
 }
 
@@ -250,11 +254,11 @@ body.infiltrator { background: var(--bg-infiltrator); }
     .tool-btn .icon { font-size: 1.1rem; }
 }
 
-/* Very small screens */
+/* Very small screens - maintain 44px minimum */
 @media (max-width: 360px) {
     .tool-btn {
-        width: 42px;
-        height: 42px;
+        width: 44px;
+        height: 44px;
         font-size: 0.4rem;
     }
     .tool-btn .icon { font-size: 1rem; }
@@ -363,6 +367,18 @@ body.infiltrator { background: var(--bg-infiltrator); }
 @media (max-width: 500px) {
     .ability-btn small {
         font-size: 0.4rem;
+    }
+}
+
+/* Very small screens - maintain 44px minimum for abilities */
+@media (max-width: 360px) {
+    .ability-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 1rem;
+    }
+    .ability-btn small {
+        font-size: 0.35rem;
     }
 }
 
@@ -488,57 +504,66 @@ body.infiltrator { background: var(--bg-infiltrator); }
     text-align: left;
 }
 
-/* ==================== ROTATE HINT ==================== */
-#rotateHint {
-    position: fixed;
-    inset: 0;
-    background: var(--bg-dark);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    z-index: 1000;
-    color: var(--gold);
-    font-family: 'Bebas Neue', sans-serif;
-    padding: 20px;
-    text-align: center;
+/* ==================== PORTRAIT MODE ==================== */
+@media (orientation: portrait) {
+    /* Toolbar: horizontal am unteren Rand */
+    #toolbar {
+        height: 70px;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    /* Abilities: horizontal zentriert am unteren Rand */
+    #abilityBar {
+        top: auto;
+        right: auto; /* Bestehende right: 10px überschreiben */
+        left: 50%;
+        transform: translateX(-50%); /* Horizontal zentrieren */
+        bottom: 80px; /* Über der Toolbar */
+        flex-direction: row;
+        gap: 15px;
+    }
+
+    /* Wenn Infiltrator-Mode (keine Toolbar), Abilities ganz unten */
+    body.infiltrator #abilityBar {
+        bottom: 10px;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    /* TopBar: mehr Platz für Wrap */
+    #topBar {
+        max-width: calc(100vw - 20px);
+        right: 10px;
+        left: 10px;
+    }
 }
 
-#rotateHint .icon { font-size: 3rem; margin-bottom: 1rem; }
-#rotateHint p { font-size: clamp(1rem, 5vw, 1.5rem); margin-bottom: 1.5rem; }
-
-/* IMPROVED: Dismiss button for rotate hint */
-.dismiss-btn {
-    padding: 0.8em 1.5em;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1rem;
-    background: transparent;
-    border: 2px solid var(--gold);
-    color: var(--gold);
-    cursor: pointer;
-    transition: all 0.2s;
-    touch-action: manipulation;
+/* ==================== SAFE AREAS ==================== */
+/* Top Bar: Abstand zur Status-Bar / Dynamic Island */
+#topBar {
+    top: max(10px, env(safe-area-inset-top, 10px));
 }
 
-.dismiss-btn:hover, .dismiss-btn:active {
-    background: var(--gold);
-    color: #000;
+/* Budget Display: Abstand nach rechts für Safe Area */
+#budgetDisplay {
+    right: max(10px, env(safe-area-inset-right, 10px));
+    top: max(10px, env(safe-area-inset-top, 10px));
 }
 
-/* IMPROVED: Only show rotate hint on very small portrait screens, make it dismissible */
-@media (orientation: portrait) and (max-height: 500px) {
-    #rotateHint:not(.dismissed) { display: flex; }
-    #menuScreen, #gameContainer { display: none !important; }
+/* Toolbar: Safe Area unten */
+#toolbar {
+    padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
-@media (orientation: portrait) and (min-height: 501px) {
-    /* Allow portrait on larger phones/tablets */
-    #rotateHint { display: none; }
-}
+/* Landscape: Safe Areas links/rechts */
+@media (orientation: landscape) {
+    #abilityBar {
+        right: max(10px, env(safe-area-inset-right, 10px));
+    }
 
-/* When dismissed, hide rotate hint */
-#rotateHint.dismissed {
-    display: none !important;
+    #toolbar {
+        padding-left: env(safe-area-inset-left, 0);
+        padding-right: env(safe-area-inset-right, 0);
+    }
 }
 
 /* ==================== HIDDEN UTILITY ==================== */
