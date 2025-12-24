@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
-    <link rel="stylesheet" href="style.css?v=2.1.0">
+    <link rel="stylesheet" href="style.css?v=2.2.0">
 </head>
 <body>
     <!-- Menu Screen -->
@@ -119,6 +119,14 @@
                 <span>Löschen</span>
                 <span class="cost">-</span>
             </div>
+            <div class="tool-btn action-btn" onclick="saveLevelCode()">
+                <span class="icon">💾</span>
+                <span>Speichern</span>
+            </div>
+            <div class="tool-btn action-btn" onclick="loadLevelCode()">
+                <span class="icon">📂</span>
+                <span>Laden</span>
+            </div>
         </div>
 
         <!-- Infiltrator Abilities -->
@@ -133,17 +141,16 @@
             </button>
         </div>
 
-        <!-- Music Selection -->
-        <div id="musicSelector">
-            <label><input type="radio" name="music" value="ambient" checked onchange="changeMusicStyle(this.value)"> Ambient</label>
-            <label><input type="radio" name="music" value="tense" onchange="changeMusicStyle(this.value)"> Spannend</label>
-            <label><input type="radio" name="music" value="off" onchange="changeMusicStyle(this.value)"> Aus</label>
-        </div>
+        <!-- Music Toggle -->
+        <button id="musicToggle" class="music-toggle" onclick="cycleMusicStyle()">
+            <span id="musicIcon">🎵</span>
+            <small id="musicLabel">Ambient</small>
+        </button>
     </div>
 
     <!-- Status Overlay -->
     <div id="statusOverlay"></div>
 
-    <script src="game.js?v=2.1.0"></script>
+    <script src="game.js?v=2.2.0"></script>
 </body>
 </html>
