@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <!-- IMPROVED: Allow pinch-to-zoom for accessibility, but prevent initial zoom issues -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=3.0, user-scalable=yes">
+    <title>Pocket Heist</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+    <link rel="stylesheet" href="style.css?v=1.0.0">
+</head>
+<body>
+    <!-- Rotate Hint - now dismissible -->
+    <div id="rotateHint">
+        <div class="icon">📱↻</div>
+        <p>Querformat empfohlen</p>
+        <button class="dismiss-btn" onclick="dismissRotateHint()">Trotzdem spielen</button>
+    </div>
+
+    <!-- Menu Screen -->
+    <div id="menuScreen">
+        <h1 class="logo">POCKET <span>HEIST</span></h1>
+        <button class="menu-btn" onclick="startArchitect()">
+            <span class="icon">🏗️</span>
+            <span>Neues Level bauen</span>
+        </button>
+        <button class="menu-btn" onclick="showCodeModal('level')">
+            <span class="icon">🕵️</span>
+            <span>Mission starten</span>
+        </button>
+        <button class="menu-btn" onclick="showCodeModal('replay')">
+            <span class="icon">🎬</span>
+            <span>Replay ansehen</span>
+        </button>
+    </div>
+
+    <!-- Code Input Modal -->
+    <div id="codeModal">
+        <div class="modal-content">
+            <h2 id="codeModalTitle">Code eingeben</h2>
+            <textarea id="codeInput" placeholder="PH1-... oder PHR-..."></textarea>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="hideCodeModal()">Abbrechen</button>
+                <button class="modal-btn confirm" onclick="loadCode()">Laden</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div id="shareModal">
+        <div class="modal-content">
+            <h2>Level-Code</h2>
+            <p style="color:#888;font-size:0.9rem;">Teile diesen Code mit dem Infiltrator:</p>
+            <div id="levelCode"></div>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="hideShareModal()">Schließen</button>
+                <button class="modal-btn confirm" onclick="shareCode()">📤 Teilen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Container -->
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Pan hint overlay (shows briefly on first load) -->
+        <div id="panHint" class="pan-hint hidden">
+            <span>👆 Wischen zum Verschieben</span>
+        </div>
+
+        <!-- Top Bar -->
+        <div id="topBar">
+            <button class="top-btn danger" onclick="backToMenu()">✕ Menü</button>
+            <button class="top-btn" onclick="backToBuild()" id="backToBuildBtn" style="display:none;">◀ Zurück</button>
+            <button class="top-btn" onclick="clearLevel()" id="clearBtn">🗑️ Leeren</button>
+            <button class="top-btn" onclick="showLevelCode()" id="viewCodeBtn">👁️ Code</button>
+            <button class="top-btn primary" onclick="testLevel()" id="testBtn">▶️ Testen</button>
+        </div>
+
+        <!-- Budget Display -->
+        <div id="budgetDisplay">Budget: <span id="budgetValue">10</span></div>
+
+        <!-- Architect Toolbar -->
+        <div id="toolbar">
+            <div class="tool-btn active" data-tool="wall" onclick="selectTool('wall')">
+                <span class="icon">🧱</span>
+                <span>Wand</span>
+                <span class="cost">0</span>
+            </div>
+            <div class="tool-btn" data-tool="guard" onclick="selectTool('guard')">
+                <span class="icon">👮</span>
+                <span>Wache</span>
+                <span class="cost">3</span>
+            </div>
+            <div class="tool-btn" data-tool="camera" onclick="selectTool('camera')">
+                <span class="icon">📷</span>
+                <span>Kamera</span>
+                <span class="cost">2</span>
+            </div>
+            <div class="tool-btn" data-tool="trap" onclick="selectTool('trap')">
+                <span class="icon">🔔</span>
+                <span>Falle</span>
+                <span class="cost">1</span>
+            </div>
+            <div class="tool-btn" data-tool="vault" onclick="selectTool('vault')">
+                <span class="icon">💰</span>
+                <span>Tresor</span>
+                <span class="cost">★</span>
+            </div>
+            <div class="tool-btn" data-tool="start" onclick="selectTool('start')">
+                <span class="icon">🚪</span>
+                <span>Start</span>
+                <span class="cost">★</span>
+            </div>
+            <div class="tool-btn" data-tool="erase" onclick="selectTool('erase')">
+                <span class="icon">❌</span>
+                <span>Löschen</span>
+                <span class="cost">-</span>
+            </div>
+        </div>
+
+        <!-- Infiltrator Abilities -->
+        <div id="abilityBar">
+            <button class="ability-btn" id="throwBtn" onclick="toggleThrow()" title="Stein werfen (Ablenkung) - 1x nutzbar">
+                <span>🪨</span>
+                <small id="throwLabel">Werfen (1)</small>
+            </button>
+            <button class="ability-btn" id="sneakBtn" onclick="toggleSneak()" title="Schleichen - 1x nutzbar">
+                <span>🦶</span>
+                <small id="sneakLabel">Schleichen (1)</small>
+            </button>
+        </div>
+
+        <!-- Music Selection -->
+        <div id="musicSelector">
+            <label><input type="radio" name="music" value="ambient" checked onchange="changeMusicStyle(this.value)"> Ambient</label>
+            <label><input type="radio" name="music" value="tense" onchange="changeMusicStyle(this.value)"> Spannend</label>
+            <label><input type="radio" name="music" value="off" onchange="changeMusicStyle(this.value)"> Aus</label>
+        </div>
+    </div>
+
+    <!-- Status Overlay -->
+    <div id="statusOverlay"></div>
+
+    <script src="game.js?v=1.0.0"></script>
+</body>
+</html>
