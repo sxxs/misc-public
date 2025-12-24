@@ -1,7 +1,7 @@
 // ==================== POCKET HEIST - GAME.JS ====================
 // Version mit Mobile-Optimierungen
 
-const VERSION = '2.1.0';
+const VERSION = '2.2.0';
 
 // Version-Logging für Debugging
 console.log(`Pocket Heist v${VERSION}`);
@@ -10,7 +10,7 @@ console.log(`Pocket Heist v${VERSION}`);
 const GRID_WIDTH = 12;
 const GRID_HEIGHT = 18;
 const BASE_TILE_SIZE = 40;
-const MAX_BUDGET = 10;
+const MAX_BUDGET = 20;
 
 const TOOL_COSTS = {
     wall: 0,
@@ -225,6 +225,38 @@ function playAlarmSFX() {
     alarmSynth?.triggerAttackRelease("E4", "8n", now + 0.45);
 }
 
+// Victory fanfare - triumphant ascending arpeggio
+function playVictoryFanfare() {
+    if (!audioStarted) return;
+    const now = Tone.now();
+    // Triumphant C major fanfare
+    const notes = ["C4", "E4", "G4", "C5", "E5", "G5", "C6"];
+    notes.forEach((note, i) => {
+        arpSynth?.triggerAttackRelease(note, "8n", now + i * 0.12);
+    });
+    // Final chord
+    setTimeout(() => {
+        padSynth?.triggerAttackRelease(["C4", "E4", "G4", "C5"], "2n");
+    }, 900);
+}
+
+// Defeat music - sad descending tones that mock
+function playDefeatMusic() {
+    if (!audioStarted) return;
+    const now = Tone.now();
+    // Sad "wah wah wah wahhh" trombone-style
+    const notes = ["G4", "F#4", "F4", "E4"];
+    const durations = ["8n", "8n", "8n", "2n"];
+    notes.forEach((note, i) => {
+        const time = now + i * 0.4;
+        bassSynth?.triggerAttackRelease(note, durations[i], time);
+    });
+    // Extra mocking low note
+    setTimeout(() => {
+        bassSynth?.triggerAttackRelease("C3", "1n");
+    }, 1800);
+}
+
 let lastFootstepTime = 0;
 function playFootstepSFX(isGuard = false) {
     if (!audioStarted || currentMusicStyle === 'off') return;
@@ -258,11 +290,34 @@ function playCameraCreakSFX() {
 
 function changeMusicStyle(style) {
     currentMusicStyle = style;
+    updateMusicToggleUI();
     if (gameMode === 'architect') {
         setAudioMode('architect');
     } else if (gameMode === 'infiltrator' || gameMode === 'replay') {
         setAudioMode('infiltrator');
     }
+}
+
+// Cycle through music styles: ambient → tense → off → ambient
+function cycleMusicStyle() {
+    const styles = ['ambient', 'tense', 'off'];
+    const currentIndex = styles.indexOf(currentMusicStyle);
+    const nextIndex = (currentIndex + 1) % styles.length;
+    changeMusicStyle(styles[nextIndex]);
+}
+
+function updateMusicToggleUI() {
+    const toggle = document.getElementById('musicToggle');
+    const icon = document.getElementById('musicIcon');
+    const label = document.getElementById('musicLabel');
+    if (!toggle) return;
+
+    const labels = { ambient: 'Ambient', tense: 'Spannend', off: 'Aus' };
+    const icons = { ambient: '🎵', tense: '🎶', off: '🔇' };
+
+    label.textContent = labels[currentMusicStyle] || 'Ambient';
+    icon.textContent = icons[currentMusicStyle] || '🎵';
+    toggle.classList.toggle('active', currentMusicStyle !== 'off');
 }
 
 function setAudioMode(mode) {
@@ -1155,20 +1210,33 @@ function triggerGameOver() {
     gameOver = true;
     stopAudio();
     playAlarmSFX();
+    playDefeatMusic();
     showStatusWithButtons('ENTDECKT!', true);
 }
 
 function triggerWin() {
     won = true;
     stopAudio();
+    playVictoryFanfare();
     showStatusWithButtons('MISSION ERFOLGREICH!', false);
 }
 
 function showStatusWithButtons(text, isAlert) {
     const el = document.getElementById('statusOverlay');
+    const replayCode = generateReplayCode();
+
     el.innerHTML = `
         <div>${text}</div>
-        <div style="margin-top: 20px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+        ${replayCode ? `
+            <div style="margin-top: 15px; font-size: 0.7rem; color: #888;">
+                <div style="margin-bottom: 5px;">Replay-Code:</div>
+                <input type="text" value="${replayCode}" readonly
+                    style="width: 90%; max-width: 300px; padding: 8px; font-family: monospace; font-size: 0.65rem; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; text-align: center;"
+                    onclick="this.select(); navigator.clipboard?.writeText(this.value);">
+                <div style="font-size: 0.5rem; margin-top: 3px; color: #666;">Tippen zum Kopieren</div>
+            </div>
+        ` : ''}
+        <div style="margin-top: 15px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
             ${isTestMode ? `
                 <button onclick="backToBuild()" style="padding: 10px 20px; font-family: 'Bebas Neue'; font-size: 1.2rem; background: #444; color: #fff; border: none; cursor: pointer;">◀ Zurück zum Bauen</button>
             ` : `
@@ -1855,6 +1923,59 @@ function loadLevelFromCode(code) {
     }
 }
 
+// Architect mode: Save current level to clipboard
+function saveLevelCode() {
+    const code = generateLevelCode();
+    navigator.clipboard?.writeText(code).then(() => {
+        showTemporaryMessage('Level-Code kopiert!');
+    }).catch(() => {
+        // Fallback: show in prompt
+        prompt('Level-Code (kopieren):', code);
+    });
+}
+
+// Architect mode: Load level from clipboard or prompt
+function loadLevelCode() {
+    navigator.clipboard?.readText().then(code => {
+        if (code && code.startsWith('PH1-')) {
+            applyLoadedLevel(code);
+        } else {
+            promptForLevelCode();
+        }
+    }).catch(() => {
+        promptForLevelCode();
+    });
+}
+
+function promptForLevelCode() {
+    const code = prompt('Level-Code einfügen:');
+    if (code) {
+        applyLoadedLevel(code);
+    }
+}
+
+function applyLoadedLevel(code) {
+    if (loadLevelFromCode(code)) {
+        // Recalculate budget
+        const guardCost = level.guards.length * TOOL_COSTS.guard;
+        const cameraCost = level.cameras.length * TOOL_COSTS.camera;
+        const trapCost = level.traps.size * TOOL_COSTS.trap;
+        budget = MAX_BUDGET - guardCost - cameraCost - trapCost;
+        updateBudgetDisplay();
+        showTemporaryMessage('Level geladen!');
+    }
+}
+
+function showTemporaryMessage(msg) {
+    const el = document.getElementById('statusOverlay');
+    el.innerHTML = `<div>${msg}</div>`;
+    el.className = '';
+    el.style.display = 'block';
+    setTimeout(() => {
+        el.style.display = 'none';
+    }, 1500);
+}
+
 function generateReplayCode() {
     const data = {
         level: {
@@ -1887,7 +2008,7 @@ async function startArchitect() {
     document.getElementById('topBar').style.display = 'flex';
     document.getElementById('budgetDisplay').style.display = 'block';
     document.getElementById('abilityBar').style.display = 'none';
-    document.getElementById('musicSelector').style.display = 'flex';
+    document.getElementById('musicToggle').style.display = 'flex';
 
     // Show architect buttons
     document.getElementById('clearBtn').style.display = '';
@@ -1923,7 +2044,7 @@ async function startInfiltrator() {
     document.getElementById('topBar').style.display = 'flex';
     document.getElementById('budgetDisplay').style.display = 'none';
     document.getElementById('abilityBar').style.display = 'flex';
-    document.getElementById('musicSelector').style.display = 'flex';
+    document.getElementById('musicToggle').style.display = 'flex';
 
     // Hide architect-only buttons, show infiltrator buttons
     document.getElementById('clearBtn').style.display = 'none';
@@ -2006,7 +2127,7 @@ function backToMenu() {
     document.getElementById('menuScreen').style.display = 'flex';
     document.getElementById('gameContainer').style.display = 'none';
     document.getElementById('shareModal').style.display = 'none';
-    document.getElementById('musicSelector').style.display = 'none';
+    document.getElementById('musicToggle').style.display = 'none';
     document.getElementById('statusOverlay').style.display = 'none';
 
     // Reset button visibility
