@@ -1,7 +1,7 @@
 // ==================== POCKET HEIST - GAME.JS ====================
 // Version mit Mobile-Optimierungen
 
-const VERSION = '2.2.0';
+const VERSION = '2.3.0';
 
 // Version-Logging für Debugging
 console.log(`Pocket Heist v${VERSION}`);
@@ -223,6 +223,18 @@ function playAlarmSFX() {
     alarmSynth?.triggerAttackRelease("E4", "8n", now + 0.15);
     alarmSynth?.triggerAttackRelease("A4", "8n", now + 0.3);
     alarmSynth?.triggerAttackRelease("E4", "8n", now + 0.45);
+}
+
+// Detection warning - pulsing alarm while in cone
+let lastDetectionWarningTime = 0;
+function playDetectionWarning() {
+    if (!audioStarted) return;
+    const now = Date.now();
+    // Play every 200ms while being detected
+    if (now - lastDetectionWarningTime > 200) {
+        alarmSynth?.triggerAttackRelease("A5", "32n");
+        lastDetectionWarningTime = now;
+    }
 }
 
 // Victory fanfare - triumphant ascending arpeggio
@@ -1029,8 +1041,8 @@ function updateGame(dt) {
 
         // Normal patrol logic
         if (guard.waypoints && guard.waypoints.length > 0) {
-            // Build full path: start -> waypoints -> back to start
-            const fullPath = [
+            // Build full waypoint list: start -> waypoints (loops back to start)
+            const waypoints = [
                 { x: guard.x, y: guard.y },
                 ...guard.waypoints
             ];
@@ -1040,31 +1052,62 @@ function updateGame(dt) {
                 state.waypointIndex = 0;
             }
 
-            // Get next target (loop through path)
-            const nextIdx = (state.waypointIndex + 1) % fullPath.length;
-            const target = fullPath[nextIdx];
+            // Get next waypoint target (loop through waypoints)
+            const nextWaypointIdx = (state.waypointIndex + 1) % waypoints.length;
+            const waypointTarget = waypoints[nextWaypointIdx];
 
-            if (!target) {
+            if (!waypointTarget) {
                 state.angle += dt * 0.5;
                 return;
             }
 
-            const dx = target.x - state.x;
-            const dy = target.y - state.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
+            // Check if we need to compute A* path to waypoint
+            const currentTileX = Math.round(state.x);
+            const currentTileY = Math.round(state.y);
 
-            if (dist < 0.1) {
-                state.waypointIndex = nextIdx;
-                state.x = target.x;
-                state.y = target.y;
-                playGuardFootstepSFX();
-            } else {
-                const speed = 1.5 * dt;
-                state.x += (dx / dist) * speed;
-                state.y += (dy / dist) * speed;
-                state.angle = Math.atan2(dy, dx);
-                // Footstep sound while moving
-                if (Math.random() < 0.02) playGuardFootstepSFX();
+            if (!state.currentPath || state.currentPath.length === 0 ||
+                state.pathTargetX !== waypointTarget.x || state.pathTargetY !== waypointTarget.y) {
+                // Compute new A* path to waypoint
+                const path = findPath(currentTileX, currentTileY, waypointTarget.x, waypointTarget.y);
+                if (path && path.length > 1) {
+                    state.currentPath = path;
+                    state.pathIndex = 1; // Start from index 1 (0 is current position)
+                    state.pathTargetX = waypointTarget.x;
+                    state.pathTargetY = waypointTarget.y;
+                } else {
+                    // No valid path, skip to next waypoint
+                    state.waypointIndex = nextWaypointIdx;
+                    state.currentPath = null;
+                    return;
+                }
+            }
+
+            // Follow A* path
+            if (state.currentPath && state.pathIndex < state.currentPath.length) {
+                const pathNode = state.currentPath[state.pathIndex];
+                const dx = pathNode.x - state.x;
+                const dy = pathNode.y - state.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < 0.1) {
+                    // Reached path node, move to next
+                    state.x = pathNode.x;
+                    state.y = pathNode.y;
+                    state.pathIndex++;
+                    playGuardFootstepSFX();
+
+                    // Check if reached final waypoint
+                    if (state.pathIndex >= state.currentPath.length) {
+                        state.waypointIndex = nextWaypointIdx;
+                        state.currentPath = null;
+                    }
+                } else {
+                    const speed = 1.5 * dt;
+                    state.x += (dx / dist) * speed;
+                    state.y += (dy / dist) * speed;
+                    state.angle = Math.atan2(dy, dx);
+                    if (Math.random() < 0.02) playGuardFootstepSFX();
+                }
             }
         } else {
             // Just rotate if no waypoints
@@ -1133,6 +1176,8 @@ function updateGame(dt) {
 
     if (detected) {
         detectionLevel += dt * 2; // Fill in 0.5 seconds
+        // Play warning alarm while being detected
+        playDetectionWarning();
         if (detectionLevel >= 1) {
             if (gameMode === 'replay') {
                 // In replay, just stop playing
@@ -1564,6 +1609,9 @@ canvas.addEventListener('touchmove', (e) => {
 canvas.addEventListener('touchend', (e) => {
     e.preventDefault();
 
+    // If there are still touches remaining, don't process yet
+    if (e.touches.length > 0) return;
+
     const wasPanning = isPanning;
     const wasPainting = isPainting;
     const touchDuration = Date.now() - touchStartTime;
@@ -1596,6 +1644,14 @@ canvas.addEventListener('touchend', (e) => {
     if ((gameMode === 'infiltrator' || gameMode === 'replay') && wasTapWithoutMove) {
         handleCanvasClick(e);
     }
+});
+
+// Touch cancel - reset state
+canvas.addEventListener('touchcancel', (e) => {
+    isPainting = false;
+    isPanning = false;
+    lastPaintedKey = null;
+    totalTouchMovement = 0;
 });
 
 function handleArchitectPaint(pos) {
@@ -2020,7 +2076,15 @@ async function startArchitect() {
     viewport.x = 0;
     viewport.y = 0;
 
-    clearLevel();
+    // Don't clear level - preserve previous state
+    // User can use "Clear" button to start fresh
+    // Recalculate budget based on current level
+    const guardCost = level.guards.length * TOOL_COSTS.guard;
+    const cameraCost = level.cameras.length * TOOL_COSTS.camera;
+    const trapCost = level.traps.size * TOOL_COSTS.trap;
+    budget = MAX_BUDGET - guardCost - cameraCost - trapCost;
+    updateBudgetDisplay();
+
     resizeCanvas();
     setAudioMode('architect');
     startGameLoop();
