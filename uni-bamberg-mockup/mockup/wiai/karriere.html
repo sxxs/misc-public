@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Karrieremoglichkeiten und Berufseinstieg fur WIAI-Absolventen">
+    <title>Karriere | Fakultat WIAI | Universitat Bamberg</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Vollkorn:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" type="image/svg+xml" href="../crawler/output/www.uni-bamberg.de/_frontend/siteunibamberg/favicon/favicon.svg">
+</head>
+<body class="subpage fakultaet-page">
+    <!-- Skip Links -->
+    <nav class="skip-links" aria-label="Sprungnavigation">
+        <a href="#main-nav" class="skip-link">Zur Hauptnavigation</a>
+        <a href="#main-content" class="skip-link">Zum Inhalt</a>
+        <a href="#footer" class="skip-link">Zur Fusszeile</a>
+    </nav>
+
+    <!-- Header -->
+    <header class="site-header" role="banner">
+        <div class="header-inner">
+            <a href="../index.html" class="logo" aria-label="Universitat Bamberg Startseite">
+                <img src="../uba-social-media-cropped-transparent.png" alt="" class="logo-icon" aria-hidden="true">
+                <span class="logo-text">
+                    <span class="logo-main">Universitat Bamberg</span>
+                </span>
+            </a>
+
+            <nav class="nav-primary" id="main-nav" aria-label="Hauptnavigation">
+                <ul class="nav-list" role="list">
+                    <li><a href="../index.html#universitaet">Universitat</a></li>
+                    <li><a href="../index.html#fakultaeten" class="active" aria-current="page">Fakultaten</a></li>
+                    <li><a href="../studium.html">Studium</a></li>
+                    <li><a href="../index.html#forschung">Forschung</a></li>
+                    <li><a href="../index.html#international">International</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-actions">
+                <button class="btn-search" aria-label="Suche offnen" id="search-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                </button>
+                <div class="lang-switch">
+                    <a href="#" class="lang-link active" aria-current="page" hreflang="de">DE</a>
+                    <span class="lang-divider" aria-hidden="true">/</span>
+                    <a href="#" class="lang-link" hreflang="en">EN</a>
+                </div>
+                <button class="btn-menu" aria-label="Menu offnen" aria-expanded="false" id="menu-toggle">
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav-overlay" id="mobile-nav" aria-hidden="true">
+        <nav class="mobile-nav" aria-label="Mobile Navigation">
+            <ul class="mobile-nav-list" role="list">
+                <li><a href="../index.html#universitaet">Universitat</a></li>
+                <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
+                <li><a href="../studium.html">Studium</a></li>
+                <li><a href="../index.html#forschung">Forschung</a></li>
+                <li><a href="../index.html#international">International</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Search Overlay -->
+    <div class="search-overlay" id="search-overlay" aria-hidden="true">
+        <div class="search-container">
+            <form class="search-form" role="search" action="/suche">
+                <label for="search-input" class="visually-hidden">Suchbegriff eingeben</label>
+                <input type="search" id="search-input" class="search-input" placeholder="Suchen..." autocomplete="off">
+                <button type="submit" class="search-submit" aria-label="Suche starten">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </form>
+            <button class="search-close" aria-label="Suche schliessen" id="search-close">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <div class="container">
+            <ol class="breadcrumb-list">
+                <li><a href="../index.html">Startseite</a></li>
+                <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
+                <li><a href="../fakultaet-wiai.html">WIAI</a></li>
+                
+                <li aria-current="page">Karriere</li>
+            </ol>
+        </div>
+    </nav>
+
+    <!-- WIAI Subnavigation -->
+    <nav class="subnav" aria-label="WIAI Navigation">
+        <div class="container">
+            <div class="subnav-wrapper">
+                <ul class="subnav-list">
+                    <li><a href="../fakultaet-wiai.html">Übersicht</a></li>
+                    <li><a href="studium.html">Studium</a></li>
+                    <li><a href="studiengaenge.html">Studiengänge</a></li>
+                    <li><a href="forschung.html">Forschung</a></li>
+                    <li><a href="karriere.html" class="active" aria-current="page">Karriere</a></li>
+                </ul>
+                <div class="subnav-quick">
+                    <a href="faq.html" class="subnav-quick-link">FAQ</a>
+                    <a href="bewerbung.html" class="subnav-quick-link">Bewerbung</a>
+                    <a href="kontakt.html" class="subnav-quick-link">Kontakt</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- Page Hero -->
+        <section class="page-hero page-hero--fakultaet" style="--fakultaet-color: var(--color-primary);">
+            <div class="container">
+                <div class="page-hero-content">
+                    <span class="page-hero-label">WIAI</span>
+                    <h1 class="page-hero-title">Karriere & Berufseinstieg</h1>
+                    <p class="page-hero-subtitle">Von der Uni in die Praxis - Karrierewege für WIAI-Absolvent:innen</p>
+                </div>
+            </div>
+            <div class="page-hero-accent"></div>
+        </section>
+
+        <!-- Karrieretag Highlight -->
+        <section class="content-section">
+            <div class="container">
+                <div class="event-highlight">
+                    <div class="event-highlight-badge">Save the Date</div>
+                    <div class="event-highlight-content">
+                        <h2 class="event-highlight-title">WIAI Karrieretag 2025</h2>
+                        <p class="event-highlight-date">12. Mai 2025 | 10:00 - 16:00 Uhr | ERBA Campus</p>
+                        <p class="event-highlight-text">Triff über 30 Unternehmen aus der IT-Branche. Bewerbungsgespräche, Vorträge und Networking - alles an einem Tag.</p>
+                        <div class="event-highlight-actions">
+                            <a href="#" class="btn btn-primary btn-lg">Anmeldung</a>
+                            <a href="#" class="btn btn-secondary">Teilnehmende Unternehmen</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quote -->
+        <section class="content-section bg-subtle">
+            <div class="container">
+                <div class="quote-block quote-block--with-image">
+                    <div class="quote-image">
+                        <img src="../img/alumni-portrait.jpg" alt="Max K., WIAI-Absolvent" loading="lazy">
+                    </div>
+                    <div class="quote-content">
+                        <blockquote class="quote-text">
+                            "Beim WIAI Karrieretag habe ich meinen heutigen Arbeitgeber kennengelernt. Zwei Monate nach dem Masterabschluss hatte ich meinen Traumjob."
+                        </blockquote>
+                        <cite class="quote-author">
+                            <strong>Max K.</strong>
+                            <span>Absolvent M.Sc. Angewandte Informatik, Lead Developer bei Siemens</span>
+                        </cite>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Karrierewege -->
+        <section class="content-section">
+            <div class="container">
+                <h2 class="section-title">Karrierewege für WIAI-Absolvent:innen</h2>
+
+                <div class="card-grid card-grid--3">
+                    <article class="content-card">
+                        <div class="content-card-body">
+                            <h3 class="content-card-title">Softwareentwicklung</h3>
+                            <p class="content-card-text">Backend, Frontend, Mobile, DevOps - die klassischen Entwicklerrollen in Unternehmen aller Größen.</p>
+                            <ul class="content-card-meta">
+                                <li>Software Engineer</li>
+                                <li>Full-Stack Developer</li>
+                                <li>DevOps Engineer</li>
+                            </ul>
+                        </div>
+                    </article>
+
+                    <article class="content-card">
+                        <div class="content-card-body">
+                            <h3 class="content-card-title">Data & AI</h3>
+                            <p class="content-card-text">Datenanalyse, Machine Learning und KI sind gefragter denn je - die WIAI bereitet optimal darauf vor.</p>
+                            <ul class="content-card-meta">
+                                <li>Data Scientist</li>
+                                <li>ML Engineer</li>
+                                <li>AI Researcher</li>
+                            </ul>
+                        </div>
+                    </article>
+
+                    <article class="content-card">
+                        <div class="content-card-body">
+                            <h3 class="content-card-title">IT-Beratung</h3>
+                            <p class="content-card-text">Digitale Transformation begleiten - als Consultant oder Product Owner in der Schnittstelle zwischen IT und Business.</p>
+                            <ul class="content-card-meta">
+                                <li>IT Consultant</li>
+                                <li>Product Owner</li>
+                                <li>Business Analyst</li>
+                            </ul>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- Praktikum & Jobs -->
+        <section class="content-section bg-subtle">
+            <div class="container">
+                <h2 class="section-title">Praktikum & Nebenjobs</h2>
+                <p class="section-intro">Sammle Praxiserfahrung schon während des Studiums.</p>
+
+                <div class="card-grid card-grid--2" style="max-width: 800px;">
+                    <a href="#" class="service-card">
+                        <h3 class="service-card-title">Praktikumsbörse</h3>
+                        <p class="service-card-text">Aktuelle Praktikumsangebote von Partnerunternehmen der WIAI.</p>
+                    </a>
+
+                    <a href="#" class="service-card">
+                        <h3 class="service-card-title">HiWi-Stellen</h3>
+                        <p class="service-card-text">Wissenschaftliche Hilfskraft an Lehrstühlen der WIAI.</p>
+                    </a>
+
+                    <a href="#" class="service-card">
+                        <h3 class="service-card-title">Werkstudent:innen</h3>
+                        <p class="service-card-text">Jobs bei Unternehmen in Bamberg und Umgebung.</p>
+                    </a>
+
+                    <a href="#" class="service-card">
+                        <h3 class="service-card-title">Abschlussarbeiten</h3>
+                        <p class="service-card-text">Bachelor- und Masterarbeiten in Kooperation mit Unternehmen.</p>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Unternehmenskooperationen -->
+        <section class="content-section">
+            <div class="container">
+                <h2 class="section-title">Unsere Partnerunternehmen</h2>
+                <p class="section-intro">Die WIAI arbeitet eng mit der IT-Wirtschaft zusammen.</p>
+
+                <div class="partner-logos">
+                    <div class="partner-logo">SAP</div>
+                    <div class="partner-logo">Siemens</div>
+                    <div class="partner-logo">Bosch</div>
+                    <div class="partner-logo">Datev</div>
+                    <div class="partner-logo">msg</div>
+                    <div class="partner-logo">Capgemini</div>
+                    <div class="partner-logo">Brose</div>
+                    <div class="partner-logo">Schaeffler</div>
+                </div>
+
+                <p class="text-center text-muted" style="margin-top: var(--space-6);">
+                    Interesse an einer Kooperation? <a href="kontakt.html">Kontaktieren Sie uns.</a>
+                </p>
+            </div>
+        </section>
+
+        <!-- Alumni -->
+        <section class="content-section bg-subtle">
+            <div class="container">
+                <div class="feature-spotlight feature-spotlight--right">
+                    <div class="feature-spotlight-image">
+                        <img src="../img/alumni-network.jpg" alt="WIAI Alumni Netzwerk" loading="lazy">
+                    </div>
+                    <div class="feature-spotlight-content">
+                        <span class="feature-spotlight-label">Netzwerk</span>
+                        <h2 class="feature-spotlight-title">WIAI Alumni</h2>
+                        <p class="feature-spotlight-text">Bleib verbunden! Das WIAI-Alumni-Netzwerk bietet Kontakte, Mentoring und exklusive Events für Absolvent:innen.</p>
+                        <ul class="feature-spotlight-list">
+                            <li>Mentoring-Programm für Studierende</li>
+                            <li>Jährliches Alumni-Treffen</li>
+                            <li>Exklusive Job-Angebote</li>
+                        </ul>
+                        <a href="#" class="btn btn-primary">Zum Alumni-Netzwerk</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="cta-banner">
+            <div class="container">
+                <div class="cta-banner-content">
+                    <h2 class="cta-banner-title">Karriereberatung gewünscht?</h2>
+                    <p class="cta-banner-text">Die Studienberatung hilft auch bei Fragen zu Berufseinstieg und Karriereplanung.</p>
+                    <div class="cta-banner-actions">
+                        <a href="beratung.html" class="btn btn-primary btn-lg">Beratung kontaktieren</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    <!-- Footer -->
+    <footer class="site-footer" id="footer" role="contentinfo">
+        <div class="footer-main">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-brand">
+                        <a href="../index.html" class="footer-logo">
+                            <img src="../uba-social-media-cropped-transparent-white.png" alt="" class="logo-icon" aria-hidden="true">
+                            <span class="footer-logo-text">Universitat Bamberg</span>
+                        </a>
+                        <p class="footer-tagline">Studieren im Welterbe</p>
+                    </div>
+                    <nav class="footer-nav" aria-label="Schnellzugriff">
+                        <h3>Schnellzugriff</h3>
+                        <ul>
+                            <li><a href="../studium.html">Studium</a></li>
+                            <li><a href="../index.html#forschung">Forschung</a></li>
+                            <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
+                            <li><a href="../index.html#international">International</a></li>
+                        </ul>
+                    </nav>
+                    <nav class="footer-nav" aria-label="Service">
+                        <h3>Service</h3>
+                        <ul>
+                            <li><a href="#">Bibliothek</a></li>
+                            <li><a href="#">IT-Service</a></li>
+                            <li><a href="#">Mensa</a></li>
+                            <li><a href="#">Stellenangebote</a></li>
+                        </ul>
+                    </nav>
+                    <div class="footer-contact">
+                        <h3>Kontakt</h3>
+                        <address>
+                            <p>Otto-Friedrich-Universitat Bamberg</p>
+                            <p>Kapuzinerstrasse 16</p>
+                            <p>96047 Bamberg</p>
+                        </address>
+                        <p><a href="tel:+499518630">+49 951 863-0</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <nav class="footer-legal" aria-label="Rechtliches">
+                    <ul>
+                        <li><a href="#">Impressum</a></li>
+                        <li><a href="#">Datenschutz</a></li>
+                        <li><a href="#">Barrierefreiheit</a></li>
+                    </ul>
+                </nav>
+                <p class="footer-copyright">Otto-Friedrich-Universitat Bamberg</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+</html>

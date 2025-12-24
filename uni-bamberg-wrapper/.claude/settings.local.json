@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "WebFetch(domain:localhost)",
+      "Bash(ls:*)",
+      "Skill(frontend-design:frontend-design)",
+      "Bash(open:*)",
+      "Bash(xargs ls:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

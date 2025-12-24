@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Studieren an der Fakultät WIAI - Bachelor, Master und Promotion">
+    <title>Studium | Fakultät WIAI | Universitat Bamberg</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Vollkorn:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" type="image/svg+xml" href="../crawler/output/www.uni-bamberg.de/_frontend/siteunibamberg/favicon/favicon.svg">
+</head>
+<body class="subpage fakultaet-page">
+    <!-- Skip Links -->
+    <nav class="skip-links" aria-label="Sprungnavigation">
+        <a href="#main-nav" class="skip-link">Zur Hauptnavigation</a>
+        <a href="#main-content" class="skip-link">Zum Inhalt</a>
+        <a href="#footer" class="skip-link">Zur Fusszeile</a>
+    </nav>
+
+    <!-- Header -->
+    <header class="site-header" role="banner">
+        <div class="header-inner">
+            <a href="../index.html" class="logo" aria-label="Universitat Bamberg Startseite">
+                <img src="../uba-social-media-cropped-transparent.png" alt="" class="logo-icon" aria-hidden="true">
+                <span class="logo-text">
+                    <span class="logo-main">Universitat Bamberg</span>
+                </span>
+            </a>
+
+            <nav class="nav-primary" id="main-nav" aria-label="Hauptnavigation">
+                <ul class="nav-list" role="list">
+                    <li><a href="../index.html#universitaet">Universitat</a></li>
+                    <li><a href="../index.html#fakultaeten" class="active" aria-current="page">Fakultaten</a></li>
+                    <li><a href="../studium.html">Studium</a></li>
+                    <li><a href="../index.html#forschung">Forschung</a></li>
+                    <li><a href="../index.html#international">International</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-actions">
+                <button class="btn-search" aria-label="Suche offnen" id="search-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                </button>
+                <div class="lang-switch">
+                    <a href="#" class="lang-link active" aria-current="page" hreflang="de">DE</a>
+                    <span class="lang-divider" aria-hidden="true">/</span>
+                    <a href="#" class="lang-link" hreflang="en">EN</a>
+                </div>
+                <button class="btn-menu" aria-label="Menu offnen" aria-expanded="false" id="menu-toggle">
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav-overlay" id="mobile-nav" aria-hidden="true">
+        <nav class="mobile-nav" aria-label="Mobile Navigation">
+            <ul class="mobile-nav-list" role="list">
+                <li><a href="../index.html#universitaet">Universitat</a></li>
+                <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
+                <li><a href="../studium.html">Studium</a></li>
+                <li><a href="../index.html#forschung">Forschung</a></li>
+                <li><a href="../index.html#international">International</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Search Overlay -->
+    <div class="search-overlay" id="search-overlay" aria-hidden="true">
+        <div class="search-container">
+            <form class="search-form" role="search" action="/suche">
+                <label for="search-input" class="visually-hidden">Suchbegriff eingeben</label>
+                <input type="search" id="search-input" class="search-input" placeholder="Suchen..." autocomplete="off">
+                <button type="submit" class="search-submit" aria-label="Suche starten">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </form>
+            <button class="search-close" aria-label="Suche schliessen" id="search-close">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <div class="container">
+            <ol class="breadcrumb-list">
+                <li><a href="../index.html">Startseite</a></li>
+                <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
+                <li><a href="../fakultaet-wiai.html">WIAI</a></li>
+                
+                <li aria-current="page">Studium</li>
+            </ol>
+        </div>
+    </nav>
+
+    <!-- WIAI Subnavigation -->
+    <nav class="subnav" aria-label="WIAI Navigation">
+        <div class="container">
+            <div class="subnav-wrapper">
+                <ul class="subnav-list">
+                    <li><a href="../fakultaet-wiai.html">Übersicht</a></li>
+                    <li><a href="studium.html" class="active" aria-current="page">Studium</a></li>
+                    <li><a href="studiengaenge.html">Studiengänge</a></li>
+                    <li><a href="forschung.html">Forschung</a></li>
+                    <li><a href="karriere.html">Karriere</a></li>
+                </ul>
+                <div class="subnav-quick">
+                    <a href="faq.html" class="subnav-quick-link">FAQ</a>
+                    <a href="bewerbung.html" class="subnav-quick-link">Bewerbung</a>
+                    <a href="kontakt.html" class="subnav-quick-link">Kontakt</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- Page Hero -->
+        <section class="page-hero page-hero--fakultaet" style="--fakultaet-color: var(--color-primary);">
+            <div class="container">
+                <div class="page-hero-content">
+                    <span class="page-hero-label">Fakultät WIAI</span>
+                    <h1 class="page-hero-title">Studium</h1>
+                    <p class="page-hero-subtitle">Informatik studieren in Bamberg - praxisnah, zukunftsorientiert und persönlich</p>
+                </div>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <span class="hero-stat-number">1.800+</span>
+                        <span class="hero-stat-label">Studierende</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-number">8</span>
+                        <span class="hero-stat-label">Studiengänge</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-number">92%</span>
+                        <span class="hero-stat-label">Berufseinstieg</span>
+                    </div>
+                </div>
+            </div>
+            <div class="page-hero-accent"></div>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="content-section" style="padding-block: var(--space-8);">
+            <div class="container">
+                <div class="card-grid card-grid--4">
+                    <a href="studiengaenge.html" class="quick-action-card">
+                        <svg class="quick-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                        </svg>
+                        <span class="quick-action-label">Studiengänge</span>
+                    </a>
+                    <a href="bewerbung.html" class="quick-action-card">
+                        <svg class="quick-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                        <span class="quick-action-label">Jetzt bewerben</span>
+                    </a>
+                    <a href="im-studium.html" class="quick-action-card">
+                        <svg class="quick-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                        </svg>
+                        <span class="quick-action-label">Im Studium</span>
+                    </a>
+                    <a href="faq.html" class="quick-action-card">
+                        <svg class="quick-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        <span class="quick-action-label">FAQ</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Studiengänge Überblick -->
+        <section class="content-section bg-subtle">
+            <div class="container">
+                <h2 class="section-title">Unsere Studiengänge</h2>
+                <p class="section-intro">Vom Bachelor bis zur Promotion - wähle deinen Weg in die digitale Zukunft.</p>
+
+                <div class="card-grid card-grid--3">
+                    <!-- Bachelor -->
+                    <article class="content-card content-card--hover">
+                        <div class="content-card-header">
+                            <span class="content-card-badge">Bachelor</span>
+                        </div>
+                        <div class="content-card-body">
+                            <h3 class="content-card-title">Angewandte Informatik</h3>
+                            <p class="content-card-text">Klassische Informatik mit Praxisbezug. Von Algorithmen bis KI - breit aufgestellt für den Arbeitsmarkt.</p>
+                            <ul class="content-card-meta">
+                                <li>6 Semester</li>
+                                <li>180 ECTS</li>
+                                <li>Zulassungsfrei</li>
+                            </ul>
+                        </div>
+                        <a href="angewandte-informatik-bsc.html" class="content-card-link">Mehr erfahren</a>
+                    </article>
+
+                    <article class="content-card content-card--hover">
+                        <div class="content-card-header">
+                            <span class="content-card-badge">Bachelor</span>
+                        </div>
+                        <div class="content-card-body">
+                            <h3 class="content-card-title">Wirtschaftsinformatik</h3>
+                            <p class="content-card-text">IT trifft BWL. Gestalte digitale Geschäftsmodelle und werde zur Schnittstelle zwischen Tech und Business.</p>
+                            <ul class="content-card-meta">
+                                <li>6 Semester</li>
+                                <li>180 ECTS</li>
+                                <li>NC: 2,3</li>
+                            </ul>
+                        </div>
+                        <a href="studiengaenge.html#wirtschaftsinformatik" class="content-card-link">Mehr erfahren</a>
+                    </article>
+
+                    <article class="content-card content-card--hover">
+                        <div class="content-card-header">
+                            <span class="content-card-badge">Bachelor</span>
+                        </div>
+                        <div class="content-card-body">
+                            <h3 class="content-card-title">Software Systems Science</h3>
+                            <p class="content-card-text">International und interdisziplinär. Software Engineering mit Fokus auf komplexe Systeme.</p>
+                            <ul class="content-card-meta">
+                                <li>6 Semester</li>
+                                <li>180 ECTS</li>
+                                <li>Englisch</li>
+                            </ul>
+                        </div>
+                        <a href="studiengaenge.html#sss" class="content-card-link">Mehr erfahren</a>
+                    </article>
+                </div>
+
+                <div class="section-action">
+                    <a href="studiengaenge.html" class="btn btn-secondary">Alle 8 Studiengänge ansehen</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature Spotlight: Warum Bamberg? -->
+        <section class="feature-spotlight">
+            <div class="feature-spotlight-image">
+                <img src="../img/wiai-campus.jpg" alt="WIAI Campus am Erba-Gelände" loading="lazy">
+            </div>
+            <div class="feature-spotlight-content">
+                <span class="feature-spotlight-label">Warum Bamberg?</span>
+                <h2 class="feature-spotlight-title">Klein, aber oho</h2>
+                <p class="feature-spotlight-text">An der WIAI studierst du nicht anonym. Professoren kennen deine Namen, Übungsgruppen sind klein, und der Campus am Erba-Gelände bietet modernste Ausstattung.</p>
+                <ul class="feature-spotlight-list">
+                    <li>Persönliche Betreuung mit exzellentem Betreuungsverhältnis</li>
+                    <li>Moderne Labore und Arbeitsräume</li>
+                    <li>Starke Verbindung zur regionalen IT-Wirtschaft</li>
+                    <li>UNESCO-Welterbe vor der Tür</li>
+                </ul>
+                <a href="beratung.html" class="btn btn-primary">Beratung vereinbaren</a>
+            </div>
+        </section>
+
+        <!-- Testimonial / Quote -->
+        <section class="content-section">
+            <div class="container">
+                <div class="quote-block quote-block--with-image">
+                    <div class="quote-image">
+                        <img src="../img/student-portrait.jpg" alt="Lisa M., Absolventin" loading="lazy">
+                    </div>
+                    <div class="quote-content">
+                        <blockquote class="quote-text">
+                            "Das Studium an der WIAI hat mir nicht nur technisches Wissen vermittelt, sondern auch die Fähigkeit, komplexe Probleme strukturiert anzugehen. Nach meinem Abschluss hatte ich drei Jobangebote."
+                        </blockquote>
+                        <cite class="quote-author">
+                            <strong>Lisa M.</strong>
+                            <span>Absolventin B.Sc. Angewandte Informatik, jetzt Software Engineer bei SAP</span>
+                        </cite>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Aktuelles -->
+        <section class="content-section bg-subtle">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Aktuelles zum Studium</h2>
+                    <a href="../index.html#news" class="section-link">Alle News</a>
+                </div>
+
+                <div class="card-grid card-grid--3">
+                    <article class="news-card">
+                        <time class="news-date">15. Dez 2024</time>
+                        <h3 class="news-title">Bewerbungsphase für Sommersemester 2025 gestartet</h3>
+                        <p class="news-excerpt">Bis 15. Januar können sich Studieninteressierte für Master-Studiengänge bewerben.</p>
+                        <a href="../artikel.html" class="news-link">Weiterlesen</a>
+                    </article>
+
+                    <article class="news-card">
+                        <time class="news-date">10. Dez 2024</time>
+                        <h3 class="news-title">Neuer KI-Schwerpunkt ab WS 2025</h3>
+                        <p class="news-excerpt">Der B.Sc. Angewandte Informatik erhält einen erweiterten Wahlbereich für Künstliche Intelligenz.</p>
+                        <a href="../artikel.html" class="news-link">Weiterlesen</a>
+                    </article>
+
+                    <article class="news-card">
+                        <time class="news-date">5. Dez 2024</time>
+                        <h3 class="news-title">Prüfungsanmeldung bis 20. Dezember</h3>
+                        <p class="news-excerpt">Die Anmeldephase für die Prüfungen im Wintersemester läuft. Jetzt in FlexNow anmelden!</p>
+                        <a href="im-studium.html#pruefungen" class="news-link">Weiterlesen</a>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Banner -->
+        <section class="cta-banner">
+            <div class="container">
+                <div class="cta-banner-content">
+                    <h2 class="cta-banner-title">Bereit für dein Informatik-Studium?</h2>
+                    <p class="cta-banner-text">Die Bewerbung für das Sommersemester 2025 ist bis zum 15. Januar möglich.</p>
+                    <div class="cta-banner-actions">
+                        <a href="bewerbung.html" class="btn btn-primary btn-lg">Jetzt bewerben</a>
+                        <a href="beratung.html" class="btn btn-secondary btn-lg">Beratungstermin</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Services für Studierende -->
+        <section class="content-section">
+            <div class="container">
+                <h2 class="section-title">Schon eingeschrieben?</h2>
+                <p class="section-intro">Wichtige Services und Anlaufstellen für Studierende der WIAI.</p>
+
+                <div class="card-grid card-grid--4">
+                    <a href="im-studium.html#pruefungen" class="service-card">
+                        <h3 class="service-card-title">Prüfungen & FlexNow</h3>
+                        <p class="service-card-text">Anmeldung, Termine, Ergebnisse</p>
+                    </a>
+                    <a href="im-studium.html#module" class="service-card">
+                        <h3 class="service-card-title">Modulhandbücher</h3>
+                        <p class="service-card-text">Alle Ordnungen & Dokumente</p>
+                    </a>
+                    <a href="im-studium.html#ausland" class="service-card">
+                        <h3 class="service-card-title">Auslandssemester</h3>
+                        <p class="service-card-text">Erasmus & Partnerhochschulen</p>
+                    </a>
+                    <a href="karriere.html" class="service-card">
+                        <h3 class="service-card-title">Karriere & Jobs</h3>
+                        <p class="service-card-text">Praktika, HiWi-Stellen, Berufseinstieg</p>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    <!-- Footer -->
+    <footer class="site-footer" id="footer" role="contentinfo">
+        <div class="footer-main">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-brand">
+                        <a href="../index.html" class="footer-logo">
+                            <img src="../uba-social-media-cropped-transparent-white.png" alt="" class="logo-icon" aria-hidden="true">
+                            <span class="footer-logo-text">Universitat Bamberg</span>
+                        </a>
+                        <p class="footer-tagline">Studieren im Welterbe</p>
+                    </div>
+                    <nav class="footer-nav" aria-label="Schnellzugriff">
+                        <h3>Schnellzugriff</h3>
+                        <ul>
+                            <li><a href="../studium.html">Studium</a></li>
+                            <li><a href="../index.html#forschung">Forschung</a></li>
+                            <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
+                            <li><a href="../index.html#international">International</a></li>
+                        </ul>
+                    </nav>
+                    <nav class="footer-nav" aria-label="Service">
+                        <h3>Service</h3>
+                        <ul>
+                            <li><a href="#">Bibliothek</a></li>
+                            <li><a href="#">IT-Service</a></li>
+                            <li><a href="#">Mensa</a></li>
+                            <li><a href="#">Stellenangebote</a></li>
+                        </ul>
+                    </nav>
+                    <div class="footer-contact">
+                        <h3>Kontakt</h3>
+                        <address>
+                            <p>Otto-Friedrich-Universitat Bamberg</p>
+                            <p>Kapuzinerstrasse 16</p>
+                            <p>96047 Bamberg</p>
+                        </address>
+                        <p><a href="tel:+499518630">+49 951 863-0</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <nav class="footer-legal" aria-label="Rechtliches">
+                    <ul>
+                        <li><a href="#">Impressum</a></li>
+                        <li><a href="#">Datenschutz</a></li>
+                        <li><a href="#">Barrierefreiheit</a></li>
+                    </ul>
+                </nav>
+                <p class="footer-copyright">Otto-Friedrich-Universitat Bamberg</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+</html>

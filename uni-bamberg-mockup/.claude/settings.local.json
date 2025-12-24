@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(xargs -I{} sh -c 'echo \"\"$\\(dirname {} | xargs basename\\): $\\(grep -oP \"\"<title>[^<]+\"\" {} | head -1 | sed \"\"s/<title>//\"\"\\)\"\"')",
+      "Bash(python3:*)",
+      "Skill(frontend-design:frontend-design)",
+      "Bash(for class in \"quote-block-image\" \"quote-block-content\" \"quote-block-text\" \"quote-block-author\")",
+      "Bash(do)",
+      "Bash(if grep -q \"\\\\.$class\" styles.css)",
+      "Bash(then)",
+      "Bash(echo:*)",
+      "Bash(else)",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(for class in \"feature-spotlight-image\" \"feature-spotlight-list\" \"feature-spotlight-text\" \"feature-spotlight-title\" \"quote-block-content\" \"quote-block-text\" \"quote-block-author\" \"bg-subtle\" \"quote-block-image\" \"quote-image-placeholder\")",
+      "Bash(chmod:*)",
+      "Bash(mkdir:*)",
+      "Bash(ls:*)"
+    ]
+  }
+}

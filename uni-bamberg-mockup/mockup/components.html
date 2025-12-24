@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Komponenten-Bibliothek - Design System der Universitat Bamberg Mockups">
+    <title>Komponenten | Design System | Universitat Bamberg</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Vollkorn:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+
+    <style>
+        /* Component Showcase Styles */
+        .showcase-section {
+            padding: var(--space-16) 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .showcase-section:nth-child(even) {
+            background: var(--color-sand-light);
+        }
+
+        .showcase-title {
+            font-family: var(--font-display);
+            font-size: var(--text-3xl);
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .showcase-desc {
+            font-size: var(--text-base);
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-8);
+            max-width: 600px;
+        }
+
+        .showcase-label {
+            display: inline-block;
+            font-size: var(--text-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--color-text-muted);
+            margin-bottom: var(--space-4);
+            margin-top: var(--space-8);
+        }
+
+        .showcase-label:first-of-type {
+            margin-top: 0;
+        }
+
+        .code-hint {
+            display: inline-block;
+            font-family: monospace;
+            font-size: var(--text-sm);
+            background: var(--color-bg);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            color: var(--color-secondary);
+            margin-left: var(--space-2);
+        }
+
+        .component-grid {
+            display: grid;
+            gap: var(--space-6);
+        }
+
+        @media (min-width: 768px) {
+            .component-grid--2 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .component-grid--3 {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body class="subpage">
+    <!-- Header (simplified for showcase) -->
+    <header class="site-header" role="banner">
+        <div class="header-inner">
+            <a href="index.html" class="logo">
+                <img src="uba-social-media-cropped-transparent.png" alt="" class="logo-icon">
+                <span class="logo-text">
+                    <span class="logo-main">Design System</span>
+                </span>
+            </a>
+            <nav class="nav-primary">
+                <ul class="nav-list">
+                    <li><a href="index.html">Startseite</a></li>
+                    <li><a href="fakultaet-wiai.html">WIAI</a></li>
+                    <li><a href="components.html" class="active">Komponenten</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Page Hero -->
+    <section class="page-hero page-hero--fakultaet" style="background: linear-gradient(135deg, var(--color-text) 0%, var(--color-primary) 100%);">
+        <div class="container">
+            <div class="page-hero-content">
+                <span class="page-hero-label">Design System</span>
+                <h1 class="page-hero-title">Komponenten-Bibliothek</h1>
+                <p class="page-hero-subtitle">Wiederverwendbare Bausteine fur das Uni Bamberg Mockup</p>
+            </div>
+        </div>
+        <div class="page-hero-accent"></div>
+    </section>
+
+    <main>
+        <!-- Accordion -->
+        <section class="showcase-section" id="accordion">
+            <div class="container">
+                <h2 class="showcase-title">Accordion</h2>
+                <p class="showcase-desc">Aufklappbare Inhaltsblöcke für FAQs und strukturierte Informationen.</p>
+
+                <span class="showcase-label">Standard <code class="code-hint">.accordion</code></span>
+                <div class="accordion" style="max-width: 700px;">
+                    <div class="accordion-item active">
+                        <button class="accordion-trigger" aria-expanded="true">
+                            <span>Wie bewerbe ich mich für einen Studiengang?</span>
+                            <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </button>
+                        <div class="accordion-content">
+                            <p>Die Bewerbung erfolgt online uber das Bewerbungsportal der Universitat Bamberg. Fur zulassungsfreie Studiengange können Sie sich direkt einschreiben, fur zulassungsbeschrankte Studiengange mussen Sie sich bewerben.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <button class="accordion-trigger" aria-expanded="false">
+                            <span>Wann sind die Bewerbungsfristen?</span>
+                            <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </button>
+                        <div class="accordion-content">
+                            <p>Fur das Wintersemester: 15. Juli. Fur das Sommersemester: 15. Januar. Internationale Bewerber haben frühere Fristen.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <button class="accordion-trigger" aria-expanded="false">
+                            <span>Welche Unterlagen benötige ich?</span>
+                            <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </button>
+                        <div class="accordion-content">
+                            <p>Bachelor: Hochschulzugangsberechtigung (Abitur). Master: Bachelor-Zeugnis und ggf. Motivationsschreiben.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature Spotlight -->
+        <section class="showcase-section" id="feature-spotlight">
+            <div class="container">
+                <h2 class="showcase-title">Feature Spotlight</h2>
+                <p class="showcase-desc">Großflachige Bild-Text-Kombinationen für Testimonials und Highlights.</p>
+
+                <span class="showcase-label">Standard (Bild links) <code class="code-hint">.feature-spotlight</code></span>
+                <div class="feature-spotlight" style="margin-bottom: var(--space-8);">
+                    <div class="feature-spotlight-media">
+                        <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&h=600&fit=crop" alt="Student am Campus">
+                    </div>
+                    <div class="feature-spotlight-content">
+                        <span class="feature-spotlight-label">Absolvent*innen-Stimme</span>
+                        <blockquote class="feature-spotlight-quote">
+                            "Das Studium an der WIAI hat mir die perfekte Grundlage für meine Karriere in der IT gegeben."
+                        </blockquote>
+                        <div class="feature-spotlight-author">
+                            <div class="feature-spotlight-avatar"></div>
+                            <div>
+                                <div class="feature-spotlight-name">Max Mustermann</div>
+                                <div class="feature-spotlight-role">Software Engineer bei SAP</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <span class="showcase-label">Bild rechts <code class="code-hint">.feature-spotlight--right</code></span>
+                <div class="feature-spotlight feature-spotlight--right">
+                    <div class="feature-spotlight-media">
+                        <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&h=600&fit=crop" alt="Teamarbeit">
+                    </div>
+                    <div class="feature-spotlight-content">
+                        <span class="feature-spotlight-label">Forschung</span>
+                        <blockquote class="feature-spotlight-quote">
+                            "Unsere Forschung verbindet Theorie mit praktischen Anwendungen in Wirtschaft und Gesellschaft."
+                        </blockquote>
+                        <div class="feature-spotlight-author">
+                            <div class="feature-spotlight-avatar"></div>
+                            <div>
+                                <div class="feature-spotlight-name">Prof. Dr. Maria Schmidt</div>
+                                <div class="feature-spotlight-role">Lehrstuhl für Künstliche Intelligenz</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quote Block -->
+        <section class="showcase-section" id="quote-block">
+            <div class="container">
+                <h2 class="showcase-title">Quote Block</h2>
+                <p class="showcase-desc">Zitate und Statements für Content-Seiten.</p>
+
+                <span class="showcase-label">Standard <code class="code-hint">.quote-block</code></span>
+                <div class="quote-block" style="max-width: 700px;">
+                    <p class="quote-block-text">Die Verbindung von Informatik und Wirtschaft macht Bamberg zu einem einzigartigen Studienort.</p>
+                    <div class="quote-block-author">
+                        <div class="quote-block-avatar"></div>
+                        <div>
+                            <div class="quote-block-name">Prof. Dr. Dominik Herrmann</div>
+                            <div class="quote-block-role">Dekan WIAI</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Banner -->
+        <section class="showcase-section" id="cta-banner">
+            <div class="container">
+                <h2 class="showcase-title">CTA Banner</h2>
+                <p class="showcase-desc">Call-to-Action Banner für wichtige Aktionen.</p>
+            </div>
+
+            <div style="margin-top: var(--space-8);">
+                <span class="showcase-label container">Primary <code class="code-hint">.cta-banner</code></span>
+                <div class="cta-banner" style="margin-top: var(--space-4);">
+                    <div class="container">
+                        <div class="cta-banner-content">
+                            <h3 class="cta-banner-title">Jetzt für das Wintersemester bewerben</h3>
+                            <p class="cta-banner-text">Bewerbungsschluss ist der 15. Juli 2025</p>
+                        </div>
+                        <div class="cta-banner-actions">
+                            <a href="#" class="btn btn-primary">Jetzt bewerben</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: var(--space-8);">
+                <span class="showcase-label container">Secondary <code class="code-hint">.cta-banner--secondary</code></span>
+                <div class="cta-banner cta-banner--secondary" style="margin-top: var(--space-4);">
+                    <div class="container">
+                        <div class="cta-banner-content">
+                            <h3 class="cta-banner-title">Fragen zum Studium?</h3>
+                            <p class="cta-banner-text">Unsere Studienberatung hilft gerne weiter</p>
+                        </div>
+                        <div class="cta-banner-actions">
+                            <a href="#" class="btn btn-primary">Beratung anfragen</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filter Chips -->
+        <section class="showcase-section" id="filter-chips">
+            <div class="container">
+                <h2 class="showcase-title">Filter Chips</h2>
+                <p class="showcase-desc">Filteroptionen für Listen und Übersichten.</p>
+
+                <span class="showcase-label">Standard <code class="code-hint">.filter-chip</code></span>
+                <div class="filter-bar" style="position: static; background: transparent; border: none;">
+                    <span class="filter-label">Abschluss:</span>
+                    <div class="filter-chips">
+                        <button class="filter-chip active">
+                            Alle <span class="count">12</span>
+                        </button>
+                        <button class="filter-chip">
+                            Bachelor <span class="count">6</span>
+                        </button>
+                        <button class="filter-chip">
+                            Master <span class="count">5</span>
+                        </button>
+                        <button class="filter-chip">
+                            Lehramt <span class="count">1</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Buttons -->
+        <section class="showcase-section" id="buttons">
+            <div class="container">
+                <h2 class="showcase-title">Buttons</h2>
+                <p class="showcase-desc">Interaktive Schaltflachen für Aktionen.</p>
+
+                <span class="showcase-label">Varianten</span>
+                <div style="display: flex; gap: var(--space-4); flex-wrap: wrap; align-items: center;">
+                    <a href="#" class="btn btn-primary">Primary Button</a>
+                    <a href="#" class="btn btn-secondary" style="background: var(--color-primary);">Secondary Button</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cards -->
+        <section class="showcase-section" id="cards">
+            <div class="container">
+                <h2 class="showcase-title">Cards</h2>
+                <p class="showcase-desc">Verschiedene Kartentypen für Inhalte.</p>
+
+                <span class="showcase-label">Studiengang Card <code class="code-hint">.studiengang-card</code></span>
+                <div class="component-grid component-grid--3">
+                    <article class="studiengang-card">
+                        <h4>Angewandte Informatik</h4>
+                        <p>Verbindet Informatik-Grundlagen mit Anwendungsfeldern wie Medieninformatik.</p>
+                        <div class="studiengang-meta">
+                            <span>B.Sc.</span>
+                            <span>6 Semester</span>
+                        </div>
+                    </article>
+                    <article class="studiengang-card">
+                        <h4>Wirtschaftsinformatik</h4>
+                        <p>Interdisziplinarer Studiengang an der Schnittstelle von Informatik und BWL.</p>
+                        <div class="studiengang-meta">
+                            <span>B.Sc.</span>
+                            <span>6 Semester</span>
+                        </div>
+                    </article>
+                    <article class="studiengang-card">
+                        <h4>Computing in the Humanities</h4>
+                        <p>Einzigartiger Studiengang, der Informatik mit Geisteswissenschaften verbindet.</p>
+                        <div class="studiengang-meta">
+                            <span>M.Sc.</span>
+                            <span>4 Semester</span>
+                        </div>
+                    </article>
+                </div>
+
+                <span class="showcase-label">Person Card <code class="code-hint">.person-card</code></span>
+                <div class="component-grid component-grid--3">
+                    <article class="person-card">
+                        <div class="person-image">
+                            <div class="person-placeholder">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="person-info">
+                            <span class="person-role">Dekan</span>
+                            <h3>Prof. Dr. Dominik Herrmann</h3>
+                            <p>Lehrstuhl für Privatsphare und Sicherheit</p>
+                        </div>
+                    </article>
+                    <article class="person-card">
+                        <div class="person-image">
+                            <div class="person-placeholder">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="person-info">
+                            <span class="person-role">Studienberatung</span>
+                            <h3>Dr. Anna Müller</h3>
+                            <p>Fachstudienberatung WIAI</p>
+                        </div>
+                    </article>
+                    <article class="person-card">
+                        <div class="person-image">
+                            <div class="person-placeholder">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="person-info">
+                            <span class="person-role">Prüfungsamt</span>
+                            <h3>Thomas Weber</h3>
+                            <p>Ansprechpartner Prüfungsangelegenheiten</p>
+                        </div>
+                    </article>
+                </div>
+
+                <span class="showcase-label">Stat Card <code class="code-hint">.stat-card</code></span>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); max-width: 500px;">
+                    <div class="stat-card">
+                        <span class="stat-card-number">~2.000</span>
+                        <span class="stat-card-label">Studierende</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-card-number">25+</span>
+                        <span class="stat-card-label">Professuren</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-card-number">12+</span>
+                        <span class="stat-card-label">Studiengange</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Timeline -->
+        <section class="showcase-section" id="timeline">
+            <div class="container">
+                <h2 class="showcase-title">Timeline</h2>
+                <p class="showcase-desc">Zeitliche Ablaufe und Prozesse.</p>
+
+                <div class="timeline" style="max-width: 900px;">
+                    <h3 class="timeline-title">Bewerbungsprozess</h3>
+                    <div class="timeline-items">
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <span class="timeline-date">Schritt 1</span>
+                                <h4 class="timeline-heading">Online-Bewerbung</h4>
+                                <p class="timeline-text">Registrieren und Bewerbung einreichen</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <span class="timeline-date">Schritt 2</span>
+                                <h4 class="timeline-heading">Prüfung</h4>
+                                <p class="timeline-text">Unterlagen werden geprüft</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <span class="timeline-date">Schritt 3</span>
+                                <h4 class="timeline-heading">Zulassung</h4>
+                                <p class="timeline-text">Bescheid per E-Mail</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <span class="timeline-date">Schritt 4</span>
+                                <h4 class="timeline-heading">Einschreibung</h4>
+                                <p class="timeline-text">Online einschreiben</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Navigation Components -->
+        <section class="showcase-section" id="navigation">
+            <div class="container">
+                <h2 class="showcase-title">Navigation</h2>
+                <p class="showcase-desc">Navigationskomponenten für Subseiten.</p>
+
+                <span class="showcase-label">Subnav mit Quick Links <code class="code-hint">.subnav</code></span>
+                <nav class="subnav" style="position: static; border-radius: var(--radius-md);">
+                    <div class="subnav-wrapper">
+                        <ul class="subnav-list">
+                            <li><a href="#" class="active">Übersicht</a></li>
+                            <li><a href="#">Studiengange</a></li>
+                            <li><a href="#">Forschung</a></li>
+                            <li><a href="#">Im Studium</a></li>
+                            <li><a href="#">Beratung</a></li>
+                        </ul>
+                        <div class="subnav-quick">
+                            <a href="#" class="subnav-quick-link">FAQ</a>
+                            <a href="#" class="subnav-quick-link">Bewerbung</a>
+                            <a href="#" class="subnav-quick-link">Kontakt</a>
+                        </div>
+                    </div>
+                </nav>
+
+                <span class="showcase-label">Breadcrumb <code class="code-hint">.breadcrumb</code></span>
+                <nav class="breadcrumb" style="background: var(--color-primary); padding: var(--space-4); border-radius: var(--radius-md);">
+                    <ol class="breadcrumb-list">
+                        <li><a href="#">Startseite</a></li>
+                        <li><a href="#">Fakultaten</a></li>
+                        <li><a href="#">WIAI</a></li>
+                        <li aria-current="page">Studiengange</li>
+                    </ol>
+                </nav>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-main">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-brand">
+                        <a href="index.html" class="footer-logo">
+                            <img src="uba-social-media-cropped-transparent-white.png" alt="" class="logo-icon">
+                            <span class="footer-logo-text">Universitat Bamberg</span>
+                        </a>
+                        <p class="footer-tagline">Studieren im Welterbe</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-legal">
+            <div class="container">
+                <p class="copyright">Design System - Mockup v1.0</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Simple accordion toggle
+        document.querySelectorAll('.accordion-trigger').forEach(trigger => {
+            trigger.addEventListener('click', () => {
+                const item = trigger.closest('.accordion-item');
+                const isActive = item.classList.contains('active');
+
+                // Close all items in same accordion
+                item.closest('.accordion').querySelectorAll('.accordion-item').forEach(i => {
+                    i.classList.remove('active');
+                    i.querySelector('.accordion-trigger').setAttribute('aria-expanded', 'false');
+                });
+
+                // Open clicked if was closed
+                if (!isActive) {
+                    item.classList.add('active');
+                    trigger.setAttribute('aria-expanded', 'true');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,80 +1,80 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>University of Bamberg - Wrapper</title>
+    <title>Universitat Bamberg</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header class="wrapper-header">
         <div class="header-content">
-            <h1>Otto-Friedrich-Universität Bamberg</h1>
-            <p class="subtitle">Studieren im Welterbe • Est. 1647</p>
-        </div>
-        <div class="controls">
-            <select id="language-selector" class="btn">
-                <option value="de">Deutsch</option>
-                <option value="en">English</option>
-                <option value="es">Español</option>
-            </select>
-            <button id="refresh-btn" class="btn">Refresh</button>
-            <button id="toggle-theme" class="btn">Toggle Theme</button>
-            <select id="view-mode" class="btn">
-                <option value="full">Full View</option>
-                <option value="mobile">Mobile View</option>
-                <option value="tablet">Tablet View</option>
-            </select>
+            <div>
+                <h1>Otto-Friedrich-Universitat Bamberg</h1>
+                <p class="subtitle">Studieren im Welterbe</p>
+            </div>
+            <div class="controls">
+                <select id="language-selector" class="btn">
+                    <option value="de">Deutsch</option>
+                    <option value="en">English</option>
+                </select>
+                <button id="back-btn" class="btn nav-btn" disabled>Zuruck</button>
+                <button id="forward-btn" class="btn nav-btn" disabled>Vor</button>
+                <button id="refresh-btn" class="btn">Aktualisieren</button>
+                <button id="toggle-theme" class="btn">Thema</button>
+                <select id="view-mode" class="btn">
+                    <option value="full">Vollansicht</option>
+                    <option value="tablet">Tablet</option>
+                    <option value="mobile">Mobil</option>
+                </select>
+            </div>
         </div>
     </header>
 
     <main class="wrapper-main">
-        <div class="sidebar">
+        <aside class="sidebar">
             <h3>Navigation</h3>
             <ul class="quick-links">
-                <li><a href="https://www.uni-bamberg.de" class="fetch-link">🏠 Home</a></li>
-                <li><a href="https://www.uni-bamberg.de/en/" class="fetch-link">🌍 English Version</a></li>
-                <li><a href="https://www.uni-bamberg.de/studium/" class="fetch-link">📚 Studium</a></li>
-                <li><a href="https://www.uni-bamberg.de/forschung/" class="fetch-link">🔬 Forschung</a></li>
-                <li><a href="https://www.uni-bamberg.de/lehre/" class="fetch-link">👨‍🏫 Lehre</a></li>
-                <li><a href="https://www.uni-bamberg.de/universitaet/" class="fetch-link">🏛️ Universität</a></li>
-                <li><a href="https://www.uni-bamberg.de/fakultaeten/" class="fetch-link">🎓 Fakultäten</a></li>
-                <li><a href="https://www.uni-bamberg.de/international/" class="fetch-link">✈️ International</a></li>
+                <li><a href="https://www.uni-bamberg.de" class="fetch-link">Startseite</a></li>
+                <li><a href="https://www.uni-bamberg.de/studium/" class="fetch-link">Studium</a></li>
+                <li><a href="https://www.uni-bamberg.de/forschung/" class="fetch-link">Forschung</a></li>
+                <li><a href="https://www.uni-bamberg.de/universitaet/" class="fetch-link">Universitat</a></li>
+                <li><a href="https://www.uni-bamberg.de/fakultaeten/" class="fetch-link">Fakultaten</a></li>
+                <li><a href="https://www.uni-bamberg.de/international/" class="fetch-link">International</a></li>
             </ul>
 
             <div class="info-box">
-                <h4>About University</h4>
-                <p><strong>Otto-Friedrich-Universität Bamberg</strong> - Founded in 1647, located in the UNESCO World Heritage city of Bamberg. Offering 100+ degree programs across 4 faculties.</p>
+                <h4>Uber die Universitat</h4>
+                <p><strong>Otto-Friedrich-Universitat Bamberg</strong> wurde 1647 gegrundet und befindet sich in der UNESCO-Welterbestadt Bamberg. Uber 100 Studiengange in 4 Fakultaten.</p>
             </div>
 
-            <div class="info-box" style="margin-top: 1rem;">
-                <h4>Social Media</h4>
+            <div class="info-box">
+                <h4>Kontakt</h4>
                 <div class="social-links">
-                    <a href="https://www.instagram.com/uni.bamberg/" target="_blank" title="Instagram">📷 Instagram</a>
-                    <a href="https://www.facebook.com/unibamberg" target="_blank" title="Facebook">📘 Facebook</a>
-                    <a href="https://bsky.app/profile/uni-bamberg.de" target="_blank" title="Bluesky">🦋 Bluesky</a>
-                    <a href="https://www.tiktok.com/@uni.bamberg" target="_blank" title="TikTok">🎵 TikTok</a>
+                    <a href="https://www.instagram.com/uni.bamberg/" target="_blank" rel="noopener">Instagram</a>
+                    <a href="https://bsky.app/profile/uni-bamberg.de" target="_blank" rel="noopener">Bluesky</a>
                 </div>
             </div>
-        </div>
+        </aside>
 
         <div class="content-area">
             <div class="loading-overlay" id="loading">
                 <div class="spinner"></div>
-                <p>Loading content...</p>
+                <p>Inhalt wird geladen</p>
             </div>
             <div id="content-display" class="content-display">
                 <div class="welcome-message">
-                    <h2>Welcome to Otto-Friedrich-Universität Bamberg</h2>
-                    <p>Select a link from the navigation to view content</p>
+                    <h2>Willkommen</h2>
+                    <p>Wahle einen Link aus der Navigation</p>
                 </div>
             </div>
         </div>
     </main>
 
     <footer class="wrapper-footer">
-        <p>&copy; 2025 Otto-Friedrich-Universität Bamberg Wrapper | Original content from <a href="https://www.uni-bamberg.de" target="_blank">uni-bamberg.de</a></p>
-        <p style="font-size: 0.85rem; margin-top: 0.5rem; opacity: 0.8;">Enhanced viewing experience for the UNESCO World Heritage University</p>
+        <p>Wrapper fur <a href="https://www.uni-bamberg.de" target="_blank" rel="noopener">uni-bamberg.de</a></p>
     </footer>
 
     <script src="script.js"></script>

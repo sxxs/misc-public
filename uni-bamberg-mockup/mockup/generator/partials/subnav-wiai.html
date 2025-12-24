@@ -1,0 +1,32 @@
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <div class="container">
+            <ol class="breadcrumb-list">
+                <li><a href="{{root_path}}index.html">Startseite</a></li>
+                <li><a href="{{root_path}}index.html#fakultaeten">Fakultaten</a></li>
+                <li><a href="{{root_path}}fakultaet-wiai.html">WIAI</a></li>
+                {{#breadcrumb_extra}}<li><a href="{{breadcrumb_extra_url}}">{{breadcrumb_extra_text}}</a></li>{{/breadcrumb_extra}}
+                <li aria-current="page">{{breadcrumb_current}}</li>
+            </ol>
+        </div>
+    </nav>
+
+    <!-- WIAI Subnavigation -->
+    <nav class="subnav" aria-label="WIAI Navigation">
+        <div class="container">
+            <div class="subnav-wrapper">
+                <ul class="subnav-list">
+                    <li><a href="{{root_path}}fakultaet-wiai.html"{{#subnav_uebersicht}} class="active" aria-current="page"{{/subnav_uebersicht}}>Übersicht</a></li>
+                    <li><a href="{{wiai_path}}studium.html"{{#subnav_studium}} class="active" aria-current="page"{{/subnav_studium}}>Studium</a></li>
+                    <li><a href="{{wiai_path}}studiengaenge.html"{{#subnav_studiengaenge}} class="active" aria-current="page"{{/subnav_studiengaenge}}>Studiengänge</a></li>
+                    <li><a href="{{wiai_path}}forschung.html"{{#subnav_forschung}} class="active" aria-current="page"{{/subnav_forschung}}>Forschung</a></li>
+                    <li><a href="{{wiai_path}}karriere.html"{{#subnav_karriere}} class="active" aria-current="page"{{/subnav_karriere}}>Karriere</a></li>
+                </ul>
+                <div class="subnav-quick">
+                    <a href="{{wiai_path}}faq.html" class="subnav-quick-link">FAQ</a>
+                    <a href="{{wiai_path}}bewerbung.html" class="subnav-quick-link">Bewerbung</a>
+                    <a href="{{wiai_path}}kontakt.html" class="subnav-quick-link">Kontakt</a>
+                </div>
+            </div>
+        </div>
+    </nav>
