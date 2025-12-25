@@ -22,10 +22,15 @@
     --color-text: #1F2937;
     --color-text-secondary: #4B5563;
     --color-text-muted: #6B7280;
+    --color-text-light: #5B6470;
     --color-bg: #FAFBFC;
+    --color-bg-secondary: #F1F3F5;
+    --color-bg-subtle: #F6F7F9;
     --color-surface: #FFFFFF;
     --color-border: #E5E7EB;
     --color-border-subtle: #F3F4F6;
+    --color-success: #2D5A3D;
+    --color-warm: #F3EBDD;
 
     /* Typography */
     --font-display: 'Vollkorn', Georgia, 'Times New Roman', serif;
@@ -68,6 +73,8 @@
     --radius-sm: 0.25rem;
     --radius-md: 0.5rem;
     --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+    --radius-full: 999px;
 
     /* Shadows */
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -88,10 +95,15 @@
     --color-text: #F9FAFB;
     --color-text-secondary: #D1D5DB;
     --color-text-muted: #9CA3AF;
+    --color-text-light: #D1D5DB;
     --color-bg: #0f1419;
+    --color-bg-secondary: #1f2630;
+    --color-bg-subtle: #151b22;
     --color-surface: #1a2027;
     --color-border: #2d3748;
     --color-border-subtle: #1f2937;
+    --color-success: #4f9d6b;
+    --color-warm: #2a2825;
     --color-primary-light: #6B8FBF;
     --color-sand: #3d3a35;
     --color-sand-light: #2a2825;
@@ -649,11 +661,17 @@ address {
    ============================================ */
 .hero {
     position: relative;
-    min-height: 100vh;
+    min-height: 85vh;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+}
+
+@media (min-width: 768px) {
+    .hero {
+        min-height: 100vh;
+    }
 }
 
 .hero-media {
