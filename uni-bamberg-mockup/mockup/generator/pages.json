@@ -4,6 +4,11 @@
     "description": "Otto-Friedrich-Universität Bamberg - Studium, Forschung und Wissenstransfer in einer UNESCO-Welterbestadt",
     "full_page": true
   },
+  "components": {
+    "title": "Komponenten | Design System | Universität Bamberg",
+    "description": "Komponenten-Bibliothek - Design System der Universität Bamberg Mockups",
+    "full_page": true
+  },
   "wiai/studium": {
     "title": "Studium | Fakultät WIAI",
     "description": "Studieren an der Fakultät WIAI - Bachelor, Master und Promotion",
@@ -73,6 +78,42 @@
     "nav_fak": true,
     "breadcrumb_current": "Kontakt",
     "subnav_kontakt": true
+  },
+  "wiai/studiengaenge": {
+    "title": "Studiengänge | Fakultät WIAI | Universität Bamberg",
+    "description": "Studiengänge der Fakultät WIAI - Bachelor und Master in Informatik, Wirtschaftsinformatik und mehr",
+    "body_class": "subpage fakultaet-page",
+    "nav_fak": true,
+    "inline_styles_file": "styles-studiengaenge.css",
+    "custom_structure": true,
+    "no_breadcrumb": true
+  },
+  "wiai/forschung": {
+    "title": "Forschung | Fakultät WIAI | Universität Bamberg",
+    "description": "Forschung an der Fakultät WIAI - Künstliche Intelligenz, Data Engineering, Mensch-Computer-Interaktion und mehr",
+    "body_class": "subpage fakultaet-page",
+    "nav_fak": true,
+    "inline_styles_file": "styles-forschung.css",
+    "custom_structure": true,
+    "no_breadcrumb": true
+  },
+  "wiai/angewandte-informatik-bsc": {
+    "title": "Angewandte Informatik B.Sc. | Fakultät WIAI | Universität Bamberg",
+    "description": "Bachelor Angewandte Informatik - Verbindet Informatik-Grundlagen mit Anwendungsfeldern wie Medieninformatik, Kulturinformatik oder Software Engineering",
+    "body_class": "subpage fakultaet-page",
+    "nav_fak": true,
+    "inline_styles_file": "styles-studiengang-detail.css",
+    "custom_structure": true,
+    "no_breadcrumb": true
+  },
+  "wiai/wirtschaftsinformatik-bsc": {
+    "title": "Wirtschaftsinformatik B.Sc. | Fakultät WIAI | Universität Bamberg",
+    "description": "Bachelor Wirtschaftsinformatik - Interdisziplinär an der Schnittstelle von Informatik und Betriebswirtschaftslehre",
+    "body_class": "subpage fakultaet-page",
+    "nav_fak": true,
+    "inline_styles_file": "styles-studiengang-detail.css",
+    "custom_structure": true,
+    "no_breadcrumb": true
   },
   "studium": {
     "title": "Studium",
