@@ -1,4 +1,4 @@
-const SW_VERSION = '2.3.0';
+const SW_VERSION = '2.3.1';
 
 self.addEventListener('install', (event) => {
     console.log(`[SW ${SW_VERSION}] Installing`);
