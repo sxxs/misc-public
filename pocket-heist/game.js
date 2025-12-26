@@ -1,7 +1,7 @@
 // ==================== POCKET HEIST - GAME.JS ====================
 // Version mit Mobile-Optimierungen
 
-const VERSION = '2.3.1';
+const VERSION = '2.4.2';
 
 // Version-Logging für Debugging
 console.log(`Pocket Heist v${VERSION}`);
@@ -29,16 +29,8 @@ let budget = MAX_BUDGET;
 let audioStarted = false;
 let codeModalType = null;
 
-// Viewport/Camera state for panning
-let viewport = {
-    x: 0,  // offset in pixels
-    y: 0,
-    scale: 1,
-    isDragging: false,
-    lastTouchX: 0,
-    lastTouchY: 0
-};
-let TILE_SIZE = BASE_TILE_SIZE; // Dynamic based on screen size
+// Dynamic tile size (calculated in resizeCanvas)
+let TILE_SIZE = 40;
 
 // Level data
 let level = {
@@ -87,23 +79,6 @@ let guardPathMode = null; // { guardIndex, waypoints: [] }
 // Canvas
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-
-// ==================== PAN HINT ====================
-function showPanHint() {
-    // Only show once per session
-    if (sessionStorage.getItem('pocket-heist-pan-hint-shown')) return;
-
-    const hint = document.getElementById('panHint');
-    if (hint && shouldAllowPan()) {
-        hint.classList.remove('hidden');
-        sessionStorage.setItem('pocket-heist-pan-hint-shown', 'true');
-
-        // Auto-hide after animation completes
-        setTimeout(() => {
-            hint.classList.add('hidden');
-        }, 3000);
-    }
-}
 
 // ==================== AUDIO SYSTEM (Tone.js) ====================
 let reverb, delay, filter;
@@ -524,78 +499,55 @@ function canSolveLevel() {
 
 // ==================== CANVAS SETUP ====================
 function resizeCanvas() {
-    // Canvas fills entire screen
     const screenW = window.innerWidth;
     const screenH = window.innerHeight;
 
-    // Set canvas to screen size (for crisp rendering, use device pixel ratio)
+    // UI offsets
+    const topOffset = 50;  // Top bar height
+    const bottomOffset = gameMode === 'architect' ? 80 : 10; // Toolbar or minimal
+
+    // Available space for game
+    const availableW = screenW;
+    const availableH = screenH - topOffset - bottomOffset;
+
+    // Calculate tile size to fit grid completely
+    const tileByWidth = availableW / GRID_WIDTH;
+    const tileByHeight = availableH / GRID_HEIGHT;
+    TILE_SIZE = Math.floor(Math.min(tileByWidth, tileByHeight));
+
+    // Minimum tile size
+    if (TILE_SIZE < 20) TILE_SIZE = 20;
+
+    // Canvas size = grid size
+    const canvasW = GRID_WIDTH * TILE_SIZE;
+    const canvasH = GRID_HEIGHT * TILE_SIZE;
+
+    // Set canvas size with device pixel ratio for sharpness
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = screenW * dpr;
-    canvas.height = screenH * dpr;
-    canvas.style.width = screenW + 'px';
-    canvas.style.height = screenH + 'px';
+    canvas.width = canvasW * dpr;
+    canvas.height = canvasH * dpr;
+    canvas.style.width = canvasW + 'px';
+    canvas.style.height = canvasH + 'px';
+
+    // Center canvas on screen
+    const leftOffset = (screenW - canvasW) / 2;
+    const topCanvasOffset = topOffset + (availableH - canvasH) / 2;
+    canvas.style.position = 'fixed';
+    canvas.style.left = leftOffset + 'px';
+    canvas.style.top = topCanvasOffset + 'px';
 
     // Scale context for high DPI
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-    // Calculate tile size to fit grid nicely
-    // IMPROVED: Reduced minimum to 28px for small screens
-    const minDisplayTileSize = 28;
-
-    // Calculate what tile size would fit the grid on screen
-    const fitTileSizeX = screenW / GRID_WIDTH;
-    const fitTileSizeY = screenH / GRID_HEIGHT;
-    const fitTileSize = Math.min(fitTileSizeX, fitTileSizeY);
-
-    // If grid fits comfortably, center it. Otherwise allow panning.
-    if (fitTileSize >= minDisplayTileSize) {
-        // Grid fits on screen - use fitting tile size, center the grid
-        TILE_SIZE = fitTileSize;
-        viewport.x = 0;
-        viewport.y = 0;
-    } else {
-        // Grid too big for screen - use minimum tile size, allow pan
-        TILE_SIZE = minDisplayTileSize;
-        clampViewport();
-    }
-}
-
-function clampViewport() {
-    const gridPixelWidth = GRID_WIDTH * TILE_SIZE;
-    const gridPixelHeight = GRID_HEIGHT * TILE_SIZE;
-    const screenW = window.innerWidth;
-    const screenH = window.innerHeight;
-
-    // Max scroll = grid size - screen size (can't scroll past edges)
-    const maxX = Math.max(0, gridPixelWidth - screenW);
-    const maxY = Math.max(0, gridPixelHeight - screenH);
-
-    // IMPROVED: Smoother clamping with small margin
-    viewport.x = Math.max(0, Math.min(maxX, viewport.x));
-    viewport.y = Math.max(0, Math.min(maxY, viewport.y));
-}
-
-function shouldAllowPan() {
-    const gridPixelWidth = GRID_WIDTH * TILE_SIZE;
-    const gridPixelHeight = GRID_HEIGHT * TILE_SIZE;
-    // Account for toolbar height (approx 70px) and top bar (50px)
-    const availableHeight = window.innerHeight - 120;
-    const availableWidth = window.innerWidth;
-    return gridPixelWidth > availableWidth || gridPixelHeight > availableHeight;
 }
 
 // ==================== RENDERING ====================
 function render() {
-    const screenW = window.innerWidth;
-    const screenH = window.innerHeight;
+    const canvasW = GRID_WIDTH * TILE_SIZE;
+    const canvasH = GRID_HEIGHT * TILE_SIZE;
 
-    // Clear entire visible area
+    // Clear canvas
     ctx.fillStyle = '#0a0a0f';
-    ctx.fillRect(0, 0, screenW, screenH);
-
-    // Save context and apply viewport transform
-    ctx.save();
-    ctx.translate(-viewport.x, -viewport.y);
+    ctx.fillRect(0, 0, canvasW, canvasH);
 
     // Grid lines
     ctx.strokeStyle = '#1a1a2a';
@@ -798,20 +750,17 @@ function render() {
         }
     }
 
-    // Restore context before drawing UI elements (they should be screen-fixed)
-    ctx.restore();
-
-    // Sneak timer display (screen-fixed)
+    // Sneak timer display
     if ((gameMode === 'infiltrator' || gameMode === 'replay') && player.sneaking && sneakTimer > 0) {
         ctx.fillStyle = 'rgba(40, 170, 136, 0.9)';
         ctx.font = '14px JetBrains Mono';
-        ctx.fillText(`🦶 ${sneakTimer.toFixed(1)}s`, screenW - 80, 30);
+        ctx.fillText(`🦶 ${sneakTimer.toFixed(1)}s`, canvasW - 80, 20);
     }
 
-    // Detection indicator (screen-fixed)
+    // Detection indicator
     if (gameMode === 'infiltrator' && detectionLevel > 0) {
         ctx.fillStyle = `rgba(255, 0, 0, ${detectionLevel})`;
-        ctx.fillRect(0, 0, screenW, 5);
+        ctx.fillRect(0, 0, canvasW, 5);
     }
 }
 
@@ -1435,30 +1384,11 @@ function getGridPos(e) {
         clientY = e.clientY;
     }
 
-    // Screen position + viewport offset = world position
-    const worldX = (clientX - rect.left) + viewport.x;
-    const worldY = (clientY - rect.top) + viewport.y;
-
-    const x = Math.floor(worldX / TILE_SIZE);
-    const y = Math.floor(worldY / TILE_SIZE);
+    // Screen position to grid position (no viewport offset needed)
+    const x = Math.floor((clientX - rect.left) / TILE_SIZE);
+    const y = Math.floor((clientY - rect.top) / TILE_SIZE);
 
     return { x: Math.max(0, Math.min(GRID_WIDTH - 1, x)), y: Math.max(0, Math.min(GRID_HEIGHT - 1, y)) };
-}
-
-function getScreenPos(e) {
-    // Get raw screen position without grid snapping (for panning)
-    let clientX, clientY;
-    if (e.changedTouches && e.changedTouches.length > 0) {
-        clientX = e.changedTouches[0].clientX;
-        clientY = e.changedTouches[0].clientY;
-    } else if (e.touches && e.touches.length > 0) {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-    } else {
-        clientX = e.clientX;
-        clientY = e.clientY;
-    }
-    return { x: clientX, y: clientY };
 }
 
 // Drag painting state
@@ -1468,30 +1398,13 @@ let lastPaintedKey = null;
 // Camera direction placement state
 let cameraDirectionMode = null; // { cameraIndex: number }
 
-// Panning state - IMPROVED for 1-finger panning
-let isPanning = false;
-let panStartX = 0;
-let panStartY = 0;
+// Touch tracking for tap detection
 let touchStartTime = 0;
-let touchStartPos = { x: 0, y: 0 };
 let totalTouchMovement = 0;
-
-// Thresholds for tap vs pan detection
-const TAP_MAX_DURATION = 500; // ms - erhöht für bessere Touch-Erkennung
 const TAP_MAX_MOVEMENT = 20; // pixels
-const PAN_START_THRESHOLD = 15; // pixels before pan mode activates
 
-// Mouse events
+// Mouse events (Desktop)
 canvas.addEventListener('mousedown', (e) => {
-    if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
-        // Middle click or shift+click to pan
-        isPanning = true;
-        panStartX = e.clientX;
-        panStartY = e.clientY;
-        e.preventDefault();
-        return;
-    }
-
     const pos = getGridPos(e);
     if (gameMode === 'architect' && (currentTool === 'wall' || currentTool === 'erase')) {
         isPainting = true;
@@ -1501,16 +1414,6 @@ canvas.addEventListener('mousedown', (e) => {
 });
 
 canvas.addEventListener('mousemove', (e) => {
-    if (isPanning) {
-        viewport.x -= (e.clientX - panStartX);
-        viewport.y -= (e.clientY - panStartY);
-        clampViewport();
-
-        panStartX = e.clientX;
-        panStartY = e.clientY;
-        return;
-    }
-
     if (isPainting && gameMode === 'architect') {
         const pos = getGridPos(e);
         handleArchitectPaint(pos);
@@ -1519,104 +1422,45 @@ canvas.addEventListener('mousemove', (e) => {
 
 canvas.addEventListener('mouseup', () => {
     isPainting = false;
-    isPanning = false;
     lastPaintedKey = null;
 });
 
 canvas.addEventListener('mouseleave', () => {
     isPainting = false;
-    isPanning = false;
     lastPaintedKey = null;
 });
 
 canvas.addEventListener('click', handleCanvasClick);
 
-// Touch events - IMPROVED: 1-finger panning with tap detection
+// Touch events - Simplified: no panning, just tap and drag-paint
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     touchStartTime = Date.now();
-    const screenPos = getScreenPos(e);
-    touchStartPos = { x: screenPos.x, y: screenPos.y };
-    panStartX = screenPos.x;
-    panStartY = screenPos.y;
     totalTouchMovement = 0;
-    isPanning = false;
 
-    if (e.touches.length === 2) {
-        // Two-finger: always pan
-        isPanning = true;
-        isPainting = false;
-        const touch1 = e.touches[0];
-        const touch2 = e.touches[1];
-        panStartX = (touch1.clientX + touch2.clientX) / 2;
-        panStartY = (touch1.clientY + touch2.clientY) / 2;
-        return;
-    }
-
-    // Single finger - don't start painting immediately, wait to see if it's a pan
-    const pos = getGridPos(e);
+    // Architect mode: wall/erase tools - start painting
     if (gameMode === 'architect' && (currentTool === 'wall' || currentTool === 'erase')) {
-        // Don't paint yet - wait for touchmove or touchend to determine action
+        isPainting = true;
         lastPaintedKey = null;
+        const pos = getGridPos(e);
+        handleArchitectPaint(pos);
     }
 }, { passive: false });
 
 canvas.addEventListener('touchmove', (e) => {
     e.preventDefault();
 
-    if (e.touches.length === 2) {
-        // Two-finger pan
-        isPanning = true;
-        isPainting = false;
-        const touch1 = e.touches[0];
-        const touch2 = e.touches[1];
-        const midX = (touch1.clientX + touch2.clientX) / 2;
-        const midY = (touch1.clientY + touch2.clientY) / 2;
-
-        viewport.x -= (midX - panStartX);
-        viewport.y -= (midY - panStartY);
-        clampViewport();
-
-        panStartX = midX;
-        panStartY = midY;
-        return;
+    // Track movement for tap detection
+    if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        totalTouchMovement += 5; // Approximate movement tracking
     }
 
-    // Single finger
-    const screenPos = getScreenPos(e);
-    const dx = screenPos.x - panStartX;
-    const dy = screenPos.y - panStartY;
-    const movementFromStart = Math.abs(screenPos.x - touchStartPos.x) + Math.abs(screenPos.y - touchStartPos.y);
-    totalTouchMovement += Math.abs(dx) + Math.abs(dy);
-
-    // Check if panning is needed
-    const canPan = shouldAllowPan();
-    const significantMove = movementFromStart > PAN_START_THRESHOLD;
-
-    // Architect mode: Paint with drag (wall/erase tools) - only if NOT panning
-    if (gameMode === 'architect' && (currentTool === 'wall' || currentTool === 'erase') && !isPanning && !canPan) {
-        isPainting = true;
+    // Architect mode: wall/erase tools - continue painting
+    if (isPainting && gameMode === 'architect' && (currentTool === 'wall' || currentTool === 'erase')) {
         const pos = getGridPos(e);
         handleArchitectPaint(pos);
     }
-    // Pan mode: Any mode when grid is larger than screen AND significant movement
-    else if (canPan && significantMove) {
-        isPanning = true;
-        isPainting = false;
-
-        viewport.x -= dx;
-        viewport.y -= dy;
-        clampViewport();
-    }
-    // Architect paint mode when panning not needed but painting tools selected
-    else if (gameMode === 'architect' && (currentTool === 'wall' || currentTool === 'erase') && !isPanning) {
-        isPainting = true;
-        const pos = getGridPos(e);
-        handleArchitectPaint(pos);
-    }
-
-    panStartX = screenPos.x;
-    panStartY = screenPos.y;
 }, { passive: false });
 
 canvas.addEventListener('touchend', (e) => {
@@ -1625,44 +1469,32 @@ canvas.addEventListener('touchend', (e) => {
     // If there are still touches remaining, don't process yet
     if (e.touches.length > 0) return;
 
-    const wasPanning = isPanning;
     const wasPainting = isPainting;
-    const touchDuration = Date.now() - touchStartTime;
-    const wasQuickTap = touchDuration < TAP_MAX_DURATION && totalTouchMovement < TAP_MAX_MOVEMENT;
-    const wasTapWithoutMove = totalTouchMovement < TAP_MAX_MOVEMENT;
+    const wasTap = totalTouchMovement < TAP_MAX_MOVEMENT;
 
     isPainting = false;
-    isPanning = false;
     lastPaintedKey = null;
 
-    // Skip if we were panning
-    if (wasPanning) return;
-
-    // Architect mode: wall/erase - handle tap (even if not quick)
+    // Architect mode: wall/erase - tap already handled in touchstart
     if (gameMode === 'architect' && (currentTool === 'wall' || currentTool === 'erase')) {
-        if (wasTapWithoutMove && !wasPainting) {
-            const pos = getGridPos(e);
-            handleArchitectPaint(pos);
-        }
         return;
     }
 
-    // Architect mode: other tools - handle as click
-    if (gameMode === 'architect' && wasTapWithoutMove) {
+    // Architect mode: other tools - handle as click on tap
+    if (gameMode === 'architect' && wasTap) {
         handleCanvasClick(e);
         return;
     }
 
-    // Infiltrator/Replay mode: any tap without movement is a click
-    if ((gameMode === 'infiltrator' || gameMode === 'replay') && wasTapWithoutMove) {
+    // Infiltrator/Replay mode: tap is a click (move command)
+    if ((gameMode === 'infiltrator' || gameMode === 'replay') && wasTap) {
         handleCanvasClick(e);
     }
 });
 
 // Touch cancel - reset state
-canvas.addEventListener('touchcancel', (e) => {
+canvas.addEventListener('touchcancel', () => {
     isPainting = false;
-    isPanning = false;
     lastPaintedKey = null;
     totalTouchMovement = 0;
 });
@@ -2085,10 +1917,6 @@ async function startArchitect() {
     document.getElementById('testBtn').style.display = '';
     document.getElementById('backToBuildBtn').style.display = 'none';
 
-    // Reset viewport
-    viewport.x = 0;
-    viewport.y = 0;
-
     // Don't clear level - preserve previous state
     // User can use "Clear" button to start fresh
     // Recalculate budget based on current level
@@ -2101,9 +1929,6 @@ async function startArchitect() {
     resizeCanvas();
     setAudioMode('architect');
     startGameLoop();
-
-    // Show pan hint if needed
-    showPanHint();
 }
 
 async function startInfiltrator() {
@@ -2130,10 +1955,6 @@ async function startInfiltrator() {
 
     // Show back button only in test mode
     document.getElementById('backToBuildBtn').style.display = isTestMode ? '' : 'none';
-
-    // Reset viewport
-    viewport.x = 0;
-    viewport.y = 0;
 
     // Initialize player
     player = {
@@ -2177,9 +1998,6 @@ async function startInfiltrator() {
     resizeCanvas();
     setAudioMode('infiltrator');
     startGameLoop();
-
-    // Show pan hint if needed
-    showPanHint();
 }
 
 async function testLevel() {
@@ -2386,6 +2204,11 @@ function hideShareModal() {
     document.getElementById('shareModal').style.display = 'none';
 }
 
+function copyLevelCode() {
+    const code = document.getElementById('levelCode').textContent;
+    copyToClipboard(code, 'levelCopyBtn');
+}
+
 async function shareCode() {
     const code = document.getElementById('levelCode').textContent;
 
@@ -2397,16 +2220,25 @@ async function shareCode() {
             });
         } catch (e) {
             // User cancelled or error
-            copyToClipboard(code);
+            copyToClipboard(code, 'levelCopyBtn');
         }
     } else {
-        copyToClipboard(code);
+        copyToClipboard(code, 'levelCopyBtn');
     }
 }
 
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        alert('Code kopiert!');
+function copyToClipboard(text, buttonId) {
+    navigator.clipboard?.writeText(text).then(() => {
+        const btn = buttonId ? document.getElementById(buttonId) : null;
+        if (btn) {
+            btn.classList.add('copied');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg><span>Kopiert!</span>';
+            setTimeout(() => {
+                btn.classList.remove('copied');
+                btn.innerHTML = originalHTML;
+            }, 2000);
+        }
     }).catch(() => {
         prompt('Code kopieren:', text);
     });
@@ -2447,7 +2279,6 @@ function startGameLoop() {
 window.addEventListener('resize', () => {
     if (gameMode) {
         resizeCanvas();
-        clampViewport();
     }
 });
 
@@ -2458,7 +2289,6 @@ window.addEventListener('orientationchange', () => {
         setTimeout(() => {
             if (gameMode) {
                 resizeCanvas();
-                clampViewport();
             }
         }, delay);
     });
@@ -2479,3 +2309,6 @@ if ('serviceWorker' in navigator) {
 
 // ==================== INIT ====================
 resizeCanvas();
+
+// Display version on menu screen
+document.getElementById('versionDisplay').textContent = `v${VERSION}`;
