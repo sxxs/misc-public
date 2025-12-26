@@ -2,9 +2,15 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Multiplication Troll Game - Kleines 1x1</title>
-    <link rel="stylesheet" href="style.css?v=1.1.13">
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00D9FF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <link rel="stylesheet" href="style.css?v=1.2.0">
 </head>
 <body>
     <div class="game-container">
@@ -62,6 +68,16 @@
     <audio id="sfx_wrong" src="es_wrong.mp3" preload="auto"></audio>
     <audio id="sfx_game_over" src="es_game_over.mp3" preload="auto"></audio>
 
-    <script src="game.js?v=1.1.13"></script>
+    <script src="game.js?v=1.2.0"></script>
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js?v=1.2.0')
+                    .then(reg => console.log('[App] SW registered'))
+                    .catch(err => console.warn('[App] SW failed:', err));
+            });
+        }
+    </script>
 </body>
 </html>
