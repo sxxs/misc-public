@@ -1,0 +1,602 @@
+/* Pocket Heist - Styles v1.0.0 */
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    /* IMPROVED: Only manipulation on interactive elements, not globally */
+}
+
+:root {
+    --bg-dark: #0a0a0f;
+    --bg-architect: #1a2a1a;
+    --bg-infiltrator: #1a0a0f;
+    --gold: #d4af37;
+    --red-alert: #ff2a2a;
+    --cyan: #00d4ff;
+    --green: #2aff6a;
+}
+
+html, body {
+    overflow: hidden;
+    overscroll-behavior: none;
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    touch-action: none;
+}
+
+body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-dark);
+    color: #eee;
+    min-height: 100vh;
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+    transition: background 0.8s ease;
+}
+
+body.architect { background: var(--bg-architect); }
+body.infiltrator { background: var(--bg-infiltrator); }
+
+/* ==================== MENU SCREEN ==================== */
+#menuScreen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2f 100%);
+    padding: 20px;
+}
+
+.logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.5rem, 10vw, 6rem);
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    text-shadow: 0 0 40px rgba(212, 175, 55, 0.5);
+    margin-bottom: 0.5em;
+    text-align: center;
+}
+
+.logo span { color: #fff; }
+
+.menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.8em;
+    padding: 0.8em 1.5em;
+    margin: 0.4em;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1rem, 4vw, 1.5rem);
+    letter-spacing: 0.1em;
+    border: 2px solid var(--gold);
+    background: rgba(212, 175, 55, 0.1);
+    color: var(--gold);
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 200px;
+    max-width: 90vw;
+    touch-action: manipulation;
+}
+
+.menu-btn:hover, .menu-btn:active {
+    background: var(--gold);
+    color: #000;
+    transform: scale(1.02);
+}
+
+.menu-btn .icon { font-size: 1.5em; }
+
+.version-display {
+    margin-top: 2em;
+    font-size: 0.8rem;
+    color: #555;
+    letter-spacing: 0.1em;
+}
+
+/* ==================== CODE INPUT MODAL ==================== */
+#codeModal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 20px;
+}
+
+.modal-content {
+    background: #1a1a2f;
+    padding: 1.5em;
+    border: 2px solid var(--gold);
+    max-width: 90vw;
+    width: 400px;
+}
+
+.modal-content h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    color: var(--gold);
+    margin-bottom: 1em;
+    font-size: clamp(1.2rem, 5vw, 1.8rem);
+}
+
+.modal-content textarea {
+    width: 100%;
+    height: 100px;
+    background: #0a0a0f;
+    border: 1px solid #333;
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    padding: 0.5em;
+    resize: none;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 0.8em;
+    margin-top: 1em;
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 0.8em;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1rem, 4vw, 1.2rem);
+    border: none;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.modal-btn.confirm { background: var(--gold); color: #000; }
+.modal-btn.cancel { background: #333; color: #fff; }
+
+/* Copy Button */
+.copy-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 20px;
+    margin-top: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.05em;
+    background: var(--gold);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: all 0.2s;
+}
+
+.copy-btn:active {
+    background: #b8962e;
+    transform: scale(0.98);
+}
+
+.copy-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.copy-btn.copied {
+    background: var(--green);
+}
+
+/* ==================== GAME CONTAINER ==================== */
+#gameContainer {
+    display: none;
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: #0a0a0f;
+}
+
+#gameCanvas {
+    background: #0a0a0f;
+    /* Position and size are set dynamically in JS */
+    touch-action: none;
+    user-select: none;
+}
+
+/* ==================== TOOLBAR (ARCHITECT) ==================== */
+#toolbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.7));
+    display: none;
+    align-items: center;
+    padding: 0 10px;
+    gap: 6px;
+    overflow-x: auto;
+    z-index: 50;
+    -webkit-overflow-scrolling: touch;
+    /* Allow horizontal scroll on toolbar */
+    touch-action: pan-x;
+}
+
+/* Small phones - more compact toolbar */
+@media (max-width: 500px) {
+    #toolbar {
+        height: 65px;
+        gap: 4px;
+        padding: 0 5px;
+    }
+}
+
+.tool-btn {
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    border: 2px solid #444;
+    background: #222;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #aaa;
+    font-size: 0.55rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    touch-action: manipulation;
+}
+
+@media (max-width: 500px) {
+    .tool-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 0.45rem;
+    }
+    .tool-btn .icon { font-size: 1.1rem; }
+}
+
+/* Very small screens - maintain 44px minimum */
+@media (max-width: 360px) {
+    .tool-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 0.4rem;
+    }
+    .tool-btn .icon { font-size: 1rem; }
+}
+
+.tool-btn.active {
+    border-color: var(--gold);
+    background: rgba(212, 175, 55, 0.2);
+    color: var(--gold);
+}
+
+.tool-btn .icon { font-size: 1.4rem; margin-bottom: 2px; }
+.tool-btn .cost { color: var(--cyan); font-weight: bold; }
+
+/* Action buttons (Save/Load) - no cost, different style */
+.tool-btn.action-btn {
+    border-color: #666;
+    background: rgba(100, 100, 100, 0.2);
+}
+.tool-btn.action-btn:active {
+    border-color: var(--gold);
+    background: rgba(212, 175, 55, 0.3);
+}
+
+#budgetDisplay {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1rem, 4vw, 1.5rem);
+    color: var(--gold);
+    background: rgba(0,0,0,0.8);
+    padding: 0.4em 0.8em;
+    border: 1px solid var(--gold);
+    z-index: 50;
+}
+
+/* ==================== TOP BAR ==================== */
+#topBar {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    display: none;
+    gap: 8px;
+    z-index: 50;
+    flex-wrap: wrap;
+    max-width: calc(100vw - 120px);
+}
+
+.top-btn {
+    padding: 0.4em 0.8em;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(0.8rem, 3vw, 1rem);
+    border: 1px solid #666;
+    background: rgba(0,0,0,0.8);
+    color: #fff;
+    cursor: pointer;
+    touch-action: manipulation;
+    white-space: nowrap;
+}
+
+.top-btn:hover, .top-btn:active { background: rgba(255,255,255,0.1); }
+.top-btn.primary { border-color: var(--green); color: var(--green); }
+.top-btn.danger { border-color: var(--red-alert); color: var(--red-alert); }
+
+/* ==================== ABILITY BUTTONS (INFILTRATOR) ==================== */
+#abilityBar {
+    position: fixed;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 50;
+}
+
+@media (max-width: 500px) {
+    #abilityBar {
+        right: 5px;
+        gap: 8px;
+    }
+}
+
+.ability-btn {
+    width: 65px;
+    height: 65px;
+    border-radius: 12px;
+    border: 2px solid var(--red-alert);
+    background: rgba(255, 42, 42, 0.2);
+    color: #fff;
+    font-size: 1.4rem;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    transition: all 0.2s;
+    touch-action: manipulation;
+}
+
+@media (max-width: 500px) {
+    .ability-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 1.1rem;
+    }
+}
+
+.ability-btn small {
+    font-size: 0.5rem;
+    opacity: 0.8;
+}
+
+@media (max-width: 500px) {
+    .ability-btn small {
+        font-size: 0.4rem;
+    }
+}
+
+/* Very small screens - maintain 44px minimum for abilities */
+@media (max-width: 360px) {
+    .ability-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 1rem;
+    }
+    .ability-btn small {
+        font-size: 0.35rem;
+    }
+}
+
+.ability-btn.active {
+    background: var(--red-alert);
+    color: #000;
+}
+
+.ability-btn.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: #666;
+}
+
+.ability-btn.used {
+    opacity: 0.5;
+    border-color: #444;
+    background: rgba(100, 100, 100, 0.2);
+}
+
+/* ==================== MUSIC TOGGLE ==================== */
+.music-toggle {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid #444;
+    border-radius: 10px;
+    color: #aaa;
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 50;
+    touch-action: manipulation;
+    transition: all 0.2s;
+}
+
+.music-toggle:active {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.music-toggle small {
+    font-size: 0.45rem;
+    margin-top: 2px;
+}
+
+.music-toggle.active {
+    border-color: var(--gold);
+    color: var(--gold);
+}
+
+@media (max-width: 500px) {
+    .music-toggle {
+        bottom: 75px;
+        width: 44px;
+        height: 44px;
+        font-size: 1rem;
+    }
+    .music-toggle small {
+        font-size: 0.4rem;
+    }
+}
+
+/* ==================== STATUS OVERLAY ==================== */
+#statusOverlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2rem, 10vw, 4rem);
+    color: var(--gold);
+    text-shadow: 0 0 40px rgba(212, 175, 55, 0.8);
+    display: none;
+    z-index: 60;
+    text-align: center;
+    padding: 20px;
+    max-width: 90vw;
+}
+
+#statusOverlay.alert {
+    color: var(--red-alert);
+    text-shadow: 0 0 40px rgba(255, 42, 42, 0.8);
+    animation: pulse 0.3s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Status overlay buttons */
+#statusOverlay button {
+    padding: 10px 20px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(0.9rem, 4vw, 1.2rem);
+    border: none;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+/* ==================== SHARE MODAL ==================== */
+#shareModal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.95);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 20px;
+}
+
+#shareModal .modal-content {
+    text-align: center;
+}
+
+#levelCode {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(0.6rem, 2.5vw, 0.8rem);
+    word-break: break-all;
+    background: #0a0a0f;
+    padding: 1em;
+    margin: 1em 0;
+    border: 1px solid #333;
+    max-height: 150px;
+    overflow-y: auto;
+    text-align: left;
+}
+
+/* ==================== PORTRAIT MODE ==================== */
+@media (orientation: portrait) {
+    /* Toolbar: horizontal am unteren Rand */
+    #toolbar {
+        height: 70px;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    /* Abilities: horizontal zentriert am unteren Rand */
+    #abilityBar {
+        top: auto;
+        right: auto; /* Bestehende right: 10px überschreiben */
+        left: 50%;
+        transform: translateX(-50%); /* Horizontal zentrieren */
+        bottom: 80px; /* Über der Toolbar */
+        flex-direction: row;
+        gap: 15px;
+    }
+
+    /* Wenn Infiltrator-Mode (keine Toolbar), Abilities ganz unten */
+    body.infiltrator #abilityBar {
+        bottom: 10px;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    /* TopBar: mehr Platz für Wrap */
+    #topBar {
+        max-width: calc(100vw - 20px);
+        right: 10px;
+        left: 10px;
+    }
+}
+
+/* ==================== SAFE AREAS ==================== */
+/* Top Bar: Abstand zur Status-Bar / Dynamic Island */
+#topBar {
+    top: max(10px, env(safe-area-inset-top, 10px));
+}
+
+/* Budget Display: Abstand nach rechts für Safe Area */
+#budgetDisplay {
+    right: max(10px, env(safe-area-inset-right, 10px));
+    top: max(10px, env(safe-area-inset-top, 10px));
+}
+
+/* Toolbar: Safe Area unten */
+#toolbar {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Landscape: Safe Areas links/rechts */
+@media (orientation: landscape) {
+    #abilityBar {
+        right: max(10px, env(safe-area-inset-right, 10px));
+    }
+
+    #toolbar {
+        padding-left: env(safe-area-inset-left, 0);
+        padding-right: env(safe-area-inset-right, 0);
+    }
+}
+
+/* ==================== HIDDEN UTILITY ==================== */
+.hidden {
+    display: none !important;
+}
