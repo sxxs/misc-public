@@ -6,9 +6,11 @@ This is a mono-repo with multiple independent web projects:
 
 ```
 misc-public/
-├── pocket-heist/          # Stealth strategy game (v2.4.x)
-├── multiplication-troll-game/  # Math learning game (v1.2.x)
-├── wiai25-enhance/        # Static demo
+├── pocket-heist/              # Stealth strategy game (v2.4.x)
+├── multiplication-troll-game/ # Math learning game (v1.2.x)
+├── wiai25-enhance/            # Static demo
+├── uni-bamberg-wrapper/       # University website wrapper with CORS proxy
+├── uni-bamberg-mockup/        # Mockup and crawler for uni-bamberg
 └── README.md
 ```
 
@@ -18,6 +20,54 @@ All projects are deployed via GitHub Pages from the `main` branch:
 - https://sxxs.github.io/misc-public/pocket-heist/
 - https://sxxs.github.io/misc-public/multiplication-troll-game/
 - https://sxxs.github.io/misc-public/wiai25-enhance/
+
+## Project Details
+
+### Pocket Heist
+
+Asymmetric 2-player stealth strategy game.
+
+**Architecture:**
+- `game.js` - Main game logic (~2300 lines)
+- `style.css` - All styles with mobile-first approach
+- `sw.js` - Service Worker for PWA
+- `PLAN-*.md` - Implementation plans for features
+
+**Key Systems:**
+- **Rendering**: Canvas-based with dynamic `TILE_SIZE` calculation
+- **Audio**: Tone.js for generative music (ambient/tense modes) and SFX
+- **Pathfinding**: A* algorithm for player and guard movement
+- **Vision Cones**: Raycasting with wall clipping (40 rays per cone)
+- **Serialization**: LZString compression for level/replay codes
+
+**Game Modes:**
+- `architect` - Build levels with guards, cameras, traps
+- `infiltrator` - Play through levels, reach the vault
+- `replay` - Watch recorded playthroughs
+
+**Touch Handling:**
+- Tap to place/move
+- Drag to paint walls (architect mode)
+- No panning (auto-scale to fit screen)
+
+### Multiplication Troll Game
+
+Retro math learning game with troll mechanics.
+
+**Key Features:**
+- Tasks change while typing (troll mechanic)
+- On-screen keyboard for mobile
+- Falling blocks gameplay
+- Audio feedback (correct/wrong/game over)
+
+### Uni Bamberg Wrapper
+
+Website wrapper that fetches and displays uni-bamberg.de content.
+
+**Components:**
+- `cors-proxy.py` - Python CORS proxy server
+- `script.js` - Content fetching and caching
+- `start-proxy.sh` - Launch script
 
 ## Development Guidelines
 
@@ -54,5 +104,5 @@ Both games are installable PWAs with:
 ## Language
 
 - Code comments: English
-- User-facing text: German (for these projects)
+- User-facing text: German (for games)
 - Commit messages: English
