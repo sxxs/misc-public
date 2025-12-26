@@ -6,7 +6,7 @@
 mockup/
 ├── index.html                         Startseite der Universitat
 ├── studium.html                       Studium-Bereich
-├── fakultaet-wiai.html                Fakultat WIAI Startseite
+├── wiai/index.html                Fakultat WIAI Startseite
 ├── artikel.html                       Artikel-Template (News/Meldungen)
 ├── styles.css                         Design-System
 ├── script.js                          Interaktivitat
@@ -163,7 +163,7 @@ Gestaffelte Ebenen mit Chevron-Animation:
    - Fakultaten-Kacheln
    - Forschungs-Highlights
 
-2. **Bereichsseite** (`studium.html`, `fakultaet-wiai.html`)
+2. **Bereichsseite** (`studium.html`, `wiai/index.html`)
    - Hero mit Breadcrumb
    - Intro-Text
    - Nummerierte Sections

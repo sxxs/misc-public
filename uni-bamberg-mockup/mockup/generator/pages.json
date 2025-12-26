@@ -115,6 +115,60 @@
     "custom_structure": true,
     "no_breadcrumb": true
   },
+  "wiai/angewandte-informatik-msc": {
+    "title": "Angewandte Informatik M.Sc. | Fakultät WIAI | Universität Bamberg",
+    "description": "Master Angewandte Informatik - Vertiefung in Medieninformatik, KI, Software Engineering oder Kulturinformatik",
+    "body_class": "subpage fakultaet-page",
+    "nav_fak": true,
+    "inline_styles_file": "styles-studiengang-detail.css",
+    "custom_structure": true,
+    "no_breadcrumb": true
+  },
+  "wiai/wirtschaftsinformatik-msc": {
+    "title": "Wirtschaftsinformatik M.Sc. | Fakultät WIAI | Universität Bamberg",
+    "description": "Master Wirtschaftsinformatik - Vertiefung an der Schnittstelle von IT und Unternehmensstrategie",
+    "body_class": "subpage fakultaet-page",
+    "nav_fak": true,
+    "inline_styles_file": "styles-studiengang-detail.css",
+    "custom_structure": true,
+    "no_breadcrumb": true
+  },
+  "wiai/informatik-bsc": {
+    "title": "Informatik B.Sc. | Fakultät WIAI | Universität Bamberg",
+    "description": "Bachelor Informatik - Grundständiges Informatikstudium mit breitem Fundament",
+    "body_class": "subpage fakultaet-page",
+    "nav_fak": true,
+    "inline_styles_file": "styles-studiengang-detail.css",
+    "custom_structure": true,
+    "no_breadcrumb": true
+  },
+  "wiai/computing-humanities-msc": {
+    "title": "Computing in the Humanities M.Sc. | Fakultät WIAI | Universität Bamberg",
+    "description": "Master Computing in the Humanities - Digitale Geisteswissenschaften und Informatik vereint",
+    "body_class": "subpage fakultaet-page",
+    "nav_fak": true,
+    "inline_styles_file": "styles-studiengang-detail.css",
+    "custom_structure": true,
+    "no_breadcrumb": true
+  },
+  "wiai/iism-bsc": {
+    "title": "International Information Systems Management B.Sc. | Fakultät WIAI | Universität Bamberg",
+    "description": "Bachelor IISM - Internationales Wirtschaftsinformatik-Studium mit Auslandssemester",
+    "body_class": "subpage fakultaet-page",
+    "nav_fak": true,
+    "inline_styles_file": "styles-studiengang-detail.css",
+    "custom_structure": true,
+    "no_breadcrumb": true
+  },
+  "wiai/isosysc-msc": {
+    "title": "Software Systems Science M.Sc. | Fakultät WIAI | Universität Bamberg",
+    "description": "Master Software Systems Science - Forschungsorientierter Masterstudiengang in Software-Engineering",
+    "body_class": "subpage fakultaet-page",
+    "nav_fak": true,
+    "inline_styles_file": "styles-studiengang-detail.css",
+    "custom_structure": true,
+    "no_breadcrumb": true
+  },
   "studium": {
     "title": "Studium",
     "description": "Studieren an der Universität Bamberg - Über 100 Studiengänge in 4 Fakultäten",
@@ -130,13 +184,14 @@
     "breadcrumb_parent_url": "index.html#aktuelles",
     "breadcrumb_current": "Nachhaltigkeit an der Uni Bamberg"
   },
-  "fakultaet-wiai": {
+  "wiai/index": {
     "title": "Fakultät WIAI",
     "description": "Fakultät Wirtschaftsinformatik und Angewandte Informatik der Universität Bamberg",
     "body_class": "subpage fakultaet-page",
     "nav_fak": true,
     "inline_styles_file": "styles-fakultaet-wiai.css",
     "custom_structure": true,
-    "no_breadcrumb": true
+    "no_breadcrumb": true,
+    "subnav_uebersicht": true
   }
 }
