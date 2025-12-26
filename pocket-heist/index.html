@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <!-- Cache-Busting für Entwicklung -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Pocket Heist</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#d4af37">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="stylesheet" href="style.css?v=2.4.2">
+</head>
+<body>
+    <!-- Menu Screen -->
+    <div id="menuScreen">
+        <h1 class="logo">POCKET <span>HEIST</span></h1>
+        <button class="menu-btn" onclick="startArchitect()">
+            <span class="icon">🏗️</span>
+            <span>Neues Level bauen</span>
+        </button>
+        <button class="menu-btn" onclick="showCodeModal('level')">
+            <span class="icon">🕵️</span>
+            <span>Mission starten</span>
+        </button>
+        <button class="menu-btn" onclick="showCodeModal('replay')">
+            <span class="icon">🎬</span>
+            <span>Replay ansehen</span>
+        </button>
+        <div id="versionDisplay" class="version-display"></div>
+    </div>
+
+    <!-- Code Input Modal -->
+    <div id="codeModal">
+        <div class="modal-content">
+            <h2 id="codeModalTitle">Code eingeben</h2>
+            <textarea id="codeInput" placeholder="PH1-... oder PHR-..."></textarea>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="hideCodeModal()">Abbrechen</button>
+                <button class="modal-btn confirm" onclick="loadCode()">Laden</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div id="shareModal">
+        <div class="modal-content">
+            <h2>Level-Code</h2>
+            <p style="color:#888;font-size:0.9rem;">Teile diesen Code mit dem Infiltrator:</p>
+            <div id="levelCode"></div>
+            <button class="copy-btn" id="levelCopyBtn" onclick="copyLevelCode()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+                </svg>
+                <span>Code kopieren</span>
+            </button>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="hideShareModal()">Schließen</button>
+                <button class="modal-btn confirm" onclick="shareCode()">📤 Teilen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Container -->
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Top Bar -->
+        <div id="topBar">
+            <button class="top-btn danger" onclick="backToMenu()">✕ Menü</button>
+            <button class="top-btn" onclick="backToBuild()" id="backToBuildBtn" style="display:none;">◀ Zurück</button>
+            <button class="top-btn" onclick="clearLevel()" id="clearBtn">🗑️ Leeren</button>
+            <button class="top-btn" onclick="showLevelCode()" id="viewCodeBtn">👁️ Code</button>
+            <button class="top-btn primary" onclick="testLevel()" id="testBtn">▶️ Testen</button>
+        </div>
+
+        <!-- Budget Display -->
+        <div id="budgetDisplay">Budget: <span id="budgetValue">10</span></div>
+
+        <!-- Architect Toolbar -->
+        <div id="toolbar">
+            <div class="tool-btn active" data-tool="wall" onclick="selectTool('wall')">
+                <span class="icon">🧱</span>
+                <span>Wand</span>
+                <span class="cost">0</span>
+            </div>
+            <div class="tool-btn" data-tool="guard" onclick="selectTool('guard')">
+                <span class="icon">👮</span>
+                <span>Wache</span>
+                <span class="cost">3</span>
+            </div>
+            <div class="tool-btn" data-tool="camera" onclick="selectTool('camera')">
+                <span class="icon">📷</span>
+                <span>Kamera</span>
+                <span class="cost">2</span>
+            </div>
+            <div class="tool-btn" data-tool="trap" onclick="selectTool('trap')">
+                <span class="icon">🔔</span>
+                <span>Falle</span>
+                <span class="cost">1</span>
+            </div>
+            <div class="tool-btn" data-tool="vault" onclick="selectTool('vault')">
+                <span class="icon">💰</span>
+                <span>Tresor</span>
+                <span class="cost">★</span>
+            </div>
+            <div class="tool-btn" data-tool="start" onclick="selectTool('start')">
+                <span class="icon">🚪</span>
+                <span>Start</span>
+                <span class="cost">★</span>
+            </div>
+            <div class="tool-btn" data-tool="erase" onclick="selectTool('erase')">
+                <span class="icon">❌</span>
+                <span>Löschen</span>
+                <span class="cost">-</span>
+            </div>
+            <div class="tool-btn action-btn" onclick="saveLevelCode()">
+                <span class="icon">💾</span>
+                <span>Speichern</span>
+            </div>
+            <div class="tool-btn action-btn" onclick="loadLevelCode()">
+                <span class="icon">📂</span>
+                <span>Laden</span>
+            </div>
+        </div>
+
+        <!-- Infiltrator Abilities -->
+        <div id="abilityBar">
+            <button class="ability-btn" id="throwBtn" onclick="toggleThrow()" title="Stein werfen (Ablenkung) - 1x nutzbar">
+                <span>🪨</span>
+                <small id="throwLabel">Werfen (1)</small>
+            </button>
+            <button class="ability-btn" id="sneakBtn" onclick="toggleSneak()" title="Schleichen - 1x nutzbar">
+                <span>🦶</span>
+                <small id="sneakLabel">Schleichen (1)</small>
+            </button>
+        </div>
+
+        <!-- Music Toggle -->
+        <button id="musicToggle" class="music-toggle" onclick="cycleMusicStyle()">
+            <span id="musicIcon">🎵</span>
+            <small id="musicLabel">Ambient</small>
+        </button>
+    </div>
+
+    <!-- Status Overlay -->
+    <div id="statusOverlay"></div>
+
+    <script src="game.js?v=2.4.2"></script>
+</body>
+</html>
