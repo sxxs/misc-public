@@ -1,7 +1,7 @@
 // ==================== POCKET HEIST - GAME.JS ====================
 // Version mit Mobile-Optimierungen
 
-const VERSION = '2.3.0';
+const VERSION = '2.3.1';
 
 // Version-Logging für Debugging
 console.log(`Pocket Heist v${VERSION}`);
@@ -578,7 +578,10 @@ function clampViewport() {
 function shouldAllowPan() {
     const gridPixelWidth = GRID_WIDTH * TILE_SIZE;
     const gridPixelHeight = GRID_HEIGHT * TILE_SIZE;
-    return gridPixelWidth > window.innerWidth || gridPixelHeight > window.innerHeight;
+    // Account for toolbar height (approx 70px) and top bar (50px)
+    const availableHeight = window.innerHeight - 120;
+    const availableWidth = window.innerWidth;
+    return gridPixelWidth > availableWidth || gridPixelHeight > availableHeight;
 }
 
 // ==================== RENDERING ====================
@@ -1586,20 +1589,30 @@ canvas.addEventListener('touchmove', (e) => {
     const movementFromStart = Math.abs(screenPos.x - touchStartPos.x) + Math.abs(screenPos.y - touchStartPos.y);
     totalTouchMovement += Math.abs(dx) + Math.abs(dy);
 
-    // Architect mode: Paint with drag (wall/erase tools)
-    if (gameMode === 'architect' && (currentTool === 'wall' || currentTool === 'erase') && !isPanning) {
+    // Check if panning is needed
+    const canPan = shouldAllowPan();
+    const significantMove = movementFromStart > PAN_START_THRESHOLD;
+
+    // Architect mode: Paint with drag (wall/erase tools) - only if NOT panning
+    if (gameMode === 'architect' && (currentTool === 'wall' || currentTool === 'erase') && !isPanning && !canPan) {
         isPainting = true;
         const pos = getGridPos(e);
         handleArchitectPaint(pos);
     }
-    // Pan mode: Only if grid is larger than screen AND significant movement
-    else if (shouldAllowPan() && movementFromStart > PAN_START_THRESHOLD) {
+    // Pan mode: Any mode when grid is larger than screen AND significant movement
+    else if (canPan && significantMove) {
         isPanning = true;
         isPainting = false;
 
         viewport.x -= dx;
         viewport.y -= dy;
         clampViewport();
+    }
+    // Architect paint mode when panning not needed but painting tools selected
+    else if (gameMode === 'architect' && (currentTool === 'wall' || currentTool === 'erase') && !isPanning) {
+        isPainting = true;
+        const pos = getGridPos(e);
+        handleArchitectPaint(pos);
     }
 
     panStartX = screenPos.x;
