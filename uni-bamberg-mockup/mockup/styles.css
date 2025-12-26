@@ -1825,6 +1825,108 @@ body.subpage {
     font-weight: 500;
 }
 
+/* Breadcrumb in Hero Variant */
+.breadcrumb--in-hero {
+    padding: 0;
+    background: transparent;
+    border-bottom: none;
+    margin-bottom: var(--space-6);
+}
+
+.breadcrumb--in-hero ol,
+.breadcrumb--in-hero .breadcrumb-list {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.breadcrumb--in-hero li {
+    font-size: var(--text-sm);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.breadcrumb--in-hero li:not(:last-child)::after {
+    content: '/';
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.breadcrumb--in-hero a {
+    color: rgba(255, 255, 255, 0.7);
+    transition: color var(--transition-fast);
+}
+
+.breadcrumb--in-hero a:hover {
+    color: white;
+}
+
+.breadcrumb--in-hero li[aria-current="page"] {
+    color: white;
+    font-weight: 500;
+}
+
+/* Key Facts (Sticky Info Bar) */
+.key-facts {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: var(--header-height);
+    z-index: 50;
+}
+
+.key-facts-inner {
+    display: flex;
+    gap: var(--space-8);
+    padding: var(--space-4) 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.key-facts-inner::-webkit-scrollbar {
+    display: none;
+}
+
+.key-fact {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-shrink: 0;
+}
+
+.key-fact-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-sand-light);
+    border-radius: var(--radius-md);
+    color: var(--color-primary);
+}
+
+.key-fact-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.key-fact-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.key-fact-label {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.key-fact-value {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text);
+}
+
 /* Page Title */
 .page-title {
     font-family: var(--font-display);
@@ -1997,6 +2099,37 @@ body.subpage {
     font-size: var(--text-lg);
     color: var(--color-text-secondary);
     line-height: 1.7;
+}
+
+/* Section Header (Variant with number on left) */
+.section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
+}
+
+.section-number {
+    font-family: var(--font-display);
+    font-size: var(--text-5xl);
+    font-weight: 700;
+    color: var(--color-border);
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.section-title {
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: var(--space-2);
+}
+
+.section-intro {
+    font-size: var(--text-base);
+    color: var(--color-text-secondary);
+    max-width: 700px;
 }
 
 /* Program Grid */
