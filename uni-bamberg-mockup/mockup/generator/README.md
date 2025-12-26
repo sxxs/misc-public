@@ -14,7 +14,7 @@ python build.py studium      # Einzelne Seite bauen
 - ✅ `index.html` - Homepage (full_page)
 - ✅ `studium.html` - Hauptseite Studium
 - ✅ `artikel.html` - Artikel-Seite
-- ✅ `fakultaet-wiai.html` - WIAI Fakultät (custom_structure)
+- ✅ `wiai/index.html` - WIAI Fakultät (custom_structure)
 - ✅ 7x WIAI-Unterseiten (studium, faq, bewerbung, beratung, im-studium, karriere, kontakt)
 
 ## Struktur
@@ -27,7 +27,7 @@ content/
 ├── index.html             # Komplette Homepage (full_page: true)
 ├── studium.html           # Hero + Content (Standard)
 ├── artikel.html           # Hero + Content (Standard)
-├── fakultaet-wiai.html    # Hero + Subnav + Main (custom_structure: true)
+├── wiai/index.html    # Hero + Subnav + Main (custom_structure: true)
 └── wiai/
     ├── studium.html       # Hero + Content (Standard)
     ├── faq.html
@@ -41,7 +41,7 @@ Wiederverwendbare Template-Teile:
 - `breadcrumb.html` - Generisches Breadcrumb
 - `breadcrumb-wiai.html` - WIAI-spezifisches Breadcrumb
 - `subnav-wiai.html` - WIAI Subnavigation
-- `styles-fakultaet-wiai.css` - Inline-CSS für fakultaet-wiai.html
+- `styles-fakultaet-wiai.css` - Inline-CSS für wiai/index.html
 
 ### Konfiguration (`pages.json`)
 
@@ -130,7 +130,7 @@ Wiederverwendbare Template-Teile:
 - **Subnav:** `subnav-wiai.html` (sticky)
 - **Hero:** `.page-hero--fakultaet`
 
-### 3. Custom-Struktur (fakultaet-wiai.html)
+### 3. Custom-Struktur (wiai/index.html)
 - **Struktur:** Header → Hero + Subnav + Main → Footer
 - **Flag:** `custom_structure: true`
 - **Inline-Styles:** `inline_styles_file: "styles-fakultaet-wiai.css"`

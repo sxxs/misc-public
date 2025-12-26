@@ -1,14 +1,6 @@
     <!-- Hero -->
     <section class="studiengang-hero">
         <div class="container">
-            <nav class="breadcrumb breadcrumb--in-hero" aria-label="Breadcrumb">
-                <ol class="breadcrumb-list">
-                    <li><a href="{{root_path}}index.html">Startseite</a></li>
-                    <li><a href="{{root_path}}fakultaet-wiai.html">Fakultät WIAI</a></li>
-                    <li><a href="studiengaenge.html">Studiengänge</a></li>
-                    <li aria-current="page">Angewandte Informatik B.Sc.</li>
-                </ol>
-            </nav>
             <span class="hero-degree">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
@@ -20,6 +12,39 @@
             <p class="hero-subtitle">Verbindet Informatik-Grundlagen mit Anwendungsfeldern wie Medieninformatik, Kulturinformatik oder Software Engineering.</p>
         </div>
     </section>
+
+    <!-- WIAI Subnavigation -->
+    <nav class="subnav" aria-label="WIAI Navigation">
+        <div class="container">
+            <div class="subnav-wrapper">
+                <ul class="subnav-list">
+                    <li><a href="index.html">Übersicht</a></li>
+                    <li><a href="studium.html">Studium</a></li>
+                    <li><a href="im-studium.html">Im Studium</a></li>
+                    <li><a href="studiengaenge.html">Studiengänge</a></li>
+                    <li><a href="forschung.html">Forschung</a></li>
+                    <li><a href="karriere.html">Karriere</a></li>
+                </ul>
+                <div class="subnav-quick">
+                    <a href="faq.html" class="subnav-quick-link">FAQ</a>
+                    <a href="bewerbung.html" class="subnav-quick-link">Bewerbung</a>
+                    <a href="kontakt.html" class="subnav-quick-link">Kontakt</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <div class="container">
+            <ol class="breadcrumb-list">
+                <li><a href="{{root_path}}index.html">Startseite</a></li>
+                <li><a href="index.html">Fakultät WIAI</a></li>
+                <li><a href="studiengaenge.html">Studiengänge</a></li>
+                <li aria-current="page">Angewandte Informatik B.Sc.</li>
+            </ol>
+        </div>
+    </nav>
 
     <!-- Key Facts -->
     <section class="key-facts">
