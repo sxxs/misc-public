@@ -93,6 +93,13 @@ body.infiltrator { background: var(--bg-infiltrator); }
 
 .menu-btn .icon { font-size: 1.5em; }
 
+.version-display {
+    margin-top: 2em;
+    font-size: 0.8rem;
+    color: #555;
+    letter-spacing: 0.1em;
+}
+
 /* ==================== CODE INPUT MODAL ==================== */
 #codeModal {
     position: fixed;
@@ -151,6 +158,41 @@ body.infiltrator { background: var(--bg-infiltrator); }
 .modal-btn.confirm { background: var(--gold); color: #000; }
 .modal-btn.cancel { background: #333; color: #fff; }
 
+/* Copy Button */
+.copy-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 20px;
+    margin-top: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.05em;
+    background: var(--gold);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: all 0.2s;
+}
+
+.copy-btn:active {
+    background: #b8962e;
+    transform: scale(0.98);
+}
+
+.copy-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.copy-btn.copied {
+    background: var(--green);
+}
+
 /* ==================== GAME CONTAINER ==================== */
 #gameContainer {
     display: none;
@@ -161,42 +203,10 @@ body.infiltrator { background: var(--bg-infiltrator); }
 }
 
 #gameCanvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100% !important;
-    height: 100% !important;
     background: #0a0a0f;
-    /* IMPROVED: Allow touch events but handle them in JS */
+    /* Position and size are set dynamically in JS */
     touch-action: none;
     user-select: none;
-}
-
-/* ==================== PAN HINT ==================== */
-.pan-hint {
-    position: fixed;
-    bottom: 100px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
-    color: var(--gold);
-    padding: 10px 20px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    z-index: 55;
-    pointer-events: none;
-    animation: fadeInOut 3s ease-in-out forwards;
-}
-
-.pan-hint.hidden {
-    display: none;
-}
-
-@keyframes fadeInOut {
-    0% { opacity: 0; }
-    10% { opacity: 1; }
-    80% { opacity: 1; }
-    100% { opacity: 0; display: none; }
 }
 
 /* ==================== TOOLBAR (ARCHITECT) ==================== */
