@@ -422,13 +422,10 @@ button:disabled {
 .keyboard-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(3, minmax(48px, 60px));
-    gap: 6px;
-    max-width: 252px;
-    /* Visual centering: Grid is mathematically centered, but appears off-center
-       because row 1 has empty column 1 (numbers 7,8,9 only). This -24px compensates
-       for the asymmetric layout and creates better visual balance. */
-    margin-left: -24px;
+    grid-template-rows: repeat(3, minmax(44px, 56px));
+    gap: 4px;
+    width: 100%;
+    max-width: 280px;
 }
 
 .key-btn {
@@ -497,13 +494,62 @@ button:disabled {
 
 @media (max-width: 480px) {
     .keyboard-grid {
-        grid-template-columns: repeat(4, 1fr);
-        grid-template-rows: repeat(3, minmax(44px, 56px));
-        gap: 4px;
-        max-width: 90%;
+        max-width: 100%;
+        gap: 3px;
     }
 
     .key-btn {
-        font-size: clamp(1.1em, 4vw, 1.3em);
+        font-size: clamp(1em, 5vw, 1.3em);
+        min-width: 0;
+    }
+}
+
+/* Extra small screens (iPhone SE, etc.) */
+@media (max-width: 350px) {
+    body {
+        padding: 2px;
+    }
+
+    .game-container {
+        padding: 5px;
+        border-width: 2px;
+    }
+
+    .stats {
+        padding: 4px;
+        gap: 4px;
+        font-size: 0.75em;
+    }
+
+    .keyboard-grid {
+        gap: 2px;
+    }
+
+    .key-btn {
+        font-size: 1em;
+        border-width: 1px;
+        border-radius: 4px;
+    }
+
+    .input-area {
+        margin: 5px 0;
+    }
+
+    .current-task {
+        padding: 8px;
+        min-height: 40px;
+        font-size: 1em;
+    }
+
+    .pause-btn {
+        padding: 8px 12px;
+        min-width: 45px;
+        font-size: 1em;
+    }
+
+    button {
+        padding: 8px 15px;
+        min-width: 80px;
+        font-size: 0.9em;
     }
 }
