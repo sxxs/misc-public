@@ -8,6 +8,7 @@ This is a mono-repo with multiple independent web projects:
 misc-public/
 ├── pocket-heist/              # Stealth strategy game (v2.4.x)
 ├── multiplication-troll-game/ # Math learning game (v1.2.x)
+├── jumpcat/                   # Christmas cat jump & run (v5.0)
 ├── wiai25-enhance/            # Static demo
 ├── uni-bamberg-wrapper/       # University website wrapper with CORS proxy
 ├── uni-bamberg-mockup/        # Mockup and crawler for uni-bamberg
@@ -19,6 +20,7 @@ misc-public/
 All projects are deployed via GitHub Pages from the `main` branch:
 - https://sxxs.github.io/misc-public/pocket-heist/
 - https://sxxs.github.io/misc-public/multiplication-troll-game/
+- https://sxxs.github.io/misc-public/jumpcat/
 - https://sxxs.github.io/misc-public/wiai25-enhance/
 
 ## Project Details
@@ -59,6 +61,17 @@ Retro math learning game with troll mechanics.
 - On-screen keyboard for mobile
 - Falling blocks gameplay
 - Audio feedback (correct/wrong/game over)
+
+### JumpCat (Weihnachts-Katzen Jump)
+
+Christmas-themed jump & run game with a cat.
+
+**Key Features:**
+- Double-jump mechanic
+- Dynamic world themes (change at 10/20/30/40 points)
+- Power-ups: Slow-Mo, Speed, Extra Life, Gift
+- Generative Christmas music (Web Audio API)
+- Single-file architecture (all in index.html)
 
 ### Uni Bamberg Wrapper
 

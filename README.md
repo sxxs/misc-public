@@ -27,6 +27,18 @@ Retro-Style Multiplizierungsspiel zum Üben des kleinen 1x1 mit fiesen Troll-Mec
 - Mobile-optimiert mit On-Screen Keyboard
 - PWA (installierbar)
 
+### [Weihnachts-Katzen Jump](jumpcat/)
+
+Ein festliches Jump & Run Spiel mit einer Weihnachtskatze. Springe über Plattformen, sammle Power-Ups und entdecke verschiedene Welten!
+
+**[Play](https://sxxs.github.io/misc-public/jumpcat/)** | v5.0
+
+- Doppelsprung-Mechanik
+- Dynamische Welten (ändern sich bei 10/20/30 Punkten)
+- Power-Ups: ❄️ Slow-Mo, 🚀 Speed, ❤️ Extra-Leben, 🎁 Geschenk
+- Generative Weihnachtsmusik
+- PWA (installierbar)
+
 ### [WIAI25 Enhance](wiai25-enhance/)
 
 Static demo for WIAI 25 Collective Enhance project.
