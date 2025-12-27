@@ -6,6 +6,8 @@ This is a mono-repo with multiple independent web projects:
 
 ```
 misc-public/
+├── index.html                 # Landing page with project links
+├── .nojekyll                  # Disables Jekyll (see Deployment section)
 ├── pocket-heist/              # Stealth strategy game (v2.4.x)
 ├── multiplication-troll-game/ # Math learning game (v1.2.x)
 ├── jumpcat/                   # Christmas cat jump & run (v5.0)
@@ -18,10 +20,22 @@ misc-public/
 ## Deployment
 
 All projects are deployed via GitHub Pages from the `main` branch:
+- https://sxxs.github.io/misc-public/ (landing page)
 - https://sxxs.github.io/misc-public/pocket-heist/
 - https://sxxs.github.io/misc-public/multiplication-troll-game/
 - https://sxxs.github.io/misc-public/jumpcat/
 - https://sxxs.github.io/misc-public/wiai25-enhance/
+
+### GitHub Pages Configuration
+
+**`.nojekyll`** - Disables Jekyll processing. Required because:
+- `uni-bamberg-mockup/mockup/crawler` is a symlink to `../crawler`
+- Jekyll fails on symlinks during build
+- Without Jekyll, GitHub Pages serves static files directly
+
+**`index.html`** - Root landing page. Required because:
+- With `.nojekyll`, README.md is not auto-converted to index.html
+- Provides clickable links to all projects
 
 ## Project Details
 
@@ -96,7 +110,7 @@ All projects use:
 3. Network-first Service Worker
 
 ### PWA Setup
-Both games are installable PWAs with:
+All three games are installable PWAs with:
 - `manifest.json`
 - `sw.js` (Service Worker)
 - Icons (192px, 512px, apple-touch-icon)
