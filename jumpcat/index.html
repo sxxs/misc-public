@@ -152,7 +152,7 @@
 </head>
 <body>
 
-    <div id="score-display">Punkte: 0</div>
+    <div id="score-display">🪙 0</div>
     <div id="status-bar">
         <div id="icon-hearts" class="status-icon">❤️</div>
         <div id="icon-snow" class="status-icon">❄️</div>
@@ -161,7 +161,6 @@
         <div id="icon-glide" class="status-icon">🪽</div>
         <div id="icon-rage" class="status-icon">😼</div>
     </div>
-    <div id="coin-display" style="position: absolute; top: 20px; left: 160px; font-size: 20px; color: #f1c40f; background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 15px; z-index: 10;">🪙 0</div>
     <div id="mute-btn">🔊</div>
     
     <div id="ui-layer">
@@ -177,7 +176,7 @@
         </div>
         <div id="game-over-screen" class="hidden clickable-overlay">
             <h1>Oje!</h1>
-            <p>Punkte: <span id="final-score">0</span></p>
+            <p>Gesammelt: <span id="final-score">0</span></p>
             <p class="blink">Tippen für Neustart</p>
         </div>
     </div>
@@ -218,14 +217,13 @@ const iconSpeed = document.getElementById('icon-speed');
 const iconTriple = document.getElementById('icon-triple');
 const iconGlide = document.getElementById('icon-glide');
 const iconRage = document.getElementById('icon-rage');
-const coinDisplay = document.getElementById('coin-display');
 const versionDisplay = document.getElementById('version-display');
 const highscoreDisplay = document.getElementById('highscore-display');
 
-// Version und Highscore anzeigen
+// Version und Highscore anzeigen (Münzen-basiert)
 versionDisplay.innerText = 'v' + GAME_VERSION;
-let highscore = parseInt(localStorage.getItem('jumpcat-highscore') || '0');
-if (highscore > 0) highscoreDisplay.innerText = '🏆 Highscore: ' + highscore;
+let highscore = parseInt(localStorage.getItem('jumpcat-highscore-coins') || '0');
+if (highscore > 0) highscoreDisplay.innerText = '🏆 Beste Sammlung: ' + highscore + ' 🪙';
 
 // --- THEMES & COLORS ---
 const THEMES = {
@@ -269,6 +267,7 @@ let gameState = 'START';
 let frames = 0;
 let score = 0;
 let coins = 0;
+let coinCombo = 0;  // Combo-Zähler für aufeinanderfolgende Münzen
 let baseSpeed = 5;
 let currentSpeed = 5;
 let gameOverTime = 0;
@@ -689,12 +688,33 @@ class Platform {
             ctx.fillStyle = 'rgba(230, 126, 34, 0.5)'; ctx.beginPath(); ctx.arc(this.obsX + 5, this.y + shakeY - 35, fSize*2, 0, Math.PI*2); ctx.fill();
         }
 
-        // Draw Coins
+        // Draw Coins (gelber Kreis mit Glanz)
         this.coins.forEach(c => {
             if (!c.collected) {
                 const yHover = this.y + shakeY - 35 + Math.sin(frames * 0.15 + c.x) * 3;
-                ctx.shadowBlur = 8; ctx.shadowColor = '#f1c40f';
-                ctx.font = '20px Arial'; ctx.fillText('🪙', c.x, yHover);
+
+                // Schatten
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#f1c40f';
+
+                // Äußerer goldener Ring
+                ctx.fillStyle = '#f39c12';
+                ctx.beginPath();
+                ctx.arc(c.x, yHover, 12, 0, Math.PI*2);
+                ctx.fill();
+
+                // Innerer gelber Kreis
+                ctx.fillStyle = '#f1c40f';
+                ctx.beginPath();
+                ctx.arc(c.x, yHover, 10, 0, Math.PI*2);
+                ctx.fill();
+
+                // Glanz-Effekt
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.beginPath();
+                ctx.arc(c.x - 3, yHover - 3, 4, 0, Math.PI*2);
+                ctx.fill();
+
                 ctx.shadowBlur = 0;
             }
         });
@@ -783,6 +803,15 @@ class Particle {
 }
 function createParticles(x, y, count, color) { for(let i=0; i<count; i++) particles.push(new Particle(x, y, Math.random()*4+2, color)); }
 
+// Combo-Text anzeigen
+let comboText = '';
+let comboTextTimer = 0;
+
+function showComboText(text) {
+    comboText = text;
+    comboTextTimer = 120;  // 2 Sekunden bei 60fps
+}
+
 // --- LOGIK ---
 function activateEffect(type) {
     AudioEngine.playSfx('powerup');
@@ -849,8 +878,8 @@ function updateUI() {
     iconGlide.classList.toggle('active', activeEffect === 'glide');
     iconRage.classList.toggle('active', isRaging);
 
-    scoreDisplay.innerText = "Punkte: " + score;
-    coinDisplay.innerText = '🪙 ' + coins;
+    // Nur Münzen anzeigen (score intern für Features)
+    scoreDisplay.innerText = '🪙 ' + coins;
 }
 
 function startGame() {
@@ -859,6 +888,9 @@ function startGame() {
     catSnowballs.length = 0;
     score = 0;
     coins = 0;
+    coinCombo = 0;
+    comboText = '';
+    comboTextTimer = 0;
     baseSpeed = 5;
     currentSpeed = baseSpeed;
     lives = 0;
@@ -975,16 +1007,45 @@ function checkCollision() {
             if (!c.collected && Math.abs(cat.x - c.x) < 25 && Math.abs(cat.y - (p.y - 35)) < 30) {
                 c.collected = true;
                 coins++;
+                coinCombo++;  // Combo erhöhen
                 AudioEngine.playSfx('powerup');
-                createParticles(c.x, p.y - 35, 5, '#f1c40f');
+                createParticles(c.x, p.y - 35, 8, '#f1c40f');
+
+                // Combo-Bonusse
+                if (coinCombo === 5) {
+                    coins += 5;
+                    createParticles(cat.x, cat.y, 30, '#f39c12');
+                    AudioEngine.playSfx('rescue');
+                    showComboText('5x COMBO! +5 🪙');
+                } else if (coinCombo === 10) {
+                    coins += 10;
+                    createParticles(cat.x, cat.y, 50, '#f39c12');
+                    AudioEngine.playSfx('rescue');
+                    showComboText('10x COMBO! +10 🪙');
+                } else if (coinCombo === 20) {
+                    coins += 20;
+                    lives = Math.min(lives + 1, 3);  // Bonus: +1 Leben
+                    createParticles(cat.x, cat.y, 80, '#f39c12');
+                    AudioEngine.playSfx('rescue');
+                    showComboText('20x MEGA-COMBO! +20 🪙 +❤️');
+                }
+
                 updateUI();
             }
         });
 
-        // Score-Tracking
+        // Score-Tracking & Münzen-Verpasst-Check
         if (!p.passed && p.x + p.w < cat.x) {
             score++;
             p.passed = true;
+
+            // Combo resetten wenn Münzen verpasst wurden
+            const hadCoins = p.coins.length > 0;
+            const allCollected = p.coins.every(c => c.collected);
+            if (hadCoins && !allCollected) {
+                coinCombo = 0;  // Combo zurücksetzen
+            }
+
             updateUI();
 
             // Geschwindigkeit erhöhen
@@ -1003,13 +1064,13 @@ function gameOver() {
     gameState = 'GAMEOVER';
     gameOverTime = Date.now();
 
-    // Highscore speichern
-    if (score > highscore) {
-        highscore = score;
-        localStorage.setItem('jumpcat-highscore', highscore.toString());
-        finalScoreSpan.innerText = score + ' 🏆 NEUER REKORD!';
+    // Highscore speichern (nur Münzen zählen!)
+    if (coins > highscore) {
+        highscore = coins;
+        localStorage.setItem('jumpcat-highscore-coins', highscore.toString());
+        finalScoreSpan.innerText = coins + ' 🪙 NEUER REKORD!';
     } else {
-        finalScoreSpan.innerText = score;
+        finalScoreSpan.innerText = coins + ' 🪙';
     }
 
     gameOverScreen.classList.remove('hidden');
@@ -1190,6 +1251,9 @@ function loop() {
     if (gameState === 'PLAYING') {
         frames++;
 
+        // Combo-Text Timer
+        if (comboTextTimer > 0) comboTextTimer--;
+
         // Effekt-Timer
         if (activeEffect) {
             effectTimer--;
@@ -1284,6 +1348,34 @@ function loop() {
         p.draw();
         if (p.life <= 0) particles.splice(index, 1);
     });
+
+    // Combo-Anzeige (wenn Combo aktiv)
+    if (coinCombo > 2 && gameState === 'PLAYING') {
+        ctx.fillStyle = 'rgba(243, 156, 18, 0.9)';
+        ctx.strokeStyle = '#f1c40f';
+        ctx.lineWidth = 3;
+        ctx.font = 'bold 24px Fredoka One';
+        ctx.textAlign = 'center';
+        ctx.strokeText('🪙 ' + coinCombo + 'x COMBO', width/2, height - 40);
+        ctx.fillText('🪙 ' + coinCombo + 'x COMBO', width/2, height - 40);
+        ctx.textAlign = 'left';
+    }
+
+    // Combo-Bonus-Text (wenn ausgelöst)
+    if (comboTextTimer > 0) {
+        const alpha = comboTextTimer / 120;
+        const yPos = height / 3 - (120 - comboTextTimer) * 0.5;  // Text steigt nach oben
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = '#f39c12';
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 4;
+        ctx.font = 'bold 32px Fredoka One';
+        ctx.textAlign = 'center';
+        ctx.strokeText(comboText, width/2, yPos);
+        ctx.fillText(comboText, width/2, yPos);
+        ctx.textAlign = 'left';
+        ctx.globalAlpha = 1;
+    }
 
     updateUI();
     requestAnimationFrame(loop);
