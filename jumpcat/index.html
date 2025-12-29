@@ -186,10 +186,10 @@
 <script>
 /**
  * Weihnachts-Katzen Jump & Run EVOLUTION
- * Version 6.1: Coin Collection & Boss Fight
+ * Version 6.1.1: Boss Fight Fix
  */
 
-const GAME_VERSION = '6.1';
+const GAME_VERSION = '6.1.1';
 
 // Cache-Busting: Redirect wenn Version in URL nicht stimmt
 (function() {
@@ -298,12 +298,13 @@ function handleInput(e) {
 
     if (gameState === 'START') startGame();
     else if (gameState === 'PLAYING') {
-        if (bossActive && boss && boss.phase === 1) {
-            // Boss-Kampf: Schneeball werfen
+        // Immer springen (auch während Boss-Kampf!)
+        cat.jump();
+
+        // Boss-Kampf: Zusätzlich Schneeball werfen (mit Cooldown)
+        if (bossActive && boss && boss.phase === 1 && snowballCooldown <= 0) {
             throwSnowball();
-        } else {
-            // Normal: Springen
-            cat.jump();
+            snowballCooldown = 20;  // ~0.3 Sekunden bei 60fps
         }
     }
     else if (gameState === 'GAMEOVER') { if (Date.now() - gameOverTime > 800) resetGame(); }
@@ -333,7 +334,7 @@ function throwSnowball() {
         vy: vy
     });
 
-    AudioEngine.playSfx('jump');
+    AudioEngine.playSfx('powerup');  // Anderer Sound als Sprung
     createParticles(cat.x + 20, cat.y, 5, '#3498db');
 }
 window.addEventListener('touchstart', handleInput, {passive: false});
@@ -886,6 +887,7 @@ function startGame() {
     cat.reset();
     platforms.length = 0;
     catSnowballs.length = 0;
+    snowballCooldown = 0;
     score = 0;
     coins = 0;
     coinCombo = 0;
@@ -1083,6 +1085,7 @@ function resetGame() { startGame(); }
 
 // --- BOSS SYSTEM ---
 let catSnowballs = [];  // Schneebälle die die Katze wirft
+let snowballCooldown = 0;  // Cooldown zwischen Würfen
 
 class Boss {
     constructor() {
@@ -1254,6 +1257,9 @@ function loop() {
         // Combo-Text Timer
         if (comboTextTimer > 0) comboTextTimer--;
 
+        // Schneeball-Cooldown
+        if (snowballCooldown > 0) snowballCooldown--;
+
         // Effekt-Timer
         if (activeEffect) {
             effectTimer--;
@@ -1338,7 +1344,8 @@ function loop() {
         ctx.font = 'bold 20px Fredoka One';
         ctx.textAlign = 'center';
         ctx.fillText('🎄 BOSS: Böser Schneemann! 🎄', width/2, 50);
-        ctx.fillText('Tippen um Schneebälle zu werfen! ⚪', width/2, 75);
+        ctx.font = 'bold 16px Fredoka One';
+        ctx.fillText('Springen + Schneebälle werfen! ⚪', width/2, 75);
         ctx.textAlign = 'left';
     }
 
