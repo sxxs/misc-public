@@ -10,7 +10,7 @@ misc-public/
 ├── .nojekyll                  # Disables Jekyll (see Deployment section)
 ├── pocket-heist/              # Stealth strategy game (v2.4.x)
 ├── multiplication-troll-game/ # Math learning game (v1.2.x)
-├── jumpcat/                   # Christmas cat jump & run (v5.0)
+├── jumpcat/                   # Christmas cat jump & run (v6.2)
 ├── wiai25-enhance/            # Static demo
 ├── uni-bamberg-wrapper/       # University website wrapper with CORS proxy
 ├── uni-bamberg-mockup/        # Mockup and crawler for uni-bamberg
@@ -78,14 +78,45 @@ Retro math learning game with troll mechanics.
 
 ### JumpCat (Weihnachts-Katzen Jump)
 
-Christmas-themed jump & run game with a cat.
+Christmas-themed jump & run game with a cat (v6.2).
 
-**Key Features:**
-- Double-jump mechanic
-- Dynamic world themes (change at 10/20/30/40 points)
-- Power-ups: Slow-Mo, Speed, Extra Life, Gift
-- Generative Christmas music (Web Audio API)
+**Core Mechanics:**
+- Double/Triple-jump mechanic
+- Coin collection as primary score system
+- Combo system (5x, 10x, 20x) for consecutive coins
+- Up to 3 extra lives (hearts)
+- Dynamic world themes (change at 10/20/30/40 internal points)
+
+**Power-ups:**
+- ❄️ Slow-Mo - Slows game speed
+- 🚀 Speed - Increases game speed
+- ❤️ Heart - Extra life (max 3)
+- 🎁 Gift - Multi-bonus (slow + life + 20 coins)
+- ⬆️ Triple Jump - 3 jumps instead of 2
+- 🪽 Glide - Reduced gravity when falling
+- 😼 Catnip Rage - Grow large, destroy candles
+
+**Platform Types (unlocked progressively):**
+- Normal platforms (score 0+)
+- Shaking platforms (score 12+)
+- Moving platforms (score 15+)
+- Crumbling platforms (score 25+) - break when standing too long
+- Ice platforms (score 35+) - slippery physics
+- Bouncy platforms (score 45+) - catapult jump
+
+**Boss Fight (30 coins):**
+- Evil Snowman boss appears at 30 collected coins
+- Jump + tap throws snowballs at boss
+- Boss shoots snowballs back
+- 5 hit points to defeat
+- Snowball throwing has 0.3s cooldown
+
+**Technical:**
 - Single-file architecture (all in index.html)
+- Cache-busting via URL parameter redirect (`?v=6.2`)
+- Generative Christmas music (Web Audio API)
+- localStorage for highscore (coin-based)
+- Combo text animations and visual effects
 
 ### Uni Bamberg Wrapper
 
