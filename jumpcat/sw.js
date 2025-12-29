@@ -1,9 +1,9 @@
 /**
  * Service Worker for Weihnachts-Katzen Jump
- * Version 5.0 - Network First Strategy
+ * Version 6.0 - Mega Update
  */
 
-const CACHE_NAME = 'jumpcat-v5.0';
+const CACHE_NAME = 'jumpcat-v6.0';
 const urlsToCache = [
   './',
   './index.html',

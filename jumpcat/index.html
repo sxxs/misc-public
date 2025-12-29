@@ -154,10 +154,14 @@
 
     <div id="score-display">Punkte: 0</div>
     <div id="status-bar">
-        <div id="icon-heart" class="status-icon">❤️</div>
+        <div id="icon-hearts" class="status-icon">❤️</div>
         <div id="icon-snow" class="status-icon">❄️</div>
         <div id="icon-speed" class="status-icon">🚀</div>
+        <div id="icon-triple" class="status-icon">⬆️³</div>
+        <div id="icon-glide" class="status-icon">🪽</div>
+        <div id="icon-rage" class="status-icon">😼</div>
     </div>
+    <div id="coin-display" style="position: absolute; top: 20px; left: 160px; font-size: 20px; color: #f1c40f; background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 15px; z-index: 10;">🪙 0</div>
     <div id="mute-btn">🔊</div>
     
     <div id="ui-layer">
@@ -167,7 +171,9 @@
             <p style="font-size: 14px; margin-top: 10px;">
                 Erreiche 10, 20, 30 Punkte<br>um neue Welten zu sehen!
             </p>
+            <p id="highscore-display" style="font-size: 14px; color: #f1c40f; margin-top: 5px;"></p>
             <p class="blink" style="margin-top: 20px;">Tippen zum Starten</p>
+            <p id="version-display" style="font-size: 10px; opacity: 0.5; margin-top: 10px;"></p>
         </div>
         <div id="game-over-screen" class="hidden clickable-overlay">
             <h1>Oje!</h1>
@@ -181,8 +187,20 @@
 <script>
 /**
  * Weihnachts-Katzen Jump & Run EVOLUTION
- * Version 5.0: Fairness Update & Dynamic Worlds
+ * Version 6.0: Mega Update - Power-ups, Plattformen, Boss
  */
+
+const GAME_VERSION = '6.0';
+
+// Cache-Busting: Redirect wenn Version in URL nicht stimmt
+(function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlVersion = urlParams.get('v');
+    if (urlVersion !== GAME_VERSION) {
+        urlParams.set('v', GAME_VERSION);
+        window.location.replace(window.location.pathname + '?' + urlParams.toString());
+    }
+})();
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -194,9 +212,20 @@ const finalScoreSpan = document.getElementById('final-score');
 const muteBtn = document.getElementById('mute-btn');
 
 // Status Icons
-const iconHeart = document.getElementById('icon-heart');
+const iconHearts = document.getElementById('icon-hearts');
 const iconSnow = document.getElementById('icon-snow');
 const iconSpeed = document.getElementById('icon-speed');
+const iconTriple = document.getElementById('icon-triple');
+const iconGlide = document.getElementById('icon-glide');
+const iconRage = document.getElementById('icon-rage');
+const coinDisplay = document.getElementById('coin-display');
+const versionDisplay = document.getElementById('version-display');
+const highscoreDisplay = document.getElementById('highscore-display');
+
+// Version und Highscore anzeigen
+versionDisplay.innerText = 'v' + GAME_VERSION;
+let highscore = parseInt(localStorage.getItem('jumpcat-highscore') || '0');
+if (highscore > 0) highscoreDisplay.innerText = '🏆 Highscore: ' + highscore;
 
 // --- THEMES & COLORS ---
 const THEMES = {
@@ -239,12 +268,20 @@ muteBtn.addEventListener('touchstart', (e) => { e.stopPropagation(); AudioEngine
 let gameState = 'START';
 let frames = 0;
 let score = 0;
+let coins = 0;
 let baseSpeed = 5;
 let currentSpeed = 5;
-let gameOverTime = 0; 
+let gameOverTime = 0;
 let effectTimer = 0;
 let activeEffect = null;
-let hasRevive = false;
+let lives = 0;  // 0-3 Herzen
+let maxJumps = 2;  // Normal: 2, mit Triple: 3
+let isGliding = false;
+let isRaging = false;
+let rageTimer = 0;
+let bossActive = false;
+let bossDefeated = false;
+let boss = null;
 
 // --- CURRENT THEME ---
 let currentTheme = THEMES[0];
@@ -270,73 +307,206 @@ window.addEventListener('keydown', (e) => { if (e.code === 'Space' || e.code ===
 
 // --- ITEMS & OBSTACLES ---
 const ITEM_TYPES = {
-    SNOW: { color: '#00d2d3', label: '❄️' }, 
-    ROCKET: { color: '#ff9f43', label: '🚀' }, 
-    HEART: { color: '#ff6b6b', label: '❤️' }, 
-    GIFT: { color: '#feca57', label: '🎁' }   
+    SNOW: { color: '#00d2d3', label: '❄️' },
+    ROCKET: { color: '#ff9f43', label: '🚀' },
+    HEART: { color: '#ff6b6b', label: '❤️' },
+    GIFT: { color: '#feca57', label: '🎁' },
+    TRIPLE: { color: '#9b59b6', label: '⬆️' },  // Dreifachsprung
+    GLIDE: { color: '#3498db', label: '🪽' },   // Flügel/Gleiten
+    RAGE: { color: '#e74c3c', label: '😼' },    // Catnip-Rage
+    COIN: { color: '#f1c40f', label: '🪙' }     // Münze
 };
 
 // --- GAME OBJECTS ---
 const cat = {
-    x: 50, y: 0, radius: 20, vy: 0, gravity: 0.55, jumpForce: -12, grounded: false, rotation: 0, jumpCount: 0, onPlatform: null, invincible: 0,
-    reset: function() { this.x = width * 0.15; this.y = height / 2; this.vy = 0; this.rotation = 0; this.jumpCount = 0; this.onPlatform = null; this.invincible = 0; },
-    jump: function() { if (this.grounded || this.jumpCount < 2) { this.vy = this.jumpForce; this.grounded = false; this.jumpCount++; AudioEngine.playSfx('jump'); createParticles(this.x, this.y + 20, 5, '#fff'); this.onPlatform = null; } },
-    revive: function() { this.vy = -20; this.jumpCount = 1; this.grounded = false; this.invincible = 80; hasRevive = false; AudioEngine.playSfx('rescue'); createParticles(this.x, this.y, 20, '#ff6b6b'); updateUI(); },
-    update: function() { this.vy += this.gravity; this.y += this.vy; if(this.invincible > 0) this.invincible--; 
-        if (!this.grounded) this.rotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, (this.vy * 0.1))); else { this.rotation = 0; this.jumpCount = 0; if (this.onPlatform && this.onPlatform.dy) this.y += this.onPlatform.dy; }
-        if (this.y + this.radius > height + 60) { if (hasRevive) this.revive(); else gameOver(); }
+    x: 50, y: 0, radius: 20, vy: 0, gravity: 0.55, jumpForce: -12, grounded: false, rotation: 0, jumpCount: 0, onPlatform: null, invincible: 0, slideVel: 0,
+    reset: function() { this.x = width * 0.15; this.y = height / 2; this.vy = 0; this.rotation = 0; this.jumpCount = 0; this.onPlatform = null; this.invincible = 0; this.slideVel = 0; },
+    jump: function() {
+        if (this.grounded || this.jumpCount < maxJumps) {
+            this.vy = this.jumpForce;
+            this.grounded = false;
+            this.jumpCount++;
+            AudioEngine.playSfx('jump');
+            createParticles(this.x, this.y + 20, 5, '#fff');
+            this.onPlatform = null;
+        }
+    },
+    revive: function() {
+        this.vy = -20;
+        this.jumpCount = 1;
+        this.grounded = false;
+        this.invincible = 80;
+        lives--;
+        AudioEngine.playSfx('rescue');
+        createParticles(this.x, this.y, 20, '#ff6b6b');
+        updateUI();
+    },
+    update: function() {
+        // Gliding: Wenn in der Luft und Glide-Effekt aktiv, reduzierte Gravität
+        let grav = this.gravity;
+        if (activeEffect === 'glide' && !this.grounded && this.vy > 0) {
+            grav = 0.15;  // Langsamer fallen
+            isGliding = true;
+            // Glide-Partikel
+            if (frames % 5 === 0) createParticles(this.x - 10, this.y, 1, '#3498db');
+        } else {
+            isGliding = false;
+        }
+
+        this.vy += grav;
+        this.y += this.vy;
+
+        // Eis-Rutsch-Physik
+        if (this.onPlatform && this.onPlatform.type === 'ice') {
+            this.slideVel *= 0.98;  // Langsames Abbremsen
+        } else {
+            this.slideVel = 0;
+        }
+
+        if (this.invincible > 0) this.invincible--;
+
+        if (!this.grounded) {
+            this.rotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, (this.vy * 0.1)));
+        } else {
+            this.rotation = 0;
+            this.jumpCount = 0;
+            if (this.onPlatform && this.onPlatform.dy) this.y += this.onPlatform.dy;
+        }
+
+        if (this.y + this.radius > height + 60) {
+            if (lives > 0) this.revive();
+            else gameOver();
+        }
     },
     draw: function() {
-        ctx.save(); ctx.translate(this.x, this.y);
-        if (hasRevive) { ctx.strokeStyle = `rgba(255, 215, 0, ${0.5 + Math.sin(frames*0.1)*0.3})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, 25, 0, Math.PI*2); ctx.stroke(); }
+        const scale = isRaging ? 1.8 : 1.0;  // Rage = größere Katze
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Leben-Aura (je mehr Leben, desto stärker)
+        if (lives > 0) {
+            const auraSize = 25 + lives * 5;
+            ctx.strokeStyle = `rgba(255, 215, 0, ${0.3 + Math.sin(frames*0.1)*0.2})`;
+            ctx.lineWidth = lives;
+            ctx.beginPath();
+            ctx.arc(0, 0, auraSize * scale, 0, Math.PI*2);
+            ctx.stroke();
+        }
+
+        // Rage-Aura (rot pulsierend)
+        if (isRaging) {
+            ctx.fillStyle = `rgba(231, 76, 60, ${0.3 + Math.sin(frames*0.2)*0.2})`;
+            ctx.beginPath();
+            ctx.arc(0, 0, 50, 0, Math.PI*2);
+            ctx.fill();
+        }
+
+        // Glide-Flügel
+        if (isGliding) {
+            ctx.fillStyle = 'rgba(52, 152, 219, 0.7)';
+            // Linker Flügel
+            ctx.beginPath();
+            ctx.moveTo(-15 * scale, 0);
+            ctx.quadraticCurveTo(-40 * scale, -20, -50 * scale, 5);
+            ctx.quadraticCurveTo(-30 * scale, 10, -15 * scale, 5);
+            ctx.fill();
+            // Rechter Flügel
+            ctx.beginPath();
+            ctx.moveTo(15 * scale, 0);
+            ctx.quadraticCurveTo(40 * scale, -20, 50 * scale, 5);
+            ctx.quadraticCurveTo(30 * scale, 10, 15 * scale, 5);
+            ctx.fill();
+        }
+
         ctx.rotate(this.rotation);
-        // Body
-        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(0, 10, 18, 14, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(0, -5, 16, 0, Math.PI * 2); ctx.fill();
+        ctx.scale(scale, scale);
+
+        // Body (Rage = rot getönt)
+        ctx.fillStyle = isRaging ? '#ffaaaa' : '#fff';
+        ctx.beginPath(); ctx.ellipse(0, 10, 18, 14, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(0, -5, 16, 0, Math.PI * 2); ctx.fill();
         // Ears
-        ctx.beginPath(); ctx.moveTo(-12, -12); ctx.lineTo(-16, -22); ctx.lineTo(-4, -16); ctx.fill(); ctx.beginPath(); ctx.moveTo(12, -12); ctx.lineTo(16, -22); ctx.lineTo(4, -16); ctx.fill();
-        // Face
-        ctx.fillStyle = '#333'; ctx.beginPath(); ctx.arc(-6, -6, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(6, -6, 2, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = 'pink'; ctx.beginPath(); ctx.arc(0, -1, 2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-12, -12); ctx.lineTo(-16, -22); ctx.lineTo(-4, -16); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(12, -12); ctx.lineTo(16, -22); ctx.lineTo(4, -16); ctx.fill();
+        // Face (Rage = wütende Augen)
+        ctx.fillStyle = isRaging ? '#e74c3c' : '#333';
+        ctx.beginPath(); ctx.arc(-6, -6, isRaging ? 3 : 2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(6, -6, isRaging ? 3 : 2, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = 'pink'; ctx.beginPath(); ctx.arc(0, -1, 2, 0, Math.PI*2); ctx.fill();
         // Hat
-        ctx.rotate(Math.sin(frames * 0.1) * 0.1); ctx.fillStyle = '#c0392b'; ctx.beginPath(); ctx.moveTo(-14, -10); ctx.quadraticCurveTo(0, -30, 20, -5); ctx.lineTo(14, -10); ctx.quadraticCurveTo(0, -16, -14, -10); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(20, -5, 4, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.roundRect(-15, -12, 30, 6, 3); ctx.fill();
+        ctx.rotate(Math.sin(frames * 0.1) * 0.1);
+        ctx.fillStyle = '#c0392b';
+        ctx.beginPath(); ctx.moveTo(-14, -10); ctx.quadraticCurveTo(0, -30, 20, -5); ctx.lineTo(14, -10); ctx.quadraticCurveTo(0, -16, -14, -10); ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(20, -5, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(-15, -12, 30, 6, 3); ctx.fill();
         ctx.restore();
     }
 };
 
 const platforms = [];
 
+// Plattform-Typen mit Score-Schwellen für gestaffelte Einführung
+const PLATFORM_TYPES = {
+    normal: { minScore: 0, color: '#ecf0f1' },
+    moving: { minScore: 15, color: '#a29bfe' },
+    shaking: { minScore: 12, color: '#fdcb6e' },      // Rüttelplattform
+    crumbling: { minScore: 25, color: '#e17055' },    // Zerbröckelnde
+    ice: { minScore: 35, color: '#74b9ff' },          // Eis
+    bouncy: { minScore: 45, color: '#00b894' }        // Sprungplattform
+};
+
 class Platform {
     constructor(x, y, w, type = 'normal') {
         this.x = x; this.y = y; this.originalY = y; this.w = w; this.h = 40;
         this.type = type; this.passed = false; this.dy = 0; this.offset = Math.random() * Math.PI * 2;
-        this.item = null; this.obstacle = null; 
-        
-        // SPAWN RATES (Fairer)
+        this.item = null; this.obstacle = null;
+        this.crumbleTimer = 0;  // Für zerbröckelnde Plattformen
+        this.crumbleState = 0;  // 0-3 Zustand
+        this.shakeOffset = 0;   // Für Rüttelplattformen
+        this.coins = [];        // Münzen auf der Plattform
+
+        // Münzen spawnen (häufig!)
+        if (w > 80 && Math.random() > 0.5) {
+            const numCoins = Math.floor(Math.random() * 3) + 1;
+            for (let i = 0; i < numCoins; i++) {
+                this.coins.push({
+                    x: x + 30 + (i * 30) + Math.random() * 20,
+                    collected: false
+                });
+            }
+        }
+
+        // SPAWN RATES
         if (w > 100) {
             const rand = Math.random();
-            // Kerzen: Sehr selten am Anfang, etwas öfter später, aber nie zu oft
-            let candleChance = 0.05; // 5% Basis
-            if (score > 20) candleChance = 0.15; 
-            
-            if (rand < candleChance && score > 5) { 
+            let candleChance = 0.05;
+            if (score > 20) candleChance = 0.15;
+
+            if (rand < candleChance && score > 5) {
                 this.obstacle = 'CANDLE';
                 this.obsX = x + 30 + Math.random() * (w - 60);
-            } else if (rand > 0.8) { // 20% Item Chance (hoch!)
+            } else if (rand > 0.75) { // 25% Item Chance
                 const r2 = Math.random();
-                // Verteilung Items:
-                if (r2 < 0.3) this.item = 'SNOW'; // 30% Slow
-                else if (r2 < 0.35) this.item = 'ROCKET'; // Nur 5% Rakete (nervt am meisten)
-                else if (r2 < 0.8) this.item = 'HEART'; // 45% Herz (sehr häufig!)
-                else this.item = 'GIFT'; // 20% Geschenk
+                // Neue Item-Verteilung mit neuen Power-ups
+                if (r2 < 0.15) this.item = 'SNOW';
+                else if (r2 < 0.18) this.item = 'ROCKET';
+                else if (r2 < 0.45) this.item = 'HEART';
+                else if (r2 < 0.55) this.item = 'GIFT';
+                else if (r2 < 0.70 && score >= 8) this.item = 'TRIPLE';
+                else if (r2 < 0.85 && score >= 15) this.item = 'GLIDE';
+                else if (r2 < 0.95 && score >= 20) this.item = 'RAGE';
+                else this.item = 'HEART';  // Fallback
                 this.itemX = x + 20 + Math.random() * (w - 40);
             }
         }
-        
+
         // Deko generieren
         this.lights = [];
         if (score >= 30) {
             let numLights = Math.floor(w / 30);
-            for(let i=0; i<numLights; i++) {
-                this.lights.push({x: i*30 + 10, color: Math.random()>0.5 ? '#e74c3c' : '#f1c40f'});
+            for(let i = 0; i < numLights; i++) {
+                this.lights.push({x: i*30 + 10, color: Math.random() > 0.5 ? '#e74c3c' : '#f1c40f'});
             }
         }
     }
@@ -345,64 +515,157 @@ class Platform {
         this.x -= currentSpeed;
         if (this.obstacle) this.obsX -= currentSpeed;
         if (this.item) this.itemX -= currentSpeed;
-        if (this.type === 'moving') { this.y = this.originalY + Math.sin((frames * 0.05) + this.offset) * 60; this.dy = Math.cos((frames * 0.05) + this.offset) * 60 * 0.05; } else { this.dy = 0; }
+        this.coins.forEach(c => c.x -= currentSpeed);
+
+        // Plattform-spezifische Updates
+        if (this.type === 'moving') {
+            this.y = this.originalY + Math.sin((frames * 0.05) + this.offset) * 60;
+            this.dy = Math.cos((frames * 0.05) + this.offset) * 60 * 0.05;
+        } else if (this.type === 'shaking') {
+            // Rütteln wenn Katze drauf steht
+            if (cat.onPlatform === this) {
+                this.shakeOffset = Math.sin(frames * 0.8) * 3;
+            } else {
+                this.shakeOffset *= 0.9;
+            }
+            this.dy = 0;
+        } else if (this.type === 'crumbling') {
+            // Zerbröckeln wenn Katze drauf steht
+            if (cat.onPlatform === this) {
+                this.crumbleTimer++;
+                if (this.crumbleTimer > 30) this.crumbleState = 1;
+                if (this.crumbleTimer > 50) this.crumbleState = 2;
+                if (this.crumbleTimer > 70) this.crumbleState = 3;
+                if (this.crumbleTimer > 90) {
+                    // Plattform bricht weg
+                    this.collapsed = true;
+                    cat.onPlatform = null;
+                    cat.grounded = false;
+                    createParticles(this.x + this.w/2, this.y, 15, '#e17055');
+                }
+            }
+            this.dy = 0;
+        } else {
+            this.dy = 0;
+        }
     }
 
     draw() {
+        if (this.collapsed) return;  // Eingestürzte Plattformen nicht zeichnen
+
+        const shakeY = this.type === 'shaking' ? this.shakeOffset : 0;
+
+        // Plattform-Farbe je nach Typ
+        let color = PLATFORM_TYPES[this.type]?.color || '#ecf0f1';
+
+        // Zerbröckelnde Plattform wird roter
+        if (this.type === 'crumbling' && this.crumbleState > 0) {
+            const alpha = 1 - (this.crumbleState * 0.2);
+            ctx.globalAlpha = alpha;
+            // Risse zeichnen
+            if (this.crumbleState >= 1) {
+                ctx.strokeStyle = '#c0392b';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(this.x + this.w * 0.3, this.y);
+                ctx.lineTo(this.x + this.w * 0.4, this.y + this.h);
+                ctx.stroke();
+            }
+            if (this.crumbleState >= 2) {
+                ctx.beginPath();
+                ctx.moveTo(this.x + this.w * 0.7, this.y);
+                ctx.lineTo(this.x + this.w * 0.6, this.y + this.h);
+                ctx.stroke();
+            }
+        }
+
         // Platform Body
-        if (this.type === 'moving') ctx.fillStyle = '#a29bfe'; else ctx.fillStyle = '#ecf0f1'; 
-        ctx.beginPath(); ctx.roundRect(this.x, this.y, this.w, this.h, 5); ctx.fill();
-        
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.roundRect(this.x, this.y + shakeY, this.w, this.h, 5); ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Eis-Plattform: Glitzer-Effekt
+        if (this.type === 'ice') {
+            ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            for (let i = 0; i < 5; i++) {
+                const sparkleX = this.x + 10 + (i * this.w / 5) + Math.sin(frames * 0.1 + i) * 5;
+                const sparkleY = this.y + 5 + shakeY;
+                ctx.beginPath(); ctx.arc(sparkleX, sparkleY, 2, 0, Math.PI*2); ctx.fill();
+            }
+        }
+
+        // Sprungplattform: Feder-Symbol
+        if (this.type === 'bouncy') {
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3;
+            const centerX = this.x + this.w / 2;
+            ctx.beginPath();
+            ctx.moveTo(centerX - 15, this.y + shakeY - 5);
+            for (let i = 0; i < 4; i++) {
+                ctx.lineTo(centerX - 10 + i * 8, this.y + shakeY - 15 - (i % 2) * 10);
+            }
+            ctx.stroke();
+        }
+
         // DEKO: Stufe 1 (ab 10 Pkt): Dicker Schnee oben drauf
-        if (score >= 10) {
+        if (score >= 10 && this.type !== 'ice') {
             ctx.fillStyle = '#fff';
-            ctx.beginPath(); 
-            ctx.roundRect(this.x - 2, this.y - 8, this.w + 4, 15, 8); 
+            ctx.beginPath();
+            ctx.roundRect(this.x - 2, this.y + shakeY - 8, this.w + 4, 15, 8);
             ctx.fill();
-        } else {
-            // Standard Schnee
+        } else if (this.type !== 'ice') {
             ctx.fillStyle = 'rgba(255,255,255,0.4)';
-            ctx.beginPath(); ctx.rect(this.x, this.y, this.w, 10); ctx.fill();
+            ctx.beginPath(); ctx.rect(this.x, this.y + shakeY, this.w, 10); ctx.fill();
         }
 
         // DEKO: Stufe 2 (ab 20 Pkt): Eiszapfen unten
-        if (score >= 20) {
+        if (score >= 20 && this.type !== 'crumbling') {
             ctx.fillStyle = 'rgba(223, 230, 233, 0.8)';
-            for(let i=10; i<this.w-10; i+=25) {
+            for(let i = 10; i < this.w - 10; i += 25) {
                 ctx.beginPath();
-                ctx.moveTo(this.x + i, this.y + this.h);
-                ctx.lineTo(this.x + i + 10, this.y + this.h);
-                ctx.lineTo(this.x + i + 5, this.y + this.h + 15 + Math.sin(i)*5);
+                ctx.moveTo(this.x + i, this.y + this.h + shakeY);
+                ctx.lineTo(this.x + i + 10, this.y + this.h + shakeY);
+                ctx.lineTo(this.x + i + 5, this.y + this.h + shakeY + 15 + Math.sin(i)*5);
                 ctx.fill();
             }
         }
-        
-        // DEKO: Stufe 3 (ab 30 Pkt): Lichterkette oder Tannenzweig
+
+        // DEKO: Stufe 3 (ab 30 Pkt): Lichterkette
         if (score >= 30) {
             ctx.lineWidth = 2;
             ctx.strokeStyle = '#2d3436';
             ctx.beginPath();
-            ctx.moveTo(this.x, this.y + 5);
-            ctx.bezierCurveTo(this.x + this.w/3, this.y + 15, this.x + 2*this.w/3, this.y + 5, this.x + this.w, this.y + 10);
+            ctx.moveTo(this.x, this.y + 5 + shakeY);
+            ctx.bezierCurveTo(this.x + this.w/3, this.y + 15 + shakeY, this.x + 2*this.w/3, this.y + 5 + shakeY, this.x + this.w, this.y + 10 + shakeY);
             ctx.stroke();
-            
+
             this.lights.forEach((l, idx) => {
                 ctx.fillStyle = (Math.floor(frames/10) + idx) % 2 === 0 ? l.color : '#fff';
-                ctx.beginPath(); ctx.arc(this.x + l.x, this.y + 10, 3, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(this.x + l.x, this.y + 10 + shakeY, 3, 0, Math.PI*2); ctx.fill();
             });
         }
 
         // Draw Candle
         if (this.obstacle === 'CANDLE') {
-            ctx.fillStyle = '#e74c3c'; ctx.fillRect(this.obsX, this.y - 30, 10, 30);
+            ctx.fillStyle = '#e74c3c'; ctx.fillRect(this.obsX, this.y + shakeY - 30, 10, 30);
             const fSize = 5 + Math.sin(frames * 0.5) * 2;
-            ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(this.obsX + 5, this.y - 35, fSize, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = 'rgba(230, 126, 34, 0.5)'; ctx.beginPath(); ctx.arc(this.obsX + 5, this.y - 35, fSize*2, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(this.obsX + 5, this.y + shakeY - 35, fSize, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = 'rgba(230, 126, 34, 0.5)'; ctx.beginPath(); ctx.arc(this.obsX + 5, this.y + shakeY - 35, fSize*2, 0, Math.PI*2); ctx.fill();
         }
+
+        // Draw Coins
+        this.coins.forEach(c => {
+            if (!c.collected) {
+                const yHover = this.y + shakeY - 35 + Math.sin(frames * 0.15 + c.x) * 3;
+                ctx.shadowBlur = 8; ctx.shadowColor = '#f1c40f';
+                ctx.font = '20px Arial'; ctx.fillText('🪙', c.x, yHover);
+                ctx.shadowBlur = 0;
+            }
+        });
 
         // Draw Item
         if (this.item) {
-            const yHover = this.y - 40 + Math.sin(frames * 0.1) * 5;
+            const yHover = this.y + shakeY - 40 + Math.sin(frames * 0.1) * 5;
             const info = ITEM_TYPES[this.item];
             ctx.shadowBlur = 10; ctx.shadowColor = info.color;
             ctx.font = '24px Arial'; ctx.fillStyle = '#fff'; ctx.fillText(info.label, this.itemX, yHover);
@@ -487,27 +750,98 @@ function createParticles(x, y, count, color) { for(let i=0; i<count; i++) partic
 // --- LOGIK ---
 function activateEffect(type) {
     AudioEngine.playSfx('powerup');
-    if (type === 'SNOW') { activeEffect = 'slow'; effectTimer = 300; currentSpeed = 3; } 
-    else if (type === 'ROCKET') { activeEffect = 'fast'; effectTimer = 180; currentSpeed = 9; AudioEngine.playSfx('bad'); } 
-    else if (type === 'HEART') { hasRevive = true; } 
-    else if (type === 'GIFT') { activateEffect('SNOW'); hasRevive = true; score += 20; createParticles(cat.x, cat.y, 50, '#f1c40f'); }
+
+    if (type === 'SNOW') {
+        activeEffect = 'slow';
+        effectTimer = 300;
+        currentSpeed = 3;
+    } else if (type === 'ROCKET') {
+        activeEffect = 'fast';
+        effectTimer = 180;
+        currentSpeed = 9;
+        AudioEngine.playSfx('bad');
+    } else if (type === 'HEART') {
+        if (lives < 3) lives++;  // Max 3 Herzen
+        createParticles(cat.x, cat.y, 10, '#ff6b6b');
+    } else if (type === 'GIFT') {
+        // Super-Geschenk: Slow + Herz + 20 Punkte
+        activeEffect = 'slow';
+        effectTimer = 300;
+        currentSpeed = 3;
+        if (lives < 3) lives++;
+        score += 20;
+        createParticles(cat.x, cat.y, 50, '#f1c40f');
+    } else if (type === 'TRIPLE') {
+        // Dreifachsprung für begrenzte Zeit
+        activeEffect = 'triple';
+        effectTimer = 400;
+        maxJumps = 3;
+        createParticles(cat.x, cat.y, 15, '#9b59b6');
+    } else if (type === 'GLIDE') {
+        // Gleiten/Flügel
+        activeEffect = 'glide';
+        effectTimer = 500;
+        createParticles(cat.x, cat.y, 15, '#3498db');
+    } else if (type === 'RAGE') {
+        // Catnip-Rage: Größer werden, Kerzen zerstören
+        activeEffect = 'rage';
+        effectTimer = 300;
+        isRaging = true;
+        rageTimer = 300;
+        createParticles(cat.x, cat.y, 30, '#e74c3c');
+        AudioEngine.playSfx('bad');  // Dramatischer Sound
+    } else if (type === 'COIN') {
+        coins++;
+        createParticles(cat.x, cat.y, 5, '#f1c40f');
+    }
     updateUI();
 }
 
 function updateUI() {
-    iconHeart.classList.toggle('active', hasRevive);
+    // Herzen anzeigen (0-3)
+    if (lives > 0) {
+        iconHearts.classList.add('active');
+        iconHearts.innerText = '❤️'.repeat(lives);
+    } else {
+        iconHearts.classList.remove('active');
+        iconHearts.innerText = '❤️';
+    }
+
     iconSnow.classList.toggle('active', activeEffect === 'slow');
     iconSpeed.classList.toggle('active', activeEffect === 'fast');
+    iconTriple.classList.toggle('active', activeEffect === 'triple');
+    iconGlide.classList.toggle('active', activeEffect === 'glide');
+    iconRage.classList.toggle('active', isRaging);
+
     scoreDisplay.innerText = "Punkte: " + score;
+    coinDisplay.innerText = '🪙 ' + coins;
 }
 
 function startGame() {
-    cat.reset(); platforms.length = 0; score = 0; baseSpeed = 5; currentSpeed = baseSpeed; hasRevive = false; activeEffect = null; effectTimer = 0;
-    platforms.push(new Platform(50, height - 150, 800)); 
-    generatePlatform(); updateUI();
+    cat.reset();
+    platforms.length = 0;
+    score = 0;
+    coins = 0;
+    baseSpeed = 5;
+    currentSpeed = baseSpeed;
+    lives = 0;
+    activeEffect = null;
+    effectTimer = 0;
+    maxJumps = 2;
+    isGliding = false;
+    isRaging = false;
+    rageTimer = 0;
+    bossActive = false;
+    boss = null;
+
+    platforms.push(new Platform(50, height - 150, 800));
+    generatePlatform();
+    updateUI();
+
     startScreen.classList.remove('visible'); startScreen.classList.add('hidden');
     gameOverScreen.classList.remove('visible'); gameOverScreen.classList.add('hidden');
-    AudioEngine.startMusic(); gameState = 'PLAYING';
+    AudioEngine.startMusic();
+    gameState = 'PLAYING';
 }
 
 function generatePlatform() {
@@ -516,33 +850,294 @@ function generatePlatform() {
     let newX = lastPlat.x + lastPlat.w + gap;
     let yVariance = (Math.random() * 160) - 80;
     let newY = lastPlat.originalY + yVariance;
-    if (newY < 200) newY = 200; if (newY > height - 100) newY = height - 100;
-    let type = (score > 15 && Math.random() > 0.7) ? 'moving' : 'normal';
+    if (newY < 200) newY = 200;
+    if (newY > height - 100) newY = height - 100;
+
+    // Gestaffelte Plattform-Typen Einführung
+    let type = 'normal';
+    const rand = Math.random();
+
+    // Verfügbare Typen basierend auf Score sammeln
+    let availableTypes = ['normal'];
+
+    if (score >= PLATFORM_TYPES.shaking.minScore) availableTypes.push('shaking');
+    if (score >= PLATFORM_TYPES.moving.minScore) availableTypes.push('moving');
+    if (score >= PLATFORM_TYPES.crumbling.minScore) availableTypes.push('crumbling');
+    if (score >= PLATFORM_TYPES.ice.minScore) availableTypes.push('ice');
+    if (score >= PLATFORM_TYPES.bouncy.minScore) availableTypes.push('bouncy');
+
+    // 30% Chance für Spezial-Plattform wenn verfügbar
+    if (rand > 0.7 && availableTypes.length > 1) {
+        // Wähle zufällig einen Spezial-Typ (nicht normal)
+        const specialTypes = availableTypes.filter(t => t !== 'normal');
+        type = specialTypes[Math.floor(Math.random() * specialTypes.length)];
+    }
+
     platforms.push(new Platform(newX, newY, 150 + Math.random() * 150, type));
 }
 
 function checkCollision() {
-    cat.grounded = false; cat.onPlatform = null;
+    cat.grounded = false;
+    cat.onPlatform = null;
+
     for (let p of platforms) {
-        if (cat.x + 5 > p.x && cat.x - 5 < p.x + p.w && cat.y + cat.radius >= p.y && cat.y + cat.radius <= p.y + p.h + 15 && cat.vy >= 0) {
-            cat.grounded = true; cat.vy = 0; cat.y = p.y - cat.radius; cat.jumpCount = 0; cat.onPlatform = p;
+        if (p.collapsed) continue;  // Eingestürzte Plattformen ignorieren
+
+        // Plattform-Kollision
+        if (cat.x + 5 > p.x && cat.x - 5 < p.x + p.w &&
+            cat.y + cat.radius >= p.y && cat.y + cat.radius <= p.y + p.h + 15 && cat.vy >= 0) {
+
+            cat.grounded = true;
+            cat.y = p.y - cat.radius;
+            cat.jumpCount = 0;
+            cat.onPlatform = p;
+
+            // Bouncy-Plattform: Super-Sprung!
+            if (p.type === 'bouncy') {
+                cat.vy = -20;  // Extra starker Sprung
+                cat.grounded = false;
+                cat.onPlatform = null;
+                AudioEngine.playSfx('powerup');
+                createParticles(cat.x, cat.y + 20, 10, '#00b894');
+            } else {
+                cat.vy = 0;
+            }
         }
+
+        // Kerzen-Kollision
         if (p.obstacle === 'CANDLE') {
-            if (Math.abs(cat.x - (p.obsX + 5)) < 15 && Math.abs(cat.y - (p.y - 15)) < 25) { if (cat.invincible <= 0) { if (hasRevive) { cat.revive(); p.obstacle = null; } else { gameOver(); } } }
+            if (Math.abs(cat.x - (p.obsX + 5)) < 15 && Math.abs(cat.y - (p.y - 15)) < 25) {
+                if (isRaging) {
+                    // Rage-Modus: Kerze zerstören!
+                    p.obstacle = null;
+                    score += 5;
+                    AudioEngine.playSfx('powerup');
+                    createParticles(p.obsX, p.y - 15, 20, '#f1c40f');
+                } else if (cat.invincible <= 0) {
+                    if (lives > 0) {
+                        cat.revive();
+                        p.obstacle = null;
+                    } else {
+                        gameOver();
+                    }
+                }
+            }
         }
-        if (p.item) { if (Math.abs(cat.x - p.itemX) < 30 && Math.abs(cat.y - (p.y - 40)) < 40) { activateEffect(p.item); p.item = null; } }
-        if (!p.passed && p.x + p.w < cat.x) { score++; p.passed = true; updateUI(); if (score % 5 === 0 && baseSpeed < 9) baseSpeed += 0.2; }
+
+        // Item-Kollision
+        if (p.item) {
+            if (Math.abs(cat.x - p.itemX) < 30 && Math.abs(cat.y - (p.y - 40)) < 40) {
+                activateEffect(p.item);
+                p.item = null;
+            }
+        }
+
+        // Münzen-Kollision
+        p.coins.forEach(c => {
+            if (!c.collected && Math.abs(cat.x - c.x) < 25 && Math.abs(cat.y - (p.y - 35)) < 30) {
+                c.collected = true;
+                coins++;
+                AudioEngine.playSfx('powerup');
+                createParticles(c.x, p.y - 35, 5, '#f1c40f');
+                updateUI();
+            }
+        });
+
+        // Score-Tracking
+        if (!p.passed && p.x + p.w < cat.x) {
+            score++;
+            p.passed = true;
+            updateUI();
+
+            // Geschwindigkeit erhöhen
+            if (score % 5 === 0 && baseSpeed < 9) baseSpeed += 0.2;
+
+            // Boss bei 50 Punkten triggern
+            if (score === 50 && !bossDefeated) {
+                triggerBoss();
+            }
+        }
     }
 }
 
 function gameOver() {
     if (gameState === 'GAMEOVER') return;
-    gameState = 'GAMEOVER'; gameOverTime = Date.now(); finalScoreSpan.innerText = score;
-    gameOverScreen.classList.remove('hidden'); gameOverScreen.classList.add('visible');
-    AudioEngine.stopMusic(); AudioEngine.playSfx('bad');
+    gameState = 'GAMEOVER';
+    gameOverTime = Date.now();
+
+    // Highscore speichern
+    if (score > highscore) {
+        highscore = score;
+        localStorage.setItem('jumpcat-highscore', highscore.toString());
+        finalScoreSpan.innerText = score + ' 🏆 NEUER REKORD!';
+    } else {
+        finalScoreSpan.innerText = score;
+    }
+
+    gameOverScreen.classList.remove('hidden');
+    gameOverScreen.classList.add('visible');
+    AudioEngine.stopMusic();
+    AudioEngine.playSfx('bad');
 }
 
 function resetGame() { startGame(); }
+
+// --- BOSS SYSTEM ---
+class Boss {
+    constructor() {
+        this.x = width + 100;
+        this.y = height / 2;
+        this.size = 80;
+        this.health = 5;
+        this.maxHealth = 5;
+        this.phase = 0;  // 0 = Einflug, 1 = Kampf, 2 = Besiegt
+        this.attackTimer = 0;
+        this.projectiles = [];
+        this.hitTimer = 0;
+    }
+
+    update() {
+        // Einflug-Phase
+        if (this.phase === 0) {
+            this.x -= 2;
+            if (this.x <= width - 150) {
+                this.phase = 1;
+            }
+        }
+
+        // Kampf-Phase
+        if (this.phase === 1) {
+            // Auf und ab schweben
+            this.y = height / 2 + Math.sin(frames * 0.03) * 100;
+
+            // Projektile schießen
+            this.attackTimer++;
+            if (this.attackTimer > 80) {
+                this.attackTimer = 0;
+                this.projectiles.push({
+                    x: this.x - this.size/2,
+                    y: this.y,
+                    vx: -8,
+                    vy: (Math.random() - 0.5) * 4
+                });
+                AudioEngine.playSfx('bad');
+            }
+
+            // Hit-Timer
+            if (this.hitTimer > 0) this.hitTimer--;
+
+            // Rage-Modus trifft Boss!
+            if (isRaging && Math.abs(cat.x - this.x) < this.size && Math.abs(cat.y - this.y) < this.size) {
+                if (this.hitTimer <= 0) {
+                    this.health--;
+                    this.hitTimer = 30;
+                    createParticles(this.x, this.y, 20, '#e74c3c');
+                    AudioEngine.playSfx('powerup');
+
+                    if (this.health <= 0) {
+                        this.phase = 2;
+                        bossDefeated = true;
+                        bossActive = false;
+                        score += 50;
+                        createParticles(this.x, this.y, 50, '#f1c40f');
+                    }
+                }
+            }
+        }
+
+        // Projektile updaten
+        this.projectiles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+        });
+        this.projectiles = this.projectiles.filter(p => p.x > -50);
+
+        // Projektil-Kollision mit Katze
+        this.projectiles.forEach((p, i) => {
+            if (Math.abs(cat.x - p.x) < 20 && Math.abs(cat.y - p.y) < 20) {
+                if (cat.invincible <= 0 && !isRaging) {
+                    if (lives > 0) {
+                        cat.revive();
+                    } else {
+                        gameOver();
+                    }
+                }
+                this.projectiles.splice(i, 1);
+            }
+        });
+    }
+
+    draw() {
+        if (this.phase === 2) return;
+
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Wut-Aura wenn getroffen
+        if (this.hitTimer > 0) {
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+            ctx.beginPath();
+            ctx.arc(0, 0, this.size + 20, 0, Math.PI*2);
+            ctx.fill();
+        }
+
+        // Boss-Körper (Böser Schneemann)
+        ctx.fillStyle = '#ecf0f1';
+        ctx.beginPath(); ctx.arc(0, 30, 40, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(0, -20, 30, 0, Math.PI*2); ctx.fill();
+
+        // Böse Augen
+        ctx.fillStyle = '#e74c3c';
+        ctx.beginPath(); ctx.arc(-10, -25, 6, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(10, -25, 6, 0, Math.PI*2); ctx.fill();
+
+        // Karotten-Nase
+        ctx.fillStyle = '#e67e22';
+        ctx.beginPath();
+        ctx.moveTo(0, -15);
+        ctx.lineTo(25, -10);
+        ctx.lineTo(0, -5);
+        ctx.fill();
+
+        // Zylinder
+        ctx.fillStyle = '#2c3e50';
+        ctx.fillRect(-20, -60, 40, 15);
+        ctx.fillRect(-15, -80, 30, 25);
+
+        // Gesundheitsanzeige
+        ctx.fillStyle = '#c0392b';
+        ctx.fillRect(-30, -100, 60, 10);
+        ctx.fillStyle = '#27ae60';
+        ctx.fillRect(-30, -100, 60 * (this.health / this.maxHealth), 10);
+
+        ctx.restore();
+
+        // Projektile zeichnen (Schneebälle)
+        this.projectiles.forEach(p => {
+            ctx.fillStyle = '#ecf0f1';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#3498db';
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 12, 0, Math.PI*2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        });
+    }
+}
+
+function triggerBoss() {
+    bossActive = true;
+    boss = new Boss();
+    // Rage-Item droppen um Boss bekämpfen zu können
+    if (!isRaging) {
+        const lastPlat = platforms[platforms.length - 1];
+        if (lastPlat) {
+            lastPlat.item = 'RAGE';
+            lastPlat.itemX = lastPlat.x + lastPlat.w / 2;
+        }
+    }
+}
+
 requestAnimationFrame(loop);
 
 function loop() {
@@ -551,18 +1146,82 @@ function loop() {
 
     if (gameState === 'PLAYING') {
         frames++;
-        if (activeEffect) { effectTimer--; if (effectTimer <= 0) activeEffect = null; }
-        let targetSpeed = baseSpeed; if (activeEffect === 'slow') targetSpeed = 3; if (activeEffect === 'fast') targetSpeed = 9;
+
+        // Effekt-Timer
+        if (activeEffect) {
+            effectTimer--;
+            if (effectTimer <= 0) {
+                // Effekt zurücksetzen
+                if (activeEffect === 'triple') maxJumps = 2;
+                if (activeEffect === 'rage') {
+                    isRaging = false;
+                    rageTimer = 0;
+                }
+                activeEffect = null;
+                updateUI();
+            }
+        }
+
+        // Rage-Timer separat (falls Rage ohne activeEffect)
+        if (isRaging && activeEffect !== 'rage') {
+            rageTimer--;
+            if (rageTimer <= 0) {
+                isRaging = false;
+                updateUI();
+            }
+        }
+
+        // Geschwindigkeit anpassen
+        let targetSpeed = baseSpeed;
+        if (activeEffect === 'slow') targetSpeed = 3;
+        if (activeEffect === 'fast') targetSpeed = 9;
+        if (bossActive) targetSpeed = 4;  // Langsamer während Boss
         currentSpeed += (targetSpeed - currentSpeed) * 0.05;
 
-        if (platforms.length > 0) { let lastX = platforms[platforms.length - 1].x; if (lastX < width + 300) generatePlatform(); }
+        // Plattformen generieren
+        if (platforms.length > 0) {
+            let lastX = platforms[platforms.length - 1].x;
+            if (lastX < width + 300) generatePlatform();
+        }
         if (platforms.length > 0 && platforms[0].x + platforms[0].w < -200) platforms.shift();
 
-        platforms.forEach(p => p.update()); cat.update(); checkCollision();
+        // Updates
+        platforms.forEach(p => p.update());
+        cat.update();
+        checkCollision();
+
+        // Boss Update
+        if (bossActive && boss) {
+            boss.update();
+        }
     }
-    platforms.forEach(p => p.draw()); cat.draw();
-    particles.forEach((p, index) => { p.update(); p.draw(); if (p.life <= 0) particles.splice(index, 1); });
-    updateUI(); requestAnimationFrame(loop);
+
+    // Zeichnen
+    platforms.forEach(p => p.draw());
+    cat.draw();
+
+    // Boss zeichnen
+    if (bossActive && boss) {
+        boss.draw();
+
+        // Boss-Hinweis
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.font = 'bold 20px Fredoka One';
+        ctx.textAlign = 'center';
+        ctx.fillText('🎄 BOSS: Böser Schneemann! 🎄', width/2, 50);
+        ctx.fillText('Sammle 😼 Catnip-Rage um anzugreifen!', width/2, 75);
+        ctx.textAlign = 'left';
+    }
+
+    // Partikel
+    particles.forEach((p, index) => {
+        p.update();
+        p.draw();
+        if (p.life <= 0) particles.splice(index, 1);
+    });
+
+    updateUI();
+    requestAnimationFrame(loop);
 }
 
 // Service Worker Registration
