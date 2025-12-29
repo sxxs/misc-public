@@ -186,10 +186,10 @@
 <script>
 /**
  * Weihnachts-Katzen Jump & Run EVOLUTION
- * Version 6.1.1: Boss Fight Fix
+ * Version 6.2: Boss Trigger Fix
  */
 
-const GAME_VERSION = '6.1.1';
+const GAME_VERSION = '6.2';
 
 // Cache-Busting: Redirect wenn Version in URL nicht stimmt
 (function() {
@@ -1050,14 +1050,14 @@ function checkCollision() {
 
             updateUI();
 
-            // Geschwindigkeit erhöhen
+            // Geschwindigkeit erhöhen (basierend auf Plattformen)
             if (score % 5 === 0 && baseSpeed < 9) baseSpeed += 0.2;
-
-            // Boss bei 50 Punkten triggern
-            if (score === 50 && !bossDefeated) {
-                triggerBoss();
-            }
         }
+    }
+
+    // Boss bei 30 Münzen triggern (außerhalb der Plattform-Schleife!)
+    if (coins >= 30 && !bossDefeated && !bossActive) {
+        triggerBoss();
     }
 }
 

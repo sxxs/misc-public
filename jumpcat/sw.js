@@ -1,9 +1,9 @@
 /**
  * Service Worker for Weihnachts-Katzen Jump
- * Version 6.1.1 - Boss Fight Fix
+ * Version 6.2 - Boss Trigger Fix
  */
 
-const CACHE_NAME = 'jumpcat-v6.1.1';
+const CACHE_NAME = 'jumpcat-v6.2';
 const urlsToCache = [
   './',
   './index.html',
