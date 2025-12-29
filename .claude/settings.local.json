@@ -4,7 +4,10 @@
       "Bash(git clone:*)",
       "Bash(git fetch:*)",
       "Bash(git pull:*)",
-      "Skill(feature-dev:feature-dev)"
+      "Skill(feature-dev:feature-dev)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)"
     ]
   }
 }
