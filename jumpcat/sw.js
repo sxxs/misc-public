@@ -1,9 +1,9 @@
 /**
  * Service Worker for Weihnachts-Katzen Jump
- * Version 6.0 - Mega Update
+ * Version 6.1 - Coin Collection & Boss Fight
  */
 
-const CACHE_NAME = 'jumpcat-v6.0';
+const CACHE_NAME = 'jumpcat-v6.1';
 const urlsToCache = [
   './',
   './index.html',
