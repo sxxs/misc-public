@@ -74,8 +74,8 @@
 }
 
 .filter-tab.active {
-    color: var(--color-primary);
-    background: var(--color-primary-light);
+    color: white;
+    background: var(--color-primary);
 }
 
 /* Programs Layout */

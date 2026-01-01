@@ -680,7 +680,7 @@
 
     </style>
 </head>
-<body class="subpage subpage fakultaet-page">
+<body class="subpage fakultaet-page">
     <!-- Skip Links -->
     <nav class="skip-links" aria-label="Sprungnavigation">
         <a href="#main-nav" class="skip-link">Zur Hauptnavigation</a>
@@ -761,21 +761,38 @@
             </button>
         </div>
     </div>
-    <!-- Hero -->
-    <section class="studiengang-hero">
+    <!-- Breadcrumb (kompakt) -->
+    <nav class="breadcrumb breadcrumb--compact" aria-label="Breadcrumb">
         <div class="container">
-            <span class="hero-degree">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-                    <path d="M6 12v5c0 2 4 3 6 3s6-1 6-3v-5"/>
-                </svg>
-                Bachelor of Science
-            </span>
-            <h1>International Information Systems Management</h1>
-            <p class="hero-subtitle">Internationales Wirtschaftsinformatik-Studium mit Auslandssemester.</p>
+            <ol class="breadcrumb-list">
+                <li><a href="../index.html">Startseite</a></li>
+                <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
+                <li><a href="index.html">WIAI</a></li>
+                
+                <li aria-current="page">IISM B.Sc.</li>
+            </ol>
         </div>
+    </nav>
+    <!-- Page Hero -->
+    <section class="page-hero page-hero--fakultaet" style="--fakultaet-color: var(--color-primary);">
+        <div class="container">
+            <div class="page-hero-content">
+                
+                <span class="page-hero-degree">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                        <path d="M6 12v5c0 2 4 3 6 3s6-1 6-3v-5"/>
+                    </svg>
+                    Bachelor of Science
+                </span>
+                
+                <span class="page-hero-label"></span>
+                <h1 class="page-hero-title">International Information Systems Management</h1>
+                <p class="page-hero-subtitle">Internationales Wirtschaftsinformatik-Studium mit Auslandssemester.</p>
+            </div>
+        </div>
+        
     </section>
-
     <!-- WIAI Subnavigation -->
     <nav class="subnav" aria-label="WIAI Navigation">
         <div class="container">
@@ -784,7 +801,7 @@
                     <li><a href="index.html">Übersicht</a></li>
                     <li><a href="studium.html">Studium</a></li>
                     <li><a href="im-studium.html">Im Studium</a></li>
-                    <li><a href="studiengaenge.html">Studiengänge</a></li>
+                    <li><a href="studiengaenge.html" class="active" aria-current="page">Studiengänge</a></li>
                     <li><a href="forschung.html">Forschung</a></li>
                     <li><a href="karriere.html">Karriere</a></li>
                 </ul>
@@ -797,20 +814,9 @@
         </div>
     </nav>
 
-    <!-- Breadcrumb -->
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-        <div class="container">
-            <ol class="breadcrumb-list">
-                <li><a href="{{root_path}}index.html">Startseite</a></li>
-                <li><a href="index.html">Fakultät WIAI</a></li>
-                <li><a href="studiengaenge.html">Studiengänge</a></li>
-                <li aria-current="page">IISM B.Sc.</li>
-            </ol>
-        </div>
-    </nav>
-
-    <!-- Placeholder Content -->
+    <!-- Main Content -->
     <main id="main-content">
+        <!-- Placeholder Content -->
         <section class="placeholder-section">
             <div class="container">
                 <div class="placeholder-content">
@@ -825,6 +831,7 @@
                 </div>
             </div>
         </section>
+
     </main>
     <!-- Footer -->
     <footer class="site-footer" id="footer" role="contentinfo">

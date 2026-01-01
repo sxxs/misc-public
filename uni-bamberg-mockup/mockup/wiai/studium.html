@@ -93,8 +93,8 @@
             </button>
         </div>
     </div>
-    <!-- Breadcrumb -->
-    <nav class="breadcrumb" aria-label="Breadcrumb">
+    <!-- Breadcrumb (kompakt) -->
+    <nav class="breadcrumb breadcrumb--compact" aria-label="Breadcrumb">
         <div class="container">
             <ol class="breadcrumb-list">
                 <li><a href="../index.html">Startseite</a></li>
@@ -105,6 +105,18 @@
             </ol>
         </div>
     </nav>
+    <!-- Page Hero -->
+    <section class="page-hero page-hero--fakultaet" style="--fakultaet-color: var(--color-primary);">
+        <div class="container">
+            <div class="page-hero-content">
+                
+                <span class="page-hero-label">Fakultät WIAI</span>
+                <h1 class="page-hero-title">Studium</h1>
+                <p class="page-hero-subtitle">Informatik studieren in Bamberg - praxisnah, zukunftsorientiert und persönlich</p>
+            </div>
+        </div>
+        
+    </section>
     <!-- WIAI Subnavigation -->
     <nav class="subnav" aria-label="WIAI Navigation">
         <div class="container">
@@ -128,32 +140,6 @@
 
     <!-- Main Content -->
     <main id="main-content">
-        <!-- Page Hero -->
-        <section class="page-hero page-hero--fakultaet" style="--fakultaet-color: var(--color-primary);">
-            <div class="container">
-                <div class="page-hero-content">
-                    <span class="page-hero-label">Fakultät WIAI</span>
-                    <h1 class="page-hero-title">Studium</h1>
-                    <p class="page-hero-subtitle">Informatik studieren in Bamberg - praxisnah, zukunftsorientiert und persönlich</p>
-                </div>
-                <div class="hero-stats">
-                    <div class="hero-stat">
-                        <span class="hero-stat-number">1.800+</span>
-                        <span class="hero-stat-label">Studierende</span>
-                    </div>
-                    <div class="hero-stat">
-                        <span class="hero-stat-number">8</span>
-                        <span class="hero-stat-label">Studiengänge</span>
-                    </div>
-                    <div class="hero-stat">
-                        <span class="hero-stat-number">92%</span>
-                        <span class="hero-stat-label">Berufseinstieg</span>
-                    </div>
-                </div>
-            </div>
-            <div class="page-hero-accent"></div>
-        </section>
-
         <!-- Quick Actions -->
         <section class="content-section" style="padding-block: var(--space-8);">
             <div class="container">
@@ -259,7 +245,7 @@
         <!-- Feature Spotlight: Warum Bamberg? -->
         <section class="feature-spotlight">
             <div class="feature-spotlight-image">
-                <img src="../img/wiai-campus.jpg" alt="WIAI Campus am Erba-Gelände" loading="lazy">
+                <img src="https://picsum.photos/seed/wiai-campus/800/600" alt="WIAI Campus am Erba-Gelände" loading="lazy">
             </div>
             <div class="feature-spotlight-content">
                 <span class="feature-spotlight-label">Warum Bamberg?</span>
@@ -279,14 +265,14 @@
         <section class="content-section">
             <div class="container">
                 <div class="quote-block quote-block--with-image">
-                    <div class="quote-image">
-                        <img src="../img/student-portrait.jpg" alt="Lisa M., Absolventin" loading="lazy">
+                    <div class="quote-block-image">
+                        <img src="https://picsum.photos/seed/lisa-portrait/400/400" alt="Lisa M., Absolventin" loading="lazy">
                     </div>
-                    <div class="quote-content">
-                        <blockquote class="quote-text">
+                    <div class="quote-block-content">
+                        <blockquote class="quote-block-text">
                             "Das Studium an der WIAI hat mir nicht nur technisches Wissen vermittelt, sondern auch die Fähigkeit, komplexe Probleme strukturiert anzugehen. Nach meinem Abschluss hatte ich drei Jobangebote."
                         </blockquote>
-                        <cite class="quote-author">
+                        <cite class="quote-block-author">
                             <strong>Lisa M.</strong>
                             <span>Absolventin B.Sc. Angewandte Informatik, jetzt Software Engineer bei SAP</span>
                         </cite>
