@@ -128,8 +128,24 @@ def build_page(content_path: Path, config: dict) -> str:
         subnav = render_template(load_partial(config["subnav"]), context)
 
     # Seite zusammenbauen
+    # WIAI-Seiten: Breadcrumb -> Hero -> Subnav -> Content
+    if config.get("wiai_page"):
+        # Breadcrumb (kompakt) - außer bei no_breadcrumb
+        wiai_breadcrumb = ""
+        if not config.get("no_breadcrumb"):
+            wiai_breadcrumb = render_template(load_partial("breadcrumb-wiai"), context)
+
+        # Hero aus Partial laden
+        hero = ""
+        if config.get("hero_title"):
+            hero = render_template(load_partial("hero-wiai"), context)
+
+        # Subnav immer laden für WIAI-Seiten
+        wiai_subnav = render_template(load_partial("subnav-wiai"), context)
+
+        page = header + wiai_breadcrumb + hero + wiai_subnav + "\n    <!-- Main Content -->\n    <main id=\"main-content\">\n" + content + "\n    </main>\n" + footer
     # Bei custom_structure enthält content bereits alles (Hero, Subnav, Main)
-    if config.get("custom_structure"):
+    elif config.get("custom_structure"):
         page = header + content + footer
     else:
         # Standard: Content wird in <main> gewrappt

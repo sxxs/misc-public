@@ -1,0 +1,20 @@
+    <!-- Page Hero -->
+    <section class="page-hero page-hero--fakultaet" style="--fakultaet-color: var(--color-primary);">
+        <div class="container">
+            <div class="page-hero-content">
+                {{#hero_degree}}
+                <span class="page-hero-degree">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                        <path d="M6 12v5c0 2 4 3 6 3s6-1 6-3v-5"/>
+                    </svg>
+                    {{hero_degree}}
+                </span>
+                {{/hero_degree}}
+                {{^hero_degree}}<span class="page-hero-label">{{hero_label}}</span>{{/hero_degree}}
+                <h1 class="page-hero-title">{{hero_title}}</h1>
+                {{#hero_subtitle}}<p class="page-hero-subtitle">{{hero_subtitle}}</p>{{/hero_subtitle}}
+            </div>
+        </div>
+        {{#hero_accent}}<div class="page-hero-accent"></div>{{/hero_accent}}
+    </section>

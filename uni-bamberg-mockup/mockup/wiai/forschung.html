@@ -538,7 +538,7 @@
 
     </style>
 </head>
-<body class="subpage subpage fakultaet-page">
+<body class="subpage fakultaet-page">
     <!-- Skip Links -->
     <nav class="skip-links" aria-label="Sprungnavigation">
         <a href="#main-nav" class="skip-link">Zur Hauptnavigation</a>
@@ -619,15 +619,30 @@
             </button>
         </div>
     </div>
-    <!-- Hero -->
-    <section class="forschung-hero">
+    <!-- Breadcrumb (kompakt) -->
+    <nav class="breadcrumb breadcrumb--compact" aria-label="Breadcrumb">
         <div class="container">
-            <a href="index.html" class="page-hero-label">Fakultät WIAI</a>
-            <h1>Forschung</h1>
-            <p class="hero-subtitle">Von Künstlicher Intelligenz über Data Engineering bis zur Mensch-Computer-Interaktion - Forschung an der Fakultät WIAI</p>
+            <ol class="breadcrumb-list">
+                <li><a href="../index.html">Startseite</a></li>
+                <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
+                <li><a href="index.html">WIAI</a></li>
+                
+                <li aria-current="page">Forschung</li>
+            </ol>
         </div>
+    </nav>
+    <!-- Page Hero -->
+    <section class="page-hero page-hero--fakultaet" style="--fakultaet-color: var(--color-primary);">
+        <div class="container">
+            <div class="page-hero-content">
+                
+                <span class="page-hero-label">Fakultät WIAI</span>
+                <h1 class="page-hero-title">Forschung</h1>
+                <p class="page-hero-subtitle">Von Künstlicher Intelligenz über Data Engineering bis zur Mensch-Computer-Interaktion</p>
+            </div>
+        </div>
+        
     </section>
-
     <!-- WIAI Subnavigation -->
     <nav class="subnav" aria-label="WIAI Navigation">
         <div class="container">
@@ -651,11 +666,10 @@
 
     <!-- Main Content -->
     <main id="main-content">
-
         <!-- Schwerpunkte -->
         <section class="schwerpunkte-section">
             <div class="container">
-                <div class="section-header">
+                <div class="section-header--numbered">
                     <span class="section-number">01</span>
                     <div class="section-title-group">
                         <h2>Forschungsschwerpunkte</h2>
@@ -777,7 +791,7 @@
         <!-- Forschungszentren -->
         <section class="projekte-section">
             <div class="container">
-                <div class="section-header">
+                <div class="section-header--numbered">
                     <span class="section-number">02</span>
                     <div class="section-title-group">
                         <h2>Forschungszentren</h2>
@@ -828,7 +842,7 @@
         <!-- Lehrstühle (gekürzt für Content-Datei, nur Beispiele) -->
         <section class="lehrstuehle-section">
             <div class="container">
-                <div class="section-header">
+                <div class="section-header--numbered">
                     <span class="section-number">03</span>
                     <div class="section-title-group">
                         <h2>Lehrstühle & Professuren</h2>
@@ -892,7 +906,7 @@
         <!-- Partner -->
         <section class="partner-section">
             <div class="container">
-                <div class="section-header">
+                <div class="section-header--numbered">
                     <span class="section-number">04</span>
                     <div class="section-title-group">
                         <h2>Kooperationspartner</h2>
@@ -936,6 +950,7 @@
                 </div>
             </div>
         </section>
+
     </main>
     <!-- Footer -->
     <footer class="site-footer" id="footer" role="contentinfo">

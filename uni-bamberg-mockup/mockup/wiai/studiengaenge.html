@@ -89,8 +89,8 @@
 }
 
 .filter-tab.active {
-    color: var(--color-primary);
-    background: var(--color-primary-light);
+    color: white;
+    background: var(--color-primary);
 }
 
 /* Programs Layout */
@@ -337,7 +337,7 @@
 
     </style>
 </head>
-<body class="subpage subpage fakultaet-page">
+<body class="subpage fakultaet-page">
     <!-- Skip Links -->
     <nav class="skip-links" aria-label="Sprungnavigation">
         <a href="#main-nav" class="skip-link">Zur Hauptnavigation</a>
@@ -418,15 +418,30 @@
             </button>
         </div>
     </div>
-    <!-- Hero -->
-    <section class="studiengaenge-hero">
+    <!-- Breadcrumb (kompakt) -->
+    <nav class="breadcrumb breadcrumb--compact" aria-label="Breadcrumb">
         <div class="container">
-            <a href="index.html" class="page-hero-label">Fakultät WIAI</a>
-            <h1>Studiengänge</h1>
-            <p class="hero-subtitle">Bachelor und Master in Informatik, Wirtschaftsinformatik und interdisziplinären Programmen</p>
+            <ol class="breadcrumb-list">
+                <li><a href="../index.html">Startseite</a></li>
+                <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
+                <li><a href="index.html">WIAI</a></li>
+                
+                <li aria-current="page">Studiengänge</li>
+            </ol>
         </div>
+    </nav>
+    <!-- Page Hero -->
+    <section class="page-hero page-hero--fakultaet" style="--fakultaet-color: var(--color-primary);">
+        <div class="container">
+            <div class="page-hero-content">
+                
+                <span class="page-hero-label">Fakultät WIAI</span>
+                <h1 class="page-hero-title">Studiengänge</h1>
+                <p class="page-hero-subtitle">Bachelor und Master in Informatik, Wirtschaftsinformatik und interdisziplinären Programmen</p>
+            </div>
+        </div>
+        
     </section>
-
     <!-- WIAI Subnavigation -->
     <nav class="subnav" aria-label="WIAI Navigation">
         <div class="container">
@@ -448,6 +463,8 @@
         </div>
     </nav>
 
+    <!-- Main Content -->
+    <main id="main-content">
     <!-- Filter -->
     <section class="filter-section">
         <div class="container">
@@ -459,8 +476,6 @@
         </div>
     </section>
 
-    <!-- Main Content -->
-    <main id="main-content">
         <section class="programs-section">
             <div class="container">
 
@@ -716,7 +731,6 @@
                 </div>
             </div>
         </section>
-    </main>
 
     <script>
         // Filter functionality
@@ -743,6 +757,8 @@
             });
         });
     </script>
+
+    </main>
     <!-- Footer -->
     <footer class="site-footer" id="footer" role="contentinfo">
         <div class="footer-main">
