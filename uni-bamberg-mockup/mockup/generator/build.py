@@ -42,6 +42,7 @@ def render_template(template: str, context: dict) -> str:
     Einfaches Template-Rendering:
     - {{variable}} -> Ersetzung
     - {{#flag}}...{{/flag}} -> Bedingte Blöcke
+    - {{^flag}}...{{/flag}} -> Invertierte Blöcke
     """
     result = template
 
@@ -50,11 +51,36 @@ def render_template(template: str, context: dict) -> str:
     def replace_conditional(match):
         flag = match.group(1)
         content = match.group(2)
-        return content if context.get(flag) else ""
+        value = context.get(flag)
+
+        if isinstance(value, list):
+            rendered_items = []
+            for item in value:
+                if isinstance(item, dict):
+                    merged_context = {**context, **item}
+                else:
+                    merged_context = {**context, flag: item}
+                rendered_items.append(render_template(content, merged_context))
+            return "".join(rendered_items)
+
+        return content if value else ""
 
     result = re.sub(
         r'\{\{#(\w+)\}\}(.*?)\{\{/\1\}\}',
         replace_conditional,
+        result,
+        flags=re.DOTALL
+    )
+
+    # Invertierte Blöcke
+    def replace_inverted(match):
+        flag = match.group(1)
+        content = match.group(2)
+        return content if not context.get(flag) else ""
+
+    result = re.sub(
+        r'\{\{\^(\w+)\}\}(.*?)\{\{/\1\}\}',
+        replace_inverted,
         result,
         flags=re.DOTALL
     )
@@ -82,6 +108,23 @@ def build_page(content_path: Path, config: dict) -> str:
     root_path = "../" * depth if depth > 0 else ""
     css_path = root_path
     wiai_path = f"{root_path}wiai/" if depth == 0 else ""
+
+    # Klassen bereinigen, um doppelte Basisklassen zu vermeiden
+    body_class = config.get("body_class", "")
+    if body_class:
+        classes = [cls for cls in body_class.split() if cls and cls != "subpage"]
+        body_class = " ".join(dict.fromkeys(classes))
+    config["body_class"] = body_class
+
+    # Titel zusammensetzen, Duplikate vermeiden
+    title = config.get("title", "")
+    title_lower = title.lower()
+    if "universitat bamberg" in title_lower or "universität bamberg" in title_lower:
+        config["title_full"] = title
+    elif title:
+        config["title_full"] = f"{title} | Universitat Bamberg"
+    else:
+        config["title_full"] = "Universitat Bamberg"
 
     # Kontext fur Templates
     context = {
