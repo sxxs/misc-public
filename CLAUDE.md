@@ -11,6 +11,7 @@ misc-public/
 ├── pocket-heist/              # Stealth strategy game (v2.4.x)
 ├── multiplication-troll-game/ # Math learning game (v1.2.x)
 ├── jumpcat/                   # Christmas cat jump & run (v6.2)
+├── neon-mind/                 # 2-player reaction game (v1.0.0)
 ├── wiai25-enhance/            # Static demo
 ├── uni-bamberg-wrapper/       # University website wrapper with CORS proxy
 ├── uni-bamberg-mockup/        # Mockup and crawler for uni-bamberg
@@ -24,6 +25,7 @@ All projects are deployed via GitHub Pages from the `main` branch:
 - https://sxxs.github.io/misc-public/pocket-heist/
 - https://sxxs.github.io/misc-public/multiplication-troll-game/
 - https://sxxs.github.io/misc-public/jumpcat/
+- https://sxxs.github.io/misc-public/neon-mind/
 - https://sxxs.github.io/misc-public/wiai25-enhance/
 
 ### GitHub Pages Configuration
@@ -117,6 +119,32 @@ Christmas-themed jump & run game with a cat (v6.2).
 - Generative Christmas music (Web Audio API)
 - localStorage for highscore (coin-based)
 - Combo text animations and visual effects
+
+### Neon Mind (Panic Edition)
+
+Fast-paced 2-player reaction game (v1.0.0).
+
+**Gameplay:**
+- Two players face each other on one device (split screen, top rotated 180°)
+- A shape flashes briefly in the center
+- Players race to tap the matching shape from 4 options
+- First to 10 points wins
+
+**Mechanics:**
+- Correct answer: +1 point
+- Wrong answer: -1 point (can't go below 0)
+- Leader handicap: flash duration decreases as point lead grows
+- Base flash time: 500ms, minimum: 100ms
+
+**Shapes:**
+- Tetris-style pieces: I, O, T, S, Z, J, L, X
+- Easter egg shapes (20% chance): Glider, Space Invader, Pac-Man
+
+**Technical:**
+- Single-file architecture (React via CDN)
+- Tailwind CSS for styling
+- Web Audio API for SFX and synthwave music
+- No build step required
 
 ### Uni Bamberg Wrapper
 
