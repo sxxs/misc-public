@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Neon Mind - Panic Edition</title>
+    <meta name="description" content="Neon Mind Panic Edition - Ein schnelles 2-Spieler Reaktionsspiel">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- React -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+        html, body, #root {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        body {
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        }
+        @keyframes zoom-in {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .animate-in {
+            animation: zoom-in 0.15s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        const { useState, useEffect, useCallback } = React;
+
+        /* --- UTILS --- */
+        const shuffleArray = (array) => {
+            const newArr = [...array];
+            for (let i = newArr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+            }
+            return newArr;
+        };
+
+        /* --- AUDIO ENGINE --- */
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        const playSfx = (type) => {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            switch (type) {
+                case 'tick':
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(220, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                    break;
+                case 'flash':
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(110, now);
+                    osc.frequency.exponentialRampToValueAtTime(55, now + 0.3);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                    break;
+                case 'correct': {
+                    const osc2 = audioCtx.createOscillator();
+                    const gain2 = audioCtx.createGain();
+                    osc2.connect(gain2);
+                    gain2.connect(audioCtx.destination);
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(1046.50, now);
+                    gain2.gain.setValueAtTime(0.05, now);
+                    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                    osc2.start(now);
+                    osc2.stop(now + 0.4);
+                    break;
+                }
+                case 'wrong':
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(100, now);
+                    osc.frequency.linearRampToValueAtTime(50, now + 0.3);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                    break;
+                case 'win':
+                    [0, 0.1, 0.2].forEach((t, i) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.type = 'triangle';
+                        o.frequency.value = [440, 554, 659][i];
+                        g.gain.setValueAtTime(0.2, now + t);
+                        g.gain.linearRampToValueAtTime(0, now + t + 1.0);
+                        o.start(now + t);
+                        o.stop(now + t + 1.0);
+                    });
+                    break;
+            }
+        };
+
+        // Music Sequencer (Synthwave Style)
+        const musicEngine = {
+            isPlaying: false,
+            timeoutId: null,
+            step: 0,
+            tempo: 130,
+
+            start() {
+                if (this.isPlaying) return;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                this.isPlaying = true;
+                this.step = 0;
+                this.scheduleNextNote();
+            },
+
+            stop() {
+                this.isPlaying = false;
+                if (this.timeoutId) clearTimeout(this.timeoutId);
+            },
+
+            scheduleNextNote() {
+                if (!this.isPlaying) return;
+
+                const secPerBeat = 60.0 / this.tempo;
+                const stepTime = secPerBeat / 4;
+                const now = audioCtx.currentTime;
+
+                const isBassStep = this.step % 2 === 0;
+
+                if (isBassStep) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.type = 'sawtooth';
+                    const freq = (Math.floor(this.step / 32) % 2 === 0) ? 55.00 : 43.65;
+
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                }
+
+                const melodyPattern = [
+                    220, null, 261, null,
+                    null, null, 196, null,
+                    220, null, null, null,
+                    164, null, 196, null,
+
+                    220, null, 261, null,
+                    329, null, 261, null,
+                    220, null, null, null,
+                    null, null, null, null
+                ];
+
+                const note = melodyPattern[this.step % 32];
+
+                if (note) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.type = 'square';
+                    osc.frequency.value = note;
+
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                }
+
+                const isKick = this.step % 8 === 0;
+                const isSnare = this.step % 8 === 4;
+
+                if (isKick) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.frequency.setValueAtTime(100, now);
+                    osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    gain.gain.setValueAtTime(0.5, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                }
+
+                if (isSnare) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.type = 'triangle';
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.linearRampToValueAtTime(100, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                }
+
+                this.step++;
+                this.timeoutId = setTimeout(() => {
+                    this.scheduleNextNote();
+                }, stepTime * 1000);
+            }
+        };
+
+        /* --- ASSETS --- */
+        const SHAPES = [
+            { id: 'I', color: 'text-cyan-400', path: 'M4 4h4v16H4z' },
+            { id: 'O', color: 'text-yellow-400', path: 'M4 4h16v16H4z' },
+            { id: 'T', color: 'text-purple-400', path: 'M4 4h16v6H14v10h-4V10H4z' },
+            { id: 'S', color: 'text-green-400', path: 'M12 4h8v8h-8v8H4v-8h8z' },
+            { id: 'Z', color: 'text-red-400', path: 'M4 4h8v8h8v8h-8v-8H4z' },
+            { id: 'J', color: 'text-blue-400', path: 'M14 4h6v16H4v-6h10z' },
+            { id: 'L', color: 'text-orange-400', path: 'M4 4h6v10h10v6H4z' },
+            { id: 'X', color: 'text-pink-400', path: 'M4 4l16 16M20 4L4 20' }
+        ];
+
+        const EASTER_EGGS = [
+            { id: 'glider', color: 'text-emerald-400', isEgg: true, path: 'M10 4h6v6h-6z M16 10h6v6h-6z M16 16h6v6h-6z M10 16h-6v6h6z M4 10h6v6H4z' },
+            { id: 'invader', color: 'text-lime-400', isEgg: true, path: 'M2 8h2v2H2zm4 0h2v2H6zm8 0h2v2h-2zm4 0h2v2h-2zM4 6h16v2H4zm2-2h4v2H6zm8 0h4v2h-4zM2 10h20v8H2z' },
+            { id: 'pac', color: 'text-yellow-300', isEgg: true, path: 'M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16zm4-12h2v2h-2z' },
+        ];
+
+        const ALL_PATTERNS = [...SHAPES, ...EASTER_EGGS];
+
+        const ShapeIcon = ({ shape, className = "" }) => (
+            <svg viewBox="0 0 24 24" className={`${shape.color} ${className}`} style={{filter: 'drop-shadow(0 0 15px currentColor)'}}>
+                {shape.id === 'X' ? (
+                    <path d={shape.path} stroke="currentColor" strokeWidth="4" strokeLinecap="round" fill="none" />
+                ) : (
+                    <path d={shape.path} fill="currentColor" />
+                )}
+            </svg>
+        );
+
+        /* --- ICON COMPONENTS --- */
+        const PlayIcon = () => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="6 3 20 12 6 21 6 3"></polygon>
+            </svg>
+        );
+
+        const TrophyIcon = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                <path d="M4 22h16"></path>
+                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+            </svg>
+        );
+
+        const VolumeIcon = ({ size = 24, muted = false }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                {muted ? (
+                    <line x1="22" y1="9" x2="16" y2="15"></line>
+                ) : (
+                    <>
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                    </>
+                )}
+                {muted && <line x1="16" y1="9" x2="22" y2="15"></line>}
+            </svg>
+        );
+
+        const MusicIcon = ({ on = false }) => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={on ? 'text-green-400' : ''}>
+                <path d="M9 18V5l12-2v13"></path>
+                <circle cx="6" cy="18" r="3"></circle>
+                <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+        );
+
+        /* --- GAME LOGIC --- */
+        const createPlayerRound = () => {
+            const isEgg = Math.random() < 0.2;
+            const pool = isEgg ? EASTER_EGGS : SHAPES;
+            const target = pool[Math.floor(Math.random() * pool.length)];
+            const others = ALL_PATTERNS.filter(s => s.id !== target.id);
+            const decoys = shuffleArray(others).slice(0, 3);
+            const options = shuffleArray([target, ...decoys]);
+            return { target, options };
+        };
+
+        const PlayerZone = ({ id, score, options, feedback, onInput, rotate, disabled }) => {
+            return (
+                <div className={`flex-1 flex flex-col p-3 ${rotate ? 'rotate-180' : ''}`}>
+                    <div className="flex justify-between items-center mb-2 px-2">
+                        <span className="text-xs font-bold text-slate-600 tracking-widest">P{id}</span>
+                        <span className={`text-5xl font-black tabular-nums transition-colors duration-300 ${feedback === 'wrong' ? 'text-red-500' : 'text-slate-200'}`}>
+                            {score}
+                        </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 h-full">
+                        {options ? options.map((shape, idx) => (
+                            <button
+                                key={idx}
+                                disabled={disabled}
+                                onPointerDown={(e) => {
+                                    e.preventDefault();
+                                    if (!disabled) onInput(shape.id);
+                                }}
+                                className={`
+                                    relative flex items-center justify-center rounded-lg border-2
+                                    transition-all duration-75 touch-manipulation
+                                    ${feedback === 'correct' && !disabled ? 'opacity-50' : ''}
+                                    ${disabled
+                                        ? 'bg-slate-900 border-slate-800 opacity-40 cursor-not-allowed'
+                                        : 'bg-slate-800 border-slate-700 hover:border-cyan-500/50 active:bg-slate-700 active:scale-95'
+                                    }
+                                `}
+                            >
+                                <ShapeIcon shape={shape} className="w-14 h-14 sm:w-16 sm:h-16 opacity-90" />
+                            </button>
+                        )) : (
+                            [1,2,3,4].map(i => <div key={i} className="bg-slate-900/20 rounded-lg animate-pulse"></div>)
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        function Game() {
+            const [phase, setPhase] = useState('menu');
+            const [count, setCount] = useState(3);
+            const [scores, setScores] = useState({ p1: 0, p2: 0 });
+
+            const [roundData, setRoundData] = useState(null);
+
+            const [showTargetP1, setShowTargetP1] = useState(false);
+            const [showTargetP2, setShowTargetP2] = useState(false);
+
+            const [feedbackP1, setFeedbackP1] = useState(null);
+            const [feedbackP2, setFeedbackP2] = useState(null);
+
+            const [musicOn, setMusicOn] = useState(false);
+
+            const WINNING_SCORE = 10;
+            const BASE_TIME = 500;
+            const MIN_TIME = 100;
+
+            useEffect(() => {
+                return () => musicEngine.stop();
+            }, []);
+
+            useEffect(() => {
+                if (musicOn && phase !== 'menu' && phase !== 'end') {
+                    musicEngine.start();
+                } else {
+                    musicEngine.stop();
+                }
+            }, [musicOn, phase]);
+
+            const startRound = useCallback(() => {
+                setRoundData({
+                    p1: createPlayerRound(),
+                    p2: createPlayerRound()
+                });
+                setFeedbackP1(null);
+                setFeedbackP2(null);
+                setShowTargetP1(false);
+                setShowTargetP2(false);
+                setPhase('countdown');
+                setCount(3);
+            }, []);
+
+            const startGame = () => {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                setScores({ p1: 0, p2: 0 });
+                setPhase('countdown');
+                startRound();
+            };
+
+            const triggerFlash = useCallback(() => {
+                setPhase('input');
+                playSfx('flash');
+                setShowTargetP1(true);
+                setShowTargetP2(true);
+
+                const diff = scores.p1 - scores.p2;
+
+                const p1Duration = diff > 0
+                    ? Math.max(MIN_TIME, BASE_TIME - (diff * 100))
+                    : BASE_TIME;
+
+                const p2Duration = diff < 0
+                    ? Math.max(MIN_TIME, BASE_TIME - (Math.abs(diff) * 100))
+                    : BASE_TIME;
+
+                setTimeout(() => setShowTargetP1(false), p1Duration);
+                setTimeout(() => setShowTargetP2(false), p2Duration);
+            }, [scores.p1, scores.p2]);
+
+            useEffect(() => {
+                if (phase === 'countdown') {
+                    if (count > 0) {
+                        playSfx('tick');
+                        const t = setTimeout(() => setCount(c => c - 1), 600);
+                        return () => clearTimeout(t);
+                    } else {
+                        triggerFlash();
+                    }
+                }
+            }, [phase, count, triggerFlash]);
+
+            const handleInput = (player, shapeId) => {
+                if (phase !== 'input') return;
+
+                const pKey = player === 1 ? 'p1' : 'p2';
+                const isCorrect = shapeId === roundData[pKey].target.id;
+                const setFeedback = player === 1 ? setFeedbackP1 : setFeedbackP2;
+
+                if (isCorrect) {
+                    playSfx('correct');
+                    setFeedback('correct');
+
+                    const newScore = scores[pKey] + 1;
+                    setScores(s => ({ ...s, [pKey]: newScore }));
+
+                    if (newScore >= WINNING_SCORE) {
+                        setPhase('end');
+                        playSfx('win');
+                    } else {
+                        setPhase('result');
+                        setTimeout(startRound, 1000);
+                    }
+                } else {
+                    playSfx('wrong');
+                    setFeedback('wrong');
+
+                    const newScore = Math.max(0, scores[pKey] - 1);
+                    setScores(s => ({ ...s, [pKey]: newScore }));
+
+                    setPhase('result');
+                    setTimeout(startRound, 1000);
+                }
+            };
+
+            const toggleMusic = () => {
+                setMusicOn(!musicOn);
+            };
+
+            return (
+                <div className="fixed inset-0 bg-slate-950 text-white select-none overflow-hidden touch-none flex flex-col font-mono">
+
+                    {/* --- MENU --- */}
+                    {phase === 'menu' && (
+                        <div className="absolute inset-0 z-50 bg-slate-900/95 flex flex-col items-center justify-center p-6 text-center">
+                            <div className="mb-8">
+                                <h1 className="text-6xl font-black italic tracking-tighter text-cyan-400" style={{textShadow: '0 0 15px rgba(34,211,238,0.8)'}}>
+                                    NEON<br/>MIND
+                                </h1>
+                                <div className="text-pink-500 font-bold tracking-widest text-xl mt-2 animate-pulse">PANIC EDITION</div>
+                            </div>
+
+                            <button
+                                onClick={startGame}
+                                className="group relative px-12 py-6 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-black text-2xl rounded-sm transition-transform active:scale-95"
+                                style={{transform: 'skewX(-10deg)'}}
+                            >
+                                <span style={{display: 'inline-block', transform: 'skewX(10deg)'}}>START</span>
+                            </button>
+
+                            <div className="mt-8 flex gap-4 text-slate-500 text-sm">
+                                <span>🔴 Fehler: -1</span>
+                                <span>⚡ Speed: Extrem</span>
+                            </div>
+
+                            <button onClick={toggleMusic} className="mt-8 text-slate-400 hover:text-white flex gap-2 items-center">
+                                <MusicIcon on={musicOn} />
+                                {musicOn ? "Musik: AN" : "Musik: AUS"}
+                            </button>
+                        </div>
+                    )}
+
+                    {/* --- END --- */}
+                    {phase === 'end' && (
+                        <div className="absolute inset-0 z-50 bg-black/90 flex flex-col items-center justify-center animate-in">
+                            <TrophyIcon size={100} className="text-yellow-400 mb-6 animate-bounce" />
+                            <h2 className="text-5xl font-bold mb-4">P{(scores.p1 > scores.p2 ? 1 : 2)} GEWINNT!</h2>
+                            <div className="text-4xl font-black mb-8">
+                                <span className="text-cyan-400">{scores.p1}</span> - <span className="text-cyan-400">{scores.p2}</span>
+                            </div>
+                            <button onClick={startGame} className="bg-white text-black font-bold px-8 py-3 rounded hover:scale-105 transition-transform">
+                                NEUSTART
+                            </button>
+                        </div>
+                    )}
+
+                    {/* --- P2 (TOP) --- */}
+                    <div className="flex-1 flex flex-col border-b-4 border-slate-800 relative bg-slate-900/30">
+                        <PlayerZone
+                            id={2}
+                            score={scores.p2}
+                            options={roundData?.p2.options}
+                            feedback={feedbackP2}
+                            onInput={(id) => handleInput(2, id)}
+                            rotate={true}
+                            disabled={phase !== 'input'}
+                        />
+
+                        <div className="h-32 bg-slate-950 border-t border-slate-800 flex items-center justify-center relative overflow-hidden">
+                            <div className="absolute inset-0 pointer-events-none opacity-20" style={{background: 'linear-gradient(transparent 50%, rgba(0,0,0,0.5) 50%)', backgroundSize: '100% 4px'}}></div>
+                            <div className="rotate-180">
+                                {phase === 'countdown' && (
+                                    <span className="text-7xl font-black text-slate-800">{count}</span>
+                                )}
+                                {(phase === 'input') && showTargetP2 && (
+                                    <div className="animate-in">
+                                        <ShapeIcon shape={roundData.p2.target} className="w-24 h-24" />
+                                    </div>
+                                )}
+                                {phase === 'result' && feedbackP2 && (
+                                    <div className={`text-4xl font-bold ${feedbackP2 === 'correct' ? 'text-green-500' : 'text-red-500'}`}>
+                                        {feedbackP2 === 'correct' ? '+1' : '-1'}
+                                    </div>
+                                )}
+                            </div>
+                            <button onClick={toggleMusic} className="absolute top-2 left-2 rotate-180 text-slate-700 p-2">
+                                <VolumeIcon size={16} muted={!musicOn} />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* --- P1 (BOTTOM) --- */}
+                    <div className="flex-1 flex flex-col border-t-4 border-slate-800 relative bg-slate-900/30">
+                        <div className="h-32 bg-slate-950 border-b border-slate-800 flex items-center justify-center relative overflow-hidden">
+                            <div className="absolute inset-0 pointer-events-none opacity-20" style={{background: 'linear-gradient(transparent 50%, rgba(0,0,0,0.5) 50%)', backgroundSize: '100% 4px'}}></div>
+                            <div>
+                                {phase === 'countdown' && (
+                                    <span className="text-7xl font-black text-slate-800">{count}</span>
+                                )}
+                                {(phase === 'input') && showTargetP1 && (
+                                    <div className="animate-in">
+                                        <ShapeIcon shape={roundData.p1.target} className="w-24 h-24" />
+                                    </div>
+                                )}
+                                {phase === 'result' && feedbackP1 && (
+                                    <div className={`text-4xl font-bold ${feedbackP1 === 'correct' ? 'text-green-500' : 'text-red-500'}`}>
+                                        {feedbackP1 === 'correct' ? '+1' : '-1'}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <PlayerZone
+                            id={1}
+                            score={scores.p1}
+                            options={roundData?.p1.options}
+                            feedback={feedbackP1}
+                            onInput={(id) => handleInput(1, id)}
+                            rotate={false}
+                            disabled={phase !== 'input'}
+                        />
+                    </div>
+
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Game />);
+    </script>
+</body>
+</html>
