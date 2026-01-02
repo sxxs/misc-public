@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="{{description}}">
-    <title>{{title}} | Universitat Bamberg</title>
+    <title>{{title_full}}</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="{{css_path}}styles.css">
     <link rel="icon" type="image/svg+xml" href="{{css_path}}crawler/output/www.uni-bamberg.de/_frontend/siteunibamberg/favicon/favicon.svg">
 </head>
-<body class="subpage {{body_class}}">
+<body class="subpage{{#body_class}} {{body_class}}{{/body_class}}">
     <!-- Skip Links -->
     <nav class="skip-links" aria-label="Sprungnavigation">
         <a href="#main-nav" class="skip-link">Zur Hauptnavigation</a>

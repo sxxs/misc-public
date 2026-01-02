@@ -104,6 +104,11 @@ Wiederverwendbare Template-Teile:
 {{#nav_studium}} class="active"{{/nav_studium}}
 ```
 
+Invertiert:
+```html
+{{^hero_degree}}<span class="page-hero-label">{{hero_label}}</span>{{/hero_degree}}
+```
+
 ### Optionale Partials
 
 **Breadcrumb:**
@@ -160,6 +165,7 @@ Wiederverwendbare Template-Teile:
 - `custom_structure: true` - Content enthält Hero + Subnav + Main (nicht wrappen)
 - `inline_styles_file: "file.css"` - Inline-CSS aus Partial laden
 - `no_breadcrumb: true` - Kein Breadcrumb rendern
+- `hero_class: "class-name"` - Zusätzliche Klasse am Hero-Section (z.B. für Inline-Styles)
 
 ## Hero-Varianten
 

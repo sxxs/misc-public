@@ -146,6 +146,10 @@ body {
     overflow-x: hidden;
 }
 
+body.fakultaet-page {
+    background-color: var(--color-bg);
+}
+
 img {
     max-width: 100%;
     height: auto;
@@ -1520,6 +1524,14 @@ address {
     }
 }
 
+.footer-brand,
+.footer-nav,
+.footer-contact,
+.footer-social {
+    display: flex;
+    flex-direction: column;
+}
+
 .footer-logo {
     display: inline-flex;
     align-items: center;
@@ -1540,6 +1552,12 @@ address {
 }
 
 .footer-address {
+    font-size: var(--text-sm);
+    line-height: 1.8;
+    opacity: 0.8;
+}
+
+.footer-tagline {
     font-size: var(--text-sm);
     line-height: 1.8;
     opacity: 0.8;
@@ -1722,6 +1740,10 @@ body.subpage {
 .page-hero .container {
     position: relative;
     z-index: 1;
+}
+
+.page-hero-content {
+    max-width: 720px;
 }
 
 /* Hero Modifier: Mit Hintergrundbild */
@@ -2392,6 +2414,11 @@ body.subpage {
     min-width: 180px;
     display: flex;
     gap: var(--space-4);
+}
+
+.timeline-content {
+    display: flex;
+    flex-direction: column;
 }
 
 @media (min-width: 768px) {
@@ -4238,17 +4265,17 @@ body.subpage {
     transition: transform var(--transition-base), color var(--transition-fast);
 }
 
-.accordion-item.active .accordion-icon {
+.accordion-trigger[aria-expanded="true"] .accordion-icon {
     transform: rotate(180deg);
     color: var(--color-secondary);
 }
 
 .accordion-content {
     display: none;
-    padding: 0 var(--space-6) var(--space-6);
+    padding: var(--space-4) var(--space-5);
 }
 
-.accordion-item.active .accordion-content {
+.accordion-trigger[aria-expanded="true"] + .accordion-content {
     display: block;
     animation: accordionSlideDown 0.3s var(--ease-out) forwards;
 }
@@ -5318,6 +5345,11 @@ a.quick-contact-value:hover {
     }
 }
 
+.document-group {
+    display: flex;
+    flex-direction: column;
+}
+
 .document-group-title {
     font-size: var(--text-lg);
     font-weight: 700;
@@ -5378,6 +5410,11 @@ a.quick-contact-value:hover {
     color: white;
     text-align: center;
     max-width: 900px;
+    margin: 0 auto;
+}
+
+.event-highlight-content {
+    max-width: 700px;
     margin: 0 auto;
 }
 
@@ -5798,25 +5835,4 @@ a.quick-contact-value:hover {
     width: 48px;
     height: 48px;
     opacity: 0.5;
-}
-
-
-/* ============================================
-   Accordion Animation Fix
-   ============================================ */
-.accordion-content {
-    display: none;
-    padding: var(--space-4) var(--space-5);
-}
-
-.accordion-trigger[aria-expanded="true"] + .accordion-content {
-    display: block;
-}
-
-.accordion-trigger[aria-expanded="true"] .accordion-icon {
-    transform: rotate(180deg);
-}
-
-.accordion-icon {
-    transition: transform 0.3s ease;
 }
