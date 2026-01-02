@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Link - Highscore Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #101018;
+            --grid-gap: 8px;
+            --cell-size: 55px;
+
+            /* Farben */
+            --color-0: #ff33ff; /* Pink */
+            --color-1: #00ffff; /* Cyan */
+            --color-2: #ffff00; /* Yellow */
+            --color-3: #33ff33; /* Lime */
+            --color-4: #ff6600; /* Orange */
+            --color-special: #ffffff;
+            --color-highscore: #ffd700; /* Gold */
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+        }
+
+        /* Canvas für Feuerwerk */
+        #fx-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 200;
+        }
+
+        .bg-grid {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+            box-shadow: inset 0 0 100px #000;
+        }
+
+        #ui-top {
+            width: 100%; max-width: 420px;
+            padding: 5px 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 10; margin-bottom: 5px;
+        }
+
+        #quest-container {
+            width: 100%; max-width: 400px;
+            margin-bottom: 10px; position: relative;
+        }
+
+        #quest-box {
+            background: linear-gradient(180deg, rgba(30,30,40,0.9), rgba(10,10,20,0.95));
+            border: 2px solid #555;
+            padding: 10px; border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            transition: all 0.3s;
+        }
+
+        #quest-box.quest-complete {
+            border-color: #00ff00; background: rgba(0, 50, 0, 0.8);
+            transform: scale(1.05);
+        }
+
+        #quest-timer-bar {
+            height: 4px; background: #ffff00;
+            width: 100%; margin-top: 5px;
+            transform-origin: left;
+            transition: transform 1s linear;
+        }
+
+        .quest-label { font-size: 0.7rem; color: #888; letter-spacing: 2px; text-transform: uppercase; }
+        .quest-text { font-size: 1.0rem; color: #fff; margin-top: 2px; font-weight: bold; text-shadow: 0 2px 0 #000; }
+
+        .stat-box {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
+            padding: 5px 15px; border-radius: 6px; text-align: center; min-width: 70px;
+        }
+        .stat-label { font-size: 0.6rem; color: #aaa; }
+        .stat-value { font-size: 1.3rem; font-weight: bold; color:#fff; }
+
+        /* Highscore Anzeige im Spiel */
+        .highscore-indicator {
+            position: absolute; top: -20px; left: 0; width: 100%;
+            text-align: center; font-size: 0.7rem; color: #666;
+            pointer-events: none;
+        }
+        .highscore-broken {
+            color: var(--color-highscore) !important;
+            text-shadow: 0 0 10px var(--color-highscore);
+            font-weight: bold;
+        }
+
+        /* Game Board */
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(7, 1fr);
+            gap: var(--grid-gap);
+            background: rgba(0, 0, 0, 0.5);
+            padding: var(--grid-gap);
+            border-radius: 12px;
+            border: 3px solid #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            position: relative;
+            transition: box-shadow 0.5s, border-color 0.5s;
+        }
+
+        /* Epic Mode Board Style */
+        #game-board.epic-mode {
+            border-color: var(--color-highscore);
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
+            animation: pulseGold 2s infinite;
+        }
+
+        @keyframes pulseGold {
+            0% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.2); }
+            50% { box-shadow: 0 0 60px rgba(255, 215, 0, 0.6); }
+            100% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.2); }
+        }
+
+        .cell {
+            width: var(--cell-size); height: var(--cell-size);
+            border-radius: 4px; cursor: pointer;
+            position: relative; box-sizing: border-box;
+            border-top: 2px solid rgba(255,255,255,0.5);
+            border-left: 2px solid rgba(255,255,255,0.5);
+            border-bottom: 2px solid rgba(0,0,0,0.3);
+            border-right: 2px solid rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+        .cell:active { transform: scale(0.9); }
+
+        .type-0 { background: var(--color-0); box-shadow: inset 0 0 10px var(--color-0); }
+        .type-1 { background: var(--color-1); box-shadow: inset 0 0 10px var(--color-1); }
+        .type-2 { background: var(--color-2); box-shadow: inset 0 0 10px var(--color-2); }
+        .type-3 { background: var(--color-3); box-shadow: inset 0 0 10px var(--color-3); }
+        .type-4 { background: var(--color-4); box-shadow: inset 0 0 10px var(--color-4); }
+
+        .type-special {
+            background: #fff; border-color: #fff;
+            animation: flash 0.1s infinite;
+        }
+        @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.7; filter: invert(1); } 100% { opacity: 1; } }
+
+        .cell.clearing { animation: shrinkRotate 0.3s forwards; }
+        @keyframes shrinkRotate { 0% { transform: scale(1) rotate(0deg); } 100% { transform: scale(0) rotate(90deg); opacity: 0; } }
+
+        /* Floating Text */
+        .float-text {
+            position: absolute; font-weight: 900; color: #fff;
+            pointer-events: none; text-shadow: 3px 3px 0 #000; z-index: 50;
+            text-align: center; width: 200px; margin-left: -100px;
+            animation: floatUp 0.8s ease-out forwards;
+            font-size: 1.5rem;
+        }
+        .float-text.penalty { color: #ff0000; font-size: 1.2rem; }
+        .float-text.bonus { color: #ffff00; font-size: 2rem; z-index: 60; }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            20% { transform: translateY(-10px) scale(1.2); opacity: 1; }
+            100% { transform: translateY(-60px) scale(1); opacity: 0; }
+        }
+
+        /* Overlay */
+        #overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(16, 16, 24, 0.95);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 100;
+        }
+
+        h1 {
+            font-size: 3rem; margin: 0; color: #00ffff;
+            text-shadow: 4px 4px 0 #ff00ff;
+            letter-spacing: -2px; transform: rotate(-3deg);
+        }
+
+        /* New Record Style */
+        .new-record-anim {
+            animation: rainbow 1s infinite;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        @keyframes rainbow {
+            0% { color: #ff0000; } 20% { color: #ffff00; } 40% { color: #00ff00; }
+            60% { color: #00ffff; } 80% { color: #0000ff; } 100% { color: #ff00ff; }
+        }
+
+        button {
+            background: #ff00ff; color: #fff; border: none;
+            padding: 15px 40px; font-size: 1.5rem; font-family: 'Orbitron', sans-serif;
+            cursor: pointer; margin-top: 30px;
+            box-shadow: 0 6px 0 #990099; border-radius: 4px;
+            transition: transform 0.1s, box-shadow 0.1s;
+            position: relative; z-index: 201; /* Über dem Canvas clickbar sein */
+        }
+        button:active { transform: translateY(6px); box-shadow: 0 0 0 #990099; }
+        button:hover { filter: brightness(1.2); }
+
+        #mute-btn {
+            position: absolute; top: 10px; right: 10px;
+            background: none; border: 1px solid #555; color: #555;
+            padding: 5px 10px; font-size: 0.8rem; box-shadow: none; margin: 0;
+            z-index: 202;
+        }
+        #mute-btn.active { border-color: #00ff00; color: #00ff00; }
+
+        .old-score-text {
+            color: #888; font-size: 0.9rem; margin-top: 5px;
+        }
+
+        @media (max-width: 500px) {
+            :root { --cell-size: 13vw; }
+            #game-board { gap: 4px; padding: 4px; }
+            h1 { font-size: 2.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-grid"></div>
+    <canvas id="fx-canvas"></canvas>
+    <button id="mute-btn">🎵 Ton: AUS</button>
+
+    <div id="ui-top">
+        <div class="stat-box">
+            <div class="stat-label">PUNKTE</div>
+            <div id="score" class="stat-value">0</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">ZEIT</div>
+            <div id="time" class="stat-value">60</div>
+        </div>
+    </div>
+
+    <div id="quest-container">
+        <div id="quest-box">
+            <div class="quest-label">MISSION (BONUS: 2000)</div>
+            <div id="quest-text" class="quest-text">...</div>
+            <div id="quest-timer-bar"></div>
+        </div>
+    </div>
+
+    <div id="game-board">
+        <div id="ingame-highscore-display" class="highscore-indicator">HIGHSCORE: 0</div>
+    </div>
+
+    <div id="overlay">
+        <h1 id="title-text">NEON LINK</h1>
+
+        <!-- Score Container -->
+        <div id="end-screen-content" style="display:none; text-align:center;">
+            <div id="new-record-msg" class="new-record-anim" style="display:none;">NEUER REKORD!</div>
+            <div id="final-score" style="color:white; font-size:2rem; margin-top:10px; text-shadow: 2px 2px 0 #000;">0 PUNKTE</div>
+            <div id="old-record-display" class="old-score-text">Alter Rekord: 0</div>
+        </div>
+
+        <!-- Start Screen Info -->
+        <div id="start-info" style="margin-top:20px; text-align:center;">
+            <p style="color:#aaa; line-height:1.6;">
+                <span style="color:#ff3333">ACHTUNG:</span> Einzelklicks = -50 Punkte!<br>
+                Missionen geben fette Boni.<br>
+                Breche den Highscore für Epic Mode!
+            </p>
+            <div id="start-highscore" style="color:var(--color-highscore); margin-top:10px; font-weight:bold;">Highscore: 0</div>
+        </div>
+
+        <button id="start-btn" onclick="startGame()">START</button>
+    </div>
+
+    <script>
+        /* === KONFIGURATION === */
+        const COLS = 6;
+        const ROWS = 7;
+        const COLORS = ['#ff33ff', '#00ffff', '#ffff00', '#33ff33', '#ff6600'];
+        const COLOR_NAMES = ['Pink', 'Cyan', 'Gelb', 'Grün', 'Orange'];
+        const GAME_DURATION = 60;
+        const MISSION_TIME = 5;
+        const SPECIAL_CHANCE = 0.05;
+
+        // Zustand
+        let grid = [];
+        let score = 0;
+        let timeLeft = GAME_DURATION;
+        let isPlaying = false;
+        let isAnimating = false;
+
+        // Highscore
+        let savedHighScore = localStorage.getItem('neonLinkHighscore') || 0;
+        let hasBrokenHighscore = false;
+
+        // Timer
+        let gameTimerInt = null;
+        let missionTimerInt = null;
+        let missionTimeLeft = MISSION_TIME;
+
+        // Audio
+        let audioCtx = null;
+        let isMuted = true;
+        let sequencerInt = null;
+        let currentBpm = 120; // Start BPM
+        let isMusicSpeedUp = false;
+
+        // Quest
+        let currentQuest = null;
+
+        // DOM Elements
+        const els = {
+            board: document.getElementById('game-board'),
+            score: document.getElementById('score'),
+            time: document.getElementById('time'),
+            overlay: document.getElementById('overlay'),
+            questBox: document.getElementById('quest-box'),
+            questText: document.getElementById('quest-text'),
+            questBar: document.getElementById('quest-timer-bar'),
+            muteBtn: document.getElementById('mute-btn'),
+            finalScore: document.getElementById('final-score'),
+            title: document.getElementById('title-text'),
+            startInfo: document.getElementById('start-info'),
+            endContent: document.getElementById('end-screen-content'),
+            newRecordMsg: document.getElementById('new-record-msg'),
+            oldRecordDisplay: document.getElementById('old-record-display'),
+            startHighScore: document.getElementById('start-highscore'),
+            ingameHighScore: document.getElementById('ingame-highscore-display'),
+            canvas: document.getElementById('fx-canvas')
+        };
+
+        // Initiale Highscore Anzeige
+        els.startHighScore.innerText = `Highscore: ${savedHighScore}`;
+        els.ingameHighScore.innerText = `REKORD: ${savedHighScore}`;
+
+        /* === FIREWORKS ENGINE === */
+        const ctx = els.canvas.getContext('2d');
+        let particles = [];
+        let fireworksInt = null;
+
+        function resizeCanvas() {
+            els.canvas.width = window.innerWidth;
+            els.canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x; this.y = y;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5 + 2;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.color = color;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.02 + 0.01;
+                this.gravity = 0.1;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += this.gravity;
+                this.alpha -= this.decay;
+            }
+            draw() {
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function createFirework() {
+            const x = Math.random() * els.canvas.width;
+            const y = Math.random() * (els.canvas.height / 2); // Nur obere Hälfte
+            const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+            for(let i=0; i<30; i++) particles.push(new Particle(x, y, color));
+            playSoundEffect('explode'); // Reuse explode sound leise
+        }
+
+        function loopFireworks() {
+            ctx.clearRect(0, 0, els.canvas.width, els.canvas.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].alpha <= 0) particles.splice(i, 1);
+            }
+            if(particles.length > 0 || fireworksInt) requestAnimationFrame(loopFireworks);
+        }
+
+        function startFireworks() {
+            particles = [];
+            createFirework(); // Sofort eins
+            fireworksInt = setInterval(createFirework, 800);
+            loopFireworks();
+        }
+
+        function stopFireworks() {
+            if(fireworksInt) clearInterval(fireworksInt);
+            fireworksInt = null;
+            setTimeout(() => { particles = []; ctx.clearRect(0,0,els.canvas.width, els.canvas.height); }, 2000);
+        }
+
+        /* === AUDIO ENGINE === */
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playNote(freq, type, duration, vol=0.1, detune=0) {
+            if (isMuted || !audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            if(detune) osc.detune.value = detune;
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(vol, audioCtx.currentTime + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration + 0.1);
+        }
+
+        function playSoundEffect(name) {
+            if(isMuted) return;
+            switch(name) {
+                case 'match':
+                    playNote(880, 'triangle', 0.1, 0.1);
+                    setTimeout(()=>playNote(1760, 'square', 0.1, 0.05), 50);
+                    break;
+                case 'error':
+                    playNote(150, 'sawtooth', 0.2, 0.1);
+                    playNote(140, 'sawtooth', 0.2, 0.1, -10);
+                    break;
+                case 'explode':
+                    for(let i=0; i<8; i++) playNote(100 + Math.random()*400, 'square', 0.15, 0.05);
+                    break;
+                case 'quest':
+                    playNote(523, 'square', 0.1, 0.2);
+                    setTimeout(()=> playNote(659, 'square', 0.1, 0.2), 80);
+                    setTimeout(()=> playNote(783, 'square', 0.3, 0.2), 160);
+                    break;
+                case 'highscore': // Epic Jingle
+                    playNote(523, 'sawtooth', 0.5, 0.2);
+                    setTimeout(()=> playNote(1046, 'sawtooth', 0.5, 0.2), 100);
+                    break;
+            }
+        }
+
+        function startMusic(bpm = 120) {
+            if (isMuted) return;
+            if (sequencerInt) clearInterval(sequencerInt);
+            currentBpm = bpm;
+
+            let tick = 0;
+            const beatDur = 60000 / bpm; // ms per beat
+            const sixteenthDur = beatDur / 4;
+
+            const bassLines = [261.63, 196.00, 220.00, 174.61];
+            const melody = [523.25, 659.25, 783.99, 1046.50, 783.99, 659.25];
+
+            sequencerInt = setInterval(() => {
+                if (isMuted) return;
+
+                // Bass
+                if (tick % 4 === 0) {
+                    let noteIdx = Math.floor(tick / 16) % 4;
+                    let freq = bassLines[noteIdx] / 2;
+                    // Epic Bass: Mehr Power
+                    playNote(freq, hasBrokenHighscore ? 'sawtooth' : 'square', 0.3, 0.15);
+                }
+
+                // Melody
+                if (tick % 2 === 0) {
+                    let mNote = melody[tick % melody.length];
+                    if (Math.floor(tick / 32) % 2 === 1) mNote *= 1.5;
+                    playNote(mNote, 'triangle', 0.1, 0.08);
+
+                    // EPIC MODE HARMONY
+                    if (hasBrokenHighscore) {
+                        playNote(mNote * 1.25, 'triangle', 0.1, 0.05); // Terz drüber
+                    }
+                }
+
+                // HiHat / Speed Indicator
+                if (tick % 4 === 2) {
+                    playNote(2000, 'sawtooth', 0.02, 0.02);
+                }
+
+                // Extra Arpeggio für Epic Mode
+                if (hasBrokenHighscore && tick % 1 === 0) {
+                    // Sehr schnelles Arp im Hintergrund
+                    playNote(1000 + (tick%4)*200, 'sine', 0.05, 0.03);
+                }
+
+                tick++;
+            }, sixteenthDur);
+        }
+
+        function playVictory(isNewRecord) {
+            if(isMuted) return;
+            const notes = isNewRecord ?
+                [523, 659, 783, 1046, 1318, 1568, 2093] : // C Maj Arp High
+                [523, 523, 659, 523]; // Simple
+
+            notes.forEach((f, i) => {
+                setTimeout(() => playNote(f, 'square', 0.4, 0.2), i * (isNewRecord ? 150 : 300));
+            });
+        }
+
+        els.muteBtn.addEventListener('click', () => {
+            isMuted = !isMuted;
+            els.muteBtn.textContent = isMuted ? "🎵 Ton: AUS" : "🎵 Ton: AN";
+            els.muteBtn.classList.toggle('active', !isMuted);
+            if (!isMuted) {
+                initAudio();
+                if(isPlaying) startMusic(currentBpm);
+            } else {
+                clearInterval(sequencerInt);
+            }
+        });
+
+        /* === GAME LOGIC === */
+
+        function startGame() {
+            initAudio();
+            // Reset Vars
+            score = 0;
+            timeLeft = GAME_DURATION;
+            isPlaying = true;
+            hasBrokenHighscore = false;
+            isMusicSpeedUp = false;
+            currentBpm = 120;
+
+            els.score.innerText = 0;
+            els.time.innerText = timeLeft;
+            els.overlay.style.display = 'none';
+            els.endContent.style.display = 'none';
+            els.startInfo.style.display = 'none';
+            els.board.classList.remove('epic-mode');
+            els.ingameHighScore.classList.remove('highscore-broken');
+            els.ingameHighScore.innerText = `REKORD: ${savedHighScore}`;
+
+            stopFireworks();
+            initGrid();
+            updateMission(true);
+
+            // Intro Sound
+            [200, 400, 600, 800].forEach((f, i) => setTimeout(() => playNote(f, 'square', 0.1, 0.1), i*100));
+            setTimeout(() => startMusic(120), 800);
+
+            if (gameTimerInt) clearInterval(gameTimerInt);
+            gameTimerInt = setInterval(gameTick, 1000);
+        }
+
+        function gameTick() {
+            timeLeft--;
+            els.time.innerText = timeLeft;
+
+            // Speed Up Check (Last 10s)
+            if (timeLeft === 10 && !isMusicSpeedUp) {
+                isMusicSpeedUp = true;
+                els.time.style.color = "#ff0000";
+                els.time.style.transform = "scale(1.2)";
+                // Tempo erhöhen (z.B. 140 BPM)
+                startMusic(160);
+            }
+
+            if (timeLeft <= 0) endGame();
+        }
+
+        function checkHighscoreEvent() {
+            // Check ob wir den Highscore *während* des Spiels brechen
+            if (!hasBrokenHighscore && savedHighScore > 0 && score > savedHighScore) {
+                hasBrokenHighscore = true;
+                playSoundEffect('highscore');
+
+                // Visuals
+                els.board.classList.add('epic-mode');
+                els.ingameHighScore.classList.add('highscore-broken');
+                els.ingameHighScore.innerText = "NEUER REKORD!";
+                showFloatText("HIGHSCORE GEBROCHEN!", 2, 3, 'bonus');
+
+                // Audio: Restart music with epic layers (gleiches Tempo oder schneller)
+                startMusic(currentBpm);
+            }
+        }
+
+        function endGame() {
+            isPlaying = false;
+            clearInterval(gameTimerInt);
+            clearInterval(sequencerInt);
+            clearInterval(missionTimerInt);
+            els.board.classList.remove('epic-mode');
+            els.time.style.color = "#fff";
+            els.time.style.transform = "scale(1)";
+
+            // Highscore Check End
+            let isNewRecord = false;
+            if (score > savedHighScore) {
+                savedHighScore = score;
+                localStorage.setItem('neonLinkHighscore', score);
+                isNewRecord = true;
+            }
+
+            els.overlay.style.display = 'flex';
+            els.title.innerText = isNewRecord ? "FANTASTISCH!" : "ZEIT UM!";
+            els.endContent.style.display = 'block';
+            els.finalScore.innerText = `${score} PUNKTE`;
+
+            if (isNewRecord) {
+                els.newRecordMsg.style.display = 'block';
+                els.oldRecordDisplay.style.display = 'none';
+                playVictory(true);
+                startFireworks();
+            } else {
+                els.newRecordMsg.style.display = 'none';
+                els.oldRecordDisplay.style.display = 'block';
+                els.oldRecordDisplay.innerText = `Dein Rekord: ${savedHighScore}`;
+                playVictory(false);
+            }
+
+            // Update Start Highscore Display für nächsten Run
+            els.startHighScore.innerText = `Highscore: ${savedHighScore}`;
+        }
+
+        /* === MISSION SYSTEM === */
+        function updateMission(forceNew = false) {
+            if (!isPlaying) return;
+            const solvable = findSolvableQuest();
+            if (!solvable) { currentQuest = { type: 'color', val: 0, count: 3, text: "Lösche 3 Pinke" }; }
+            else { currentQuest = solvable; }
+
+            els.questText.innerText = currentQuest.text;
+            els.questText.style.color = currentQuest.colorHex || '#fff';
+            els.questBox.classList.remove('quest-complete');
+
+            missionTimeLeft = MISSION_TIME;
+            els.questBar.style.transition = 'none';
+            els.questBar.style.transform = 'scaleX(1)';
+            setTimeout(() => {
+                els.questBar.style.transition = `transform ${MISSION_TIME}s linear`;
+                els.questBar.style.transform = 'scaleX(0)';
+            }, 50);
+
+            if (missionTimerInt) clearInterval(missionTimerInt);
+            missionTimerInt = setInterval(() => updateMission(true), MISSION_TIME * 1000);
+        }
+
+        function findSolvableQuest() {
+            const groups = getAllGroups();
+            const validGroups = groups.filter(g => g.cells.length >= 2);
+            if (validGroups.length === 0) return null;
+            const group = validGroups[Math.floor(Math.random() * validGroups.length)];
+            const size = group.cells.length;
+            const type = group.type;
+            const cName = COLOR_NAMES[type];
+
+            if (Math.random() > 0.5 || size < 4) {
+                return { type: 'color', val: type, count: 2, text: `Lösche ${cName}`, colorHex: COLORS[type] };
+            } else {
+                return { type: 'big', val: type, count: 4, text: `Lösche großen ${cName} Block`, colorHex: COLORS[type] };
+            }
+        }
+
+        function checkQuest(matches, type) {
+            if (!currentQuest) return false;
+            let solved = false;
+            if (currentQuest.type === 'color' && type === currentQuest.val && matches.length >= currentQuest.count) solved = true;
+            else if (currentQuest.type === 'big' && type === currentQuest.val && matches.length >= currentQuest.count) solved = true;
+
+            if (solved) {
+                playSoundEffect('quest');
+                els.questBox.classList.add('quest-complete');
+                score += 2000;
+                showFloatText("MISSION! +2000", matches[0].x, matches[0].y, 'bonus');
+                setTimeout(() => updateMission(true), 500);
+                return true;
+            }
+            return false;
+        }
+
+        /* === GRID OPERATIONS === */
+        function initGrid() {
+            grid = [];
+            els.board.innerHTML = '';
+            // Re-Add Highscore Indicator
+            els.board.appendChild(els.ingameHighScore);
+
+            for (let y = 0; y < ROWS; y++) {
+                let row = [];
+                for (let x = 0; x < COLS; x++) {
+                    createCell(x, y, row);
+                }
+                grid.push(row);
+            }
+        }
+
+        function createCell(x, y, rowRef) {
+            const type = Math.floor(Math.random() * COLORS.length);
+            const isSpecial = Math.random() < SPECIAL_CHANCE;
+            const cellData = { type, isSpecial, isEmpty: false };
+            if (rowRef) rowRef.push(cellData);
+            else grid[y][x] = cellData;
+
+            const el = document.createElement('div');
+            el.className = `cell type-${type}`;
+            if(isSpecial) el.classList.add('type-special');
+            el.dataset.x = x; el.dataset.y = y;
+            el.onclick = () => handleClick(x, y);
+            els.board.appendChild(el);
+        }
+
+        function handleClick(x, y) {
+            if (!isPlaying || isAnimating) return;
+            const cell = grid[y][x];
+            if (cell.isEmpty) return;
+
+            if (cell.isSpecial) { triggerExplosion(x, y); return; }
+
+            const matches = getConnectedCells(x, y, cell.type);
+            if (matches.length < 2) {
+                playSoundEffect('error');
+                score = Math.max(0, score - 50);
+                els.score.innerText = score;
+                showFloatText("-50", x, y, 'penalty');
+                const domCell = getDomCell(x, y);
+                if(domCell) { domCell.style.transform = "translateX(5px)"; setTimeout(()=>domCell.style.transform="translateX(0)", 100); }
+            } else {
+                processMatch(matches, cell.type);
+            }
+            checkHighscoreEvent();
+        }
+
+        function processMatch(matches, type) {
+            isAnimating = true;
+            playSoundEffect('match');
+            let points = matches.length * 50;
+            if (matches.length >= 4) points += 200;
+            checkQuest(matches, type);
+            score += points;
+            els.score.innerText = score;
+            showFloatText(`+${points}`, matches[0].x, matches[0].y);
+            removeCells(matches, () => {
+                applyGravity();
+                isAnimating = false;
+                if(!findSolvableQuest()) updateMission(true);
+            });
+        }
+
+        function triggerExplosion(cx, cy) {
+            isAnimating = true;
+            playSoundEffect('explode');
+            let targets = [];
+            for(let dy=-1; dy<=1; dy++){
+                for(let dx=-1; dx<=1; dx++){
+                    let nx = cx+dx, ny = cy+dy;
+                    if(isValid(nx, ny) && !grid[ny][nx].isEmpty) targets.push({x:nx, y:ny});
+                }
+            }
+            score += 1000;
+            els.score.innerText = score;
+            showFloatText("BOOM! +1000", cx, cy, 'bonus');
+            checkHighscoreEvent();
+            removeCells(targets, () => { applyGravity(); isAnimating = false; });
+        }
+
+        /* === HELPER === */
+        function getConnectedCells(sx, sy, type) {
+            let matches = [];
+            let queue = [{x: sx, y: sy}];
+            let visited = new Set([`${sx},${sy}`]);
+            while(queue.length) {
+                let c = queue.pop();
+                matches.push(c);
+                [[0,1],[0,-1],[1,0],[-1,0]].forEach(d => {
+                    let nx = c.x+d[0], ny = c.y+d[1];
+                    if(isValid(nx, ny)) {
+                        let key = `${nx},${ny}`;
+                        let target = grid[ny][nx];
+                        if(!visited.has(key) && !target.isEmpty && target.type === type && !target.isSpecial) {
+                            visited.add(key); queue.push({x:nx, y:ny});
+                        }
+                    }
+                });
+            }
+            return matches;
+        }
+
+        function getAllGroups() {
+            let groups = [];
+            let globalVisited = new Set();
+            for(let y=0; y<ROWS; y++) {
+                for(let x=0; x<COLS; x++) {
+                    if(grid[y][x].isEmpty || grid[y][x].isSpecial) continue;
+                    let key = `${x},${y}`;
+                    if(globalVisited.has(key)) continue;
+                    let groupCells = getConnectedCells(x, y, grid[y][x].type);
+                    groupCells.forEach(c => globalVisited.add(`${c.x},${c.y}`));
+                    groups.push({ type: grid[y][x].type, cells: groupCells });
+                }
+            }
+            return groups;
+        }
+
+        function removeCells(coords, callback) {
+            const domCells = Array.from(els.board.querySelectorAll('.cell'));
+            coords.forEach(c => {
+                grid[c.y][c.x].isEmpty = true;
+                // Da wir das Highscore Div im Board haben, müssen wir vorsichtig mit dem Index sein.
+                // Wir selektieren daher oben explizit '.cell'
+                // Der Index in domCells sollte mit grid Logik übereinstimmen, da wir linear aufbauen.
+                let idx = c.y * COLS + c.x;
+                if(domCells[idx]) domCells[idx].classList.add('clearing');
+            });
+            setTimeout(callback, 300);
+        }
+
+        function applyGravity() {
+            for (let x = 0; x < COLS; x++) {
+                let writeY = ROWS - 1;
+                for (let y = ROWS - 1; y >= 0; y--) {
+                    if (!grid[y][x].isEmpty) {
+                        if (writeY !== y) {
+                            grid[writeY][x] = grid[y][x];
+                            grid[y][x] = { isEmpty: true };
+                        }
+                        writeY--;
+                    }
+                }
+                while (writeY >= 0) {
+                    let type = Math.floor(Math.random() * COLORS.length);
+                    let isSpecial = Math.random() < SPECIAL_CHANCE;
+                    grid[writeY][x] = { type, isSpecial, isEmpty: false };
+                    writeY--;
+                }
+            }
+            renderBoard();
+        }
+
+        function renderBoard() {
+            // Alte Cells entfernen (aber Highscore Label behalten)
+            const oldCells = els.board.querySelectorAll('.cell');
+            oldCells.forEach(c => c.remove());
+
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    const c = grid[y][x];
+                    const el = document.createElement('div');
+                    el.className = `cell type-${c.type}`;
+                    if(c.isSpecial) el.classList.add('type-special');
+                    el.onclick = () => handleClick(x, y);
+                    els.board.appendChild(el);
+                }
+            }
+        }
+
+        function isValid(x, y) { return x>=0 && x<COLS && y>=0 && y<ROWS; }
+
+        function getDomCell(x, y) {
+            return els.board.querySelectorAll('.cell')[y*COLS + x];
+        }
+
+        function showFloatText(txt, x, y, className='match') {
+            const el = document.createElement('div');
+            el.className = `float-text ${className}`;
+            el.innerText = txt;
+            el.style.left = (x * (100/COLS)) + 8 + '%';
+            el.style.top = (y * (100/ROWS)) + '%';
+            els.board.appendChild(el);
+            setTimeout(() => el.remove(), 900);
+        }
+    </script>
+</body>
+</html>
