@@ -453,6 +453,34 @@
       color: var(--text-secondary);
     }
 
+    .deck-settings-btn {
+      padding: 0.5rem;
+      margin-left: 0.5rem;
+      border-radius: 8px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .deck-settings-btn:hover {
+      color: var(--text);
+      background: var(--surface);
+    }
+
+    .deck-notes {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-style: italic;
+      margin-top: 0.125rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
+    }
+
     .empty-state {
       flex: 1;
       display: flex;
@@ -643,6 +671,57 @@
     .session-stat-label {
       font-size: 0.875rem;
       color: var(--text-secondary);
+    }
+
+    .session-insights {
+      width: 100%;
+      max-width: 320px;
+    }
+
+    .session-insight {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .insight-icon {
+      font-size: 1.5rem;
+    }
+
+    .insight-text {
+      font-size: 0.875rem;
+      text-align: left;
+      color: var(--text-secondary);
+    }
+
+    .insight-text strong {
+      color: var(--text);
+    }
+
+    .session-trivia {
+      background: linear-gradient(135deg, var(--primary), #8b5cf6);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      max-width: 320px;
+      text-align: left;
+    }
+
+    .trivia-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 0.5rem;
+    }
+
+    .trivia-text {
+      font-size: 0.9rem;
+      color: white;
+      line-height: 1.4;
     }
 
     /* ===== Settings Screen ===== */
@@ -866,9 +945,13 @@
     }
 
     .flashcard.flash-correct {
-      box-shadow: 0 0 30px var(--success), 0 0 60px rgba(107, 203, 119, 0.3);
-      border-color: var(--success);
-      transition: box-shadow 0.1s ease, border-color 0.1s ease;
+      background: linear-gradient(135deg, var(--success), #4ade80) !important;
+      border-color: var(--success) !important;
+      box-shadow: 0 0 40px rgba(74, 222, 128, 0.5);
+    }
+
+    .flashcard.flash-correct * {
+      color: white !important;
     }
 
     .combo-indicator {
@@ -999,7 +1082,7 @@
       <div class="logo">
         <div>&#x1F4DA;</div>
         <div class="logo-title">Hashcards</div>
-        <div class="logo-version" id="version-display">v1.2.2</div>
+        <div class="logo-version" id="version-display">v1.2.3</div>
       </div>
       <div class="profile-list" id="profile-list">
         <!-- Profiles will be rendered here -->
@@ -1263,7 +1346,7 @@ C: Lueckentext mit [Luecke]</pre>
 
   <script>
     // ===== Version =====
-    const VERSION = '1.2.2';
+    const VERSION = '1.2.3';
 
     // ===== Cache Busting: Redirect wenn Version in URL nicht stimmt =====
     (function() {
@@ -1284,6 +1367,7 @@ C: Lueckentext mit [Luecke]</pre>
     let originalQueueSize = 0;
     let sessionStats = { reviewed: 0, again: 0, hard: 0, good: 0, easy: 0 };
     let cardsNeededRepeat = new Set(); // Track cards that were rated "again"
+    let cardAgainCount = new Map(); // Track how many times each card was rated "again"
     let cardRevealed = false;
 
     // Session tracking
@@ -1323,6 +1407,67 @@ C: Lueckentext mit [Luecke]</pre>
       "Kartenkoenig! 👑",
       "Lernmaschine! 🤖",
       "Einfach wow! 🌟"
+    ];
+
+    // ===== Latin Trivia =====
+    const LATIN_TRIVIA = [
+      // Deutsche Woerter mit lateinischem Ursprung
+      { type: 'etymology', text: '🏠 "Fenster" kommt vom lateinischen "fenestra" - die Roemer brachten Glasfenster nach Germanien!' },
+      { type: 'etymology', text: '🧱 "Mauer" stammt von "murus" - die Roemer waren Meister im Mauerbau.' },
+      { type: 'etymology', text: '📚 "Schule" kommt von "schola" (Musse/Freizeit) - Lernen war Luxus!' },
+      { type: 'etymology', text: '🍷 "Wein" stammt von "vinum" - die Roemer brachten den Weinbau nach Deutschland.' },
+      { type: 'etymology', text: '🛣️ "Strasse" kommt von "via strata" (gepflasterter Weg) - roemische Ingenieurskunst!' },
+      { type: 'etymology', text: '✍️ "Schreiben" kommt von "scribere" - Latein praegt unsere Sprache bis heute.' },
+      { type: 'etymology', text: '🏛️ "Keller" stammt von "cellarium" (Vorratskammer) - praktisch wie die Roemer!' },
+      { type: 'etymology', text: '🪙 "Muenze" kommt von "moneta" - gepraegt im Tempel der Juno Moneta in Rom.' },
+      { type: 'etymology', text: '⚖️ "Pfund" stammt von "pondus" (Gewicht) - roemische Masseinheiten leben weiter.' },
+      { type: 'etymology', text: '🧀 "Kaese" kommt von "caseus" - die Roemer liebten Kaese!' },
+      { type: 'etymology', text: '🍒 "Kirsche" stammt von "cerasus" - benannt nach der Stadt Kerasos am Schwarzen Meer.' },
+      { type: 'etymology', text: '🫒 "Oel" kommt von "oleum" - Olivenoel war fluessiges Gold in der Antike.' },
+      { type: 'etymology', text: '🏺 "Amphore" ist direkt aus dem Lateinischen - so transportierten Roemer Wein und Oel.' },
+      { type: 'etymology', text: '📅 "Kalender" kommt von "calendae" - der erste Tag jedes roemischen Monats.' },
+
+      // Roemische Geschichte
+      { type: 'history', text: '🐺 Der Legende nach wurde Rom 753 v.Chr. von Romulus und Remus gegruendet, die von einer Woelfin gesaeugt wurden.' },
+      { type: 'history', text: '🛤️ Alle Wege fuehren nach Rom - das roemische Strassennetz war 80.000 km lang!' },
+      { type: 'history', text: '🏟️ Das Kolosseum fasste 50.000 Zuschauer - mehr als viele moderne Fussballstadien!' },
+      { type: 'history', text: '🚿 Roemische Aquaedukte brachten taeglich 1 Million Kubikmeter Wasser nach Rom.' },
+      { type: 'history', text: '📬 Die roemische Post (cursus publicus) konnte 80 km am Tag zuruecklegen!' },
+      { type: 'history', text: '🎭 Die Roemer hatten schon Fast Food: Thermopolia waren antike Imbissbuden.' },
+      { type: 'history', text: '🦁 Julius Caesar brachte die erste Giraffe nach Europa - ein Geschenk aus Aegypten.' },
+      { type: 'history', text: '⚔️ Ein roemischer Legionaer trug 30 kg Ausruestung und marschierte 30 km am Tag.' },
+      { type: 'history', text: '🏛️ Der Pantheon in Rom hat die groesste unbewehrte Betonkuppel der Welt - seit 2000 Jahren!' },
+      { type: 'history', text: '🗳️ "Senator" kommt von "senex" (alter Mann) - nur aeltere Buerger durften im Senat sitzen.' },
+      { type: 'history', text: '📜 Latein war 1000 Jahre lang DIE Wissenschaftssprache Europas.' },
+      { type: 'history', text: '🎲 Roemische Kinder spielten mit Wuerfeln, Kreiseln und sogar Jo-Jos!' },
+      { type: 'history', text: '🏊 Reiche Roemer hatten beheizte Schwimmbaeder (Thermen) - mit Fussbodenheizung!' },
+      { type: 'history', text: '👑 "Kaiser" kommt von "Caesar" - Gaius Julius Caesar praegte die Geschichte.' },
+
+      // Lateinische Redewendungen
+      { type: 'phrase', text: '💡 "Carpe diem" (Nutze den Tag) - vom Dichter Horaz, noch heute beliebt!' },
+      { type: 'phrase', text: '🏆 "Veni, vidi, vici" (Ich kam, sah, siegte) - Caesars beruemter Dreiklang.' },
+      { type: 'phrase', text: '⚠️ "Errare humanum est" (Irren ist menschlich) - ein Trost seit der Antike.' },
+      { type: 'phrase', text: '🎯 "Alea iacta est" (Die Wuerfel sind gefallen) - Caesar am Rubikon.' },
+      { type: 'phrase', text: '💪 "Per aspera ad astra" (Durch Muehen zu den Sternen) - Motto vieler Schulen.' },
+      { type: 'phrase', text: '🤫 "Qui tacet consentire videtur" (Wer schweigt, scheint zuzustimmen) - roemisches Recht!' },
+      { type: 'phrase', text: '📖 "Repetitio est mater studiorum" (Wiederholung ist die Mutter des Lernens) - stimmt!' },
+      { type: 'phrase', text: '⏰ "Tempus fugit" (Die Zeit flieht) - darum jetzt weiterlernen!' },
+      { type: 'phrase', text: '🧠 "Mens sana in corpore sano" (Ein gesunder Geist in einem gesunden Koerper).' },
+      { type: 'phrase', text: '🌟 "Ad astra" (Zu den Sternen) - Motto vieler Raumfahrtorganisationen.' },
+
+      // Spannende Fakten
+      { type: 'fact', text: '🔢 Unsere Zahlen heissen "arabisch", aber die Araber nannten sie "indisch" - via Latein zu uns!' },
+      { type: 'fact', text: '📅 Juli und August sind nach Julius Caesar und Augustus benannt.' },
+      { type: 'fact', text: '🌍 Latein ist Amtssprache im Vatikan - der einzige Geldautomat mit lateinischem Menue!' },
+      { type: 'fact', text: '🔬 75% aller wissenschaftlichen Fachbegriffe haben lateinische oder griechische Wurzeln.' },
+      { type: 'fact', text: '💊 Aerzte schreiben Rezepte auf Latein - "Rp." steht fuer "Recipe" (Nimm!).' },
+      { type: 'fact', text: '⚖️ Viele Rechtsbegriffe sind Latein: "Alibi", "Veto", "pro bono", "in dubio pro reo".' },
+      { type: 'fact', text: '🎵 Alle Musik-Tempoangaben sind italienisch - und Italienisch kommt von... Latein!' },
+      { type: 'fact', text: '🦴 Fast alle Knochen und Muskeln haben lateinische Namen - Medizinstudenten lernen viel Latein!' },
+      { type: 'fact', text: '🌸 Auch Pflanzennamen sind oft Latein - damit Biologen weltweit sich verstehen.' },
+      { type: 'fact', text: '📱 "Video" heisst "ich sehe" auf Latein - und "Audio" heisst "ich hoere".' },
+      { type: 'fact', text: '🎓 "Universitas" bedeutete urspruenglich "Gemeinschaft" - von Lernenden und Lehrenden.' },
+      { type: 'fact', text: '📧 Das @-Zeichen kommt vom lateinischen "ad" (zu/bei) - schon Moenche nutzten es!' }
     ];
 
     // ===== IndexedDB Setup =====
@@ -1626,16 +1771,23 @@ C: Lueckentext mit [Luecke]</pre>
         const item = document.createElement('div');
         item.className = 'card card-clickable deck-item';
         item.onclick = () => startPractice(deck.id);
+
+        const notesPreview = deck.notes
+          ? `<div class="deck-notes">${escapeHtml(deck.notes.substring(0, 40))}${deck.notes.length > 40 ? '...' : ''}</div>`
+          : '';
+
         item.innerHTML = `
           <div class="deck-icon">&#x1F4DA;</div>
           <div class="deck-info">
             <div class="deck-name">${escapeHtml(deck.name)}</div>
             <div class="deck-meta">${cards.length} Karten</div>
+            ${notesPreview}
           </div>
           <div class="deck-due">
             <div class="deck-due-count">${dueCount}</div>
             <div class="deck-due-label">faellig</div>
           </div>
+          <button class="deck-settings-btn" onclick="event.stopPropagation(); showDeckSettings('${deck.id}')">&#x2699;</button>
         `;
         list.appendChild(item);
       }
@@ -1650,6 +1802,63 @@ C: Lueckentext mit [Luecke]</pre>
 
       // Delete deck
       await dbDelete('decks', deckId);
+    }
+
+    async function showDeckSettings(deckId) {
+      const deck = await dbGet('decks', deckId);
+      if (!deck) return;
+
+      const cards = await dbGetAll('cards', 'deckId', deckId);
+
+      showModal('Deck bearbeiten', `
+        <div style="margin-bottom: 1rem;">
+          <label style="font-size: 0.875rem; color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Name</label>
+          <input type="text" id="deck-name-input" value="${escapeHtml(deck.name)}" maxlength="50" style="width: 100%;">
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label style="font-size: 0.875rem; color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Notizen</label>
+          <textarea id="deck-notes-input" rows="3" placeholder="Notizen zum Deck hinzufuegen..." style="width: 100%; resize: vertical;">${escapeHtml(deck.notes || '')}</textarea>
+        </div>
+        <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem;">
+          ${cards.length} Karten${deck.source ? ` • Importiert aus: ${escapeHtml(deck.source)}` : ''}
+        </div>
+      `, [
+        { text: 'Loeschen', class: 'btn-error', action: () => confirmDeleteDeck(deckId, deck.name) },
+        { text: 'Abbrechen', class: 'btn-secondary', action: hideModal },
+        { text: 'Speichern', class: 'btn-primary', action: () => saveDeckSettings(deckId) }
+      ]);
+    }
+
+    async function saveDeckSettings(deckId) {
+      const nameInput = document.getElementById('deck-name-input');
+      const notesInput = document.getElementById('deck-notes-input');
+
+      const name = nameInput.value.trim();
+      if (!name) return;
+
+      const deck = await dbGet('decks', deckId);
+      deck.name = name;
+      deck.notes = notesInput.value.trim();
+      await dbPut('decks', deck);
+
+      hideModal();
+      await loadDecks();
+    }
+
+    function confirmDeleteDeck(deckId, deckName) {
+      showModal('Deck loeschen?', `
+        <p>Das Deck "${escapeHtml(deckName)}" und alle Karten werden geloescht.</p>
+      `, [
+        { text: 'Abbrechen', class: 'btn-secondary', action: hideModal },
+        { text: 'Loeschen', class: 'btn-error', action: () => deleteDeck(deckId) }
+      ]);
+    }
+
+    async function deleteDeck(deckId) {
+      await deleteDeckData(deckId);
+      hideModal();
+      await loadDecks();
+      await updateStats();
     }
 
     // ===== Stats =====
@@ -2246,6 +2455,7 @@ C: Lueckentext mit [Luecke]</pre>
       originalQueueSize = practiceQueue.length;
       sessionStats = { reviewed: 0, again: 0, hard: 0, good: 0, easy: 0 };
       cardsNeededRepeat = new Set();
+      cardAgainCount = new Map();
       cardRevealed = false;
       comboCount = 0;
 
@@ -2426,6 +2636,7 @@ C: Lueckentext mit [Luecke]</pre>
       // Handle "again" - add to end of queue and track
       if (rating === 'again') {
         cardsNeededRepeat.add(card.id);
+        cardAgainCount.set(card.id, (cardAgainCount.get(card.id) || 0) + 1);
         practiceQueue.push({ card, state: newState, isNew: false });
       }
 
@@ -2455,6 +2666,33 @@ C: Lueckentext mit [Luecke]</pre>
       // Calculate stats based on unique cards
       const firstTryCorrect = originalQueueSize - cardsNeededRepeat.size;
 
+      // Find the "Endgegner" - card that was rated "again" most often (min 2 times)
+      let endgegnerCard = null;
+      let maxAgainCount = 1; // Must be at least 2
+      for (const [cardId, count] of cardAgainCount) {
+        if (count > maxAgainCount) {
+          maxAgainCount = count;
+          endgegnerCard = allCards.find(c => c.id === cardId);
+        }
+      }
+
+      // Get random trivia
+      const trivia = LATIN_TRIVIA[Math.floor(Math.random() * LATIN_TRIVIA.length)];
+
+      // Build insights section
+      let insightsHtml = '';
+      if (endgegnerCard) {
+        const frontText = endgegnerCard.front.length > 30
+          ? endgegnerCard.front.substring(0, 30) + '...'
+          : endgegnerCard.front;
+        insightsHtml += `
+          <div class="session-insight">
+            <span class="insight-icon">👹</span>
+            <span class="insight-text"><strong>"${frontText}"</strong> war dein Endgegner! (${maxAgainCount}x wiederholt)</span>
+          </div>
+        `;
+      }
+
       container.innerHTML = `
         <div class="session-complete">
           <div class="session-complete-icon">${allPerfect ? '&#x1F31F;' : '&#x1F389;'}</div>
@@ -2473,6 +2711,11 @@ C: Lueckentext mit [Luecke]</pre>
               <div class="session-stat-value" style="color: var(--warning)">${cardsNeededRepeat.size}</div>
               <div class="session-stat-label">Wiederholt</div>
             </div>
+          </div>
+          ${insightsHtml ? `<div class="session-insights">${insightsHtml}</div>` : ''}
+          <div class="session-trivia">
+            <div class="trivia-label">Wusstest du?</div>
+            <div class="trivia-text">${trivia.text}</div>
           </div>
           <button class="btn btn-primary btn-large mt-2" onclick="endPractice()">Zurueck</button>
         </div>
