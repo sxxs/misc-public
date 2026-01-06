@@ -1,5 +1,5 @@
-// Hashcards Service Worker v1.3.0
-const CACHE_NAME = 'hashcards-v1.3.0';
+// Hashcards Service Worker v1.3.5
+const CACHE_NAME = 'hashcards-v1.3.5';
 const BASE_PATH = '/misc-public/hashcards-pwa/';
 
 const ASSETS_TO_CACHE = [
