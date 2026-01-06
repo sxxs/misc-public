@@ -1,9 +1,11 @@
 # Hashcards PWA - Spezifikation
 
 > PWA auf GitHub Pages unter https://sxxs.github.io/misc-public/hashcards-pwa/
-> Backend auf Apache + PHP 7 (append-only Logs)
+> Backend auf Apache + PHP 7 (append-only Logs): `https://ssl.exoneon.de/hashcards-pwa/`
 > Multi-Device über Pairing-/Sync-Key
-> Duolingo-Style Komfort + kindertaugliche Gamification
+> Kindertaugliche Gamification + Multi-Profil
+
+**Inspiriert von**: [hashcards](https://borretti.me/article/hashcards-plain-text-spaced-repetition) - Plain-Text Spaced Repetition
 
 ---
 
@@ -83,9 +85,38 @@ navigator.serviceWorker.register('./service-worker.js', { scope: './' });
 
 ### 3.1 Card / Deck
 
-**Deck**: Sammlung von Karten, importiert aus Markdown (oder ZIP)
+**Deck**: Eine Markdown-Datei = ein Deck. Verzeichnisstruktur für Organisation:
 
-**Karte**:
+```
+Cards/
+  Math.md
+  Chemistry.md
+  Languages/
+    English.md
+    French.md
+```
+
+**Markdown-Format** (hashcards-kompatibel):
+
+```markdown
+Q: What is the role of synaptic vesicles?
+A: They store neurotransmitters for release at the synaptic terminal.
+
+Q: What is a neurite?
+A: A projection from a neuron: either an axon or a dendrite.
+
+C: Speech is [produced] in [Broca's] area.
+
+C: Speech is [understood] in [Wernicke's] area.
+```
+
+**Regeln**:
+- `Q:` / `A:` für Frage-Antwort-Karten
+- `C:` für Cloze-Karten mit `[eckigen Klammern]` (ohne Shift auf US-Keyboard)
+- Leerzeilen trennen Karten
+- Mehrzeilige Antworten sind erlaubt (bis zur nächsten Leerzeile)
+
+**Karte** (intern):
 - `card_id`: stabiler Hash (siehe unten)
 - `kind`: `"QA"` oder `"CLOZE"`
 - `question_md`, `answer_md` (oder `cloze_md`)
@@ -378,45 +409,107 @@ Access-Control-Allow-Methods: GET, POST, OPTIONS
 
 ---
 
-## 11) Implementierungsplan
+## 11) Design & Theme
 
-### MVP 1 (Grundfunktion)
-- [ ] Deck Import: .md Datei → Kartenparsing Q:/A:/C:
-- [ ] Local storage: IndexedDB
-- [ ] Learn session: due queue + 4 rating buttons
-- [ ] FSRS: ts-fsrs lokal
-- [ ] Events: JSONL intern
-- [ ] Export backup
+### 11.1 Theme-Modi
+- **System**: folgt OS-Einstellung (prefers-color-scheme)
+- **Hell**: manuell wählbar
+- **Dunkel**: manuell wählbar
 
-### MVP 2 (Sync)
+### 11.2 Farbpalette: uchū
+
+Basierend auf [uchū](https://github.com/NeverCease/uchu) - OKLCH-basierte Farbpalette.
+
+**CSS einbinden**:
+```html
+<link rel="stylesheet" href="https://uchu.style/color.css">
+```
+
+**Kernfarben** (reduced palette):
+```css
+/* Grau */
+--uchu-light-gray: oklch(95.57% 0.003 286.35);
+--uchu-gray: oklch(84.68% 0.002 197.12);
+--uchu-dark-gray: oklch(63.12% 0.004 219.55);
+
+/* Primär: Blau */
+--uchu-light-blue: oklch(89.66% 0.046 260.67);
+--uchu-blue: oklch(62.39% 0.181 258.33);
+--uchu-dark-blue: oklch(43.48% 0.17 260.2);
+
+/* Erfolg: Grün */
+--uchu-light-green: oklch(93.96% 0.05 148.74);
+--uchu-green: oklch(79.33% 0.179 145.62);
+--uchu-dark-green: oklch(58.83% 0.158 145.05);
+
+/* Fehler: Rot */
+--uchu-light-red: oklch(88.98% 0.052 3.28);
+--uchu-red: oklch(62.73% 0.209 12.37);
+--uchu-dark-red: oklch(45.8% 0.177 17.7);
+
+/* Akzent: Orange */
+--uchu-light-orange: oklch(93.83% 0.037 56.93);
+--uchu-orange: oklch(78.75% 0.142 54.33);
+--uchu-dark-orange: oklch(58.28% 0.128 52.2);
+
+/* Schwarz/Weiß */
+--uchu-yang: oklch(99.4% 0 0);       /* Weiß */
+--uchu-light-yin: oklch(91.87% 0.003 264.54);
+--uchu-yin: oklch(14.38% 0.007 256.88);  /* Fast Schwarz */
+```
+
+### 11.3 Multi-Profil
+
+Mehrere Profile auf einem Gerät (z.B. für Geschwister):
+- Profil-Auswahl beim App-Start
+- Jedes Profil hat eigene Decks, Reviews, Gamification-State
+- Sync-Key ist pro Profil (nicht pro Gerät)
+
+---
+
+## 12) Implementierungsplan
+
+### MVP 1 (Kernfunktion) ← Ziel
+- [ ] **Import**: Markdown-Datei(en) importieren, Q:/A:/C: parsen
+- [ ] **Multi-Profil**: Profil-Auswahl beim Start, Profil erstellen/löschen
+- [ ] **Storage**: IndexedDB für Decks, Cards, Reviews, Profile
+- [ ] **Practice Session**: Due-Queue + 4 Rating-Buttons (😵😬🙂😎)
+- [ ] **FSRS**: Scheduling lokal (einfache Implementierung oder Script-Tag)
+- [ ] **Cloze-Karten**: `[eckige Klammern]` als Lücken rendern
+- [ ] **PWA**: Offline-fähig, installierbar, persistent storage
+- [ ] **Theme**: Hell/Dunkel/System mit uchū-Palette
+- [ ] **Export**: Backup als ZIP (decks + reviews)
+
+### MVP 2 (Cloud Sync) - später
 - [ ] device_id + account_id/token
 - [ ] register.php + append.php + since.php
 - [ ] Sync UI: "Sync-Key anzeigen / eingeben"
 
-### MVP 3 (Kids)
-- [ ] Missions + Stickers
-- [ ] Elternmodus
-- [ ] Große UI + 5-Min Session button
+### MVP 3 (Gamification) - später
+- [ ] Streak-Anzeige
+- [ ] Missionen + Sticker-Album
+- [ ] Avatar-Items
 
 ---
 
-## 12) Offene Fragen
+## 13) Entscheidungen & Offene Fragen
 
-> Diese Fragen müssen vor der Implementierung geklärt werden:
+### Geklärt ✓
+- [x] **API-Base-URL**: `https://ssl.exoneon.de/hashcards-pwa/`
+- [x] **Markdown-Format**: hashcards-kompatibel (Q:/A:/C: mit [eckigen Klammern])
+- [x] **FSRS**: Einfach halten - eigene Implementierung oder Script-Tag (kein Build-Step)
+- [x] **Theme**: Hell/Dunkel/System
+- [x] **Farbpalette**: uchū (OKLCH)
+- [x] **Multi-Profil**: Ja, Profil-Auswahl beim Start
+- [x] **MVP-Scope**: Import + Practice + Cloze + Multi-Profil (kein Sync, kein Elternmodus, keine Gamification)
 
-### Technisch
-- [ ] API-Base-URL für PHP Backend?
-- [ ] Markdown-Format: Genaue Syntax für Q:/A:/C: oder andere Konvention?
-- [ ] ZIP-Import: Struktur (Assets relativ zu MD-Datei oder in assets/ Ordner)?
-- [ ] FSRS-Library: `ts-fsrs` npm package oder eigene Implementierung?
+### Offen (für MVP 1 klären)
+- [ ] **ZIP-Import**: Struktur für Assets? (relativ zu MD oder in assets/ Ordner?)
+- [ ] **Audio**: Audio-Playback in MVP 1? Wenn ja, wie referenzieren? (`![audio](file.mp3)` oder custom syntax?)
+- [ ] **Session-Länge**: Fix 10 Karten? Oder konfigurierbar?
+- [ ] **Neue Karten pro Tag**: Limit? (z.B. max 20 neue Karten/Tag)
 
-### UX/Design
-- [ ] Farbschema / Theme?
-- [ ] Soll es mehrere Profile (Kinder) auf einem Gerät geben?
-- [ ] Avatar-System: Welche Art von Items/Customization?
-- [ ] Sticker: Welche Motive / Themen?
-
-### Scope v1
-- [ ] Cloze-Karten in v1 oder später?
-- [ ] TTS in v1 oder später?
-- [ ] Missionen in v1 oder später?
+### Offen (später)
+- [ ] Avatar-System: Welche Art von Items?
+- [ ] Sticker: Welche Motive/Themen?
+- [ ] TTS: In welcher Version?
