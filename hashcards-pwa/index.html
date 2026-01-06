@@ -1,0 +1,2011 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta name="Pragma" content="no-cache">
+  <meta name="Expires" content="0">
+  <title>Hashcards</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <base href="/misc-public/hashcards-pwa/">
+  <style>
+    /* ===== uchū Color Palette (OKLCH) ===== */
+    :root {
+      /* Grau */
+      --uchu-light-gray: oklch(95.57% 0.003 286.35);
+      --uchu-gray: oklch(84.68% 0.002 197.12);
+      --uchu-dark-gray: oklch(63.12% 0.004 219.55);
+      /* Blau */
+      --uchu-light-blue: oklch(89.66% 0.046 260.67);
+      --uchu-blue: oklch(62.39% 0.181 258.33);
+      --uchu-dark-blue: oklch(43.48% 0.17 260.2);
+      /* Grün */
+      --uchu-light-green: oklch(93.96% 0.05 148.74);
+      --uchu-green: oklch(79.33% 0.179 145.62);
+      --uchu-dark-green: oklch(58.83% 0.158 145.05);
+      /* Rot */
+      --uchu-light-red: oklch(88.98% 0.052 3.28);
+      --uchu-red: oklch(62.73% 0.209 12.37);
+      --uchu-dark-red: oklch(45.8% 0.177 17.7);
+      /* Orange */
+      --uchu-light-orange: oklch(93.83% 0.037 56.93);
+      --uchu-orange: oklch(78.75% 0.142 54.33);
+      --uchu-dark-orange: oklch(58.28% 0.128 52.2);
+      /* Gelb */
+      --uchu-light-yellow: oklch(97.05% 0.039 91.2);
+      --uchu-yellow: oklch(90.92% 0.125 92.56);
+      --uchu-dark-yellow: oklch(69.14% 0.109 91.04);
+      /* Schwarz/Weiß */
+      --uchu-yang: oklch(99.4% 0 0);
+      --uchu-light-yin: oklch(91.87% 0.003 264.54);
+      --uchu-yin: oklch(14.38% 0.007 256.88);
+
+      /* Theme variables - Light mode default */
+      --bg-primary: var(--uchu-yang);
+      --bg-secondary: var(--uchu-light-gray);
+      --bg-card: var(--uchu-yang);
+      --text-primary: var(--uchu-yin);
+      --text-secondary: var(--uchu-dark-gray);
+      --accent: var(--uchu-blue);
+      --accent-light: var(--uchu-light-blue);
+      --success: var(--uchu-green);
+      --success-light: var(--uchu-light-green);
+      --error: var(--uchu-red);
+      --error-light: var(--uchu-light-red);
+      --warning: var(--uchu-orange);
+      --warning-light: var(--uchu-light-orange);
+      --border: var(--uchu-gray);
+    }
+
+    /* Dark mode */
+    [data-theme="dark"] {
+      --bg-primary: var(--uchu-yin);
+      --bg-secondary: oklch(20% 0.01 260);
+      --bg-card: oklch(25% 0.01 260);
+      --text-primary: var(--uchu-yang);
+      --text-secondary: var(--uchu-gray);
+      --accent: var(--uchu-light-blue);
+      --accent-light: var(--uchu-dark-blue);
+      --success: var(--uchu-light-green);
+      --success-light: var(--uchu-dark-green);
+      --error: var(--uchu-light-red);
+      --error-light: var(--uchu-dark-red);
+      --warning: var(--uchu-light-orange);
+      --warning-light: var(--uchu-dark-orange);
+      --border: var(--uchu-dark-gray);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      [data-theme="system"] {
+        --bg-primary: var(--uchu-yin);
+        --bg-secondary: oklch(20% 0.01 260);
+        --bg-card: oklch(25% 0.01 260);
+        --text-primary: var(--uchu-yang);
+        --text-secondary: var(--uchu-gray);
+        --accent: var(--uchu-light-blue);
+        --accent-light: var(--uchu-dark-blue);
+        --success: var(--uchu-light-green);
+        --success-light: var(--uchu-dark-green);
+        --error: var(--uchu-light-red);
+        --error-light: var(--uchu-dark-red);
+        --warning: var(--uchu-light-orange);
+        --warning-light: var(--uchu-dark-orange);
+        --border: var(--uchu-dark-gray);
+      }
+    }
+
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    body {
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    /* ===== App Container ===== */
+    #app {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== Screens ===== */
+    .screen {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* ===== Header ===== */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0 1rem;
+      gap: 1rem;
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* ===== Buttons ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      min-height: 48px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:active {
+      background: var(--uchu-dark-blue);
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:active {
+      background: var(--border);
+    }
+
+    .btn-icon {
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      border-radius: 12px;
+      font-size: 1.25rem;
+    }
+
+    .btn-large {
+      width: 100%;
+      padding: 1.25rem;
+      font-size: 1.25rem;
+      border-radius: 16px;
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-error {
+      background: var(--error);
+      color: white;
+    }
+
+    .btn-warning {
+      background: var(--warning);
+      color: white;
+    }
+
+    /* ===== Cards ===== */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1rem;
+    }
+
+    .card-clickable {
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .card-clickable:active {
+      transform: scale(0.98);
+    }
+
+    /* ===== Profile Selection Screen ===== */
+    #profile-screen {
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .logo {
+      font-size: 3rem;
+      text-align: center;
+    }
+
+    .logo-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+    }
+
+    .logo-version {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+    }
+
+    .profile-list {
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .profile-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .profile-item:active {
+      transform: scale(0.98);
+      border-color: var(--accent);
+    }
+
+    .profile-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--accent-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .profile-name {
+      flex: 1;
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+
+    .profile-stats {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .add-profile {
+      border-style: dashed;
+      justify-content: center;
+      color: var(--text-secondary);
+    }
+
+    /* ===== Home Screen ===== */
+    .stats-bar {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .stat-item {
+      flex: 1;
+      text-align: center;
+      padding: 0.75rem;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+    }
+
+    .deck-list {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      overflow-y: auto;
+      padding-bottom: 1rem;
+    }
+
+    .deck-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+    }
+
+    .deck-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--accent-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .deck-info {
+      flex: 1;
+    }
+
+    .deck-name {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .deck-meta {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .deck-due {
+      text-align: right;
+    }
+
+    .deck-due-count {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--warning);
+    }
+
+    .deck-due-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: var(--text-secondary);
+      gap: 1rem;
+      padding: 2rem;
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      opacity: 0.5;
+    }
+
+    /* ===== Practice Screen ===== */
+    #practice-screen {
+      padding: 0;
+    }
+
+    .practice-header {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      gap: 1rem;
+    }
+
+    .practice-progress {
+      flex: 1;
+      height: 8px;
+      background: var(--bg-secondary);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .practice-progress-bar {
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.3s ease;
+    }
+
+    .practice-count {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      min-width: 50px;
+      text-align: right;
+    }
+
+    .flashcard-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+      gap: 1rem;
+    }
+
+    .flashcard {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      min-height: 200px;
+    }
+
+    .flashcard:active {
+      transform: scale(0.99);
+    }
+
+    .flashcard-content {
+      font-size: 1.5rem;
+      text-align: center;
+      line-height: 1.4;
+      user-select: text;
+    }
+
+    .flashcard-hint {
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .flashcard-answer {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 2px dashed var(--border);
+      width: 100%;
+      text-align: center;
+    }
+
+    .cloze-blank {
+      display: inline-block;
+      min-width: 80px;
+      border-bottom: 3px solid var(--accent);
+      margin: 0 0.25rem;
+    }
+
+    .cloze-revealed {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .rating-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      padding: 0 1rem 1rem;
+    }
+
+    .rating-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.75rem 0.5rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      min-height: 70px;
+    }
+
+    .rating-btn:active {
+      transform: scale(0.95);
+    }
+
+    .rating-btn span {
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .rating-again { background: var(--error-light); color: var(--error); }
+    .rating-hard { background: var(--warning-light); color: var(--warning); }
+    .rating-good { background: var(--success-light); color: var(--success); }
+    .rating-easy { background: var(--accent-light); color: var(--accent); }
+
+    /* ===== Session Complete ===== */
+    .session-complete {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 1.5rem;
+      padding: 2rem;
+    }
+
+    .session-complete-icon {
+      font-size: 5rem;
+    }
+
+    .session-complete h2 {
+      font-size: 1.75rem;
+    }
+
+    .session-stats {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .session-stat {
+      text-align: center;
+    }
+
+    .session-stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    .session-stat-label {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    /* ===== Settings Screen ===== */
+    .settings-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .settings-section h2 {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
+
+    .settings-group {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .settings-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .settings-item:last-child {
+      border-bottom: none;
+    }
+
+    .settings-item label {
+      font-weight: 500;
+    }
+
+    .settings-item select,
+    .settings-item input[type="number"] {
+      padding: 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 1rem;
+      min-width: 100px;
+    }
+
+    /* ===== Import Screen ===== */
+    .import-zone {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 3px dashed var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      text-align: center;
+      gap: 1rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .import-zone:hover,
+    .import-zone.dragover {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .import-zone-icon {
+      font-size: 4rem;
+      opacity: 0.5;
+    }
+
+    .import-input {
+      display: none;
+    }
+
+    /* ===== Modal ===== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 400px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal h2 {
+      margin-bottom: 1rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .modal-actions .btn {
+      flex: 1;
+    }
+
+    .modal input[type="text"] {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-size: 1rem;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .modal input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    /* ===== Navigation ===== */
+    .bottom-nav {
+      display: flex;
+      border-top: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.75rem 0.5rem;
+      border: none;
+      background: none;
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: color 0.15s ease;
+    }
+
+    .nav-item.active {
+      color: var(--accent);
+    }
+
+    .nav-item-icon {
+      font-size: 1.5rem;
+    }
+
+    /* ===== Utilities ===== */
+    .hidden {
+      display: none !important;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .mt-1 { margin-top: 0.5rem; }
+    .mt-2 { margin-top: 1rem; }
+    .mb-1 { margin-bottom: 0.5rem; }
+    .mb-2 { margin-bottom: 1rem; }
+  </style>
+</head>
+<body data-theme="system">
+  <div id="app">
+    <!-- Profile Selection Screen -->
+    <div id="profile-screen" class="screen active">
+      <div class="logo">
+        <div>&#x1F4DA;</div>
+        <div class="logo-title">Hashcards</div>
+        <div class="logo-version" id="version-display">v1.0.0</div>
+      </div>
+      <div class="profile-list" id="profile-list">
+        <!-- Profiles will be rendered here -->
+      </div>
+    </div>
+
+    <!-- Home Screen -->
+    <div id="home-screen" class="screen">
+      <div class="header">
+        <h1 id="profile-name-display">Hashcards</h1>
+        <div class="header-actions">
+          <button class="btn btn-icon btn-secondary" onclick="showScreen('settings-screen')" aria-label="Einstellungen">&#x2699;</button>
+        </div>
+      </div>
+
+      <div class="stats-bar">
+        <div class="stat-item">
+          <div class="stat-value" id="stat-due">0</div>
+          <div class="stat-label">Faellig</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="stat-new">0</div>
+          <div class="stat-label">Neu</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="stat-total">0</div>
+          <div class="stat-label">Gesamt</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-large mb-2" id="start-practice-btn" onclick="startPractice()">
+        &#x1F4D6; Lernen
+      </button>
+
+      <div class="deck-list" id="deck-list">
+        <!-- Decks will be rendered here -->
+      </div>
+
+      <div class="empty-state hidden" id="empty-state">
+        <div class="empty-state-icon">&#x1F4DA;</div>
+        <div>Noch keine Decks vorhanden</div>
+        <button class="btn btn-primary" onclick="showScreen('import-screen')">
+          &#x2795; Deck importieren
+        </button>
+      </div>
+
+      <nav class="bottom-nav">
+        <button class="nav-item active" onclick="showScreen('home-screen')">
+          <span class="nav-item-icon">&#x1F3E0;</span>
+          <span>Home</span>
+        </button>
+        <button class="nav-item" onclick="showScreen('import-screen')">
+          <span class="nav-item-icon">&#x2795;</span>
+          <span>Import</span>
+        </button>
+        <button class="nav-item" onclick="exportBackup()">
+          <span class="nav-item-icon">&#x1F4E4;</span>
+          <span>Export</span>
+        </button>
+        <button class="nav-item" onclick="switchProfile()">
+          <span class="nav-item-icon">&#x1F464;</span>
+          <span>Profil</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Practice Screen -->
+    <div id="practice-screen" class="screen">
+      <div class="practice-header">
+        <button class="btn btn-icon btn-secondary" onclick="endPractice()">&#x2715;</button>
+        <div class="practice-progress">
+          <div class="practice-progress-bar" id="practice-progress-bar" style="width: 0%"></div>
+        </div>
+        <div class="practice-count" id="practice-count">0/0</div>
+      </div>
+
+      <div class="flashcard-container" id="flashcard-container">
+        <!-- Flashcard will be rendered here -->
+      </div>
+
+      <div class="rating-buttons hidden" id="rating-buttons">
+        <button class="rating-btn rating-again" onclick="rateCard('again')">
+          &#x1F635;
+          <span>Nope</span>
+        </button>
+        <button class="rating-btn rating-hard" onclick="rateCard('hard')">
+          &#x1F62C;
+          <span>Knapp</span>
+        </button>
+        <button class="rating-btn rating-good" onclick="rateCard('good')">
+          &#x1F642;
+          <span>Ok</span>
+        </button>
+        <button class="rating-btn rating-easy" onclick="rateCard('easy')">
+          &#x1F60E;
+          <span>Easy</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Settings Screen -->
+    <div id="settings-screen" class="screen">
+      <div class="header">
+        <button class="btn btn-icon btn-secondary" onclick="showScreen('home-screen')">&#x2190;</button>
+        <h1>Einstellungen</h1>
+        <div style="width: 48px"></div>
+      </div>
+
+      <div class="settings-section">
+        <h2>Darstellung</h2>
+        <div class="settings-group">
+          <div class="settings-item">
+            <label>Theme</label>
+            <select id="setting-theme" onchange="updateTheme(this.value)">
+              <option value="system">System</option>
+              <option value="light">Hell</option>
+              <option value="dark">Dunkel</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h2>Lernen</h2>
+        <div class="settings-group">
+          <div class="settings-item">
+            <label>Karten pro Session</label>
+            <input type="number" id="setting-cards-per-session" min="5" max="50" value="10" onchange="updateSetting('cardsPerSession', this.value)">
+          </div>
+          <div class="settings-item">
+            <label>Neue Karten pro Tag</label>
+            <input type="number" id="setting-new-cards-per-day" min="5" max="100" value="20" onchange="updateSetting('newCardsPerDay', this.value)">
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h2>Profil</h2>
+        <div class="settings-group">
+          <div class="settings-item">
+            <label id="current-profile-name">-</label>
+            <button class="btn btn-secondary" onclick="showRenameProfileModal()">Umbenennen</button>
+          </div>
+          <div class="settings-item">
+            <label>Profil loeschen</label>
+            <button class="btn btn-error" onclick="confirmDeleteProfile()">Loeschen</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h2>Daten</h2>
+        <div class="settings-group">
+          <div class="settings-item">
+            <label>Alle Daten loeschen</label>
+            <button class="btn btn-error" onclick="confirmResetAll()">Zuruecksetzen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import Screen -->
+    <div id="import-screen" class="screen">
+      <div class="header">
+        <button class="btn btn-icon btn-secondary" onclick="showScreen('home-screen')">&#x2190;</button>
+        <h1>Deck importieren</h1>
+        <div style="width: 48px"></div>
+      </div>
+
+      <div class="import-zone" id="import-zone" onclick="document.getElementById('import-input').click()">
+        <div class="import-zone-icon">&#x1F4C1;</div>
+        <div>Markdown-Datei (.md) auswaehlen</div>
+        <div style="color: var(--text-secondary); font-size: 0.875rem">oder hierher ziehen</div>
+        <input type="file" id="import-input" class="import-input" accept=".md,.txt" onchange="handleFileImport(event)">
+      </div>
+
+      <div class="card mt-2">
+        <h3 class="mb-1">Format</h3>
+        <pre style="font-size: 0.875rem; overflow-x: auto; white-space: pre-wrap; color: var(--text-secondary)">Q: Frage hier
+A: Antwort hier
+
+C: Lueckentext mit [Luecke] hier</pre>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal-overlay">
+      <div class="modal" id="modal">
+        <h2 id="modal-title">Modal</h2>
+        <div id="modal-content"></div>
+        <div class="modal-actions" id="modal-actions"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Version =====
+    const VERSION = '1.0.0';
+
+    // ===== Cache Busting: Redirect wenn Version in URL nicht stimmt =====
+    (function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlVersion = urlParams.get('v');
+      if (urlVersion !== VERSION) {
+        urlParams.set('v', VERSION);
+        window.location.replace(window.location.pathname + '?' + urlParams.toString());
+      }
+    })();
+
+    // ===== State =====
+    let db = null;
+    let currentProfile = null;
+    let currentDeck = null;
+    let practiceQueue = [];
+    let practiceIndex = 0;
+    let sessionStats = { reviewed: 0, again: 0, hard: 0, good: 0, easy: 0 };
+    let cardRevealed = false;
+
+    // ===== IndexedDB Setup =====
+    const DB_NAME = 'hashcards';
+    const DB_VERSION = 1;
+
+    async function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          db = request.result;
+          resolve(db);
+        };
+
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+
+          // Profiles store
+          if (!db.objectStoreNames.contains('profiles')) {
+            const profileStore = db.createObjectStore('profiles', { keyPath: 'id' });
+            profileStore.createIndex('name', 'name', { unique: false });
+          }
+
+          // Decks store (per profile)
+          if (!db.objectStoreNames.contains('decks')) {
+            const deckStore = db.createObjectStore('decks', { keyPath: 'id' });
+            deckStore.createIndex('profileId', 'profileId', { unique: false });
+          }
+
+          // Cards store
+          if (!db.objectStoreNames.contains('cards')) {
+            const cardStore = db.createObjectStore('cards', { keyPath: 'id' });
+            cardStore.createIndex('deckId', 'deckId', { unique: false });
+          }
+
+          // Reviews store (append-only log)
+          if (!db.objectStoreNames.contains('reviews')) {
+            const reviewStore = db.createObjectStore('reviews', { keyPath: 'id', autoIncrement: true });
+            reviewStore.createIndex('profileId', 'profileId', { unique: false });
+            reviewStore.createIndex('cardId', 'cardId', { unique: false });
+            reviewStore.createIndex('ts', 'ts', { unique: false });
+          }
+
+          // Card states store (FSRS cache, rebuildable)
+          if (!db.objectStoreNames.contains('cardStates')) {
+            const stateStore = db.createObjectStore('cardStates', { keyPath: 'id' });
+            stateStore.createIndex('profileId', 'profileId', { unique: false });
+            stateStore.createIndex('due', 'due', { unique: false });
+          }
+
+          // Settings store
+          if (!db.objectStoreNames.contains('settings')) {
+            db.createObjectStore('settings', { keyPath: 'key' });
+          }
+        };
+      });
+    }
+
+    // ===== DB Helpers =====
+    function dbTransaction(storeNames, mode = 'readonly') {
+      return db.transaction(storeNames, mode);
+    }
+
+    function dbGet(storeName, key) {
+      return new Promise((resolve, reject) => {
+        const tx = dbTransaction(storeName);
+        const request = tx.objectStore(storeName).get(key);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function dbGetAll(storeName, indexName = null, query = null) {
+      return new Promise((resolve, reject) => {
+        const tx = dbTransaction(storeName);
+        const store = tx.objectStore(storeName);
+        const target = indexName ? store.index(indexName) : store;
+        const request = query !== null ? target.getAll(query) : target.getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function dbPut(storeName, data) {
+      return new Promise((resolve, reject) => {
+        const tx = dbTransaction(storeName, 'readwrite');
+        const request = tx.objectStore(storeName).put(data);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function dbDelete(storeName, key) {
+      return new Promise((resolve, reject) => {
+        const tx = dbTransaction(storeName, 'readwrite');
+        const request = tx.objectStore(storeName).delete(key);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function dbClear(storeName) {
+      return new Promise((resolve, reject) => {
+        const tx = dbTransaction(storeName, 'readwrite');
+        const request = tx.objectStore(storeName).clear();
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    // ===== Profile Management =====
+    async function loadProfiles() {
+      const profiles = await dbGetAll('profiles');
+      renderProfiles(profiles);
+    }
+
+    function renderProfiles(profiles) {
+      const list = document.getElementById('profile-list');
+      list.innerHTML = '';
+
+      profiles.forEach(profile => {
+        const item = document.createElement('div');
+        item.className = 'profile-item';
+        item.onclick = () => selectProfile(profile.id);
+        item.innerHTML = `
+          <div class="profile-avatar">${profile.avatar || '&#x1F464;'}</div>
+          <div class="profile-name">${escapeHtml(profile.name)}</div>
+        `;
+        list.appendChild(item);
+      });
+
+      // Add profile button
+      const addBtn = document.createElement('div');
+      addBtn.className = 'profile-item add-profile';
+      addBtn.onclick = () => showCreateProfileModal();
+      addBtn.innerHTML = `<span>&#x2795; Neues Profil</span>`;
+      list.appendChild(addBtn);
+    }
+
+    async function selectProfile(profileId) {
+      currentProfile = await dbGet('profiles', profileId);
+      if (!currentProfile) return;
+
+      // Load settings
+      await loadSettings();
+
+      // Show home screen
+      document.getElementById('profile-name-display').textContent = currentProfile.name;
+      document.getElementById('current-profile-name').textContent = currentProfile.name;
+      showScreen('home-screen');
+
+      // Load decks and stats
+      await loadDecks();
+      await updateStats();
+    }
+
+    function showCreateProfileModal() {
+      showModal('Neues Profil', `
+        <input type="text" id="new-profile-name" placeholder="Name eingeben" maxlength="20">
+      `, [
+        { text: 'Abbrechen', class: 'btn-secondary', action: hideModal },
+        { text: 'Erstellen', class: 'btn-primary', action: createProfile }
+      ]);
+      setTimeout(() => document.getElementById('new-profile-name').focus(), 100);
+    }
+
+    async function createProfile() {
+      const nameInput = document.getElementById('new-profile-name');
+      const name = nameInput.value.trim();
+      if (!name) return;
+
+      const profile = {
+        id: generateId(),
+        name: name,
+        avatar: getRandomAvatar(),
+        createdAt: new Date().toISOString()
+      };
+
+      await dbPut('profiles', profile);
+      hideModal();
+      await loadProfiles();
+    }
+
+    function showRenameProfileModal() {
+      showModal('Profil umbenennen', `
+        <input type="text" id="rename-profile-name" placeholder="Neuer Name" maxlength="20" value="${escapeHtml(currentProfile.name)}">
+      `, [
+        { text: 'Abbrechen', class: 'btn-secondary', action: hideModal },
+        { text: 'Speichern', class: 'btn-primary', action: renameProfile }
+      ]);
+      setTimeout(() => {
+        const input = document.getElementById('rename-profile-name');
+        input.focus();
+        input.select();
+      }, 100);
+    }
+
+    async function renameProfile() {
+      const nameInput = document.getElementById('rename-profile-name');
+      const name = nameInput.value.trim();
+      if (!name) return;
+
+      currentProfile.name = name;
+      await dbPut('profiles', currentProfile);
+      document.getElementById('profile-name-display').textContent = name;
+      document.getElementById('current-profile-name').textContent = name;
+      hideModal();
+    }
+
+    async function confirmDeleteProfile() {
+      showModal('Profil loeschen?', `
+        <p>Alle Decks und Fortschritte von "${escapeHtml(currentProfile.name)}" werden geloescht.</p>
+      `, [
+        { text: 'Abbrechen', class: 'btn-secondary', action: hideModal },
+        { text: 'Loeschen', class: 'btn-error', action: deleteProfile }
+      ]);
+    }
+
+    async function deleteProfile() {
+      // Delete all data for this profile
+      const decks = await dbGetAll('decks', 'profileId', currentProfile.id);
+      for (const deck of decks) {
+        await deleteDeckData(deck.id);
+      }
+
+      // Delete card states
+      const states = await dbGetAll('cardStates', 'profileId', currentProfile.id);
+      for (const state of states) {
+        await dbDelete('cardStates', state.id);
+      }
+
+      // Delete reviews
+      const reviews = await dbGetAll('reviews', 'profileId', currentProfile.id);
+      for (const review of reviews) {
+        await dbDelete('reviews', review.id);
+      }
+
+      // Delete profile
+      await dbDelete('profiles', currentProfile.id);
+
+      currentProfile = null;
+      hideModal();
+      showScreen('profile-screen');
+      await loadProfiles();
+    }
+
+    function switchProfile() {
+      currentProfile = null;
+      showScreen('profile-screen');
+      loadProfiles();
+    }
+
+    // ===== Deck Management =====
+    async function loadDecks() {
+      if (!currentProfile) return;
+
+      const decks = await dbGetAll('decks', 'profileId', currentProfile.id);
+      renderDecks(decks);
+    }
+
+    async function renderDecks(decks) {
+      const list = document.getElementById('deck-list');
+      const emptyState = document.getElementById('empty-state');
+      const practiceBtn = document.getElementById('start-practice-btn');
+
+      if (decks.length === 0) {
+        list.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        practiceBtn.classList.add('hidden');
+        return;
+      }
+
+      list.classList.remove('hidden');
+      emptyState.classList.add('hidden');
+      practiceBtn.classList.remove('hidden');
+
+      list.innerHTML = '';
+
+      for (const deck of decks) {
+        const cards = await dbGetAll('cards', 'deckId', deck.id);
+        const dueCount = await getDueCount(deck.id);
+
+        const item = document.createElement('div');
+        item.className = 'card card-clickable deck-item';
+        item.onclick = () => startPractice(deck.id);
+        item.innerHTML = `
+          <div class="deck-icon">&#x1F4DA;</div>
+          <div class="deck-info">
+            <div class="deck-name">${escapeHtml(deck.name)}</div>
+            <div class="deck-meta">${cards.length} Karten</div>
+          </div>
+          <div class="deck-due">
+            <div class="deck-due-count">${dueCount}</div>
+            <div class="deck-due-label">faellig</div>
+          </div>
+        `;
+        list.appendChild(item);
+      }
+    }
+
+    async function deleteDeckData(deckId) {
+      // Delete cards
+      const cards = await dbGetAll('cards', 'deckId', deckId);
+      for (const card of cards) {
+        await dbDelete('cards', card.id);
+      }
+
+      // Delete deck
+      await dbDelete('decks', deckId);
+    }
+
+    // ===== Stats =====
+    async function updateStats() {
+      if (!currentProfile) return;
+
+      const decks = await dbGetAll('decks', 'profileId', currentProfile.id);
+      let totalCards = 0;
+      let dueCards = 0;
+      let newCards = 0;
+
+      for (const deck of decks) {
+        const cards = await dbGetAll('cards', 'deckId', deck.id);
+        totalCards += cards.length;
+
+        for (const card of cards) {
+          const state = await dbGet('cardStates', `${currentProfile.id}_${card.id}`);
+          if (!state) {
+            newCards++;
+          } else if (new Date(state.due) <= new Date()) {
+            dueCards++;
+          }
+        }
+      }
+
+      document.getElementById('stat-due').textContent = dueCards;
+      document.getElementById('stat-new').textContent = newCards;
+      document.getElementById('stat-total').textContent = totalCards;
+    }
+
+    async function getDueCount(deckId) {
+      const cards = await dbGetAll('cards', 'deckId', deckId);
+      let count = 0;
+
+      for (const card of cards) {
+        const state = await dbGet('cardStates', `${currentProfile.id}_${card.id}`);
+        if (!state || new Date(state.due) <= new Date()) {
+          count++;
+        }
+      }
+
+      return count;
+    }
+
+    // ===== Import =====
+    function handleFileImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      importFile(file);
+      event.target.value = '';
+    }
+
+    async function importFile(file) {
+      const text = await file.text();
+      const deckName = file.name.replace(/\.(md|txt)$/i, '');
+      const cards = parseMarkdown(text);
+
+      if (cards.length === 0) {
+        showModal('Import fehlgeschlagen', '<p>Keine Karten gefunden. Bitte ueberpruefen Sie das Format.</p>', [
+          { text: 'OK', class: 'btn-primary', action: hideModal }
+        ]);
+        return;
+      }
+
+      // Create deck
+      const deckId = generateId();
+      const deck = {
+        id: deckId,
+        profileId: currentProfile.id,
+        name: deckName,
+        createdAt: new Date().toISOString(),
+        source: file.name
+      };
+
+      await dbPut('decks', deck);
+
+      // Create cards
+      for (const cardData of cards) {
+        const card = {
+          id: generateCardId(deckId, cardData),
+          deckId: deckId,
+          kind: cardData.kind,
+          question: cardData.question,
+          answer: cardData.answer,
+          cloze: cardData.cloze,
+          createdAt: new Date().toISOString()
+        };
+        await dbPut('cards', card);
+      }
+
+      showModal('Import erfolgreich', `<p>${cards.length} Karten importiert!</p>`, [
+        { text: 'OK', class: 'btn-primary', action: () => { hideModal(); showScreen('home-screen'); } }
+      ]);
+
+      await loadDecks();
+      await updateStats();
+    }
+
+    // Drag and drop
+    const importZone = document.getElementById('import-zone');
+
+    importZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      importZone.classList.add('dragover');
+    });
+
+    importZone.addEventListener('dragleave', () => {
+      importZone.classList.remove('dragover');
+    });
+
+    importZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      importZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && (file.name.endsWith('.md') || file.name.endsWith('.txt'))) {
+        importFile(file);
+      }
+    });
+
+    // ===== Markdown Parser =====
+    function parseMarkdown(text) {
+      const cards = [];
+      const lines = text.split('\n');
+      let currentCard = null;
+      let currentField = null;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmed = line.trim();
+
+        // Empty line = card separator
+        if (trimmed === '') {
+          if (currentCard) {
+            finalizeCard(currentCard, cards);
+            currentCard = null;
+            currentField = null;
+          }
+          continue;
+        }
+
+        // Q: Question
+        if (trimmed.startsWith('Q:')) {
+          if (currentCard) {
+            finalizeCard(currentCard, cards);
+          }
+          currentCard = { kind: 'QA', question: trimmed.substring(2).trim(), answer: '' };
+          currentField = 'question';
+          continue;
+        }
+
+        // A: Answer
+        if (trimmed.startsWith('A:') && currentCard && currentCard.kind === 'QA') {
+          currentCard.answer = trimmed.substring(2).trim();
+          currentField = 'answer';
+          continue;
+        }
+
+        // C: Cloze
+        if (trimmed.startsWith('C:')) {
+          if (currentCard) {
+            finalizeCard(currentCard, cards);
+          }
+          currentCard = { kind: 'CLOZE', cloze: trimmed.substring(2).trim() };
+          currentField = 'cloze';
+          continue;
+        }
+
+        // Continuation of current field
+        if (currentCard && currentField) {
+          if (currentField === 'question') {
+            currentCard.question += '\n' + trimmed;
+          } else if (currentField === 'answer') {
+            currentCard.answer += '\n' + trimmed;
+          } else if (currentField === 'cloze') {
+            currentCard.cloze += '\n' + trimmed;
+          }
+        }
+      }
+
+      // Don't forget the last card
+      if (currentCard) {
+        finalizeCard(currentCard, cards);
+      }
+
+      return cards;
+    }
+
+    function finalizeCard(card, cards) {
+      if (card.kind === 'QA' && card.question && card.answer) {
+        cards.push(card);
+      } else if (card.kind === 'CLOZE' && card.cloze && card.cloze.includes('[')) {
+        cards.push(card);
+      }
+    }
+
+    function generateCardId(deckId, cardData) {
+      const content = cardData.kind === 'QA'
+        ? cardData.question + '\n---\n' + cardData.answer
+        : cardData.cloze;
+      return hashString(deckId + '\n' + content);
+    }
+
+    // ===== Export =====
+    async function exportBackup() {
+      if (!currentProfile) return;
+
+      const decks = await dbGetAll('decks', 'profileId', currentProfile.id);
+      const reviews = await dbGetAll('reviews', 'profileId', currentProfile.id);
+
+      let markdown = `# Hashcards Backup\n# Profile: ${currentProfile.name}\n# Date: ${new Date().toISOString()}\n\n`;
+
+      for (const deck of decks) {
+        markdown += `## ${deck.name}\n\n`;
+        const cards = await dbGetAll('cards', 'deckId', deck.id);
+
+        for (const card of cards) {
+          if (card.kind === 'QA') {
+            markdown += `Q: ${card.question}\nA: ${card.answer}\n\n`;
+          } else {
+            markdown += `C: ${card.cloze}\n\n`;
+          }
+        }
+      }
+
+      // Create and download file
+      const blob = new Blob([markdown], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `hashcards-backup-${currentProfile.name}-${new Date().toISOString().split('T')[0]}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // ===== Practice / FSRS =====
+    async function startPractice(deckId = null) {
+      if (!currentProfile) return;
+
+      const settings = await getSettings();
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+
+      // Get all cards from selected deck or all decks
+      let allCards = [];
+      if (deckId) {
+        allCards = await dbGetAll('cards', 'deckId', deckId);
+      } else {
+        const decks = await dbGetAll('decks', 'profileId', currentProfile.id);
+        for (const deck of decks) {
+          const cards = await dbGetAll('cards', 'deckId', deck.id);
+          allCards.push(...cards);
+        }
+      }
+
+      if (allCards.length === 0) {
+        showModal('Keine Karten', '<p>Importiere zuerst ein Deck.</p>', [
+          { text: 'OK', class: 'btn-primary', action: hideModal }
+        ]);
+        return;
+      }
+
+      // Separate due and new cards
+      const dueCards = [];
+      const newCards = [];
+
+      for (const card of allCards) {
+        const state = await dbGet('cardStates', `${currentProfile.id}_${card.id}`);
+        if (!state) {
+          newCards.push({ card, state: null });
+        } else if (new Date(state.due) <= now) {
+          dueCards.push({ card, state });
+        }
+      }
+
+      // Count new cards learned today
+      const todayReviews = await dbGetAll('reviews', 'profileId', currentProfile.id);
+      const newCardsToday = new Set();
+      for (const review of todayReviews) {
+        if (review.ts.startsWith(today) && review.isNew) {
+          newCardsToday.add(review.cardId);
+        }
+      }
+
+      // Limit new cards
+      const newCardLimit = Math.max(0, settings.newCardsPerDay - newCardsToday.size);
+      const limitedNewCards = newCards.slice(0, newCardLimit);
+
+      // Build practice queue: due cards first, then new cards
+      practiceQueue = [...dueCards, ...limitedNewCards.map(c => ({ ...c, isNew: true }))];
+
+      // Shuffle
+      shuffleArray(practiceQueue);
+
+      // Limit to session size
+      practiceQueue = practiceQueue.slice(0, settings.cardsPerSession);
+
+      if (practiceQueue.length === 0) {
+        showModal('Alles erledigt!', '<p>Keine Karten zum Lernen. Komm spaeter wieder!</p>', [
+          { text: 'OK', class: 'btn-primary', action: hideModal }
+        ]);
+        return;
+      }
+
+      // Reset session
+      practiceIndex = 0;
+      sessionStats = { reviewed: 0, again: 0, hard: 0, good: 0, easy: 0 };
+      cardRevealed = false;
+
+      showScreen('practice-screen');
+      showCurrentCard();
+    }
+
+    function showCurrentCard() {
+      if (practiceIndex >= practiceQueue.length) {
+        showSessionComplete();
+        return;
+      }
+
+      const { card, state, isNew } = practiceQueue[practiceIndex];
+      cardRevealed = false;
+
+      // Update progress
+      const progress = (practiceIndex / practiceQueue.length) * 100;
+      document.getElementById('practice-progress-bar').style.width = `${progress}%`;
+      document.getElementById('practice-count').textContent = `${practiceIndex + 1}/${practiceQueue.length}`;
+
+      // Hide rating buttons
+      document.getElementById('rating-buttons').classList.add('hidden');
+
+      // Render card
+      const container = document.getElementById('flashcard-container');
+
+      if (card.kind === 'QA') {
+        container.innerHTML = `
+          <div class="flashcard" onclick="revealAnswer()">
+            <div class="flashcard-content">${escapeHtml(card.question)}</div>
+            <div class="flashcard-hint">Tippen zum Aufdecken</div>
+            <div class="flashcard-answer hidden" id="answer-section">
+              <div class="flashcard-content">${escapeHtml(card.answer)}</div>
+            </div>
+          </div>
+        `;
+      } else {
+        // Cloze card
+        const clozeHtml = renderCloze(card.cloze, false);
+        container.innerHTML = `
+          <div class="flashcard" onclick="revealAnswer()">
+            <div class="flashcard-content">${clozeHtml}</div>
+            <div class="flashcard-hint">Tippen zum Aufdecken</div>
+          </div>
+        `;
+      }
+    }
+
+    function revealAnswer() {
+      if (cardRevealed) return;
+      cardRevealed = true;
+
+      const { card } = practiceQueue[practiceIndex];
+      const container = document.getElementById('flashcard-container');
+
+      if (card.kind === 'QA') {
+        document.getElementById('answer-section').classList.remove('hidden');
+        container.querySelector('.flashcard-hint').classList.add('hidden');
+      } else {
+        // Reveal cloze
+        const clozeHtml = renderCloze(card.cloze, true);
+        container.querySelector('.flashcard-content').innerHTML = clozeHtml;
+        container.querySelector('.flashcard-hint').classList.add('hidden');
+      }
+
+      // Show rating buttons
+      document.getElementById('rating-buttons').classList.remove('hidden');
+    }
+
+    function renderCloze(text, revealed) {
+      if (revealed) {
+        return escapeHtml(text).replace(/\[([^\]]+)\]/g, '<span class="cloze-revealed">$1</span>');
+      } else {
+        return escapeHtml(text).replace(/\[([^\]]+)\]/g, '<span class="cloze-blank"></span>');
+      }
+    }
+
+    async function rateCard(rating) {
+      const { card, state, isNew } = practiceQueue[practiceIndex];
+
+      // Log review event
+      const review = {
+        profileId: currentProfile.id,
+        cardId: card.id,
+        deckId: card.deckId,
+        ts: new Date().toISOString(),
+        rating: rating,
+        isNew: isNew || false
+      };
+      await dbPut('reviews', review);
+
+      // Update FSRS state
+      const newState = calculateFSRS(state, rating);
+      newState.id = `${currentProfile.id}_${card.id}`;
+      newState.profileId = currentProfile.id;
+      newState.cardId = card.id;
+      await dbPut('cardStates', newState);
+
+      // Update stats
+      sessionStats.reviewed++;
+      sessionStats[rating]++;
+
+      // Handle "again" - add to end of queue
+      if (rating === 'again') {
+        practiceQueue.push({ card, state: newState, isNew: false });
+      }
+
+      // Next card
+      practiceIndex++;
+      showCurrentCard();
+    }
+
+    function showSessionComplete() {
+      const container = document.getElementById('flashcard-container');
+      document.getElementById('rating-buttons').classList.add('hidden');
+
+      container.innerHTML = `
+        <div class="session-complete">
+          <div class="session-complete-icon">&#x1F389;</div>
+          <h2>Session beendet!</h2>
+          <div class="session-stats">
+            <div class="session-stat">
+              <div class="session-stat-value">${sessionStats.reviewed}</div>
+              <div class="session-stat-label">Karten</div>
+            </div>
+            <div class="session-stat">
+              <div class="session-stat-value" style="color: var(--success)">${sessionStats.good + sessionStats.easy}</div>
+              <div class="session-stat-label">Richtig</div>
+            </div>
+            <div class="session-stat">
+              <div class="session-stat-value" style="color: var(--error)">${sessionStats.again}</div>
+              <div class="session-stat-label">Nochmal</div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-large mt-2" onclick="endPractice()">Zurueck</button>
+        </div>
+      `;
+    }
+
+    function endPractice() {
+      showScreen('home-screen');
+      updateStats();
+    }
+
+    // ===== FSRS Algorithm (Simplified) =====
+    // Based on FSRS-4.5 parameters
+    const FSRS_PARAMS = {
+      w: [0.4, 0.6, 2.4, 5.8, 4.93, 0.94, 0.86, 0.01, 1.49, 0.14, 0.94, 2.18, 0.05, 0.34, 1.26, 0.29, 2.61],
+      requestRetention: 0.9,
+      maximumInterval: 36500, // 100 years in days
+    };
+
+    function calculateFSRS(prevState, rating) {
+      const now = new Date();
+      const ratingMap = { again: 1, hard: 2, good: 3, easy: 4 };
+      const grade = ratingMap[rating];
+
+      if (!prevState) {
+        // New card - initial stability based on rating
+        const initialStability = [
+          FSRS_PARAMS.w[0],
+          FSRS_PARAMS.w[1],
+          FSRS_PARAMS.w[2],
+          FSRS_PARAMS.w[3]
+        ][grade - 1];
+
+        const initialDifficulty = FSRS_PARAMS.w[4] - (grade - 3) * FSRS_PARAMS.w[5];
+        const d = Math.min(Math.max(initialDifficulty, 1), 10);
+
+        const interval = Math.max(1, Math.round(initialStability));
+
+        return {
+          stability: initialStability,
+          difficulty: d,
+          reps: 1,
+          lapses: grade === 1 ? 1 : 0,
+          due: addDays(now, interval).toISOString(),
+          lastReview: now.toISOString()
+        };
+      }
+
+      // Existing card
+      const elapsed = (now - new Date(prevState.lastReview)) / (1000 * 60 * 60 * 24); // days
+      const retrievability = Math.pow(1 + elapsed / (9 * prevState.stability), -1);
+
+      let newStability, newDifficulty;
+      const lapses = prevState.lapses + (grade === 1 ? 1 : 0);
+
+      if (grade === 1) {
+        // Again - use relearning formula
+        newDifficulty = Math.min(10, prevState.difficulty + FSRS_PARAMS.w[6]);
+        newStability = FSRS_PARAMS.w[11] * Math.pow(prevState.difficulty, -FSRS_PARAMS.w[12]) *
+                       (Math.pow(prevState.stability + 1, FSRS_PARAMS.w[13]) - 1) *
+                       Math.exp((1 - retrievability) * FSRS_PARAMS.w[14]);
+        newStability = Math.max(0.1, newStability);
+      } else {
+        // Hard, Good, Easy - use recall formula
+        const hardPenalty = grade === 2 ? FSRS_PARAMS.w[15] : 1;
+        const easyBonus = grade === 4 ? FSRS_PARAMS.w[16] : 1;
+
+        newDifficulty = prevState.difficulty - FSRS_PARAMS.w[6] * (grade - 3);
+        newDifficulty = Math.min(Math.max(newDifficulty, 1), 10);
+
+        newStability = prevState.stability * (1 +
+          Math.exp(FSRS_PARAMS.w[8]) *
+          (11 - prevState.difficulty) *
+          Math.pow(prevState.stability, -FSRS_PARAMS.w[9]) *
+          (Math.exp((1 - retrievability) * FSRS_PARAMS.w[10]) - 1) *
+          hardPenalty *
+          easyBonus
+        );
+      }
+
+      // Calculate interval
+      const interval = Math.min(
+        FSRS_PARAMS.maximumInterval,
+        Math.max(1, Math.round(9 * newStability * (1 / FSRS_PARAMS.requestRetention - 1)))
+      );
+
+      return {
+        stability: newStability,
+        difficulty: newDifficulty,
+        reps: prevState.reps + 1,
+        lapses: lapses,
+        due: addDays(now, interval).toISOString(),
+        lastReview: now.toISOString()
+      };
+    }
+
+    // ===== Settings =====
+    async function loadSettings() {
+      const theme = await dbGet('settings', 'theme');
+      if (theme) {
+        document.body.setAttribute('data-theme', theme.value);
+        document.getElementById('setting-theme').value = theme.value;
+      }
+
+      const cardsPerSession = await dbGet('settings', 'cardsPerSession');
+      if (cardsPerSession) {
+        document.getElementById('setting-cards-per-session').value = cardsPerSession.value;
+      }
+
+      const newCardsPerDay = await dbGet('settings', 'newCardsPerDay');
+      if (newCardsPerDay) {
+        document.getElementById('setting-new-cards-per-day').value = newCardsPerDay.value;
+      }
+    }
+
+    async function getSettings() {
+      const cardsPerSession = await dbGet('settings', 'cardsPerSession');
+      const newCardsPerDay = await dbGet('settings', 'newCardsPerDay');
+
+      return {
+        cardsPerSession: cardsPerSession ? parseInt(cardsPerSession.value) : 10,
+        newCardsPerDay: newCardsPerDay ? parseInt(newCardsPerDay.value) : 20
+      };
+    }
+
+    function updateTheme(value) {
+      document.body.setAttribute('data-theme', value);
+      dbPut('settings', { key: 'theme', value: value });
+    }
+
+    function updateSetting(key, value) {
+      dbPut('settings', { key: key, value: value });
+    }
+
+    async function confirmResetAll() {
+      showModal('Alle Daten loeschen?', '<p>Diese Aktion kann nicht rueckgaengig gemacht werden!</p>', [
+        { text: 'Abbrechen', class: 'btn-secondary', action: hideModal },
+        { text: 'Alles loeschen', class: 'btn-error', action: resetAll }
+      ]);
+    }
+
+    async function resetAll() {
+      await dbClear('profiles');
+      await dbClear('decks');
+      await dbClear('cards');
+      await dbClear('reviews');
+      await dbClear('cardStates');
+      await dbClear('settings');
+
+      currentProfile = null;
+      hideModal();
+      showScreen('profile-screen');
+      await loadProfiles();
+    }
+
+    // ===== Modal =====
+    function showModal(title, content, buttons) {
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-content').innerHTML = content;
+
+      const actionsContainer = document.getElementById('modal-actions');
+      actionsContainer.innerHTML = '';
+
+      buttons.forEach(btn => {
+        const button = document.createElement('button');
+        button.className = `btn ${btn.class}`;
+        button.textContent = btn.text;
+        button.onclick = btn.action;
+        actionsContainer.appendChild(button);
+      });
+
+      document.getElementById('modal-overlay').classList.add('active');
+    }
+
+    function hideModal() {
+      document.getElementById('modal-overlay').classList.remove('active');
+    }
+
+    // Close modal on overlay click
+    document.getElementById('modal-overlay').addEventListener('click', (e) => {
+      if (e.target.id === 'modal-overlay') {
+        hideModal();
+      }
+    });
+
+    // ===== Screen Navigation =====
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+
+      // Update nav
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      if (screenId === 'home-screen') {
+        document.querySelector('.nav-item').classList.add('active');
+      }
+    }
+
+    // ===== Utilities =====
+    function generateId() {
+      return 'xxxx-xxxx-xxxx'.replace(/x/g, () =>
+        Math.floor(Math.random() * 16).toString(16)
+      );
+    }
+
+    function hashString(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      return Math.abs(hash).toString(36);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function addDays(date, days) {
+      const result = new Date(date);
+      result.setDate(result.getDate() + days);
+      return result;
+    }
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function getRandomAvatar() {
+      const avatars = ['&#x1F431;', '&#x1F436;', '&#x1F98A;', '&#x1F43B;', '&#x1F428;', '&#x1F437;', '&#x1F430;', '&#x1F42F;'];
+      return avatars[Math.floor(Math.random() * avatars.length)];
+    }
+
+    // ===== PWA =====
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js', { scope: './' })
+        .then(reg => console.log('SW registered'))
+        .catch(err => console.log('SW registration failed:', err));
+    }
+
+    // Request persistent storage
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().then(granted => {
+        console.log('Persistent storage:', granted ? 'granted' : 'denied');
+      });
+    }
+
+    // ===== Init =====
+    async function init() {
+      try {
+        // Display version
+        document.getElementById('version-display').textContent = 'v' + VERSION;
+
+        await initDB();
+        await loadProfiles();
+      } catch (err) {
+        console.error('Init error:', err);
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
