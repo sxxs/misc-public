@@ -512,6 +512,7 @@
     }
 
     .flashcard {
+      position: relative;
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -917,16 +918,21 @@
 
     /* ===== Card Actions ===== */
     .card-actions {
+      position: absolute;
+      bottom: 0.75rem;
+      right: 0.75rem;
       display: flex;
       gap: 0.5rem;
-      margin-top: 1rem;
-      justify-content: center;
     }
 
     .card-action-btn {
-      padding: 0.5rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.35rem 0.6rem;
       border: 1px solid var(--border);
       border-radius: 8px;
+      font-size: 0.75rem;
       background: var(--bg-secondary);
       color: var(--text-secondary);
       font-size: 0.875rem;
@@ -985,7 +991,7 @@
       <div class="logo">
         <div>&#x1F4DA;</div>
         <div class="logo-title">Hashcards</div>
-        <div class="logo-version" id="version-display">v1.1.0</div>
+        <div class="logo-version" id="version-display">v1.1.1</div>
       </div>
       <div class="profile-list" id="profile-list">
         <!-- Profiles will be rendered here -->
@@ -1229,7 +1235,7 @@ C: Lueckentext mit [Luecke] hier</pre>
 
   <script>
     // ===== Version =====
-    const VERSION = '1.1.0';
+    const VERSION = '1.1.1';
 
     // ===== Cache Busting: Redirect wenn Version in URL nicht stimmt =====
     (function() {
@@ -1851,7 +1857,7 @@ C: Lueckentext mit [Luecke] hier</pre>
     }
 
     // ===== Practice / FSRS =====
-    async function startPractice(deckId = null) {
+    async function startPractice(deckId = null, extraMode = false) {
       if (!currentProfile) return;
 
       const settings = await getSettings();
@@ -1884,9 +1890,10 @@ C: Lueckentext mit [Luecke] hier</pre>
         return;
       }
 
-      // Separate due and new cards
+      // Separate due, new, and not-due cards
       const dueCards = [];
       const newCards = [];
+      const notDueCards = [];
 
       for (const card of allCards) {
         const state = await dbGet('cardStates', `${currentProfile.id}_${card.id}`);
@@ -1894,6 +1901,8 @@ C: Lueckentext mit [Luecke] hier</pre>
           newCards.push({ card, state: null });
         } else if (new Date(state.due) <= now) {
           dueCards.push({ card, state });
+        } else {
+          notDueCards.push({ card, state });
         }
       }
 
@@ -1906,12 +1915,17 @@ C: Lueckentext mit [Luecke] hier</pre>
         }
       }
 
-      // Limit new cards
-      const newCardLimit = Math.max(0, settings.newCardsPerDay - newCardsToday.size);
+      // Limit new cards (unless extra mode)
+      const newCardLimit = extraMode ? newCards.length : Math.max(0, settings.newCardsPerDay - newCardsToday.size);
       const limitedNewCards = newCards.slice(0, newCardLimit);
 
       // Build practice queue: due cards first, then new cards
       practiceQueue = [...dueCards, ...limitedNewCards.map(c => ({ ...c, isNew: true }))];
+
+      // In extra mode, also add not-due cards
+      if (extraMode && practiceQueue.length === 0) {
+        practiceQueue = [...notDueCards];
+      }
 
       // Shuffle
       shuffleArray(practiceQueue);
@@ -1920,9 +1934,23 @@ C: Lueckentext mit [Luecke] hier</pre>
       practiceQueue = practiceQueue.slice(0, settings.cardsPerSession);
 
       if (practiceQueue.length === 0) {
-        showModal('Alles erledigt!', '<p>Keine Karten zum Lernen. Komm spaeter wieder!</p>', [
-          { text: 'OK', class: 'btn-primary', action: hideModal }
-        ]);
+        // Check if there are cards available for extra practice
+        const extraAvailable = notDueCards.length > 0 || newCards.length > limitedNewCards.length;
+        if (extraAvailable && !extraMode) {
+          showModal('Alles erledigt! &#x1F389;', `
+            <p>Keine faelligen Karten mehr.</p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--text-secondary)">
+              ${notDueCards.length} Karten noch nicht faellig
+            </p>
+          `, [
+            { text: 'OK', class: 'btn-secondary', action: hideModal },
+            { text: 'Extra ueben', class: 'btn-primary', action: () => { hideModal(); startPractice(deckId, true); } }
+          ]);
+        } else {
+          showModal('Keine Karten', '<p>Alle Karten wurden heute schon geuebt!</p>', [
+            { text: 'OK', class: 'btn-primary', action: hideModal }
+          ]);
+        }
         return;
       }
 
@@ -1960,10 +1988,10 @@ C: Lueckentext mit [Luecke] hier</pre>
       const cardActionsHtml = `
         <div class="card-actions">
           <button class="card-action-btn" onclick="event.stopPropagation(); hideCurrentCard()" title="Karte verstecken">
-            &#x1F6AB;
+            &#x1F6AB; Ausblenden
           </button>
           <button class="card-action-btn" onclick="event.stopPropagation(); markCurrentCardFaulty()" title="Fehler melden">
-            &#x26A0;&#xFE0F;
+            &#x26A0;&#xFE0F; Fehler
           </button>
         </div>
       `;
@@ -2060,7 +2088,7 @@ C: Lueckentext mit [Luecke] hier</pre>
       const { card, state, isNew } = practiceQueue[practiceIndex];
 
       // Register activity for session tracking
-      registerActivity();
+      recordActivity();
 
       // Log review event
       const review = {
