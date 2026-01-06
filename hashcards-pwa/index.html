@@ -1092,7 +1092,7 @@
       <div class="logo">
         <div>&#x1F4DA;</div>
         <div class="logo-title">Hashcards</div>
-        <div class="logo-version" id="version-display">v1.2.5</div>
+        <div class="logo-version" id="version-display">v1.2.6</div>
       </div>
       <div class="profile-list" id="profile-list">
         <!-- Profiles will be rendered here -->
@@ -1356,7 +1356,7 @@ C: Lueckentext mit [Luecke]</pre>
 
   <script>
     // ===== Version =====
-    const VERSION = '1.2.5';
+    const VERSION = '1.2.6';
 
     // ===== Cache Busting: Redirect wenn Version in URL nicht stimmt =====
     (function() {
@@ -2711,9 +2711,9 @@ C: Lueckentext mit [Luecke]</pre>
         practiceQueue.push({ card, state: newState, isNew: false });
       }
 
-      // Next card
+      // Next card (delay to show flash animation)
       practiceIndex++;
-      showCurrentCard();
+      setTimeout(() => showCurrentCard(), 250);
     }
 
     function showSessionComplete() {
