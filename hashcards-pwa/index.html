@@ -852,15 +852,9 @@
 
     .particle {
       position: absolute;
-      width: 10px;
-      height: 10px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
-      animation: particle-fall 1s ease-out forwards;
-    }
-
-    @keyframes particle-fall {
-      0% { transform: translateY(0) scale(1); opacity: 1; }
-      100% { transform: translateY(100px) scale(0); opacity: 0; }
     }
 
     .combo-indicator {
@@ -991,7 +985,7 @@
       <div class="logo">
         <div>&#x1F4DA;</div>
         <div class="logo-title">Hashcards</div>
-        <div class="logo-version" id="version-display">v1.2.0</div>
+        <div class="logo-version" id="version-display">v1.2.1</div>
       </div>
       <div class="profile-list" id="profile-list">
         <!-- Profiles will be rendered here -->
@@ -1255,7 +1249,7 @@ C: Lueckentext mit [Luecke]</pre>
 
   <script>
     // ===== Version =====
-    const VERSION = '1.2.0';
+    const VERSION = '1.2.1';
 
     // ===== Cache Busting: Redirect wenn Version in URL nicht stimmt =====
     (function() {
@@ -3100,31 +3094,42 @@ C: Lueckentext mit [Luecke]</pre>
     }
 
     // ===== Fireworks & Effects =====
-    function spawnFireworks(x, y) {
+    function spawnFireworks() {
       const container = document.getElementById('fireworks-container');
-      const colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#95e1d3', '#f38181', '#aa96da'];
+      const flashcard = document.querySelector('.flashcard');
 
-      for (let i = 0; i < 20; i++) {
+      // Get center of flashcard or fallback to screen center
+      let centerX = window.innerWidth / 2;
+      let centerY = window.innerHeight / 2;
+
+      if (flashcard) {
+        const rect = flashcard.getBoundingClientRect();
+        centerX = rect.left + rect.width / 2;
+        centerY = rect.top + rect.height / 2;
+      }
+
+      const colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#95e1d3', '#f38181', '#aa96da', '#ffd93d', '#6bcb77'];
+      const particleCount = 40;
+
+      for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
         particle.className = 'particle';
-        particle.style.left = x + 'px';
-        particle.style.top = y + 'px';
+        particle.style.left = centerX + 'px';
+        particle.style.top = centerY + 'px';
         particle.style.background = colors[Math.floor(Math.random() * colors.length)];
 
-        const angle = (Math.PI * 2 * i) / 20;
-        const velocity = 50 + Math.random() * 50;
+        const angle = (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5) * 0.5;
+        const velocity = 80 + Math.random() * 120;
         const dx = Math.cos(angle) * velocity;
         const dy = Math.sin(angle) * velocity;
 
-        particle.style.setProperty('--dx', dx + 'px');
-        particle.style.setProperty('--dy', dy + 'px');
         particle.animate([
-          { transform: 'translate(0, 0) scale(1)', opacity: 1 },
-          { transform: `translate(${dx}px, ${dy}px) scale(0)`, opacity: 0 }
-        ], { duration: 800, easing: 'ease-out' });
+          { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+          { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0)`, opacity: 0 }
+        ], { duration: 1000, easing: 'ease-out' });
 
         container.appendChild(particle);
-        setTimeout(() => particle.remove(), 800);
+        setTimeout(() => particle.remove(), 1000);
       }
     }
 
