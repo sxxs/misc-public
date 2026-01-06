@@ -1082,7 +1082,7 @@
       <div class="logo">
         <div>&#x1F4DA;</div>
         <div class="logo-title">Hashcards</div>
-        <div class="logo-version" id="version-display">v1.2.3</div>
+        <div class="logo-version" id="version-display">v1.2.4</div>
       </div>
       <div class="profile-list" id="profile-list">
         <!-- Profiles will be rendered here -->
@@ -1346,7 +1346,7 @@ C: Lueckentext mit [Luecke]</pre>
 
   <script>
     // ===== Version =====
-    const VERSION = '1.2.3';
+    const VERSION = '1.2.4';
 
     // ===== Cache Busting: Redirect wenn Version in URL nicht stimmt =====
     (function() {
@@ -1467,7 +1467,67 @@ C: Lueckentext mit [Luecke]</pre>
       { type: 'fact', text: '🌸 Auch Pflanzennamen sind oft Latein - damit Biologen weltweit sich verstehen.' },
       { type: 'fact', text: '📱 "Video" heisst "ich sehe" auf Latein - und "Audio" heisst "ich hoere".' },
       { type: 'fact', text: '🎓 "Universitas" bedeutete urspruenglich "Gemeinschaft" - von Lernenden und Lehrenden.' },
-      { type: 'fact', text: '📧 Das @-Zeichen kommt vom lateinischen "ad" (zu/bei) - schon Moenche nutzten es!' }
+      { type: 'fact', text: '📧 Das @-Zeichen kommt vom lateinischen "ad" (zu/bei) - schon Moenche nutzten es!' },
+
+      // Verrueckte Fakten
+      { type: 'weird', text: '🦩 Flamingos hiessen bei den Roemern "Phoenicopterus" - und ihre Zungen galten als Delikatesse!' },
+      { type: 'weird', text: '🧽 Roemer benutzten Schwaemme am Stock statt Toilettenpapier - "tersorium" genannt.' },
+      { type: 'weird', text: '💀 Gladiatoren-Schweiss wurde als Aphrodisiakum verkauft - Frauen zahlten viel dafuer!' },
+      { type: 'weird', text: '🦷 Roemer verwendeten Urin als Mundwasser - der Ammoniak wirkte tatsaechlich bleichend.' },
+      { type: 'weird', text: '🐭 Siebenschlaefer waren eine roemische Delikatesse - in speziellen Toepfen gemaestet!' },
+      { type: 'weird', text: '👁️ Kaiser Nero schaute durch einen Smaragd - die erste dokumentierte "Sonnenbrille"!' },
+      { type: 'weird', text: '🩸 Epileptiker tranken Gladiatorenblut als "Medizin" - man glaubte an heilende Kraefte.' },
+      { type: 'weird', text: '🐟 Garum (fermentierte Fischsauce) war das Ketchup der Roemer - kam auf fast alles!' },
+      { type: 'weird', text: '💇 Blonde Haare waren so beliebt, dass Roemerinnen Peruecken aus germanischem Haar trugen.' },
+      { type: 'weird', text: '🦔 Igel wurden gezuechtet, um mit ihren Stacheln Stoffe aufzurauen!' },
+
+      // Staunen
+      { type: 'amazing', text: '🌋 Pompeji hatte mehr Kneipen pro Einwohner als das heutige New York - ca. 150 Bars!' },
+      { type: 'amazing', text: '🏗️ Roemischer Beton ist staerker als moderner - nach 2000 Jahren noch intakt im Meer!' },
+      { type: 'amazing', text: '📊 Rom hatte zur Kaiserzeit 1 Million Einwohner - erst London 1800 Jahre spaeter wieder!' },
+      { type: 'amazing', text: '🚽 Roemische Toiletten waren soziale Treffpunkte - man sass nebeneinander und plauderte!' },
+      { type: 'amazing', text: '🎪 Bei der Einweihung des Kolosseums wurden 9000 Tiere getoetet - in nur 100 Tagen!' },
+      { type: 'amazing', text: '💰 Kaiser Augustus hatte ein Vermoegen von 4,6 Billionen Dollar (heutigem Wert)!' },
+      { type: 'amazing', text: '🗺️ Das Roemische Reich erstreckte sich ueber 5 Millionen Quadratkilometer - 40 Laender heute!' },
+      { type: 'amazing', text: '⚓ Die roemische Flotte hatte Schiffe mit bis zu 400 Ruderern - schwimmende Festungen!' },
+      { type: 'amazing', text: '🏠 Manche roemischen Mietshaeuser waren 8 Stockwerke hoch - antike Wolkenkratzer!' },
+      { type: 'amazing', text: '📚 Die Bibliothek von Alexandria hatte 400.000 Schriftrollen - die groesste der Antike!' },
+
+      // Zum Schmunzeln
+      { type: 'funny', text: '🍕 Kaiser Tiberius verklagte einen Mann wegen eines schlechten Witzes - und gewann!' },
+      { type: 'funny', text: '🐴 Caligula wollte sein Pferd zum Konsul machen - Politiker-Kritik auf roemische Art!' },
+      { type: 'funny', text: '💩 Vespasian besteuerte oeffentliche Toiletten - sein Sohn fand das peinlich. Vespasian: "Geld stinkt nicht!"' },
+      { type: 'funny', text: '🎭 Roemische Schauspieler galten als ehrlos - durften nicht einmal waehlen!' },
+      { type: 'funny', text: '🍷 "In vino veritas" (Im Wein liegt Wahrheit) - Roemer glaubten, Betrunkene luegen nicht.' },
+      { type: 'funny', text: '🦜 Reiche Roemer hatten Papageien, die "Ave Caesar!" riefen - antike Tuerklingeln!' },
+      { type: 'funny', text: '🎲 Wuerfelspiele waren verboten - ausser im Dezember. Roemer spielten trotzdem das ganze Jahr!' },
+      { type: 'funny', text: '👠 Roemische Prostituierte trugen hohe Absaetze - zur Unterscheidung von "anstaendigen" Frauen.' },
+      { type: 'funny', text: '📝 Graffiti in Pompeji: "Hier hat Secundus gut gekackt" - manche Dinge aendern sich nie!' },
+      { type: 'funny', text: '🐕 Ein roemisches Mosaik zeigt einen Hund mit "Cave canem" (Vorsicht Hund) - aeltestes Warnschild!' },
+
+      // Wenig bekannt
+      { type: 'obscure', text: '🎂 Geburtstage wurden nur fuer Maenner gefeiert - Frauen galten als weniger wichtig.' },
+      { type: 'obscure', text: '👶 Neugeborene wurden vom Vater "aufgehoben" - nur dann waren sie offiziell akzeptiert.' },
+      { type: 'obscure', text: '🔔 Sklaven trugen manchmal Gloeckchen - damit man hoerte, wenn sie sich naeherten.' },
+      { type: 'obscure', text: '🌙 Die Roemer hatten keine Woche - bis Kaiser Konstantin den 7-Tage-Rhythmus einfuehrte.' },
+      { type: 'obscure', text: '🪒 Nur Philosophen trugen Baerte - "normale" Roemer rasierten sich taeglich!' },
+      { type: 'obscure', text: '💐 Rosen wurden im Winter in beheizten Gewaechshaeusern gezuechtet - fuer Feste!' },
+      { type: 'obscure', text: '🏃 Frauen war das Betreten des Kolosseums anfangs verboten - spaeter gabs extra Raenge.' },
+      { type: 'obscure', text: '🎨 Statuen waren bunt bemalt - das weisse Marmor-Bild ist ein Missverstaendnis!' },
+      { type: 'obscure', text: '📮 "Postumus" war ein beliebter Name - fuer nach dem Tod des Vaters geborene Kinder.' },
+      { type: 'obscure', text: '🦅 SPQR steht fuer "Senatus Populusque Romanus" - noch heute auf Gullideckeln in Rom!' },
+
+      // Sprache und Woerter
+      { type: 'language', text: '🚗 "Taxi" kommt von lateinisch "taxa" (Gebuehr) - man bezahlt nach Taxameter!' },
+      { type: 'language', text: '📻 "Radio" kommt von "radius" (Strahl) - unsichtbare Strahlen durchs All!' },
+      { type: 'language', text: '🦠 "Virus" heisst woertlich "Gift" oder "Schleim" auf Latein.' },
+      { type: 'language', text: '💡 "Kandidat" kommt von "candidus" (weiss) - Bewerber trugen weisse Togen!' },
+      { type: 'language', text: '🎭 "Person" stammt von "persona" (Maske) - wir spielen alle Rollen!' },
+      { type: 'language', text: '💵 "Salat" kommt von "sal" (Salz) - Gemuese wurde gesalzen konserviert!' },
+      { type: 'language', text: '🖊️ "Stil" kommt von "stilus" (Griffel) - das Schreibgeraet praegte den Begriff!' },
+      { type: 'language', text: '🏋️ "Gymnasium" hiess "Ort der Nacktheit" - Griechen trainierten unbekleidet!' },
+      { type: 'language', text: '🔬 "Fokus" bedeutete urspruenglich "Herd" - der Mittelpunkt des roemischen Hauses.' },
+      { type: 'language', text: '✨ "Desaster" kommt von "dis-astrum" (schlechter Stern) - Unglueck kam vom Himmel!' }
     ];
 
     // ===== IndexedDB Setup =====
