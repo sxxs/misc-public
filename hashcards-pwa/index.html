@@ -944,14 +944,24 @@
       box-shadow: 0 0 6px currentColor;
     }
 
-    .flashcard.flash-correct {
-      background: linear-gradient(135deg, var(--success), #4ade80) !important;
-      border-color: var(--success) !important;
-      box-shadow: 0 0 40px rgba(74, 222, 128, 0.5);
+    @keyframes flash-green {
+      0% { background: var(--bg-card); }
+      30% { background: #22c55e; border-color: #16a34a; box-shadow: 0 0 60px rgba(34, 197, 94, 0.8); }
+      100% { background: var(--bg-card); }
     }
 
-    .flashcard.flash-correct * {
-      color: white !important;
+    @keyframes flash-red {
+      0% { background: var(--bg-card); }
+      30% { background: #ef4444; border-color: #dc2626; box-shadow: 0 0 60px rgba(239, 68, 68, 0.8); }
+      100% { background: var(--bg-card); }
+    }
+
+    .flashcard.flash-correct {
+      animation: flash-green 0.4s ease-out;
+    }
+
+    .flashcard.flash-wrong {
+      animation: flash-red 0.4s ease-out;
     }
 
     .combo-indicator {
@@ -1082,7 +1092,7 @@
       <div class="logo">
         <div>&#x1F4DA;</div>
         <div class="logo-title">Hashcards</div>
-        <div class="logo-version" id="version-display">v1.2.4</div>
+        <div class="logo-version" id="version-display">v1.2.5</div>
       </div>
       <div class="profile-list" id="profile-list">
         <!-- Profiles will be rendered here -->
@@ -1346,7 +1356,7 @@ C: Lueckentext mit [Luecke]</pre>
 
   <script>
     // ===== Version =====
-    const VERSION = '1.2.4';
+    const VERSION = '1.2.5';
 
     // ===== Cache Busting: Redirect wenn Version in URL nicht stimmt =====
     (function() {
@@ -2691,6 +2701,7 @@ C: Lueckentext mit [Luecke]</pre>
       } else {
         comboCount = 0;
         playFailureSound();
+        flashWrong();
       }
 
       // Handle "again" - add to end of queue and track
@@ -3487,9 +3498,22 @@ C: Lueckentext mit [Luecke]</pre>
       const flashcard = document.querySelector('.flashcard');
       if (!flashcard) return;
 
-      // Add flash class for green glow effect
+      // Force animation restart by removing and re-adding class
+      flashcard.classList.remove('flash-correct', 'flash-wrong');
+      void flashcard.offsetWidth; // Trigger reflow
       flashcard.classList.add('flash-correct');
-      setTimeout(() => flashcard.classList.remove('flash-correct'), 300);
+      setTimeout(() => flashcard.classList.remove('flash-correct'), 400);
+    }
+
+    function flashWrong() {
+      const flashcard = document.querySelector('.flashcard');
+      if (!flashcard) return;
+
+      // Force animation restart by removing and re-adding class
+      flashcard.classList.remove('flash-correct', 'flash-wrong');
+      void flashcard.offsetWidth; // Trigger reflow
+      flashcard.classList.add('flash-wrong');
+      setTimeout(() => flashcard.classList.remove('flash-wrong'), 400);
     }
 
     function spawnMiniSparkles() {
