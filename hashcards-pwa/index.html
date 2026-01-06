@@ -991,7 +991,7 @@
       <div class="logo">
         <div>&#x1F4DA;</div>
         <div class="logo-title">Hashcards</div>
-        <div class="logo-version" id="version-display">v1.1.1</div>
+        <div class="logo-version" id="version-display">v1.1.2</div>
       </div>
       <div class="profile-list" id="profile-list">
         <!-- Profiles will be rendered here -->
@@ -1235,7 +1235,7 @@ C: Lueckentext mit [Luecke] hier</pre>
 
   <script>
     // ===== Version =====
-    const VERSION = '1.1.1';
+    const VERSION = '1.1.2';
 
     // ===== Cache Busting: Redirect wenn Version in URL nicht stimmt =====
     (function() {
@@ -1253,7 +1253,9 @@ C: Lueckentext mit [Luecke] hier</pre>
     let currentDeck = null;
     let practiceQueue = [];
     let practiceIndex = 0;
+    let originalQueueSize = 0;
     let sessionStats = { reviewed: 0, again: 0, hard: 0, good: 0, easy: 0 };
+    let cardsNeededRepeat = new Set(); // Track cards that were rated "again"
     let cardRevealed = false;
 
     // Session tracking
@@ -1956,7 +1958,9 @@ C: Lueckentext mit [Luecke] hier</pre>
 
       // Reset session
       practiceIndex = 0;
+      originalQueueSize = practiceQueue.length;
       sessionStats = { reviewed: 0, again: 0, hard: 0, good: 0, easy: 0 };
+      cardsNeededRepeat = new Set();
       cardRevealed = false;
       comboCount = 0;
 
@@ -1976,10 +1980,11 @@ C: Lueckentext mit [Luecke] hier</pre>
       const { card, state, isNew } = practiceQueue[practiceIndex];
       cardRevealed = false;
 
-      // Update progress
-      const progress = (practiceIndex / practiceQueue.length) * 100;
+      // Update progress (based on original queue size, not growing queue)
+      const progress = Math.min(100, (practiceIndex / originalQueueSize) * 100);
       document.getElementById('practice-progress-bar').style.width = `${progress}%`;
-      document.getElementById('practice-count').textContent = `${practiceIndex + 1}/${practiceQueue.length}`;
+      // Show current position / original size (can exceed original if repeats)
+      document.getElementById('practice-count').textContent = `${practiceIndex + 1}/${originalQueueSize}`;
 
       // Hide rating buttons
       document.getElementById('rating-buttons').classList.add('hidden');
@@ -2128,8 +2133,9 @@ C: Lueckentext mit [Luecke] hier</pre>
         playFailureSound();
       }
 
-      // Handle "again" - add to end of queue
+      // Handle "again" - add to end of queue and track
       if (rating === 'again') {
+        cardsNeededRepeat.add(card.id);
         practiceQueue.push({ card, state: newState, isNew: false });
       }
 
@@ -2145,14 +2151,19 @@ C: Lueckentext mit [Luecke] hier</pre>
       // Check if all correct (no "again" ratings)
       const allPerfect = sessionStats.again === 0 && sessionStats.reviewed > 0;
 
-      // Play celebration sound for perfect sessions
+      // Play sounds
       if (allPerfect) {
         playCelebrationSound();
         spawnFireworks();
+      } else {
+        playSessionEndSound();
       }
 
       // Get encouraging phrase
       const phrase = getRandomPhrase();
+
+      // Calculate stats based on unique cards
+      const firstTryCorrect = originalQueueSize - cardsNeededRepeat.size;
 
       container.innerHTML = `
         <div class="session-complete">
@@ -2161,16 +2172,16 @@ C: Lueckentext mit [Luecke] hier</pre>
           <p class="encouragement">${phrase}</p>
           <div class="session-stats">
             <div class="session-stat">
-              <div class="session-stat-value">${sessionStats.reviewed}</div>
+              <div class="session-stat-value">${originalQueueSize}</div>
               <div class="session-stat-label">Karten</div>
             </div>
             <div class="session-stat">
-              <div class="session-stat-value" style="color: var(--success)">${sessionStats.good + sessionStats.easy}</div>
-              <div class="session-stat-label">Richtig</div>
+              <div class="session-stat-value" style="color: var(--success)">${firstTryCorrect}</div>
+              <div class="session-stat-label">Gewusst</div>
             </div>
             <div class="session-stat">
-              <div class="session-stat-value" style="color: var(--error)">${sessionStats.again}</div>
-              <div class="session-stat-label">Nochmal</div>
+              <div class="session-stat-value" style="color: var(--warning)">${cardsNeededRepeat.size}</div>
+              <div class="session-stat-label">Wiederholt</div>
             </div>
           </div>
           <button class="btn btn-primary btn-large mt-2" onclick="endPractice()">Zurueck</button>
@@ -2334,7 +2345,7 @@ C: Lueckentext mit [Luecke] hier</pre>
 
     // ===== Modal =====
     function showModal(title, content, buttons) {
-      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-title').innerHTML = title;
       document.getElementById('modal-content').innerHTML = content;
 
       const actionsContainer = document.getElementById('modal-actions');
@@ -2451,6 +2462,10 @@ C: Lueckentext mit [Luecke] hier</pre>
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
+      // Resume for Safari (requires user interaction)
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
       return audioCtx;
     }
 
@@ -2463,13 +2478,13 @@ C: Lueckentext mit [Luecke] hier</pre>
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.type = 'sine';
-        // Rising major third (C to E)
-        osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); // E5
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        gain.gain.exponentialDecayTo(0.01, ctx.currentTime + 0.2);
+        // Quick rising beep
+        osc.frequency.setValueAtTime(600, ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(900, ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
         osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.2);
+        osc.stop(ctx.currentTime + 0.15);
       } catch (e) { console.log('Audio error:', e); }
     }
 
@@ -2482,11 +2497,11 @@ C: Lueckentext mit [Luecke] hier</pre>
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.type = 'sine';
-        // Falling perfect fifth (G to C)
-        osc.frequency.setValueAtTime(392, ctx.currentTime); // G4
-        osc.frequency.setValueAtTime(261.63, ctx.currentTime + 0.15); // C4
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        gain.gain.exponentialDecayTo(0.01, ctx.currentTime + 0.25);
+        // Low descending tone
+        osc.frequency.setValueAtTime(350, ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(200, ctx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + 0.25);
       } catch (e) { console.log('Audio error:', e); }
@@ -2506,18 +2521,32 @@ C: Lueckentext mit [Luecke] hier</pre>
           osc.type = 'sine';
           osc.frequency.value = freq;
           gain.gain.setValueAtTime(0.2, ctx.currentTime + i * 0.1);
-          gain.gain.exponentialDecayTo(0.01, ctx.currentTime + i * 0.1 + 0.3);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.1 + 0.3);
           osc.start(ctx.currentTime + i * 0.1);
           osc.stop(ctx.currentTime + i * 0.1 + 0.3);
         });
       } catch (e) { console.log('Audio error:', e); }
     }
 
-    // Polyfill for exponentialDecayTo
-    if (!GainNode.prototype.exponentialDecayTo) {
-      GainNode.prototype.exponentialDecayTo = function(value, endTime) {
-        this.gain.exponentialRampToValueAtTime(Math.max(0.0001, value), endTime);
-      };
+    function playSessionEndSound() {
+      if (isMuted) return;
+      try {
+        const ctx = initAudio();
+        // Short completion chime
+        const notes = [659.25, 783.99]; // E5, G5
+        notes.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = 'triangle';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.2, ctx.currentTime + i * 0.12);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.12 + 0.25);
+          osc.start(ctx.currentTime + i * 0.12);
+          osc.stop(ctx.currentTime + i * 0.12 + 0.25);
+        });
+      } catch (e) { console.log('Audio error:', e); }
     }
 
     // ===== Session Tracking =====
