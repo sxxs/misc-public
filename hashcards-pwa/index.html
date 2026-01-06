@@ -1280,6 +1280,13 @@
       </div>
 
       <div class="settings-section">
+        <h2>Sync</h2>
+        <div id="sync-settings-container">
+          <!-- Dynamisch befuellt durch renderSyncSettings() -->
+        </div>
+      </div>
+
+      <div class="settings-section">
         <h2>Daten</h2>
         <div class="settings-group">
           <div class="settings-item">
@@ -1356,7 +1363,10 @@ C: Lueckentext mit [Luecke]</pre>
 
   <script>
     // ===== Version =====
-    const VERSION = '1.2.6';
+    const VERSION = '1.3.0';
+
+    // ===== Sync Server =====
+    const SYNC_SERVER = 'https://ssl.exoneon.de/hashcards-pwa/api';
 
     // ===== Cache Busting: Redirect wenn Version in URL nicht stimmt =====
     (function() {
@@ -1542,7 +1552,7 @@ C: Lueckentext mit [Luecke]</pre>
 
     // ===== IndexedDB Setup =====
     const DB_NAME = 'hashcards';
-    const DB_VERSION = 2;
+    const DB_VERSION = 3;
 
     async function initDB() {
       return new Promise((resolve, reject) => {
@@ -1600,6 +1610,11 @@ C: Lueckentext mit [Luecke]</pre>
             const sessionStore = db.createObjectStore('sessions', { keyPath: 'id', autoIncrement: true });
             sessionStore.createIndex('profileId', 'profileId', { unique: false });
             sessionStore.createIndex('date', 'date', { unique: false });
+          }
+
+          // SyncState store (v3) - for sync credentials and state per profile
+          if (!db.objectStoreNames.contains('syncState')) {
+            db.createObjectStore('syncState', { keyPath: 'profileId' });
           }
         };
       });
@@ -1710,6 +1725,10 @@ C: Lueckentext mit [Luecke]</pre>
       // Update streak and learning time display
       await updateStreakDisplay();
       updateHiddenFaultyCounts();
+
+      // Render sync settings and trigger background sync
+      renderSyncSettings();
+      performSync(false); // Silent background sync
     }
 
     function showCreateProfileModal() {
@@ -2422,6 +2441,575 @@ C: Lueckentext mit [Luecke]</pre>
       await updateStats();
     }
 
+    // ===== Sync =====
+
+    // Generate device ID (stable per browser)
+    function getDeviceId() {
+      let deviceId = localStorage.getItem('hashcards_device_id');
+      if (!deviceId) {
+        deviceId = 'D-' + generateId();
+        localStorage.setItem('hashcards_device_id', deviceId);
+      }
+      return deviceId;
+    }
+
+    // Generate account ID (base32, 12 chars)
+    function generateAccountId() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+      let result = '';
+      const array = new Uint8Array(12);
+      crypto.getRandomValues(array);
+      for (let i = 0; i < 12; i++) {
+        result += chars[array[i] % 32];
+      }
+      return result;
+    }
+
+    // Generate token (base64url, 32 bytes)
+    function generateToken() {
+      const array = new Uint8Array(32);
+      crypto.getRandomValues(array);
+      return btoa(String.fromCharCode(...array))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    }
+
+    // Get sync state for current profile
+    async function getSyncState() {
+      if (!currentProfile) return null;
+      return await dbGet('syncState', currentProfile.id);
+    }
+
+    // Save sync state
+    async function saveSyncState(state) {
+      await dbPut('syncState', state);
+    }
+
+    // Build authorization header
+    function buildAuthHeader(syncState) {
+      return `Bearer ${syncState.accountId}.${syncState.token}`;
+    }
+
+    // Register new account on server
+    async function registerAccount(accountId, token, deviceId) {
+      const tokenHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+      const tokenSha256 = Array.from(new Uint8Array(tokenHash)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+      const response = await fetch(`${SYNC_SERVER}/register.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          account_id: accountId,
+          token_sha256: tokenSha256,
+          device_id: deviceId
+        })
+      });
+
+      if (!response.ok && response.status !== 400 && response.status !== 409) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!data.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+      return data;
+    }
+
+    // Build snapshot from current profile data
+    async function buildSnapshot() {
+      const decks = await dbGetAll('decks', 'profileId', currentProfile.id);
+      const decksWithCards = [];
+      for (const deck of decks) {
+        const cards = await dbGetAll('cards', 'deckId', deck.id);
+        decksWithCards.push({ ...deck, cards });
+      }
+
+      const cardStates = await dbGetAll('cardStates', 'profileId', currentProfile.id);
+      const reviews = await dbGetAll('reviews', 'profileId', currentProfile.id);
+      const sessions = await dbGetAll('sessions', 'profileId', currentProfile.id);
+
+      return {
+        profile: {
+          name: currentProfile.name,
+          avatar: currentProfile.avatar,
+          createdAt: currentProfile.createdAt,
+          hiddenCards: currentProfile.hiddenCards || [],
+          faultyCards: currentProfile.faultyCards || []
+        },
+        decks: decksWithCards,
+        cardStates,
+        reviews,
+        sessions
+      };
+    }
+
+    // Upload snapshot to server
+    async function uploadSnapshot(syncState) {
+      const snapshot = await buildSnapshot();
+
+      const response = await fetch(`${SYNC_SERVER}/snapshot.php`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': buildAuthHeader(syncState)
+        },
+        body: JSON.stringify({
+          expected_version: syncState.snapshotVersion || 0,
+          snapshot
+        })
+      });
+
+      if (!response.ok && response.status !== 400 && response.status !== 401 && response.status !== 409) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!data.ok) {
+        if (data.error === 'Version mismatch') {
+          // Need to pull first
+          return { conflict: true, serverVersion: data.server_version };
+        }
+        throw new Error(data.error || 'Upload failed');
+      }
+
+      // Update local version
+      syncState.snapshotVersion = data.version;
+      syncState.lastSync = new Date().toISOString();
+      await saveSyncState(syncState);
+
+      return { ok: true, version: data.version };
+    }
+
+    // Download snapshot from server
+    async function downloadSnapshot(syncState) {
+      const response = await fetch(`${SYNC_SERVER}/snapshot.php`, {
+        method: 'GET',
+        headers: { 'Authorization': buildAuthHeader(syncState) }
+      });
+
+      if (!response.ok && response.status !== 400 && response.status !== 401) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!data.ok) {
+        throw new Error(data.error || 'Download failed');
+      }
+
+      return { snapshot: data.snapshot, version: data.version };
+    }
+
+    // Merge server snapshot into local data (server wins for conflicts)
+    async function mergeSnapshot(serverSnapshot, serverVersion, syncState) {
+      if (!serverSnapshot) return; // Nothing to merge
+
+      // Update profile metadata
+      if (serverSnapshot.profile) {
+        currentProfile.name = serverSnapshot.profile.name || currentProfile.name;
+        currentProfile.avatar = serverSnapshot.profile.avatar || currentProfile.avatar;
+        currentProfile.hiddenCards = serverSnapshot.profile.hiddenCards || [];
+        currentProfile.faultyCards = serverSnapshot.profile.faultyCards || [];
+        await dbPut('profiles', currentProfile);
+      }
+
+      // Clear existing data for this profile
+      const existingDecks = await dbGetAll('decks', 'profileId', currentProfile.id);
+      for (const deck of existingDecks) {
+        const cards = await dbGetAll('cards', 'deckId', deck.id);
+        for (const card of cards) {
+          await dbDelete('cards', card.id);
+        }
+        await dbDelete('decks', deck.id);
+      }
+
+      const existingStates = await dbGetAll('cardStates', 'profileId', currentProfile.id);
+      for (const state of existingStates) {
+        await dbDelete('cardStates', state.id);
+      }
+
+      const existingReviews = await dbGetAll('reviews', 'profileId', currentProfile.id);
+      for (const review of existingReviews) {
+        await dbDelete('reviews', review.id);
+      }
+
+      const existingSessions = await dbGetAll('sessions', 'profileId', currentProfile.id);
+      for (const session of existingSessions) {
+        await dbDelete('sessions', session.id);
+      }
+
+      // Import server data
+      for (const deck of (serverSnapshot.decks || [])) {
+        const newDeck = {
+          id: deck.id,
+          profileId: currentProfile.id,
+          name: deck.name,
+          notes: deck.notes,
+          createdAt: deck.createdAt
+        };
+        await dbPut('decks', newDeck);
+
+        for (const card of (deck.cards || [])) {
+          const newCard = {
+            id: card.id,
+            deckId: deck.id,
+            kind: card.kind,
+            question: card.question,
+            answer: card.answer,
+            cloze: card.cloze,
+            front: card.front,
+            back: card.back
+          };
+          await dbPut('cards', newCard);
+        }
+      }
+
+      for (const state of (serverSnapshot.cardStates || [])) {
+        const newState = {
+          ...state,
+          id: `${currentProfile.id}_${state.cardId}`,
+          profileId: currentProfile.id
+        };
+        await dbPut('cardStates', newState);
+      }
+
+      for (const review of (serverSnapshot.reviews || [])) {
+        const newReview = { ...review, profileId: currentProfile.id };
+        await dbPut('reviews', newReview);
+      }
+
+      for (const session of (serverSnapshot.sessions || [])) {
+        const newSession = { ...session, profileId: currentProfile.id };
+        await dbPut('sessions', newSession);
+      }
+
+      // Update sync state
+      syncState.snapshotVersion = serverVersion;
+      syncState.lastSync = new Date().toISOString();
+      await saveSyncState(syncState);
+    }
+
+    // Full sync: download, merge if needed, then upload
+    async function performSync(showUI = true, retryCount = 0) {
+      const MAX_RETRIES = 3;
+
+      const syncState = await getSyncState();
+      if (!syncState || !syncState.accountId) {
+        if (showUI) alert('Sync nicht eingerichtet. Bitte zuerst aktivieren.');
+        return { ok: false, error: 'not_configured' };
+      }
+
+      try {
+        if (showUI) showSyncStatus('Synchronisiere...');
+
+        // 1. Download server state
+        const { snapshot: serverSnapshot, version: serverVersion } = await downloadSnapshot(syncState);
+
+        // 2. If server has newer data, merge it
+        if (serverVersion > (syncState.snapshotVersion || 0)) {
+          await mergeSnapshot(serverSnapshot, serverVersion, syncState);
+          // Reload UI after merge
+          await loadDecks();
+          await updateStats();
+          await updateStreakDisplay();
+        }
+
+        // 3. Reload sync state after merge (may have been updated)
+        const updatedSyncState = await getSyncState();
+
+        // 4. Upload local changes
+        const uploadResult = await uploadSnapshot(updatedSyncState);
+
+        if (uploadResult.conflict) {
+          // Race condition: retry with limit
+          if (retryCount < MAX_RETRIES) {
+            return await performSync(showUI, retryCount + 1);
+          } else {
+            throw new Error('Sync conflict nach mehreren Versuchen');
+          }
+        }
+
+        if (showUI) {
+          showSyncStatus('Sync erfolgreich!', 'success');
+          setTimeout(() => hideSyncStatus(), 2000);
+        }
+
+        return { ok: true };
+      } catch (err) {
+        console.error('Sync error:', err);
+        if (showUI) {
+          showSyncStatus('Sync fehlgeschlagen: ' + err.message, 'error');
+          setTimeout(() => hideSyncStatus(), 5000);
+        }
+        return { ok: false, error: err.message };
+      }
+    }
+
+    // Enable sync for current profile (create new account)
+    async function enableSync() {
+      if (!currentProfile) return;
+
+      const accountId = generateAccountId();
+      const token = generateToken();
+      const deviceId = getDeviceId();
+
+      try {
+        showSyncStatus('Registriere Account...');
+        await registerAccount(accountId, token, deviceId);
+
+        const syncState = {
+          profileId: currentProfile.id,
+          accountId,
+          token,
+          deviceId,
+          snapshotVersion: 0,
+          createdAt: new Date().toISOString()
+        };
+
+        // Initial upload (before saving sync state locally)
+        showSyncStatus('Lade Daten hoch...');
+        const snapshot = await buildSnapshot();
+        const response = await fetch(`${SYNC_SERVER}/snapshot.php`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': buildAuthHeader(syncState)
+          },
+          body: JSON.stringify({ expected_version: 0, snapshot })
+        });
+
+        if (!response.ok && response.status !== 400) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (!data.ok) {
+          throw new Error(data.error || 'Upload failed');
+        }
+
+        // Only save sync state after successful upload
+        syncState.snapshotVersion = data.version;
+        syncState.lastSync = new Date().toISOString();
+        await saveSyncState(syncState);
+
+        showSyncStatus('Sync aktiviert!', 'success');
+        setTimeout(() => {
+          hideSyncStatus();
+          renderSyncSettings();
+        }, 1500);
+      } catch (err) {
+        console.error('Enable sync error:', err);
+        showSyncStatus('Fehler: ' + err.message, 'error');
+        setTimeout(() => hideSyncStatus(), 5000);
+      }
+    }
+
+    // Pair with existing account (restore from sync key)
+    async function pairWithAccount(syncKey) {
+      if (!currentProfile) return;
+
+      const parts = syncKey.trim().split('.');
+      if (parts.length !== 2) {
+        throw new Error('Ungueltiger Sync-Key Format');
+      }
+
+      const [accountId, token] = parts;
+      const deviceId = getDeviceId();
+
+      // Validate account ID format (base32)
+      if (!/^[A-Z2-7]{12,16}$/i.test(accountId)) {
+        throw new Error('Ungueltiger Account-ID');
+      }
+
+      // Validate token format (base64url, ~43 chars for 32 bytes)
+      if (!/^[A-Za-z0-9_-]{20,60}$/.test(token)) {
+        throw new Error('Ungueltiger Token');
+      }
+
+      const syncState = {
+        profileId: currentProfile.id,
+        accountId: accountId.toUpperCase(),
+        token,
+        deviceId,
+        snapshotVersion: 0,
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        showSyncStatus('Verbinde...');
+
+        // Try to download - this validates the credentials
+        const { snapshot, version } = await downloadSnapshot(syncState);
+
+        // Save sync state
+        await saveSyncState(syncState);
+
+        // Merge server data
+        if (snapshot) {
+          await mergeSnapshot(snapshot, version, syncState);
+          await loadDecks();
+          await updateStats();
+          await updateStreakDisplay();
+        }
+
+        showSyncStatus('Verbunden!', 'success');
+        setTimeout(() => {
+          hideSyncStatus();
+          renderSyncSettings();
+        }, 1500);
+      } catch (err) {
+        console.error('Pair error:', err);
+        showSyncStatus('Fehler: ' + err.message, 'error');
+        setTimeout(() => hideSyncStatus(), 5000);
+        throw err;
+      }
+    }
+
+    // Disable sync for current profile
+    async function disableSync() {
+      if (!currentProfile) return;
+      await dbDelete('syncState', currentProfile.id);
+      renderSyncSettings();
+    }
+
+    // Show sync status message
+    function showSyncStatus(message, type = 'info') {
+      let statusEl = document.getElementById('sync-status');
+      if (!statusEl) {
+        statusEl = document.createElement('div');
+        statusEl.id = 'sync-status';
+        statusEl.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);padding:0.75rem 1.5rem;border-radius:8px;z-index:1000;font-weight:500;';
+        document.body.appendChild(statusEl);
+      }
+
+      statusEl.textContent = message;
+      statusEl.style.background = type === 'error' ? 'var(--error)' : type === 'success' ? 'var(--success)' : 'var(--accent)';
+      statusEl.style.color = 'white';
+      statusEl.style.display = 'block';
+    }
+
+    function hideSyncStatus() {
+      const statusEl = document.getElementById('sync-status');
+      if (statusEl) statusEl.style.display = 'none';
+    }
+
+    // Render sync settings UI
+    async function renderSyncSettings() {
+      const container = document.getElementById('sync-settings-container');
+      if (!container || !currentProfile) return;
+
+      const syncState = await getSyncState();
+
+      if (syncState && syncState.accountId) {
+        // Sync is enabled
+        const syncKey = `${syncState.accountId}.${syncState.token}`;
+        const lastSync = syncState.lastSync ? new Date(syncState.lastSync).toLocaleString('de-DE') : 'Nie';
+
+        container.innerHTML = `
+          <div class="settings-group">
+            <div class="settings-item" style="flex-direction:column;align-items:flex-start;gap:0.5rem">
+              <label style="color:var(--success)">&#x2713; Sync aktiv</label>
+              <div style="font-size:0.8rem;color:var(--text-secondary)">Letzter Sync: ${lastSync}</div>
+            </div>
+            <div class="settings-item">
+              <label>Sync-Key</label>
+              <button class="btn btn-secondary" onclick="showSyncKey()">Anzeigen</button>
+            </div>
+            <div class="settings-item">
+              <label>Jetzt synchronisieren</label>
+              <button class="btn btn-primary" onclick="performSync()">Sync</button>
+            </div>
+            <div class="settings-item">
+              <label>Sync deaktivieren</label>
+              <button class="btn btn-error" onclick="confirmDisableSync()">Deaktivieren</button>
+            </div>
+          </div>
+        `;
+      } else {
+        // Sync not enabled
+        container.innerHTML = `
+          <div class="settings-group">
+            <div class="settings-item" style="flex-direction:column;align-items:flex-start;gap:0.5rem">
+              <label>Sync nicht aktiviert</label>
+              <div style="font-size:0.8rem;color:var(--text-secondary)">Synchronisiere deine Lernfortschritte zwischen Geraeten.</div>
+            </div>
+            <div class="settings-item">
+              <label>Neuen Sync starten</label>
+              <button class="btn btn-primary" onclick="confirmEnableSync()">Aktivieren</button>
+            </div>
+            <div class="settings-item">
+              <label>Mit bestehendem Sync verbinden</label>
+              <button class="btn btn-secondary" onclick="showPairDialog()">Sync-Key eingeben</button>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function showSyncKey() {
+      getSyncState().then(syncState => {
+        if (!syncState) return;
+        const syncKey = `${syncState.accountId}.${syncState.token}`;
+        const escapedKey = escapeHtml(syncKey);
+        showModal('Sync-Key', `
+          <p style="margin-bottom:1rem;font-size:0.85rem;color:var(--text-secondary)">
+            Mit diesem Key kannst du andere Geraete verbinden. Halte ihn geheim!
+          </p>
+          <div id="sync-key-display" style="background:var(--bg-secondary);padding:1rem;border-radius:8px;word-break:break-all;font-family:monospace;font-size:0.85rem">
+            ${escapedKey}
+          </div>
+          <button class="btn btn-secondary mt-1" onclick="navigator.clipboard.writeText(document.getElementById('sync-key-display').textContent);this.textContent='Kopiert!'">
+            Kopieren
+          </button>
+        `, [
+          { text: 'Schliessen', class: 'btn-primary', action: hideModal }
+        ]);
+      });
+    }
+
+    function confirmEnableSync() {
+      showModal('Sync aktivieren?', `
+        <p>Ein neuer Sync-Account wird erstellt. Deine lokalen Daten werden hochgeladen.</p>
+        <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-secondary)">
+          Du erhaeltst einen Sync-Key, mit dem du andere Geraete verbinden kannst.
+        </p>
+      `, [
+        { text: 'Abbrechen', class: 'btn-secondary', action: hideModal },
+        { text: 'Aktivieren', class: 'btn-primary', action: () => { hideModal(); enableSync(); } }
+      ]);
+    }
+
+    function showPairDialog() {
+      showModal('Sync-Key eingeben', `
+        <p style="margin-bottom:1rem;font-size:0.85rem;color:var(--text-secondary)">
+          Gib den Sync-Key von einem anderen Geraet ein, um deine Daten zu synchronisieren.
+        </p>
+        <input type="text" id="pair-sync-key" placeholder="ACCOUNTID.token..." style="width:100%;font-family:monospace">
+        <p style="margin-top:0.75rem;font-size:0.8rem;color:var(--warning)">
+          ⚠️ Achtung: Lokale Daten werden durch Server-Daten ersetzt!
+        </p>
+      `, [
+        { text: 'Abbrechen', class: 'btn-secondary', action: hideModal },
+        { text: 'Verbinden', class: 'btn-primary', action: () => {
+          const key = document.getElementById('pair-sync-key').value;
+          hideModal();
+          pairWithAccount(key).catch(err => {});
+        }}
+      ]);
+      setTimeout(() => document.getElementById('pair-sync-key')?.focus(), 100);
+    }
+
+    function confirmDisableSync() {
+      showModal('Sync deaktivieren?', `
+        <p>Der Sync wird nur auf diesem Geraet deaktiviert. Deine lokalen Daten bleiben erhalten.</p>
+        <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-secondary)">
+          Du kannst den Sync jederzeit wieder aktivieren.
+        </p>
+      `, [
+        { text: 'Abbrechen', class: 'btn-secondary', action: hideModal },
+        { text: 'Deaktivieren', class: 'btn-error', action: () => { hideModal(); disableSync(); } }
+      ]);
+    }
+
     // ===== Practice / FSRS =====
     async function startPractice(deckId = null, extraMode = false) {
       if (!currentProfile) return;
@@ -2801,6 +3389,9 @@ C: Lueckentext mit [Luecke]</pre>
       showScreen('home-screen');
       await updateStats();
       await updateStreakDisplay();
+
+      // Sync after session complete (background)
+      performSync(false);
     }
 
     // ===== FSRS Algorithm (Simplified) =====
