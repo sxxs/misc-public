@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Haufig gestellte Fragen zu Studiengangen der Fakultat WIAI">
-    <title>FAQ | Fakultat WIAI | Universitat Bamberg</title>
+    <meta name="description" content="Häufig gestellte Fragen zu Studiengängen der Fakultät WIAI">
+    <title>FAQ | Fakultät WIAI | Universitat Bamberg</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -93,8 +93,8 @@
             </button>
         </div>
     </div>
-    <!-- Breadcrumb -->
-    <nav class="breadcrumb" aria-label="Breadcrumb">
+    <!-- Breadcrumb (kompakt) -->
+    <nav class="breadcrumb breadcrumb--compact" aria-label="Breadcrumb">
         <div class="container">
             <ol class="breadcrumb-list">
                 <li><a href="../index.html">Startseite</a></li>
@@ -105,6 +105,18 @@
             </ol>
         </div>
     </nav>
+    <!-- Page Hero -->
+    <section class="page-hero page-hero--fakultaet " style="--fakultaet-color: var(--color-primary);">
+        <div class="container">
+            <div class="page-hero-content">
+                
+                <span class="page-hero-label">Fakultät WIAI</span>
+                <h1 class="page-hero-title">Häufig gestellte Fragen</h1>
+                <p class="page-hero-subtitle">Antworten auf die wichtigsten Fragen rund um das Studium an der WIAI</p>
+            </div>
+        </div>
+        
+    </section>
     <!-- WIAI Subnavigation -->
     <nav class="subnav" aria-label="WIAI Navigation">
         <div class="container">
@@ -128,18 +140,6 @@
 
     <!-- Main Content -->
     <main id="main-content">
-        <!-- Page Hero -->
-        <section class="page-hero page-hero--fakultaet" style="--fakultaet-color: var(--color-primary);">
-            <div class="container">
-                <div class="page-hero-content">
-                    <span class="page-hero-label">WIAI Studium</span>
-                    <h1 class="page-hero-title">Haufig gestellte Fragen</h1>
-                    <p class="page-hero-subtitle">Antworten auf die wichtigsten Fragen rund um das Studium an der WIAI</p>
-                </div>
-            </div>
-            <div class="page-hero-accent"></div>
-        </section>
-
         <!-- Filter Section -->
         <section class="filter-section">
             <div class="container">
@@ -324,11 +324,11 @@
                             <img src="../uba-social-media-cropped-transparent-white.png" alt="" class="logo-icon" aria-hidden="true">
                             <span class="footer-logo-text">Universitat Bamberg</span>
                         </a>
-                        <p class="footer-tagline">Studieren im Welterbe</p>
+                        <p class="footer-address">Studieren im Welterbe</p>
                     </div>
                     <nav class="footer-nav" aria-label="Schnellzugriff">
-                        <h3>Schnellzugriff</h3>
-                        <ul>
+                        <h3 class="footer-heading">Schnellzugriff</h3>
+                        <ul class="footer-links">
                             <li><a href="../studium.html">Studium</a></li>
                             <li><a href="../index.html#forschung">Forschung</a></li>
                             <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
@@ -336,8 +336,8 @@
                         </ul>
                     </nav>
                     <nav class="footer-nav" aria-label="Service">
-                        <h3>Service</h3>
-                        <ul>
+                        <h3 class="footer-heading">Service</h3>
+                        <ul class="footer-links">
                             <li><a href="#">Bibliothek</a></li>
                             <li><a href="#">IT-Service</a></li>
                             <li><a href="#">Mensa</a></li>
@@ -345,31 +345,29 @@
                         </ul>
                     </nav>
                     <div class="footer-contact">
-                        <h3>Kontakt</h3>
-                        <address>
+                        <h3 class="footer-heading">Kontakt</h3>
+                        <address class="footer-address">
                             <p>Otto-Friedrich-Universitat Bamberg</p>
                             <p>Kapuzinerstrasse 16</p>
                             <p>96047 Bamberg</p>
+                            <p><a href="tel:+499518630">+49 951 863-0</a></p>
                         </address>
-                        <p><a href="tel:+499518630">+49 951 863-0</a></p>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="footer-bottom">
+        <div class="footer-legal">
             <div class="container">
-                <nav class="footer-legal" aria-label="Rechtliches">
-                    <ul>
-                        <li><a href="#">Impressum</a></li>
-                        <li><a href="#">Datenschutz</a></li>
-                        <li><a href="#">Barrierefreiheit</a></li>
-                    </ul>
+                <nav class="legal-links" aria-label="Rechtliches">
+                    <a href="#">Impressum</a>
+                    <a href="#">Datenschutz</a>
+                    <a href="#">Barrierefreiheit</a>
                 </nav>
-                <p class="footer-copyright">Otto-Friedrich-Universitat Bamberg</p>
+                <p class="copyright">Otto-Friedrich-Universitat Bamberg</p>
             </div>
         </div>
     </footer>
 
-    <script src="../script.js"></script>
+    <script src="../script.js" defer></script>
 </body>
 </html>

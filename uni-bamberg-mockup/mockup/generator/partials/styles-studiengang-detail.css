@@ -28,7 +28,7 @@
     z-index: 1;
 }
 
-.hero-degree {
+.page-hero-degree {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
@@ -52,32 +52,11 @@
     max-width: 700px;
 }
 
-.hero-subtitle {
+.page-hero-subtitle {
     font-size: var(--text-lg);
     color: rgba(255, 255, 255, 0.85);
     max-width: 600px;
     line-height: 1.6;
-}
-
-/* Page Nav for Studiengang (below key-facts) */
-.studiengang-page-nav {
-    background: var(--color-bg);
-    border-bottom: 1px solid var(--color-border);
-    position: sticky;
-    top: calc(var(--header-height) + 73px);
-    z-index: 49;
-}
-
-.studiengang-page-nav .page-nav-list {
-    display: flex;
-    gap: var(--space-1);
-    padding: var(--space-2) 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-}
-
-.studiengang-page-nav .page-nav-list::-webkit-scrollbar {
-    display: none;
 }
 
 .page-nav-link {

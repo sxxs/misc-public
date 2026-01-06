@@ -35,7 +35,7 @@
     margin-bottom: var(--space-3);
 }
 
-.studiengaenge-hero .hero-subtitle {
+.studiengaenge-hero .page-hero-subtitle {
     font-size: var(--text-lg);
     color: rgba(255, 255, 255, 0.8);
     max-width: 540px;
@@ -74,8 +74,8 @@
 }
 
 .filter-tab.active {
-    color: var(--color-primary);
-    background: var(--color-primary-light);
+    color: white;
+    background: var(--color-primary);
 }
 
 /* Programs Layout */
@@ -230,11 +230,6 @@
 .programs-list .program-link svg {
     width: 14px;
     height: 14px;
-}
-
-.program-lang {
-    font-size: var(--text-xs);
-    color: var(--color-text-muted);
 }
 
 /* Info Section */

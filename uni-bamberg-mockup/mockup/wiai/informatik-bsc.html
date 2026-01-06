@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Bachelor Informatik - Grundständiges Informatikstudium mit breitem Fundament">
-    <title>Informatik B.Sc. | Fakultät WIAI | Universität Bamberg | Universitat Bamberg</title>
+    <title>Informatik B.Sc. | Fakultät WIAI | Universität Bamberg</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -43,7 +43,7 @@
     z-index: 1;
 }
 
-.hero-degree {
+.page-hero-degree {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
@@ -67,32 +67,11 @@
     max-width: 700px;
 }
 
-.hero-subtitle {
+.page-hero-subtitle {
     font-size: var(--text-lg);
     color: rgba(255, 255, 255, 0.85);
     max-width: 600px;
     line-height: 1.6;
-}
-
-/* Page Nav for Studiengang (below key-facts) */
-.studiengang-page-nav {
-    background: var(--color-bg);
-    border-bottom: 1px solid var(--color-border);
-    position: sticky;
-    top: calc(var(--header-height) + 73px);
-    z-index: 49;
-}
-
-.studiengang-page-nav .page-nav-list {
-    display: flex;
-    gap: var(--space-1);
-    padding: var(--space-2) 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-}
-
-.studiengang-page-nav .page-nav-list::-webkit-scrollbar {
-    display: none;
 }
 
 .page-nav-link {
@@ -680,7 +659,7 @@
 
     </style>
 </head>
-<body class="subpage subpage fakultaet-page">
+<body class="subpage fakultaet-page">
     <!-- Skip Links -->
     <nav class="skip-links" aria-label="Sprungnavigation">
         <a href="#main-nav" class="skip-link">Zur Hauptnavigation</a>
@@ -761,21 +740,38 @@
             </button>
         </div>
     </div>
-    <!-- Hero -->
-    <section class="studiengang-hero">
+    <!-- Breadcrumb (kompakt) -->
+    <nav class="breadcrumb breadcrumb--compact" aria-label="Breadcrumb">
         <div class="container">
-            <span class="hero-degree">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-                    <path d="M6 12v5c0 2 4 3 6 3s6-1 6-3v-5"/>
-                </svg>
-                Bachelor of Science
-            </span>
-            <h1>Informatik</h1>
-            <p class="hero-subtitle">Grundständiges Informatikstudium mit breitem Fundament.</p>
+            <ol class="breadcrumb-list">
+                <li><a href="../index.html">Startseite</a></li>
+                <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
+                <li><a href="index.html">WIAI</a></li>
+                
+                <li aria-current="page">Informatik B.Sc.</li>
+            </ol>
         </div>
+    </nav>
+    <!-- Page Hero -->
+    <section class="page-hero page-hero--fakultaet studiengang-hero" style="--fakultaet-color: var(--color-primary);">
+        <div class="container">
+            <div class="page-hero-content">
+                
+                <span class="page-hero-degree">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                        <path d="M6 12v5c0 2 4 3 6 3s6-1 6-3v-5"/>
+                    </svg>
+                    Bachelor of Science
+                </span>
+                
+                
+                <h1 class="page-hero-title">Informatik</h1>
+                <p class="page-hero-subtitle">Grundständiges Informatikstudium mit breitem Fundament.</p>
+            </div>
+        </div>
+        
     </section>
-
     <!-- WIAI Subnavigation -->
     <nav class="subnav" aria-label="WIAI Navigation">
         <div class="container">
@@ -784,7 +780,7 @@
                     <li><a href="index.html">Übersicht</a></li>
                     <li><a href="studium.html">Studium</a></li>
                     <li><a href="im-studium.html">Im Studium</a></li>
-                    <li><a href="studiengaenge.html">Studiengänge</a></li>
+                    <li><a href="studiengaenge.html" class="active" aria-current="page">Studiengänge</a></li>
                     <li><a href="forschung.html">Forschung</a></li>
                     <li><a href="karriere.html">Karriere</a></li>
                 </ul>
@@ -797,20 +793,9 @@
         </div>
     </nav>
 
-    <!-- Breadcrumb -->
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-        <div class="container">
-            <ol class="breadcrumb-list">
-                <li><a href="{{root_path}}index.html">Startseite</a></li>
-                <li><a href="index.html">Fakultät WIAI</a></li>
-                <li><a href="studiengaenge.html">Studiengänge</a></li>
-                <li aria-current="page">Informatik B.Sc.</li>
-            </ol>
-        </div>
-    </nav>
-
-    <!-- Placeholder Content -->
+    <!-- Main Content -->
     <main id="main-content">
+        <!-- Placeholder Content -->
         <section class="placeholder-section">
             <div class="container">
                 <div class="placeholder-content">
@@ -825,6 +810,7 @@
                 </div>
             </div>
         </section>
+
     </main>
     <!-- Footer -->
     <footer class="site-footer" id="footer" role="contentinfo">
@@ -836,11 +822,11 @@
                             <img src="../uba-social-media-cropped-transparent-white.png" alt="" class="logo-icon" aria-hidden="true">
                             <span class="footer-logo-text">Universitat Bamberg</span>
                         </a>
-                        <p class="footer-tagline">Studieren im Welterbe</p>
+                        <p class="footer-address">Studieren im Welterbe</p>
                     </div>
                     <nav class="footer-nav" aria-label="Schnellzugriff">
-                        <h3>Schnellzugriff</h3>
-                        <ul>
+                        <h3 class="footer-heading">Schnellzugriff</h3>
+                        <ul class="footer-links">
                             <li><a href="../studium.html">Studium</a></li>
                             <li><a href="../index.html#forschung">Forschung</a></li>
                             <li><a href="../index.html#fakultaeten">Fakultaten</a></li>
@@ -848,8 +834,8 @@
                         </ul>
                     </nav>
                     <nav class="footer-nav" aria-label="Service">
-                        <h3>Service</h3>
-                        <ul>
+                        <h3 class="footer-heading">Service</h3>
+                        <ul class="footer-links">
                             <li><a href="#">Bibliothek</a></li>
                             <li><a href="#">IT-Service</a></li>
                             <li><a href="#">Mensa</a></li>
@@ -857,31 +843,29 @@
                         </ul>
                     </nav>
                     <div class="footer-contact">
-                        <h3>Kontakt</h3>
-                        <address>
+                        <h3 class="footer-heading">Kontakt</h3>
+                        <address class="footer-address">
                             <p>Otto-Friedrich-Universitat Bamberg</p>
                             <p>Kapuzinerstrasse 16</p>
                             <p>96047 Bamberg</p>
+                            <p><a href="tel:+499518630">+49 951 863-0</a></p>
                         </address>
-                        <p><a href="tel:+499518630">+49 951 863-0</a></p>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="footer-bottom">
+        <div class="footer-legal">
             <div class="container">
-                <nav class="footer-legal" aria-label="Rechtliches">
-                    <ul>
-                        <li><a href="#">Impressum</a></li>
-                        <li><a href="#">Datenschutz</a></li>
-                        <li><a href="#">Barrierefreiheit</a></li>
-                    </ul>
+                <nav class="legal-links" aria-label="Rechtliches">
+                    <a href="#">Impressum</a>
+                    <a href="#">Datenschutz</a>
+                    <a href="#">Barrierefreiheit</a>
                 </nav>
-                <p class="footer-copyright">Otto-Friedrich-Universitat Bamberg</p>
+                <p class="copyright">Otto-Friedrich-Universitat Bamberg</p>
             </div>
         </div>
     </footer>
 
-    <script src="../script.js"></script>
+    <script src="../script.js" defer></script>
 </body>
 </html>
