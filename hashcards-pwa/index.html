@@ -397,6 +397,49 @@
       margin-top: 0.25rem;
     }
 
+    .sync-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.75rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .sync-indicator:hover {
+      opacity: 0.8;
+    }
+
+    .sync-indicator.syncing .sync-indicator-icon {
+      animation: spin 1s linear infinite;
+    }
+
+    .sync-indicator.success {
+      color: var(--success);
+    }
+
+    .sync-indicator.error {
+      color: var(--error);
+    }
+
+    .sync-indicator.pending {
+      color: var(--warning);
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
     .deck-list {
       flex: 1;
       display: flex;
@@ -1137,6 +1180,11 @@
         </div>
       </div>
 
+      <div class="sync-indicator hidden" id="sync-indicator" onclick="onSyncIndicatorClick()">
+        <span class="sync-indicator-icon" id="sync-indicator-icon">&#x2601;</span>
+        <span class="sync-indicator-text" id="sync-indicator-text">Sync</span>
+      </div>
+
       <button class="btn btn-primary btn-large mb-2" id="start-practice-btn" onclick="startPractice()">
         &#x1F4D6; Lernen
       </button>
@@ -1363,7 +1411,7 @@ C: Lueckentext mit [Luecke]</pre>
 
   <script>
     // ===== Version =====
-    const VERSION = '1.3.0';
+    const VERSION = '1.3.5';
 
     // ===== Sync Server =====
     const SYNC_SERVER = 'https://ssl.exoneon.de/hashcards-pwa/api';
@@ -1726,8 +1774,9 @@ C: Lueckentext mit [Luecke]</pre>
       await updateStreakDisplay();
       updateHiddenFaultyCounts();
 
-      // Render sync settings and trigger background sync
+      // Render sync settings, update indicator, and trigger background sync
       renderSyncSettings();
+      updateSyncIndicator();
       performSync(false); // Silent background sync
     }
 
@@ -2028,6 +2077,18 @@ C: Lueckentext mit [Luecke]</pre>
         return;
       }
 
+      // Sync before import to get latest server state
+      const syncState = await getSyncState();
+      if (syncState?.accountId) {
+        showSyncStatus('Synchronisiere vor Import...');
+        const preSync = await performSync(false);
+        if (!preSync.ok && preSync.error !== 'not_configured') {
+          // Non-critical: continue with import even if pre-sync fails
+          console.warn('Pre-import sync failed:', preSync.error);
+        }
+        hideSyncStatus();
+      }
+
       // Create deck
       const deckId = generateId();
       const deck = {
@@ -2052,6 +2113,13 @@ C: Lueckentext mit [Luecke]</pre>
           createdAt: new Date().toISOString()
         };
         await dbPut('cards', card);
+      }
+
+      // Sync after import to upload new deck
+      if (syncState?.accountId) {
+        showSyncStatus('Lade neues Deck hoch...');
+        await performSync(false);
+        hideSyncStatus();
       }
 
       showModal('Import erfolgreich', `<p>${cards.length} Karten importiert!</p>`, [
@@ -2420,6 +2488,14 @@ C: Lueckentext mit [Luecke]</pre>
       await updateStreakDisplay();
       updateHiddenFaultyCounts();
 
+      // Sync after backup import to upload restored data
+      const syncState = await getSyncState();
+      if (syncState?.accountId) {
+        showSyncStatus('Synchronisiere wiederhergestellte Daten...');
+        await performSync(false);
+        hideSyncStatus();
+      }
+
       showModal('Import erfolgreich! ✅', `
         <p>Daten wurden importiert:</p>
         <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
@@ -2442,6 +2518,64 @@ C: Lueckentext mit [Luecke]</pre>
     }
 
     // ===== Sync =====
+
+    // Sync mutex to prevent concurrent syncs
+    let syncInProgress = false;
+    let syncPending = false; // True if sync failed due to offline
+    let lastManualSync = 0; // Timestamp for debouncing manual sync
+    const SYNC_DEBOUNCE_MS = 3000;
+    const FETCH_TIMEOUT_MS = 15000;
+
+    // Fetch with timeout to prevent hanging requests
+    async function fetchWithTimeout(url, options = {}, timeoutMs = FETCH_TIMEOUT_MS) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        return response;
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          throw new Error('Zeitüberschreitung bei der Verbindung');
+        }
+        throw err;
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }
+
+    // Offline detection and auto-sync on reconnect
+    function initOfflineHandling() {
+      window.addEventListener('online', async () => {
+        console.log('Back online');
+        updateSyncIndicator(); // Clear offline state
+
+        // If sync was pending, trigger it now
+        if (syncPending) {
+          const syncState = await getSyncState();
+          if (syncState?.accountId) {
+            console.log('Triggering pending sync after reconnect');
+            const result = await performSync(false);
+            // Only clear pending flag on success
+            if (result.ok) {
+              syncPending = false;
+            }
+            // On failure, syncPending stays true → next online event will retry
+          } else {
+            syncPending = false; // No sync configured, clear flag
+          }
+        }
+      });
+
+      window.addEventListener('offline', () => {
+        console.log('Gone offline');
+        updateSyncIndicator('offline');
+      });
+
+      // Check initial state
+      if (!navigator.onLine) {
+        updateSyncIndicator('offline');
+      }
+    }
 
     // Generate device ID (stable per browser)
     function getDeviceId() {
@@ -2494,7 +2628,7 @@ C: Lueckentext mit [Luecke]</pre>
       const tokenHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
       const tokenSha256 = Array.from(new Uint8Array(tokenHash)).map(b => b.toString(16).padStart(2, '0')).join('');
 
-      const response = await fetch(`${SYNC_SERVER}/register.php`, {
+      const response = await fetchWithTimeout(`${SYNC_SERVER}/register.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -2547,7 +2681,7 @@ C: Lueckentext mit [Luecke]</pre>
     async function uploadSnapshot(syncState) {
       const snapshot = await buildSnapshot();
 
-      const response = await fetch(`${SYNC_SERVER}/snapshot.php`, {
+      const response = await fetchWithTimeout(`${SYNC_SERVER}/snapshot.php`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -2580,9 +2714,76 @@ C: Lueckentext mit [Luecke]</pre>
       return { ok: true, version: data.version };
     }
 
+    // Validate snapshot structure to prevent corrupt data from breaking the app
+    function validateSnapshot(snapshot) {
+      if (!snapshot || typeof snapshot !== 'object') {
+        return { valid: false, error: 'Snapshot ist kein Objekt' };
+      }
+
+      // Profile validation (optional but must be object if present)
+      if (snapshot.profile !== undefined && typeof snapshot.profile !== 'object') {
+        return { valid: false, error: 'profile muss ein Objekt sein' };
+      }
+
+      // Decks validation
+      if (!Array.isArray(snapshot.decks)) {
+        return { valid: false, error: 'decks muss ein Array sein' };
+      }
+      for (let i = 0; i < snapshot.decks.length; i++) {
+        const deck = snapshot.decks[i];
+        if (!deck || typeof deck !== 'object') {
+          return { valid: false, error: `deck[${i}] ist ungueltig` };
+        }
+        if (!deck.id || typeof deck.id !== 'string') {
+          return { valid: false, error: `deck[${i}].id fehlt oder ungueltig` };
+        }
+        if (!deck.name || typeof deck.name !== 'string') {
+          return { valid: false, error: `deck[${i}].name fehlt oder ungueltig` };
+        }
+        if (!Array.isArray(deck.cards)) {
+          return { valid: false, error: `deck[${i}].cards muss ein Array sein` };
+        }
+        for (let j = 0; j < deck.cards.length; j++) {
+          const card = deck.cards[j];
+          if (!card || typeof card !== 'object') {
+            return { valid: false, error: `deck[${i}].cards[${j}] ist ungueltig` };
+          }
+          if (!card.id || typeof card.id !== 'string') {
+            return { valid: false, error: `deck[${i}].cards[${j}].id fehlt` };
+          }
+        }
+      }
+
+      // CardStates validation
+      if (!Array.isArray(snapshot.cardStates)) {
+        return { valid: false, error: 'cardStates muss ein Array sein' };
+      }
+      for (let i = 0; i < snapshot.cardStates.length; i++) {
+        const state = snapshot.cardStates[i];
+        if (!state || typeof state !== 'object') {
+          return { valid: false, error: `cardStates[${i}] ist ungueltig` };
+        }
+        if (!state.cardId || typeof state.cardId !== 'string') {
+          return { valid: false, error: `cardStates[${i}].cardId fehlt` };
+        }
+      }
+
+      // Reviews validation
+      if (!Array.isArray(snapshot.reviews)) {
+        return { valid: false, error: 'reviews muss ein Array sein' };
+      }
+
+      // Sessions validation
+      if (!Array.isArray(snapshot.sessions)) {
+        return { valid: false, error: 'sessions muss ein Array sein' };
+      }
+
+      return { valid: true };
+    }
+
     // Download snapshot from server
     async function downloadSnapshot(syncState) {
-      const response = await fetch(`${SYNC_SERVER}/snapshot.php`, {
+      const response = await fetchWithTimeout(`${SYNC_SERVER}/snapshot.php`, {
         method: 'GET',
         headers: { 'Authorization': buildAuthHeader(syncState) }
       });
@@ -2596,101 +2797,192 @@ C: Lueckentext mit [Luecke]</pre>
         throw new Error(data.error || 'Download failed');
       }
 
+      // Validate snapshot structure before returning
+      if (data.snapshot) {
+        const validation = validateSnapshot(data.snapshot);
+        if (!validation.valid) {
+          console.error('Invalid snapshot from server:', validation.error);
+          throw new Error('Server-Snapshot ungueltig: ' + validation.error);
+        }
+      }
+
       return { snapshot: data.snapshot, version: data.version };
     }
 
     // Merge server snapshot into local data (server wins for conflicts)
-    async function mergeSnapshot(serverSnapshot, serverVersion, syncState) {
+    // ATOMIC: Uses single IDB transaction - either all changes apply or none
+    async function mergeSnapshot(serverSnapshot, serverVersion, syncState, expectedProfileId) {
       if (!serverSnapshot) return; // Nothing to merge
 
-      // Update profile metadata
-      if (serverSnapshot.profile) {
-        currentProfile.name = serverSnapshot.profile.name || currentProfile.name;
-        currentProfile.avatar = serverSnapshot.profile.avatar || currentProfile.avatar;
-        currentProfile.hiddenCards = serverSnapshot.profile.hiddenCards || [];
-        currentProfile.faultyCards = serverSnapshot.profile.faultyCards || [];
-        await dbPut('profiles', currentProfile);
+      // Guard: ensure we're still on the expected profile
+      if (expectedProfileId && currentProfile?.id !== expectedProfileId) {
+        throw new Error('Profile changed during merge');
       }
 
-      // Clear existing data for this profile
-      const existingDecks = await dbGetAll('decks', 'profileId', currentProfile.id);
-      for (const deck of existingDecks) {
-        const cards = await dbGetAll('cards', 'deckId', deck.id);
-        for (const card of cards) {
-          await dbDelete('cards', card.id);
-        }
-        await dbDelete('decks', deck.id);
-      }
+      const profileId = currentProfile.id;
 
-      const existingStates = await dbGetAll('cardStates', 'profileId', currentProfile.id);
-      for (const state of existingStates) {
-        await dbDelete('cardStates', state.id);
-      }
+      return new Promise((resolve, reject) => {
+        // Single transaction across ALL affected stores for atomicity
+        const storeNames = ['profiles', 'decks', 'cards', 'cardStates', 'reviews', 'sessions', 'syncState'];
+        const tx = db.transaction(storeNames, 'readwrite');
 
-      const existingReviews = await dbGetAll('reviews', 'profileId', currentProfile.id);
-      for (const review of existingReviews) {
-        await dbDelete('reviews', review.id);
-      }
+        tx.onerror = () => reject(new Error('Merge transaction failed: ' + tx.error?.message));
+        tx.onabort = () => reject(new Error('Merge transaction aborted'));
+        tx.oncomplete = () => resolve();
 
-      const existingSessions = await dbGetAll('sessions', 'profileId', currentProfile.id);
-      for (const session of existingSessions) {
-        await dbDelete('sessions', session.id);
-      }
+        const profilesStore = tx.objectStore('profiles');
+        const decksStore = tx.objectStore('decks');
+        const cardsStore = tx.objectStore('cards');
+        const cardStatesStore = tx.objectStore('cardStates');
+        const reviewsStore = tx.objectStore('reviews');
+        const sessionsStore = tx.objectStore('sessions');
+        const syncStateStore = tx.objectStore('syncState');
 
-      // Import server data
-      for (const deck of (serverSnapshot.decks || [])) {
-        const newDeck = {
-          id: deck.id,
-          profileId: currentProfile.id,
-          name: deck.name,
-          notes: deck.notes,
-          createdAt: deck.createdAt
+        // Helper to collect all keys from an index matching a value
+        const collectKeys = (store, indexName, value) => {
+          return new Promise((res, rej) => {
+            const keys = [];
+            const index = store.index(indexName);
+            const request = index.openKeyCursor(IDBKeyRange.only(value));
+            request.onsuccess = (e) => {
+              const cursor = e.target.result;
+              if (cursor) {
+                keys.push(cursor.primaryKey);
+                cursor.continue();
+              } else {
+                res(keys);
+              }
+            };
+            request.onerror = () => rej(request.error);
+          });
         };
-        await dbPut('decks', newDeck);
 
-        for (const card of (deck.cards || [])) {
-          const newCard = {
-            id: card.id,
-            deckId: deck.id,
-            kind: card.kind,
-            question: card.question,
-            answer: card.answer,
-            cloze: card.cloze,
-            front: card.front,
-            back: card.back
-          };
-          await dbPut('cards', newCard);
-        }
-      }
+        // Execute merge steps sequentially within the transaction
+        (async () => {
+          try {
+            // 1. Update profile metadata
+            if (serverSnapshot.profile) {
+              const updatedProfile = {
+                ...currentProfile,
+                name: serverSnapshot.profile.name || currentProfile.name,
+                avatar: serverSnapshot.profile.avatar || currentProfile.avatar,
+                hiddenCards: serverSnapshot.profile.hiddenCards || [],
+                faultyCards: serverSnapshot.profile.faultyCards || []
+              };
+              profilesStore.put(updatedProfile);
+              // Update in-memory reference
+              Object.assign(currentProfile, updatedProfile);
+            }
 
-      for (const state of (serverSnapshot.cardStates || [])) {
-        const newState = {
-          ...state,
-          id: `${currentProfile.id}_${state.cardId}`,
-          profileId: currentProfile.id
-        };
-        await dbPut('cardStates', newState);
-      }
+            // 2. Collect all existing deck IDs for this profile
+            const existingDeckKeys = await collectKeys(decksStore, 'profileId', profileId);
 
-      for (const review of (serverSnapshot.reviews || [])) {
-        const newReview = { ...review, profileId: currentProfile.id };
-        await dbPut('reviews', newReview);
-      }
+            // 3. For each deck, collect and delete its cards
+            for (const deckId of existingDeckKeys) {
+              const cardKeys = await collectKeys(cardsStore, 'deckId', deckId);
+              for (const cardKey of cardKeys) {
+                cardsStore.delete(cardKey);
+              }
+              decksStore.delete(deckId);
+            }
 
-      for (const session of (serverSnapshot.sessions || [])) {
-        const newSession = { ...session, profileId: currentProfile.id };
-        await dbPut('sessions', newSession);
-      }
+            // 4. Delete all cardStates for this profile
+            const stateKeys = await collectKeys(cardStatesStore, 'profileId', profileId);
+            for (const key of stateKeys) {
+              cardStatesStore.delete(key);
+            }
 
-      // Update sync state
-      syncState.snapshotVersion = serverVersion;
-      syncState.lastSync = new Date().toISOString();
-      await saveSyncState(syncState);
+            // 5. Delete all reviews for this profile
+            const reviewKeys = await collectKeys(reviewsStore, 'profileId', profileId);
+            for (const key of reviewKeys) {
+              reviewsStore.delete(key);
+            }
+
+            // 6. Delete all sessions for this profile
+            const sessionKeys = await collectKeys(sessionsStore, 'profileId', profileId);
+            for (const key of sessionKeys) {
+              sessionsStore.delete(key);
+            }
+
+            // 7. Import server decks and cards
+            for (const deck of (serverSnapshot.decks || [])) {
+              if (!deck.id || !deck.name) continue; // Skip invalid decks
+              decksStore.put({
+                id: deck.id,
+                profileId: profileId,
+                name: deck.name,
+                notes: deck.notes || '',
+                createdAt: deck.createdAt || new Date().toISOString()
+              });
+
+              for (const card of (deck.cards || [])) {
+                if (!card.id) continue; // Skip invalid cards
+                cardsStore.put({
+                  id: card.id,
+                  deckId: deck.id,
+                  kind: card.kind || 'qa',
+                  question: card.question || '',
+                  answer: card.answer || '',
+                  cloze: card.cloze || '',
+                  front: card.front || '',
+                  back: card.back || ''
+                });
+              }
+            }
+
+            // 8. Import cardStates
+            for (const state of (serverSnapshot.cardStates || [])) {
+              if (!state.cardId) continue; // Skip invalid states
+              cardStatesStore.put({
+                ...state,
+                id: `${profileId}_${state.cardId}`,
+                profileId: profileId
+              });
+            }
+
+            // 9. Import reviews
+            for (const review of (serverSnapshot.reviews || [])) {
+              if (!review.id) continue; // Skip invalid reviews
+              reviewsStore.put({ ...review, profileId: profileId });
+            }
+
+            // 10. Import sessions
+            for (const session of (serverSnapshot.sessions || [])) {
+              if (!session.id) continue; // Skip invalid sessions
+              sessionsStore.put({ ...session, profileId: profileId });
+            }
+
+            // 11. Update sync state
+            const updatedSyncState = {
+              ...syncState,
+              snapshotVersion: serverVersion,
+              lastSync: new Date().toISOString()
+            };
+            syncStateStore.put(updatedSyncState);
+
+          } catch (err) {
+            tx.abort();
+            reject(err);
+          }
+        })();
+      });
     }
 
     // Full sync: download, merge if needed, then upload
     async function performSync(showUI = true, retryCount = 0) {
       const MAX_RETRIES = 3;
+
+      // Mutex: prevent concurrent syncs
+      if (syncInProgress) {
+        console.log('Sync already in progress, skipping');
+        return { ok: false, error: 'sync_in_progress' };
+      }
+
+      // Capture profile ID at start to detect profile switches
+      const syncProfileId = currentProfile?.id;
+      if (!syncProfileId) {
+        return { ok: false, error: 'no_profile' };
+      }
 
       const syncState = await getSyncState();
       if (!syncState || !syncState.accountId) {
@@ -2698,19 +2990,36 @@ C: Lueckentext mit [Luecke]</pre>
         return { ok: false, error: 'not_configured' };
       }
 
+      syncInProgress = true;
+      updateSyncIndicator('syncing');
+
       try {
         if (showUI) showSyncStatus('Synchronisiere...');
 
         // 1. Download server state
         const { snapshot: serverSnapshot, version: serverVersion } = await downloadSnapshot(syncState);
 
+        // Guard: abort if profile changed during download
+        if (currentProfile?.id !== syncProfileId) {
+          console.warn('Profile changed during sync, aborting');
+          return { ok: false, error: 'profile_changed' };
+        }
+
         // 2. If server has newer data, merge it
         if (serverVersion > (syncState.snapshotVersion || 0)) {
-          await mergeSnapshot(serverSnapshot, serverVersion, syncState);
-          // Reload UI after merge
-          await loadDecks();
-          await updateStats();
-          await updateStreakDisplay();
+          await mergeSnapshot(serverSnapshot, serverVersion, syncState, syncProfileId);
+          // Reload UI after merge (only if still same profile)
+          if (currentProfile?.id === syncProfileId) {
+            await loadDecks();
+            await updateStats();
+            await updateStreakDisplay();
+          }
+        }
+
+        // Guard: abort if profile changed during merge
+        if (currentProfile?.id !== syncProfileId) {
+          console.warn('Profile changed during sync, aborting upload');
+          return { ok: false, error: 'profile_changed' };
         }
 
         // 3. Reload sync state after merge (may have been updated)
@@ -2722,6 +3031,7 @@ C: Lueckentext mit [Luecke]</pre>
         if (uploadResult.conflict) {
           // Race condition: retry with limit
           if (retryCount < MAX_RETRIES) {
+            syncInProgress = false; // Release lock for retry
             return await performSync(showUI, retryCount + 1);
           } else {
             throw new Error('Sync conflict nach mehreren Versuchen');
@@ -2732,6 +3042,8 @@ C: Lueckentext mit [Luecke]</pre>
           showSyncStatus('Sync erfolgreich!', 'success');
           setTimeout(() => hideSyncStatus(), 2000);
         }
+        updateSyncIndicator('success');
+        syncPending = false; // Clear pending flag on success
 
         return { ok: true };
       } catch (err) {
@@ -2740,7 +3052,23 @@ C: Lueckentext mit [Luecke]</pre>
           showSyncStatus('Sync fehlgeschlagen: ' + err.message, 'error');
           setTimeout(() => hideSyncStatus(), 5000);
         }
+        // Check if it's a network/offline error (be precise to not mask real bugs)
+        const isOfflineError = !navigator.onLine ||
+          err.name === 'AbortError' ||
+          err.message === 'Failed to fetch' ||
+          err.message === 'Zeitüberschreitung bei der Verbindung' ||
+          err.message === 'NetworkError when attempting to fetch resource.' ||
+          err.message === 'Network request failed';
+
+        if (isOfflineError) {
+          updateSyncIndicator('offline');
+          syncPending = true; // Will auto-sync when back online
+        } else {
+          updateSyncIndicator('error');
+        }
         return { ok: false, error: err.message };
+      } finally {
+        syncInProgress = false;
       }
     }
 
@@ -2768,7 +3096,7 @@ C: Lueckentext mit [Luecke]</pre>
         // Initial upload (before saving sync state locally)
         showSyncStatus('Lade Daten hoch...');
         const snapshot = await buildSnapshot();
-        const response = await fetch(`${SYNC_SERVER}/snapshot.php`, {
+        const response = await fetchWithTimeout(`${SYNC_SERVER}/snapshot.php`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -2807,6 +3135,22 @@ C: Lueckentext mit [Luecke]</pre>
     async function pairWithAccount(syncKey) {
       if (!currentProfile) return;
 
+      // Capture profile ID at start
+      const pairProfileId = currentProfile.id;
+
+      // Warn if local data exists that will be overwritten
+      const localDecks = await dbGetAll('decks', 'profileId', pairProfileId);
+      if (localDecks.length > 0) {
+        const confirmed = confirm(
+          `Achtung: Du hast ${localDecks.length} lokale${localDecks.length === 1 ? 's Deck' : ' Decks'}. ` +
+          `Beim Verbinden werden diese mit den Server-Daten überschrieben.\n\n` +
+          `Fortfahren?`
+        );
+        if (!confirmed) {
+          throw new Error('Abgebrochen');
+        }
+      }
+
       const parts = syncKey.trim().split('.');
       if (parts.length !== 2) {
         throw new Error('Ungueltiger Sync-Key Format');
@@ -2826,7 +3170,7 @@ C: Lueckentext mit [Luecke]</pre>
       }
 
       const syncState = {
-        profileId: currentProfile.id,
+        profileId: pairProfileId,
         accountId: accountId.toUpperCase(),
         token,
         deviceId,
@@ -2840,15 +3184,20 @@ C: Lueckentext mit [Luecke]</pre>
         // Try to download - this validates the credentials
         const { snapshot, version } = await downloadSnapshot(syncState);
 
-        // Save sync state
-        await saveSyncState(syncState);
+        // Guard: abort if profile changed during download
+        if (currentProfile?.id !== pairProfileId) {
+          throw new Error('Profil waehrend Pairing gewechselt');
+        }
 
-        // Merge server data
+        // Merge server data (this also saves syncState atomically)
         if (snapshot) {
-          await mergeSnapshot(snapshot, version, syncState);
+          await mergeSnapshot(snapshot, version, syncState, pairProfileId);
           await loadDecks();
           await updateStats();
           await updateStreakDisplay();
+        } else {
+          // No server data - just save sync state
+          await saveSyncState(syncState);
         }
 
         showSyncStatus('Verbunden!', 'success');
@@ -2869,6 +3218,7 @@ C: Lueckentext mit [Luecke]</pre>
       if (!currentProfile) return;
       await dbDelete('syncState', currentProfile.id);
       renderSyncSettings();
+      updateSyncIndicator();
     }
 
     // Show sync status message
@@ -2890,6 +3240,77 @@ C: Lueckentext mit [Luecke]</pre>
     function hideSyncStatus() {
       const statusEl = document.getElementById('sync-status');
       if (statusEl) statusEl.style.display = 'none';
+    }
+
+    // Update sync indicator in dashboard
+    async function updateSyncIndicator(state = null) {
+      const indicator = document.getElementById('sync-indicator');
+      const icon = document.getElementById('sync-indicator-icon');
+      const text = document.getElementById('sync-indicator-text');
+      if (!indicator || !icon || !text) return;
+
+      // Check if sync is configured
+      const syncState = await getSyncState();
+      if (!syncState || !syncState.accountId) {
+        indicator.classList.add('hidden');
+        return;
+      }
+
+      indicator.classList.remove('hidden');
+      indicator.className = 'sync-indicator'; // Reset classes
+
+      if (state === 'syncing') {
+        indicator.classList.add('syncing');
+        icon.innerHTML = '&#x1F504;'; // 🔄
+        text.textContent = 'Synchronisiere...';
+      } else if (state === 'success') {
+        indicator.classList.add('success');
+        icon.innerHTML = '&#x2601;'; // ☁
+        text.textContent = 'Synchronisiert';
+        // Reset to normal after 3s
+        setTimeout(() => updateSyncIndicator(), 3000);
+      } else if (state === 'error') {
+        indicator.classList.add('error');
+        icon.innerHTML = '&#x26A0;'; // ⚠
+        text.textContent = 'Sync fehlgeschlagen';
+      } else if (state === 'offline') {
+        indicator.classList.add('pending');
+        icon.innerHTML = '&#x26A0;'; // ⚠
+        text.textContent = 'Offline';
+      } else {
+        // Default: show last sync time
+        if (syncState.lastSync) {
+          const lastSync = new Date(syncState.lastSync);
+          const now = new Date();
+          const diffMs = now - lastSync;
+          const diffMins = Math.floor(diffMs / 60000);
+          const diffHours = Math.floor(diffMins / 60);
+
+          icon.innerHTML = '&#x2601;'; // ☁
+          if (diffMins < 1) {
+            text.textContent = 'Gerade synchronisiert';
+          } else if (diffMins < 60) {
+            text.textContent = `Sync vor ${diffMins} Min`;
+          } else if (diffHours < 24) {
+            text.textContent = `Sync vor ${diffHours} Std`;
+          } else {
+            text.textContent = `Sync: ${lastSync.toLocaleDateString('de-DE')}`;
+          }
+        } else {
+          icon.innerHTML = '&#x2601;'; // ☁
+          text.textContent = 'Noch nicht synchronisiert';
+        }
+      }
+    }
+
+    // Click handler for sync indicator (with debounce)
+    function onSyncIndicatorClick() {
+      const now = Date.now();
+      if (syncInProgress || now - lastManualSync < SYNC_DEBOUNCE_MS) {
+        return;
+      }
+      lastManualSync = now;
+      performSync(true);
     }
 
     // Render sync settings UI
@@ -4190,6 +4611,7 @@ C: Lueckentext mit [Luecke]</pre>
         document.getElementById('version-display').textContent = 'v' + VERSION;
 
         await initDB();
+        initOfflineHandling();
         await loadProfiles();
       } catch (err) {
         console.error('Init error:', err);
