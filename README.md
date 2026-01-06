@@ -43,7 +43,7 @@ Ein festliches Jump & Run Spiel mit einer Weihnachtskatze. Springe über Plattfo
 
 Spaced Repetition Karteikarten-App mit FSRS-Algorithmus. Importiere Markdown-Dateien, lerne offline.
 
-**[Open](https://sxxs.github.io/misc-public/hashcards-pwa/)** | v1.1.1
+**[Open](https://sxxs.github.io/misc-public/hashcards-pwa/)** | v1.1.2
 
 - hashcards-kompatibles Markdown-Format (Q:/A:/C:)
 - FSRS-basiertes Scheduling
