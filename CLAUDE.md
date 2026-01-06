@@ -12,6 +12,7 @@ misc-public/
 ├── multiplication-troll-game/ # Math learning game (v1.2.x)
 ├── jumpcat/                   # Christmas cat jump & run (v6.2)
 ├── neon-mind/                 # 2-player reaction game (v1.0.0)
+├── hashcards-pwa/             # Spaced repetition flashcards (v1.0.0)
 ├── wiai25-enhance/            # Static demo
 ├── uni-bamberg-wrapper/       # University website wrapper with CORS proxy
 ├── uni-bamberg-mockup/        # Mockup and crawler for uni-bamberg
@@ -26,6 +27,7 @@ All projects are deployed via GitHub Pages from the `main` branch:
 - https://sxxs.github.io/misc-public/multiplication-troll-game/
 - https://sxxs.github.io/misc-public/jumpcat/
 - https://sxxs.github.io/misc-public/neon-mind/
+- https://sxxs.github.io/misc-public/hashcards-pwa/
 - https://sxxs.github.io/misc-public/wiai25-enhance/
 
 ### GitHub Pages Configuration

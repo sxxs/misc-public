@@ -39,6 +39,18 @@ Ein festliches Jump & Run Spiel mit einer Weihnachtskatze. Springe über Plattfo
 - Generative Weihnachtsmusik
 - PWA (installierbar)
 
+### [Hashcards](hashcards-pwa/)
+
+Spaced Repetition Karteikarten-App mit FSRS-Algorithmus. Importiere Markdown-Dateien, lerne offline.
+
+**[Open](https://sxxs.github.io/misc-public/hashcards-pwa/)** | v1.0.0
+
+- hashcards-kompatibles Markdown-Format (Q:/A:/C:)
+- FSRS-basiertes Scheduling
+- Multi-Profil-Unterstuetzung
+- Hell/Dunkel/System Theme
+- PWA (installierbar, offline-faehig)
+
 ### [WIAI25 Enhance](wiai25-enhance/)
 
 Static demo for WIAI 25 Collective Enhance project.
