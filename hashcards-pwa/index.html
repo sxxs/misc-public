@@ -65,37 +65,37 @@
     /* Dark mode */
     [data-theme="dark"] {
       --bg-primary: var(--uchu-yin);
-      --bg-secondary: oklch(20% 0.01 260);
-      --bg-card: oklch(25% 0.01 260);
+      --bg-secondary: oklch(22% 0.01 260);
+      --bg-card: oklch(20% 0.01 260);
       --text-primary: var(--uchu-yang);
       --text-secondary: var(--uchu-gray);
-      --accent: var(--uchu-light-blue);
-      --accent-light: var(--uchu-dark-blue);
-      --success: var(--uchu-light-green);
-      --success-light: var(--uchu-dark-green);
-      --error: var(--uchu-light-red);
-      --error-light: var(--uchu-dark-red);
-      --warning: var(--uchu-light-orange);
-      --warning-light: var(--uchu-dark-orange);
-      --border: var(--uchu-dark-gray);
+      --accent: var(--uchu-blue);
+      --accent-light: oklch(30% 0.05 260);
+      --success: var(--uchu-green);
+      --success-light: oklch(30% 0.05 145);
+      --error: var(--uchu-red);
+      --error-light: oklch(30% 0.05 12);
+      --warning: var(--uchu-orange);
+      --warning-light: oklch(30% 0.05 54);
+      --border: oklch(35% 0.01 260);
     }
 
     @media (prefers-color-scheme: dark) {
       [data-theme="system"] {
         --bg-primary: var(--uchu-yin);
-        --bg-secondary: oklch(20% 0.01 260);
-        --bg-card: oklch(25% 0.01 260);
+        --bg-secondary: oklch(22% 0.01 260);
+        --bg-card: oklch(20% 0.01 260);
         --text-primary: var(--uchu-yang);
         --text-secondary: var(--uchu-gray);
-        --accent: var(--uchu-light-blue);
-        --accent-light: var(--uchu-dark-blue);
-        --success: var(--uchu-light-green);
-        --success-light: var(--uchu-dark-green);
-        --error: var(--uchu-light-red);
-        --error-light: var(--uchu-dark-red);
-        --warning: var(--uchu-light-orange);
-        --warning-light: var(--uchu-dark-orange);
-        --border: var(--uchu-dark-gray);
+        --accent: var(--uchu-blue);
+        --accent-light: oklch(30% 0.05 260);
+        --success: var(--uchu-green);
+        --success-light: oklch(30% 0.05 145);
+        --error: var(--uchu-red);
+        --error-light: oklch(30% 0.05 12);
+        --warning: var(--uchu-orange);
+        --warning-light: oklch(30% 0.05 54);
+        --border: oklch(35% 0.01 260);
       }
     }
 
@@ -189,10 +189,16 @@
     .btn-secondary {
       background: var(--bg-secondary);
       color: var(--text-primary);
+      border: 1px solid var(--border);
     }
 
     .btn-secondary:active {
       background: var(--border);
+    }
+
+    .profile-avatar-btn {
+      font-size: 1.5rem;
+      min-width: 48px;
     }
 
     .btn-icon {
@@ -719,6 +725,39 @@
       border-color: var(--accent);
     }
 
+    /* ===== Avatar Picker ===== */
+    .avatar-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+    }
+
+    .avatar-option {
+      width: 100%;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      background: var(--bg-secondary);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .avatar-option:hover,
+    .avatar-option:active {
+      border-color: var(--accent);
+      transform: scale(1.05);
+    }
+
+    .avatar-option.selected {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
     /* ===== Navigation ===== */
     .bottom-nav {
       display: flex;
@@ -771,7 +810,7 @@
       <div class="logo">
         <div>&#x1F4DA;</div>
         <div class="logo-title">Hashcards</div>
-        <div class="logo-version" id="version-display">v1.0.0</div>
+        <div class="logo-version" id="version-display">v1.0.1</div>
       </div>
       <div class="profile-list" id="profile-list">
         <!-- Profiles will be rendered here -->
@@ -912,6 +951,10 @@
         <h2>Profil</h2>
         <div class="settings-group">
           <div class="settings-item">
+            <label>Avatar</label>
+            <button class="btn btn-secondary profile-avatar-btn" id="current-profile-avatar" onclick="showAvatarPicker()">&#x1F464;</button>
+          </div>
+          <div class="settings-item">
             <label id="current-profile-name">-</label>
             <button class="btn btn-secondary" onclick="showRenameProfileModal()">Umbenennen</button>
           </div>
@@ -969,7 +1012,7 @@ C: Lueckentext mit [Luecke] hier</pre>
 
   <script>
     // ===== Version =====
-    const VERSION = '1.0.0';
+    const VERSION = '1.0.1';
 
     // ===== Cache Busting: Redirect wenn Version in URL nicht stimmt =====
     (function() {
@@ -1139,6 +1182,7 @@ C: Lueckentext mit [Luecke] hier</pre>
       // Show home screen
       document.getElementById('profile-name-display').textContent = currentProfile.name;
       document.getElementById('current-profile-name').textContent = currentProfile.name;
+      document.getElementById('current-profile-avatar').innerHTML = currentProfile.avatar || '&#x1F464;';
       showScreen('home-screen');
 
       // Load decks and stats
@@ -1973,9 +2017,40 @@ C: Lueckentext mit [Luecke] hier</pre>
       }
     }
 
+    // Available avatars
+    const AVATARS = [
+      '&#x1F431;', '&#x1F436;', '&#x1F98A;', '&#x1F43B;', // cat, dog, fox, bear
+      '&#x1F428;', '&#x1F437;', '&#x1F430;', '&#x1F42F;', // koala, pig, rabbit, tiger
+      '&#x1F981;', '&#x1F984;', '&#x1F99D;', '&#x1F9A5;', // lion, unicorn, raccoon, sloth
+      '&#x1F427;', '&#x1F989;', '&#x1F99C;', '&#x1F40B;'  // penguin, owl, parrot, whale
+    ];
+
     function getRandomAvatar() {
-      const avatars = ['&#x1F431;', '&#x1F436;', '&#x1F98A;', '&#x1F43B;', '&#x1F428;', '&#x1F437;', '&#x1F430;', '&#x1F42F;'];
-      return avatars[Math.floor(Math.random() * avatars.length)];
+      return AVATARS[Math.floor(Math.random() * AVATARS.length)];
+    }
+
+    function showAvatarPicker() {
+      const currentAvatar = currentProfile?.avatar || '&#x1F464;';
+      const grid = AVATARS.map(avatar => {
+        const isSelected = avatar === currentAvatar ? 'selected' : '';
+        return `<div class="avatar-option ${isSelected}" onclick="selectAvatar('${avatar}')">${avatar}</div>`;
+      }).join('');
+
+      showModal('Avatar waehlen', `<div class="avatar-grid">${grid}</div>`, [
+        { text: 'Abbrechen', class: 'btn-secondary', action: hideModal }
+      ]);
+    }
+
+    async function selectAvatar(avatar) {
+      if (!currentProfile) return;
+
+      currentProfile.avatar = avatar;
+      await dbPut('profiles', currentProfile);
+
+      // Update UI
+      document.getElementById('current-profile-avatar').innerHTML = avatar;
+
+      hideModal();
     }
 
     // ===== PWA =====
