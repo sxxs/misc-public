@@ -503,13 +503,13 @@ Mehrere Profile auf einem Gerät (z.B. für Geschwister):
 - [x] **Multi-Profil**: Ja, Profil-Auswahl beim Start
 - [x] **MVP-Scope**: Import + Practice + Cloze + Multi-Profil (kein Sync, kein Elternmodus, keine Gamification)
 
-### Offen (für MVP 1 klären)
-- [ ] **ZIP-Import**: Struktur für Assets? (relativ zu MD oder in assets/ Ordner?)
-- [ ] **Audio**: Audio-Playback in MVP 1? Wenn ja, wie referenzieren? (`![audio](file.mp3)` oder custom syntax?)
-- [ ] **Session-Länge**: Fix 10 Karten? Oder konfigurierbar?
-- [ ] **Neue Karten pro Tag**: Limit? (z.B. max 20 neue Karten/Tag)
+### Geklärt für MVP 1 ✓
+- [x] **Assets**: Keine Bilder/Audio in MVP 1 (nur Text)
+- [x] **Session-Länge**: Konfigurierbar (default: 10 Karten)
+- [x] **Neue Karten pro Tag**: Limit konfigurierbar (default: 20)
 
 ### Offen (später)
+- [ ] Audio/Bilder: Format und Referenzierung
 - [ ] Avatar-System: Welche Art von Items?
 - [ ] Sticker: Welche Motive/Themen?
 - [ ] TTS: In welcher Version?
