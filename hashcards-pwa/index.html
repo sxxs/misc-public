@@ -991,7 +991,7 @@
       <div class="logo">
         <div>&#x1F4DA;</div>
         <div class="logo-title">Hashcards</div>
-        <div class="logo-version" id="version-display">v1.1.2</div>
+        <div class="logo-version" id="version-display">v1.2.0</div>
       </div>
       <div class="profile-list" id="profile-list">
         <!-- Profiles will be rendered here -->
@@ -1193,23 +1193,43 @@
     <div id="import-screen" class="screen">
       <div class="header">
         <button class="btn btn-icon btn-secondary" onclick="showScreen('home-screen')">&#x2190;</button>
-        <h1>Deck importieren</h1>
+        <h1>Import</h1>
         <div style="width: 48px"></div>
       </div>
 
-      <div class="import-zone" id="import-zone" onclick="document.getElementById('import-input').click()">
-        <div class="import-zone-icon">&#x1F4C1;</div>
-        <div>Markdown-Datei (.md) auswaehlen</div>
-        <div style="color: var(--text-secondary); font-size: 0.875rem">oder hierher ziehen</div>
-        <input type="file" id="import-input" class="import-input" accept=".md,.txt" onchange="handleFileImport(event)">
+      <div class="card">
+        <h3 class="mb-1">&#x1F4DA; Neues Deck importieren</h3>
+        <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem">
+          Markdown-Datei (.md) mit Q:/A:/C: Format
+        </p>
+        <div class="import-zone" id="import-zone" onclick="document.getElementById('import-input').click()">
+          <div class="import-zone-icon">&#x1F4C1;</div>
+          <div>Datei auswaehlen</div>
+          <input type="file" id="import-input" class="import-input" accept=".md,.txt" onchange="handleFileImport(event)">
+        </div>
       </div>
 
       <div class="card mt-2">
-        <h3 class="mb-1">Format</h3>
-        <pre style="font-size: 0.875rem; overflow-x: auto; white-space: pre-wrap; color: var(--text-secondary)">Q: Frage hier
+        <h3 class="mb-1">&#x1F4BE; Backup wiederherstellen</h3>
+        <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem">
+          Vollstaendiges Backup (.json) mit allen Lernfortschritten
+        </p>
+        <div class="import-zone" onclick="document.getElementById('backup-input').click()">
+          <div class="import-zone-icon">&#x1F5C4;</div>
+          <div>Backup-Datei auswaehlen</div>
+          <input type="file" id="backup-input" class="import-input" accept=".json" onchange="handleBackupImport(event)">
+        </div>
+        <p style="font-size: 0.8rem; color: var(--warning); margin-top: 0.75rem">
+          ⚠️ Ersetzt alle Daten des aktuellen Profils!
+        </p>
+      </div>
+
+      <div class="card mt-2" style="background: var(--bg-secondary)">
+        <h3 class="mb-1" style="font-size: 0.9rem">Deck-Format</h3>
+        <pre style="font-size: 0.8rem; overflow-x: auto; white-space: pre-wrap; color: var(--text-secondary)">Q: Frage hier
 A: Antwort hier
 
-C: Lueckentext mit [Luecke] hier</pre>
+C: Lueckentext mit [Luecke]</pre>
       </div>
     </div>
 
@@ -1235,7 +1255,7 @@ C: Lueckentext mit [Luecke] hier</pre>
 
   <script>
     // ===== Version =====
-    const VERSION = '1.1.2';
+    const VERSION = '1.2.0';
 
     // ===== Cache Busting: Redirect wenn Version in URL nicht stimmt =====
     (function() {
@@ -1674,6 +1694,22 @@ C: Lueckentext mit [Luecke] hier</pre>
       event.target.value = '';
     }
 
+    async function handleBackupImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      event.target.value = '';
+
+      try {
+        const content = await file.text();
+        await importJsonBackup(content);
+      } catch (e) {
+        console.error('Backup import error:', e);
+        showModal('Import fehlgeschlagen', `<p>Fehler: ${escapeHtml(e.message)}</p>`, [
+          { text: 'OK', class: 'btn-primary', action: hideModal }
+        ]);
+      }
+    }
+
     async function importFile(file) {
       const text = await file.text();
       const deckName = file.name.replace(/\.(md|txt)$/i, '');
@@ -1824,38 +1860,279 @@ C: Lueckentext mit [Luecke] hier</pre>
       return hashString(deckId + '\n' + content);
     }
 
-    // ===== Export =====
+    // ===== Export / Import =====
+    const EXPORT_FORMAT_VERSION = 1;
+
     async function exportBackup() {
       if (!currentProfile) return;
 
+      // Collect all data for this profile
       const decks = await dbGetAll('decks', 'profileId', currentProfile.id);
-      const reviews = await dbGetAll('reviews', 'profileId', currentProfile.id);
-
-      let markdown = `# Hashcards Backup\n# Profile: ${currentProfile.name}\n# Date: ${new Date().toISOString()}\n\n`;
-
+      const decksWithCards = [];
       for (const deck of decks) {
-        markdown += `## ${deck.name}\n\n`;
         const cards = await dbGetAll('cards', 'deckId', deck.id);
-
-        for (const card of cards) {
-          if (card.kind === 'QA') {
-            markdown += `Q: ${card.question}\nA: ${card.answer}\n\n`;
-          } else {
-            markdown += `C: ${card.cloze}\n\n`;
-          }
-        }
+        decksWithCards.push({ ...deck, cards });
       }
 
-      // Create and download file
-      const blob = new Blob([markdown], { type: 'text/markdown' });
+      const cardStates = await dbGetAll('cardStates', 'profileId', currentProfile.id);
+      const reviews = await dbGetAll('reviews', 'profileId', currentProfile.id);
+      const sessions = await dbGetAll('sessions', 'profileId', currentProfile.id);
+      const settings = await getSettings();
+
+      const exportData = {
+        formatVersion: EXPORT_FORMAT_VERSION,
+        appVersion: VERSION,
+        exportedAt: new Date().toISOString(),
+        profile: {
+          id: currentProfile.id,
+          name: currentProfile.name,
+          avatar: currentProfile.avatar,
+          createdAt: currentProfile.createdAt,
+          hiddenCards: currentProfile.hiddenCards || [],
+          faultyCards: currentProfile.faultyCards || []
+        },
+        decks: decksWithCards,
+        cardStates: cardStates,
+        reviews: reviews,
+        sessions: sessions,
+        settings: settings
+      };
+
+      // Create and download JSON file
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `hashcards-backup-${currentProfile.name}-${new Date().toISOString().split('T')[0]}.md`;
+      a.download = `hashcards-backup-${currentProfile.name}-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    }
+
+    function showImportBackupDialog() {
+      showModal('Backup importieren', `
+        <p style="margin-bottom: 1rem;">Waehle eine Backup-Datei (.json).</p>
+        <p style="font-size: 0.85rem; color: var(--warning); margin-bottom: 1rem;">
+          ⚠️ Achtung: Der Import ersetzt alle Daten des aktuellen Profils!
+        </p>
+        <input type="file" id="import-file" accept=".json,.md" style="margin-bottom: 1rem;">
+      `, [
+        { text: 'Abbrechen', class: 'btn-secondary', action: hideModal },
+        { text: 'Importieren', class: 'btn-primary', action: () => importBackup() }
+      ]);
+    }
+
+    async function importBackup() {
+      const fileInput = document.getElementById('import-file');
+      const file = fileInput?.files?.[0];
+      if (!file) {
+        alert('Bitte waehle eine Datei aus.');
+        return;
+      }
+
+      try {
+        const content = await file.text();
+
+        // Check if it's JSON or Markdown
+        if (file.name.endsWith('.json') || content.trim().startsWith('{')) {
+          await importJsonBackup(content);
+        } else {
+          // Legacy markdown import - just import as new deck
+          await importMarkdownAsDeck(content, file.name);
+        }
+      } catch (e) {
+        console.error('Import error:', e);
+        alert('Fehler beim Import: ' + e.message);
+      }
+    }
+
+    async function importJsonBackup(content) {
+      const data = JSON.parse(content);
+
+      // Validate format version
+      if (!data.formatVersion) {
+        throw new Error('Ungueltiges Backup-Format (keine formatVersion)');
+      }
+
+      // Handle future format versions gracefully
+      if (data.formatVersion > EXPORT_FORMAT_VERSION) {
+        const proceed = confirm(
+          `Dieses Backup wurde mit einer neueren Version erstellt (Format v${data.formatVersion}). ` +
+          `Import koennte unvollstaendig sein. Trotzdem fortfahren?`
+        );
+        if (!proceed) return;
+      }
+
+      if (!currentProfile) {
+        throw new Error('Kein Profil ausgewaehlt');
+      }
+
+      // Confirm overwrite
+      const confirmed = confirm(
+        `Import wird alle Daten von "${currentProfile.name}" ersetzen:\n\n` +
+        `• ${data.decks?.length || 0} Decks\n` +
+        `• ${data.cardStates?.length || 0} Lernfortschritte\n` +
+        `• ${data.reviews?.length || 0} Reviews\n\n` +
+        `Fortfahren?`
+      );
+      if (!confirmed) {
+        hideModal();
+        return;
+      }
+
+      // Delete existing data for this profile
+      const existingDecks = await dbGetAll('decks', 'profileId', currentProfile.id);
+      for (const deck of existingDecks) {
+        const cards = await dbGetAll('cards', 'deckId', deck.id);
+        for (const card of cards) {
+          await dbDelete('cards', card.id);
+        }
+        await dbDelete('decks', deck.id);
+      }
+
+      const existingStates = await dbGetAll('cardStates', 'profileId', currentProfile.id);
+      for (const state of existingStates) {
+        await dbDelete('cardStates', state.id);
+      }
+
+      const existingReviews = await dbGetAll('reviews', 'profileId', currentProfile.id);
+      for (const review of existingReviews) {
+        await dbDelete('reviews', review.id);
+      }
+
+      const existingSessions = await dbGetAll('sessions', 'profileId', currentProfile.id);
+      for (const session of existingSessions) {
+        await dbDelete('sessions', session.id);
+      }
+
+      // Import profile data (keep current profile ID, update metadata)
+      currentProfile.hiddenCards = data.profile?.hiddenCards || [];
+      currentProfile.faultyCards = data.profile?.faultyCards || [];
+      if (data.profile?.avatar) currentProfile.avatar = data.profile.avatar;
+      await dbPut('profiles', currentProfile);
+
+      // Create ID mapping for imported data (in case IDs conflict)
+      const deckIdMap = new Map();
+      const cardIdMap = new Map();
+
+      // Import decks and cards
+      for (const deck of (data.decks || [])) {
+        const newDeckId = generateId();
+        deckIdMap.set(deck.id, newDeckId);
+
+        const newDeck = {
+          id: newDeckId,
+          profileId: currentProfile.id,
+          name: deck.name,
+          createdAt: deck.createdAt || new Date().toISOString()
+        };
+        await dbPut('decks', newDeck);
+
+        // Import cards for this deck
+        for (const card of (deck.cards || [])) {
+          const newCardId = generateId();
+          cardIdMap.set(card.id, newCardId);
+
+          const newCard = {
+            id: newCardId,
+            deckId: newDeckId,
+            kind: card.kind,
+            question: card.question,
+            answer: card.answer,
+            cloze: card.cloze
+          };
+          await dbPut('cards', newCard);
+        }
+      }
+
+      // Import card states (with mapped IDs)
+      for (const state of (data.cardStates || [])) {
+        const newCardId = cardIdMap.get(state.cardId);
+        if (!newCardId) continue; // Skip if card wasn't imported
+
+        const newState = {
+          id: `${currentProfile.id}_${newCardId}`,
+          profileId: currentProfile.id,
+          cardId: newCardId,
+          stability: state.stability,
+          difficulty: state.difficulty,
+          due: state.due,
+          lastReview: state.lastReview,
+          reps: state.reps,
+          lapses: state.lapses
+        };
+        await dbPut('cardStates', newState);
+      }
+
+      // Import reviews (with mapped IDs)
+      for (const review of (data.reviews || [])) {
+        const newCardId = cardIdMap.get(review.cardId);
+        const newDeckId = deckIdMap.get(review.deckId);
+
+        const newReview = {
+          profileId: currentProfile.id,
+          cardId: newCardId || review.cardId, // Keep original if not mapped
+          deckId: newDeckId || review.deckId,
+          ts: review.ts,
+          rating: review.rating,
+          isNew: review.isNew
+        };
+        await dbPut('reviews', newReview);
+      }
+
+      // Import sessions
+      for (const session of (data.sessions || [])) {
+        const newSession = {
+          profileId: currentProfile.id,
+          date: session.date,
+          startTime: session.startTime,
+          endTime: session.endTime,
+          durationMs: session.durationMs,
+          cardsReviewed: session.cardsReviewed
+        };
+        await dbPut('sessions', newSession);
+      }
+
+      // Update hidden/faulty card IDs to new IDs
+      currentProfile.hiddenCards = (data.profile?.hiddenCards || [])
+        .map(id => cardIdMap.get(id))
+        .filter(id => id);
+      currentProfile.faultyCards = (data.profile?.faultyCards || [])
+        .map(id => cardIdMap.get(id))
+        .filter(id => id);
+      await dbPut('profiles', currentProfile);
+
+      // Import settings if present
+      if (data.settings) {
+        await dbPut('settings', { key: `profile_${currentProfile.id}`, ...data.settings });
+      }
+
+      hideModal();
+      await loadDecks();
+      await updateStats();
+      await updateStreakDisplay();
+      updateHiddenFaultyCounts();
+
+      showModal('Import erfolgreich! ✅', `
+        <p>Daten wurden importiert:</p>
+        <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+          <li>${data.decks?.length || 0} Decks</li>
+          <li>${cardIdMap.size} Karten</li>
+          <li>${data.cardStates?.length || 0} Lernfortschritte</li>
+        </ul>
+      `, [
+        { text: 'OK', class: 'btn-primary', action: () => { hideModal(); showScreen('home-screen'); } }
+      ]);
+    }
+
+    async function importMarkdownAsDeck(content, filename) {
+      // Legacy: Import markdown as a new deck (existing behavior)
+      const deckName = filename.replace(/\.(md|txt)$/i, '').replace(/hashcards-backup-[^-]+-/, '');
+      await parseAndImportDeck(content, deckName);
+      hideModal();
+      await loadDecks();
+      await updateStats();
     }
 
     // ===== Practice / FSRS =====
