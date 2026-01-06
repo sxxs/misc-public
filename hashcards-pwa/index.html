@@ -857,6 +857,20 @@
       border-radius: 50%;
     }
 
+    .mini-sparkle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      box-shadow: 0 0 6px currentColor;
+    }
+
+    .flashcard.flash-correct {
+      box-shadow: 0 0 30px var(--success), 0 0 60px rgba(107, 203, 119, 0.3);
+      border-color: var(--success);
+      transition: box-shadow 0.1s ease, border-color 0.1s ease;
+    }
+
     .combo-indicator {
       position: absolute;
       top: 50%;
@@ -985,7 +999,7 @@
       <div class="logo">
         <div>&#x1F4DA;</div>
         <div class="logo-title">Hashcards</div>
-        <div class="logo-version" id="version-display">v1.2.1</div>
+        <div class="logo-version" id="version-display">v1.2.2</div>
       </div>
       <div class="profile-list" id="profile-list">
         <!-- Profiles will be rendered here -->
@@ -1249,7 +1263,7 @@ C: Lueckentext mit [Luecke]</pre>
 
   <script>
     // ===== Version =====
-    const VERSION = '1.2.1';
+    const VERSION = '1.2.2';
 
     // ===== Cache Busting: Redirect wenn Version in URL nicht stimmt =====
     (function() {
@@ -2394,9 +2408,14 @@ C: Lueckentext mit [Luecke]</pre>
         comboCount++;
         playSuccessSound();
 
+        // Visual feedback on every correct answer
+        flashCorrect();
+        spawnMiniSparkles();
+
         // Show combo indicator at milestones
         if (comboCount === 5 || comboCount === 10 || comboCount === 15 || comboCount === 20) {
           showComboIndicator(comboCount);
+          playComboSound();
           spawnFireworks();
         }
       } else {
@@ -2782,19 +2801,47 @@ C: Lueckentext mit [Luecke]</pre>
       if (isMuted) return;
       try {
         const ctx = initAudio();
-        // Play a little fanfare
-        const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
-        notes.forEach((freq, i) => {
+        // Epic victory fanfare for perfect session
+        const melody = [
+          { freq: 523.25, time: 0, dur: 0.15 },     // C5
+          { freq: 659.25, time: 0.12, dur: 0.15 },  // E5
+          { freq: 783.99, time: 0.24, dur: 0.15 },  // G5
+          { freq: 1046.5, time: 0.36, dur: 0.4 },   // C6 (long)
+          { freq: 987.77, time: 0.5, dur: 0.15 },   // B5
+          { freq: 1046.5, time: 0.65, dur: 0.5 },   // C6 (triumphant end)
+        ];
+        melody.forEach(note => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = 'sine';
+          osc.frequency.value = note.freq;
+          gain.gain.setValueAtTime(0.25, ctx.currentTime + note.time);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + note.time + note.dur);
+          osc.start(ctx.currentTime + note.time);
+          osc.stop(ctx.currentTime + note.time + note.dur);
+        });
+      } catch (e) { console.log('Audio error:', e); }
+    }
+
+    function playComboSound() {
+      if (isMuted) return;
+      try {
+        const ctx = initAudio();
+        // Triumphant ascending chord for combo milestone
+        const chord = [523.25, 659.25, 783.99, 1046.5]; // C major spread
+        chord.forEach((freq, i) => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.connect(gain);
           gain.connect(ctx.destination);
           osc.type = 'sine';
           osc.frequency.value = freq;
-          gain.gain.setValueAtTime(0.2, ctx.currentTime + i * 0.1);
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.1 + 0.3);
-          osc.start(ctx.currentTime + i * 0.1);
-          osc.stop(ctx.currentTime + i * 0.1 + 0.3);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.05 + 0.4);
+          osc.start(ctx.currentTime + i * 0.05);
+          osc.stop(ctx.currentTime + i * 0.05 + 0.4);
         });
       } catch (e) { console.log('Audio error:', e); }
     }
@@ -3130,6 +3177,64 @@ C: Lueckentext mit [Luecke]</pre>
 
         container.appendChild(particle);
         setTimeout(() => particle.remove(), 1000);
+      }
+    }
+
+    function flashCorrect() {
+      const flashcard = document.querySelector('.flashcard');
+      if (!flashcard) return;
+
+      // Add flash class for green glow effect
+      flashcard.classList.add('flash-correct');
+      setTimeout(() => flashcard.classList.remove('flash-correct'), 300);
+    }
+
+    function spawnMiniSparkles() {
+      const container = document.getElementById('fireworks-container');
+      const flashcard = document.querySelector('.flashcard');
+      if (!flashcard) return;
+
+      const rect = flashcard.getBoundingClientRect();
+      const colors = ['#4ecdc4', '#6bcb77', '#ffe66d', '#95e1d3'];
+
+      // Spawn 8 small sparkles around the card
+      for (let i = 0; i < 8; i++) {
+        const sparkle = document.createElement('div');
+        sparkle.className = 'mini-sparkle';
+
+        // Random position along the card edges
+        const side = Math.floor(Math.random() * 4);
+        let x, y;
+        if (side === 0) { // top
+          x = rect.left + Math.random() * rect.width;
+          y = rect.top;
+        } else if (side === 1) { // right
+          x = rect.right;
+          y = rect.top + Math.random() * rect.height;
+        } else if (side === 2) { // bottom
+          x = rect.left + Math.random() * rect.width;
+          y = rect.bottom;
+        } else { // left
+          x = rect.left;
+          y = rect.top + Math.random() * rect.height;
+        }
+
+        sparkle.style.left = x + 'px';
+        sparkle.style.top = y + 'px';
+        sparkle.style.background = colors[Math.floor(Math.random() * colors.length)];
+
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = 30 + Math.random() * 40;
+        const dx = Math.cos(angle) * velocity;
+        const dy = Math.sin(angle) * velocity - 20; // slight upward bias
+
+        sparkle.animate([
+          { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+          { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0)`, opacity: 0 }
+        ], { duration: 500, easing: 'ease-out' });
+
+        container.appendChild(sparkle);
+        setTimeout(() => sparkle.remove(), 500);
       }
     }
 
