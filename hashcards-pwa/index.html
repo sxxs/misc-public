@@ -1113,6 +1113,190 @@
       100% { transform: scale(1); opacity: 1; }
     }
 
+    /* ===== Group Manager ===== */
+    .group-section {
+      background: var(--bg-card);
+      border-radius: 0.75rem;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+
+    .group-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      background: var(--accent-light);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .group-header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex: 1;
+    }
+
+    .group-name-input {
+      border: none;
+      background: transparent;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      width: 100%;
+      max-width: 200px;
+    }
+
+    .group-name-input:focus {
+      outline: none;
+      background: var(--bg-primary);
+    }
+
+    .group-card-count {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .group-delete-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 0.25rem;
+      font-size: 1rem;
+      opacity: 0.6;
+      transition: opacity 0.15s;
+    }
+
+    .group-delete-btn:hover {
+      opacity: 1;
+      color: var(--error);
+    }
+
+    .group-cards-list {
+      padding: 0;
+    }
+
+    .group-card-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      gap: 0.75rem;
+    }
+
+    .group-card-item:last-child {
+      border-bottom: none;
+    }
+
+    .card-preview-text {
+      flex: 1;
+      font-size: 0.875rem;
+      color: var(--text-primary);
+      line-height: 1.4;
+    }
+
+    .card-preview-text strong {
+      color: var(--accent);
+    }
+
+    .card-separator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem 1rem;
+      background: var(--bg-secondary);
+    }
+
+    .separator-add-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px dashed var(--accent);
+      background: transparent;
+      color: var(--accent);
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .separator-add-btn:hover {
+      background: var(--accent);
+      color: white;
+      border-style: solid;
+    }
+
+    .separator-input-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .separator-input {
+      flex: 1;
+      padding: 0.5rem;
+      border: 2px solid var(--accent);
+      border-radius: 0.5rem;
+      font-size: 0.9rem;
+      background: var(--bg-card);
+      color: var(--text-primary);
+    }
+
+    .separator-input:focus {
+      outline: none;
+    }
+
+    .separator-confirm-btn,
+    .separator-cancel-btn {
+      padding: 0.5rem;
+      border: none;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .separator-confirm-btn {
+      background: var(--success);
+      color: white;
+    }
+
+    .separator-cancel-btn {
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+    }
+
+    .group-filter-section {
+      padding: 1rem;
+      background: var(--bg-card);
+      border-radius: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .group-filter-label {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .group-filter-select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 1rem;
+    }
+
     /* ===== Utilities ===== */
     .hidden {
       display: none !important;
@@ -1185,7 +1369,15 @@
         <span class="sync-indicator-text" id="sync-indicator-text">Sync</span>
       </div>
 
-      <button class="btn btn-primary btn-large mb-2" id="start-practice-btn" onclick="startPractice()">
+      <div class="group-filter-section hidden" id="group-filter-section">
+        <label class="group-filter-label" for="group-filter-select">Lernbereich:</label>
+        <select class="group-filter-select" id="group-filter-select" aria-label="Kartengruppe zum Lernen auswaehlen">
+          <option value="all">Alle Karten</option>
+          <!-- Options will be populated dynamically -->
+        </select>
+      </div>
+
+      <button class="btn btn-primary btn-large mb-2" id="start-practice-btn" onclick="startPracticeWithFilter()">
         &#x1F4D6; Lernen
       </button>
 
@@ -1389,6 +1581,24 @@ C: Lueckentext mit [Luecke]</pre>
       </div>
     </div>
 
+    <!-- Group Manager Screen -->
+    <div id="group-manager-screen" class="screen">
+      <div class="header">
+        <button class="btn btn-icon btn-secondary" onclick="closeGroupManager()">&#x2190;</button>
+        <h1 id="group-manager-title">Gruppen</h1>
+        <div style="width: 48px"></div>
+      </div>
+
+      <div class="content" style="padding: 1rem; padding-bottom: 2rem; overflow-y: auto; flex: 1;">
+        <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem;">
+          Klicke auf &#x2795; zwischen Karten um eine neue Gruppe zu erstellen. Alle Karten darunter werden der neuen Gruppe zugeordnet.
+        </p>
+        <div id="group-manager-content">
+          <!-- Groups and cards will be rendered here -->
+        </div>
+      </div>
+    </div>
+
     <!-- Modal -->
     <div class="modal-overlay" id="modal-overlay">
       <div class="modal" id="modal">
@@ -1411,7 +1621,7 @@ C: Lueckentext mit [Luecke]</pre>
 
   <script>
     // ===== Version =====
-    const VERSION = '1.3.7';
+    const VERSION = '1.4.4';
 
     // ===== Sync Server =====
     const SYNC_SERVER = 'https://ssl.exoneon.de/hashcards-pwa/api';
@@ -1430,6 +1640,7 @@ C: Lueckentext mit [Luecke]</pre>
     let db = null;
     let currentProfile = null;
     let currentDeck = null;
+    let currentDeckIdForGroups = null; // For group manager screen
     let practiceQueue = [];
     let practiceIndex = 0;
     let originalQueueSize = 0;
@@ -1600,7 +1811,7 @@ C: Lueckentext mit [Luecke]</pre>
 
     // ===== IndexedDB Setup =====
     const DB_NAME = 'hashcards';
-    const DB_VERSION = 3;
+    const DB_VERSION = 4;
 
     async function initDB() {
       return new Promise((resolve, reject) => {
@@ -1683,7 +1894,104 @@ C: Lueckentext mit [Luecke]</pre>
           if (!db.objectStoreNames.contains('syncState')) {
             db.createObjectStore('syncState', { keyPath: 'profileId' });
           }
+
+          // Groups store (v4) - for card groups within decks
+          if (!db.objectStoreNames.contains('groups')) {
+            const groupsStore = db.createObjectStore('groups', { keyPath: 'id' });
+            groupsStore.createIndex('deckId', 'deckId', { unique: false });
+          }
         };
+      });
+    }
+
+    // Migration for v4: add importOrder and groupId to existing cards
+    // Uses atomic transaction to prevent partial migration on crash
+    // Returns true if cards were migrated (user should re-import for correct order)
+    async function migrateToV4IfNeeded() {
+      const migrated = await dbGet('settings', 'migratedToV4');
+      if (migrated?.value) return false;
+
+      console.log('Migrating to v4: adding importOrder and groupId to cards...');
+
+      // Step 1: Read all data outside transaction
+      const allDecks = await dbGetAllSimple('decks');
+      const existingGroups = await dbGetAllSimple('groups');
+      const existingGroupIds = new Set(existingGroups.map(g => g.id));
+
+      // Collect all cards per deck
+      const cardsByDeck = new Map();
+      for (const deck of allDecks) {
+        const cards = await dbGetAll('cards', 'deckId', deck.id);
+        cardsByDeck.set(deck.id, cards);
+      }
+
+      // Step 2: Prepare all writes
+      const groupsToCreate = [];
+      const cardsToUpdate = [];
+
+      for (const deck of allDecks) {
+        const defaultGroupId = `${deck.id}_default`;
+        if (!existingGroupIds.has(defaultGroupId)) {
+          groupsToCreate.push({
+            id: defaultGroupId,
+            deckId: deck.id,
+            name: 'Standard-Gruppe',
+            order: 0,
+            createdAt: deck.createdAt || new Date().toISOString()
+          });
+        }
+
+        const cards = cardsByDeck.get(deck.id) || [];
+        for (let i = 0; i < cards.length; i++) {
+          const card = cards[i];
+          if (card.importOrder === undefined) {
+            cardsToUpdate.push({
+              ...card,
+              importOrder: i,
+              groupId: defaultGroupId // Use explicit default group ID
+            });
+          }
+        }
+      }
+
+      // Step 3: Single atomic transaction for all writes
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(['groups', 'cards', 'settings'], 'readwrite');
+        tx.onerror = () => reject(new Error('Migration failed: ' + tx.error?.message));
+        tx.onabort = () => reject(new Error('Migration aborted'));
+        tx.oncomplete = () => resolve();
+
+        const groupsStore = tx.objectStore('groups');
+        const cardsStore = tx.objectStore('cards');
+        const settingsStore = tx.objectStore('settings');
+
+        // Write all groups
+        for (const group of groupsToCreate) {
+          groupsStore.put(group);
+        }
+
+        // Write all cards
+        for (const card of cardsToUpdate) {
+          cardsStore.put(card);
+        }
+
+        // Mark migration complete (inside same transaction!)
+        settingsStore.put({ key: 'migratedToV4', value: true });
+      });
+
+      console.log(`Migration to v4 complete: ${groupsToCreate.length} groups, ${cardsToUpdate.length} cards`);
+
+      // Return true if we actually migrated cards (user needs to re-import)
+      return cardsToUpdate.length > 0;
+    }
+
+    // Simple version of dbGetAll that doesn't require index
+    function dbGetAllSimple(storeName) {
+      return new Promise((resolve, reject) => {
+        const tx = dbTransaction(storeName);
+        const request = tx.objectStore(storeName).getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
       });
     }
 
@@ -1737,6 +2045,34 @@ C: Lueckentext mit [Luecke]</pre>
         request.onsuccess = () => resolve();
         request.onerror = () => reject(request.error);
       });
+    }
+
+    // Batch write helper - performs multiple puts/deletes in a single atomic transaction
+    // operations: [{ store: 'cards', type: 'put', data: {...} }, { store: 'groups', type: 'delete', key: 'id' }]
+    function dbBatch(operations) {
+      if (operations.length === 0) return Promise.resolve();
+
+      const storeNames = [...new Set(operations.map(op => op.store))];
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeNames, 'readwrite');
+        tx.onerror = () => reject(new Error('Batch transaction failed: ' + tx.error?.message));
+        tx.onabort = () => reject(new Error('Batch transaction aborted'));
+        tx.oncomplete = () => resolve();
+
+        for (const op of operations) {
+          const store = tx.objectStore(op.store);
+          if (op.type === 'put') {
+            store.put(op.data);
+          } else if (op.type === 'delete') {
+            store.delete(op.key);
+          }
+        }
+      });
+    }
+
+    // Helper to get normalized groupId (never null/undefined)
+    function getCardGroupId(card) {
+      return card.groupId || `${card.deckId}_default`;
     }
 
     // ===== Profile Management =====
@@ -1901,6 +2237,7 @@ C: Lueckentext mit [Luecke]</pre>
 
       const decks = await dbGetAll('decks', 'profileId', currentProfile.id);
       renderDecks(decks);
+      await populateGroupFilter();
     }
 
     async function renderDecks(decks) {
@@ -1957,6 +2294,12 @@ C: Lueckentext mit [Luecke]</pre>
         await dbDelete('cards', card.id);
       }
 
+      // Delete groups
+      const groups = await dbGetAll('groups', 'deckId', deckId);
+      for (const group of groups) {
+        await dbDelete('groups', group.id);
+      }
+
       // Delete deck
       await dbDelete('decks', deckId);
     }
@@ -1978,6 +2321,16 @@ C: Lueckentext mit [Luecke]</pre>
         </div>
         <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem;">
           ${cards.length} Karten${deck.source ? ` • Importiert aus: ${escapeHtml(deck.source)}` : ''}
+        </div>
+        <div style="margin-bottom: 0.5rem;">
+          <button class="btn btn-secondary" style="width: 100%;" onclick="showGroupManager('${deckId}')">
+            &#x1F4C1; Gruppen verwalten
+          </button>
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <button class="btn btn-secondary" style="width: 100%;" onclick="showFixOrderDialog('${deckId}')">
+            &#x1F504; Reihenfolge aus Datei laden
+          </button>
         </div>
       `, [
         { text: 'Loeschen', class: 'btn-error', action: () => confirmDeleteDeck(deckId, deck.name) },
@@ -2013,9 +2366,498 @@ C: Lueckentext mit [Luecke]</pre>
 
     async function deleteDeck(deckId) {
       await deleteDeckData(deckId);
+      invalidateGroupsCache(deckId);
       hideModal();
       await loadDecks();
       await updateStats();
+    }
+
+    // ===== Group Management =====
+    // Simple cache for groups to reduce DB calls
+    const groupsCache = new Map();
+
+    function invalidateGroupsCache(deckId = null) {
+      if (deckId) {
+        groupsCache.delete(deckId);
+      } else {
+        groupsCache.clear();
+      }
+    }
+
+    async function loadGroups(deckId, useCache = true) {
+      // Check cache first
+      if (useCache && groupsCache.has(deckId)) {
+        return groupsCache.get(deckId);
+      }
+
+      let groups = await dbGetAll('groups', 'deckId', deckId);
+
+      // Ensure default group exists
+      const defaultGroupId = `${deckId}_default`;
+      const hasDefault = groups.some(g => g.id === defaultGroupId);
+      if (!hasDefault) {
+        const deck = await dbGet('decks', deckId);
+        const defaultGroup = {
+          id: defaultGroupId,
+          deckId: deckId,
+          name: 'Standard-Gruppe',
+          order: 0,
+          createdAt: deck?.createdAt || new Date().toISOString()
+        };
+        await dbPut('groups', defaultGroup);
+        groups.push(defaultGroup);
+      }
+
+      const sortedGroups = groups.sort((a, b) => a.order - b.order);
+      groupsCache.set(deckId, sortedGroups);
+      return sortedGroups;
+    }
+
+    async function createGroup(deckId, name, insertAfterOrder) {
+      const groups = await loadGroups(deckId);
+      const newOrder = insertAfterOrder + 1;
+
+      // Create new group (validate name length)
+      const group = {
+        id: generateId(),
+        deckId: deckId,
+        name: (name || 'Neue Gruppe').substring(0, 50),
+        order: newOrder,
+        createdAt: new Date().toISOString()
+      };
+
+      // Batch: shift existing groups + create new group
+      const ops = [];
+      for (const g of groups) {
+        if (g.order >= newOrder) {
+          g.order++;
+          ops.push({ store: 'groups', type: 'put', data: g });
+        }
+      }
+      ops.push({ store: 'groups', type: 'put', data: group });
+      await dbBatch(ops);
+
+      invalidateGroupsCache(deckId);
+      return group;
+    }
+
+    async function deleteGroup(groupId) {
+      const group = await dbGet('groups', groupId);
+      if (!group) return;
+
+      // Don't delete default group
+      if (groupId.endsWith('_default')) {
+        showModal('Nicht moeglich', '<p>Die Standard-Gruppe kann nicht geloescht werden.</p>', [
+          { text: 'OK', class: 'btn-primary', action: hideModal }
+        ]);
+        return;
+      }
+
+      const deckId = group.deckId;
+      const defaultGroupId = `${deckId}_default`;
+
+      // Get all data needed for the batch operation
+      const cards = await dbGetAll('cards', 'deckId', deckId);
+      const allGroups = await loadGroups(deckId, false); // bypass cache
+
+      // Build batch operations
+      const ops = [];
+
+      // 1. Move cards from deleted group to default group
+      for (const card of cards) {
+        if (getCardGroupId(card) === groupId) {
+          card.groupId = defaultGroupId;
+          ops.push({ store: 'cards', type: 'put', data: card });
+        }
+      }
+
+      // 2. Delete the group
+      ops.push({ store: 'groups', type: 'delete', key: groupId });
+
+      // 3. Renumber remaining groups (exclude the one being deleted)
+      const remainingGroups = allGroups.filter(g => g.id !== groupId);
+      for (let i = 0; i < remainingGroups.length; i++) {
+        if (remainingGroups[i].order !== i) {
+          remainingGroups[i].order = i;
+          ops.push({ store: 'groups', type: 'put', data: remainingGroups[i] });
+        }
+      }
+
+      // Execute all in one atomic transaction
+      await dbBatch(ops);
+      invalidateGroupsCache(deckId);
+    }
+
+    async function updateGroupName(groupId, newName) {
+      const group = await dbGet('groups', groupId);
+      if (!group) return;
+
+      // Validate name (max 50 chars)
+      group.name = (newName.trim() || 'Unbenannte Gruppe').substring(0, 50);
+      await dbPut('groups', group);
+      invalidateGroupsCache(group.deckId);
+    }
+
+    async function insertGroupAfterCard(deckId, afterCardId, groupName) {
+      // Get all cards sorted by importOrder
+      const cards = await dbGetAll('cards', 'deckId', deckId);
+      cards.sort((a, b) => (a.importOrder || 0) - (b.importOrder || 0));
+
+      // Find the card and its current group
+      const cardIndex = cards.findIndex(c => c.id === afterCardId);
+      if (cardIndex === -1) {
+        console.warn('insertGroupAfterCard: Card not found:', afterCardId);
+        return null;
+      }
+
+      const afterCard = cards[cardIndex];
+      const currentGroupId = getCardGroupId(afterCard);
+
+      // Get current group's order
+      const currentGroup = await dbGet('groups', currentGroupId);
+      const currentGroupOrder = currentGroup?.order || 0;
+
+      // Create new group after current group (this already uses dbBatch internally)
+      const newGroup = await createGroup(deckId, groupName, currentGroupOrder);
+
+      // Collect cards to move (all cards after this one in same group)
+      const cardsToMove = [];
+      for (let i = cardIndex + 1; i < cards.length; i++) {
+        const card = cards[i];
+        if (getCardGroupId(card) === currentGroupId) {
+          card.groupId = newGroup.id;
+          cardsToMove.push({ store: 'cards', type: 'put', data: card });
+        }
+      }
+
+      // Batch update all cards
+      if (cardsToMove.length > 0) {
+        await dbBatch(cardsToMove);
+      }
+
+      return newGroup;
+    }
+
+    // ===== Group Manager UI =====
+    async function showGroupManager(deckId) {
+      currentDeckIdForGroups = deckId;
+      const deck = await dbGet('decks', deckId);
+      document.getElementById('group-manager-title').textContent = deck ? deck.name : 'Gruppen';
+      hideModal();
+      showScreen('group-manager-screen');
+      await renderGroupManager();
+    }
+
+    function closeGroupManager() {
+      currentDeckIdForGroups = null;
+      showScreen('home-screen');
+    }
+
+    async function renderGroupManager() {
+      if (!currentDeckIdForGroups) return;
+
+      const container = document.getElementById('group-manager-content');
+      const groups = await loadGroups(currentDeckIdForGroups);
+      const cards = await dbGetAll('cards', 'deckId', currentDeckIdForGroups);
+
+      // Sort cards by importOrder
+      cards.sort((a, b) => (a.importOrder || 0) - (b.importOrder || 0));
+
+      // Group cards by groupId
+      const cardsByGroup = new Map();
+      for (const card of cards) {
+        const groupId = getCardGroupId(card);
+        if (!cardsByGroup.has(groupId)) {
+          cardsByGroup.set(groupId, []);
+        }
+        cardsByGroup.get(groupId).push(card);
+      }
+
+      let html = '';
+
+      for (const group of groups) {
+        const groupCards = cardsByGroup.get(group.id) || [];
+        const isDefault = group.id.endsWith('_default');
+
+        html += `
+          <div class="group-section" data-group-id="${group.id}">
+            <div class="group-header">
+              <div class="group-header-left">
+                <input type="text" class="group-name-input" value="${escapeHtml(group.name)}"
+                       onblur="handleGroupNameChange(this, '${group.id}')"
+                       onkeydown="if(event.key==='Enter'){this.blur()}"
+                       aria-label="Gruppenname bearbeiten"
+                       ${isDefault ? 'readonly' : ''}>
+                <span class="group-card-count">(${groupCards.length} Karten)</span>
+              </div>
+              ${!isDefault ? `<button class="group-delete-btn" onclick="confirmDeleteGroup('${group.id}')" title="Gruppe loeschen" aria-label="Gruppe ${escapeHtml(group.name)} loeschen">&#x1F5D1;</button>` : ''}
+            </div>
+            <div class="group-cards-list">
+        `;
+
+        for (let i = 0; i < groupCards.length; i++) {
+          const card = groupCards[i];
+          const preview = getCardPreview(card);
+
+          html += `
+            <div class="group-card-item" data-card-id="${card.id}">
+              <div class="card-preview-text">${preview}</div>
+            </div>
+          `;
+
+          // Add separator after each card (except last)
+          if (i < groupCards.length - 1) {
+            html += `
+              <div class="card-separator" data-after-card="${card.id}">
+                <button class="separator-add-btn" onclick="showSeparatorInput(this, '${card.id}')" title="Gruppe einfuegen" aria-label="Neue Gruppe nach dieser Karte einfuegen">+</button>
+              </div>
+            `;
+          }
+        }
+
+        html += `
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+    }
+
+    function getCardPreview(card) {
+      if (card.kind === 'QA') {
+        const q = (card.question || '').substring(0, 80);
+        return `<strong>Q:</strong> ${escapeHtml(q)}${card.question.length > 80 ? '...' : ''}`;
+      } else {
+        const c = (card.cloze || '').substring(0, 80);
+        return `<strong>C:</strong> ${escapeHtml(c)}${card.cloze.length > 80 ? '...' : ''}`;
+      }
+    }
+
+    function showSeparatorInput(btn, afterCardId) {
+      const separator = btn.parentElement;
+      separator.innerHTML = `
+        <div class="separator-input-container">
+          <input type="text" class="separator-input" placeholder="Gruppenname..."
+                 onkeydown="handleSeparatorKeydown(event, '${afterCardId}')" autofocus>
+          <button class="separator-confirm-btn" onclick="confirmNewGroup('${afterCardId}')">&#x2713;</button>
+          <button class="separator-cancel-btn" onclick="renderGroupManager()">&#x2715;</button>
+        </div>
+      `;
+      separator.querySelector('.separator-input').focus();
+    }
+
+    function handleSeparatorKeydown(event, afterCardId) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        confirmNewGroup(afterCardId);
+      } else if (event.key === 'Escape') {
+        renderGroupManager();
+      }
+    }
+
+    async function confirmNewGroup(afterCardId) {
+      const input = document.querySelector('.separator-input');
+      const name = input?.value?.trim();
+
+      if (!name) {
+        renderGroupManager();
+        return;
+      }
+
+      await insertGroupAfterCard(currentDeckIdForGroups, afterCardId, name);
+      await renderGroupManager();
+
+      // Trigger sync
+      const syncState = await getSyncState();
+      if (syncState?.accountId) {
+        performSync(false);
+      }
+    }
+
+    async function handleGroupNameChange(input, groupId) {
+      const newName = input.value.trim();
+      if (newName) {
+        await updateGroupName(groupId, newName);
+
+        // Trigger sync
+        const syncState = await getSyncState();
+        if (syncState?.accountId) {
+          performSync(false);
+        }
+      } else {
+        // Restore original name
+        const group = await dbGet('groups', groupId);
+        input.value = group?.name || 'Gruppe';
+      }
+    }
+
+    async function confirmDeleteGroup(groupId) {
+      const group = await dbGet('groups', groupId);
+      if (!group) return;
+
+      showModal('Gruppe loeschen?', `
+        <p>Die Gruppe "${escapeHtml(group.name)}" wird geloescht.</p>
+        <p style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+          Alle Karten werden in die Standard-Gruppe verschoben.
+        </p>
+      `, [
+        { text: 'Abbrechen', class: 'btn-secondary', action: () => { hideModal(); showScreen('group-manager-screen'); } },
+        { text: 'Loeschen', class: 'btn-error', action: async () => {
+          await deleteGroup(groupId);
+          hideModal();
+          showScreen('group-manager-screen');
+          await renderGroupManager();
+
+          // Trigger sync
+          const syncState = await getSyncState();
+          if (syncState?.accountId) {
+            performSync(false);
+          }
+        }}
+      ]);
+    }
+
+    // ===== Group Filter for Practice =====
+    async function populateGroupFilter() {
+      const select = document.getElementById('group-filter-select');
+      const section = document.getElementById('group-filter-section');
+      if (!select || !currentProfile) return;
+
+      // Get all decks and their groups
+      const decks = await dbGetAll('decks', 'profileId', currentProfile.id);
+      if (decks.length === 0) {
+        section.classList.add('hidden');
+        return;
+      }
+
+      // Find newest deck by createdAt
+      const sortedDecks = [...decks].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const newestDeck = sortedDecks[0];
+
+      let allGroups = [];
+      let newestDeckGroupCount = 0;
+
+      for (const deck of decks) {
+        const groups = await loadGroups(deck.id);
+        if (deck.id === newestDeck.id) {
+          newestDeckGroupCount = groups.length;
+        }
+        for (const group of groups) {
+          allGroups.push({ ...group, deckName: deck.name, deckCreatedAt: deck.createdAt });
+        }
+      }
+
+      // Sort groups by deck createdAt (newest first), then by order
+      allGroups.sort((a, b) => {
+        const deckCmp = new Date(b.deckCreatedAt) - new Date(a.deckCreatedAt);
+        if (deckCmp !== 0) return deckCmp;
+        return a.order - b.order;
+      });
+
+      // Build options
+      let html = '<option value="all">Alle Karten</option>';
+
+      // Add "newest X groups" options based on newest deck's group count
+      if (newestDeckGroupCount > 1) {
+        html += '<option value="newest:1">Neueste Gruppe</option>';
+        if (newestDeckGroupCount > 2) {
+          html += '<option value="newest:2">Neueste 2 Gruppen</option>';
+        }
+        if (newestDeckGroupCount > 3) {
+          html += '<option value="newest:3">Neueste 3 Gruppen</option>';
+        }
+        if (newestDeckGroupCount > 5) {
+          html += '<option value="newest:5">Neueste 5 Gruppen</option>';
+        }
+      }
+
+      // Add individual groups (grouped by deck, newest deck first)
+      let currentDeckName = '';
+      for (const group of allGroups) {
+        if (group.deckName !== currentDeckName) {
+          if (currentDeckName !== '') {
+            html += '</optgroup>';
+          }
+          html += `<optgroup label="${escapeHtml(group.deckName)}">`;
+          currentDeckName = group.deckName;
+        }
+        html += `<option value="group:${group.id}">${escapeHtml(group.name)}</option>`;
+      }
+      if (currentDeckName !== '') {
+        html += '</optgroup>';
+      }
+
+      select.innerHTML = html;
+
+      // Show/hide section based on whether there are multiple groups total
+      if (allGroups.length > 1) {
+        section.classList.remove('hidden');
+      } else {
+        section.classList.add('hidden');
+      }
+    }
+
+    async function startPracticeWithFilter() {
+      const select = document.getElementById('group-filter-select');
+      const groupFilter = select?.value || 'all';
+      await startPractice(null, false, groupFilter);
+    }
+
+    async function applyGroupFilter(cards, filterValue) {
+      if (filterValue === 'all') {
+        return cards;
+      }
+
+      if (filterValue.startsWith('group:')) {
+        // Filter by specific group
+        const groupId = filterValue.substring(6);
+        return cards.filter(card => getCardGroupId(card) === groupId);
+      }
+
+      if (filterValue.startsWith('newest:')) {
+        // Filter by newest N groups from newest deck (by maxImportOrder of cards)
+        const n = parseInt(filterValue.substring(7), 10);
+
+        // Find the newest deck by createdAt
+        const deckIds = [...new Set(cards.map(c => c.deckId))];
+        const decks = await Promise.all(deckIds.map(id => dbGet('decks', id)));
+        const validDecks = decks.filter(d => d);
+        if (validDecks.length === 0) return cards;
+
+        validDecks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const newestDeck = validDecks[0];
+
+        // Get groups from newest deck only
+        const groups = await loadGroups(newestDeck.id);
+
+        // Calculate maxImportOrder for each group
+        const cardsInDeck = cards.filter(c => c.deckId === newestDeck.id);
+        const groupMaxImportOrder = new Map();
+        for (const card of cardsInDeck) {
+          const groupId = getCardGroupId(card);
+          const current = groupMaxImportOrder.get(groupId) || -1;
+          const cardOrder = card.importOrder || 0;
+          if (cardOrder > current) {
+            groupMaxImportOrder.set(groupId, cardOrder);
+          }
+        }
+
+        // Sort groups by maxImportOrder descending (highest = newest content)
+        const groupsWithOrder = groups.map(g => ({
+          ...g,
+          maxImportOrder: groupMaxImportOrder.get(g.id) ?? -1
+        }));
+        groupsWithOrder.sort((a, b) => b.maxImportOrder - a.maxImportOrder);
+
+        // Take top N groups
+        const newestGroups = groupsWithOrder.slice(0, n);
+        const newestGroupIds = new Set(newestGroups.map(g => g.id));
+
+        return cards.filter(card => newestGroupIds.has(getCardGroupId(card)));
+      }
+
+      return cards;
     }
 
     // ===== Stats =====
@@ -2096,6 +2938,31 @@ C: Lueckentext mit [Luecke]</pre>
         return;
       }
 
+      // Check if deck with same name already exists
+      const existingDecks = await dbGetAll('decks', 'profileId', currentProfile.id);
+      const existingDeck = existingDecks.find(d => d.name === deckName);
+      if (existingDeck) {
+        // Show warning and offer to fix order instead
+        showModal('Deck existiert bereits', `
+          <p style="margin-bottom: 1rem;">Ein Deck mit dem Namen "<strong>${escapeHtml(deckName)}</strong>" existiert bereits.</p>
+          <p style="margin-bottom: 1rem;">Wenn du nochmal importierst, wird ein <strong>zweites Deck</strong> mit gleichem Namen erstellt.</p>
+          <p style="font-size: 0.875rem; color: var(--text-secondary);">
+            <strong>Tipp:</strong> Um nur die Reihenfolge zu aktualisieren, oeffne das bestehende Deck und nutze "Reihenfolge aus Datei laden".
+          </p>
+        `, [
+          { text: 'Abbrechen', class: 'btn-secondary', action: hideModal },
+          { text: 'Trotzdem importieren', class: 'btn-primary', action: async () => {
+            hideModal();
+            await doImportDeck(deckName, cards, file.name);
+          }}
+        ]);
+        return;
+      }
+
+      await doImportDeck(deckName, cards, file.name);
+    }
+
+    async function doImportDeck(deckName, cards, source = '') {
       // Sync before import to get latest server state
       const syncState = await getSyncState();
       if (syncState?.accountId) {
@@ -2115,13 +2982,24 @@ C: Lueckentext mit [Luecke]</pre>
         profileId: currentProfile.id,
         name: deckName,
         createdAt: new Date().toISOString(),
-        source: file.name
+        source: source
       };
 
       await dbPut('decks', deck);
 
-      // Create cards
-      for (const cardData of cards) {
+      // Create default group for this deck
+      const defaultGroup = {
+        id: `${deckId}_default`,
+        deckId: deckId,
+        name: 'Standard-Gruppe',
+        order: 0,
+        createdAt: new Date().toISOString()
+      };
+      await dbPut('groups', defaultGroup);
+
+      // Create cards with importOrder and groupId
+      for (let i = 0; i < cards.length; i++) {
+        const cardData = cards[i];
         const card = {
           id: generateCardId(deckId, cardData),
           deckId: deckId,
@@ -2129,7 +3007,9 @@ C: Lueckentext mit [Luecke]</pre>
           question: cardData.question,
           answer: cardData.answer,
           cloze: cardData.cloze,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          importOrder: i,
+          groupId: `${deckId}_default` // Explicit default group ID
         };
         await dbPut('cards', card);
       }
@@ -2253,6 +3133,118 @@ C: Lueckentext mit [Luecke]</pre>
       return hashString(deckId + '\n' + content);
     }
 
+    // Helper to get content hash (without deckId) for matching cards
+    function getCardContentHash(card) {
+      const content = card.kind === 'QA'
+        ? card.question + '\n---\n' + card.answer
+        : card.cloze;
+      return hashString(content);
+    }
+
+    // Show dialog to fix card order from source file
+    function showFixOrderDialog(deckId) {
+      hideModal();
+      showModal('Reihenfolge laden', `
+        <p style="margin-bottom: 1rem;">Waehle die Original-Quelldatei aus, um die Karten-Reihenfolge wiederherzustellen.</p>
+        <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem;">
+          Karten werden ueber ihren Inhalt gematcht. Deine Lernfortschritte bleiben erhalten.
+        </p>
+        <input type="file" id="fix-order-file-input" accept=".md,.txt" style="display: none;">
+        <button class="btn btn-primary" style="width: 100%;" onclick="document.getElementById('fix-order-file-input').click()">
+          &#x1F4C4; Datei auswaehlen
+        </button>
+      `, [
+        { text: 'Abbrechen', class: 'btn-secondary', action: hideModal }
+      ]);
+
+      // Set up file input handler
+      setTimeout(() => {
+        const fileInput = document.getElementById('fix-order-file-input');
+        if (fileInput) {
+          fileInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            try {
+              const text = await file.text();
+              await fixDeckOrderFromFile(deckId, text);
+            } catch (err) {
+              console.error('Error fixing order:', err);
+              showModal('Fehler', `<p>Fehler beim Laden: ${escapeHtml(err.message)}</p>`, [
+                { text: 'OK', class: 'btn-primary', action: hideModal }
+              ]);
+            }
+          };
+        }
+      }, 100);
+    }
+
+    // Fix card order from source file content
+    async function fixDeckOrderFromFile(deckId, fileContent) {
+      // Parse the file
+      const parsedCards = parseMarkdown(fileContent);
+      if (parsedCards.length === 0) {
+        showModal('Keine Karten', '<p>Die Datei enthaelt keine gueltigen Karten.</p>', [
+          { text: 'OK', class: 'btn-primary', action: hideModal }
+        ]);
+        return;
+      }
+
+      // Create content hash -> importOrder map from parsed cards
+      const orderByHash = new Map();
+      for (let i = 0; i < parsedCards.length; i++) {
+        const hash = getCardContentHash(parsedCards[i]);
+        orderByHash.set(hash, i);
+      }
+
+      // Load existing cards from deck
+      const existingCards = await dbGetAll('cards', 'deckId', deckId);
+
+      // Match and prepare updates
+      const ops = [];
+      let matchedCount = 0;
+      let unmatchedCount = 0;
+
+      for (const card of existingCards) {
+        const hash = getCardContentHash(card);
+        if (orderByHash.has(hash)) {
+          const newOrder = orderByHash.get(hash);
+          if (card.importOrder !== newOrder) {
+            card.importOrder = newOrder;
+            ops.push({ store: 'cards', type: 'put', data: card });
+          }
+          matchedCount++;
+        } else {
+          unmatchedCount++;
+        }
+      }
+
+      // Apply updates in batch
+      if (ops.length > 0) {
+        await dbBatch(ops);
+      }
+
+      // Show result
+      let message = `<p><strong>${matchedCount}</strong> Karten wurden gematcht.</p>`;
+      if (ops.length > 0) {
+        message += `<p><strong>${ops.length}</strong> Karten wurden aktualisiert.</p>`;
+      } else {
+        message += `<p>Keine Aenderungen noetig - Reihenfolge war bereits korrekt.</p>`;
+      }
+      if (unmatchedCount > 0) {
+        message += `<p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 0.5rem;">${unmatchedCount} Karten im Deck wurden nicht in der Datei gefunden.</p>`;
+      }
+
+      showModal('Reihenfolge aktualisiert', message, [
+        { text: 'OK', class: 'btn-primary', action: hideModal }
+      ]);
+
+      // Trigger sync if connected
+      const syncState = await getSyncState();
+      if (syncState?.accountId) {
+        performSync(false);
+      }
+    }
+
     // ===== Export / Import =====
     const EXPORT_FORMAT_VERSION = 1;
 
@@ -2261,10 +3253,11 @@ C: Lueckentext mit [Luecke]</pre>
 
       // Collect all data for this profile
       const decks = await dbGetAll('decks', 'profileId', currentProfile.id);
-      const decksWithCards = [];
+      const decksWithCardsAndGroups = [];
       for (const deck of decks) {
         const cards = await dbGetAll('cards', 'deckId', deck.id);
-        decksWithCards.push({ ...deck, cards });
+        const groups = await dbGetAll('groups', 'deckId', deck.id);
+        decksWithCardsAndGroups.push({ ...deck, cards, groups });
       }
 
       const cardStates = await dbGetAll('cardStates', 'profileId', currentProfile.id);
@@ -2284,7 +3277,7 @@ C: Lueckentext mit [Luecke]</pre>
           hiddenCards: currentProfile.hiddenCards || [],
           faultyCards: currentProfile.faultyCards || []
         },
-        decks: decksWithCards,
+        decks: decksWithCardsAndGroups,
         cardStates: cardStates,
         reviews: reviews,
         sessions: sessions,
@@ -2408,8 +3401,9 @@ C: Lueckentext mit [Luecke]</pre>
       // Create ID mapping for imported data (in case IDs conflict)
       const deckIdMap = new Map();
       const cardIdMap = new Map();
+      const groupIdMap = new Map();
 
-      // Import decks and cards
+      // Import decks, groups, and cards
       for (const deck of (data.decks || [])) {
         const newDeckId = generateId();
         deckIdMap.set(deck.id, newDeckId);
@@ -2418,14 +3412,60 @@ C: Lueckentext mit [Luecke]</pre>
           id: newDeckId,
           profileId: currentProfile.id,
           name: deck.name,
+          source: deck.source || '',
           createdAt: deck.createdAt || new Date().toISOString()
         };
         await dbPut('decks', newDeck);
 
+        // Create default group for this deck
+        const defaultGroupId = `${newDeckId}_default`;
+        await dbPut('groups', {
+          id: defaultGroupId,
+          deckId: newDeckId,
+          name: 'Standard-Gruppe',
+          order: 0,
+          createdAt: newDeck.createdAt
+        });
+
+        // Import groups for this deck (if any)
+        for (const group of (deck.groups || [])) {
+          // Map old default group to new default group
+          if (group.id.endsWith('_default')) {
+            groupIdMap.set(group.id, defaultGroupId);
+            // Update the default group's name if different
+            if (group.name && group.name !== 'Standard-Gruppe') {
+              await dbPut('groups', {
+                id: defaultGroupId,
+                deckId: newDeckId,
+                name: (group.name || 'Standard-Gruppe').substring(0, 50),
+                order: 0,
+                createdAt: newDeck.createdAt
+              });
+            }
+          } else {
+            const newGroupId = generateId();
+            groupIdMap.set(group.id, newGroupId);
+            await dbPut('groups', {
+              id: newGroupId,
+              deckId: newDeckId,
+              name: (group.name || 'Gruppe').substring(0, 50),
+              order: group.order || 0,
+              createdAt: group.createdAt || newDeck.createdAt
+            });
+          }
+        }
+
         // Import cards for this deck
-        for (const card of (deck.cards || [])) {
+        for (let i = 0; i < (deck.cards || []).length; i++) {
+          const card = deck.cards[i];
           const newCardId = generateId();
           cardIdMap.set(card.id, newCardId);
+
+          // Map groupId to new ID, fallback to default group
+          let newGroupId = defaultGroupId;
+          if (card.groupId && groupIdMap.has(card.groupId)) {
+            newGroupId = groupIdMap.get(card.groupId);
+          }
 
           const newCard = {
             id: newCardId,
@@ -2433,7 +3473,9 @@ C: Lueckentext mit [Luecke]</pre>
             kind: card.kind,
             question: card.question,
             answer: card.answer,
-            cloze: card.cloze
+            cloze: card.cloze,
+            importOrder: card.importOrder !== undefined ? card.importOrder : i,
+            groupId: newGroupId
           };
           await dbPut('cards', newCard);
         }
@@ -2502,6 +3544,7 @@ C: Lueckentext mit [Luecke]</pre>
       }
 
       hideModal();
+      invalidateGroupsCache(); // Clear all cached groups after import
       await loadDecks();
       await updateStats();
       await updateStreakDisplay();
@@ -2530,7 +3573,37 @@ C: Lueckentext mit [Luecke]</pre>
     async function importMarkdownAsDeck(content, filename) {
       // Legacy: Import markdown as a new deck (existing behavior)
       const deckName = filename.replace(/\.(md|txt)$/i, '').replace(/hashcards-backup-[^-]+-/, '');
-      await parseAndImportDeck(content, deckName);
+      const cards = parseMarkdown(content);
+      if (cards.length === 0) {
+        showModal('Import fehlgeschlagen', '<p>Keine Karten gefunden.</p>', [
+          { text: 'OK', class: 'btn-primary', action: hideModal }
+        ]);
+        return;
+      }
+
+      // Check if deck with same name already exists
+      const existingDecks = await dbGetAll('decks', 'profileId', currentProfile.id);
+      const existingDeck = existingDecks.find(d => d.name === deckName);
+      if (existingDeck) {
+        showModal('Deck existiert bereits', `
+          <p style="margin-bottom: 1rem;">Ein Deck mit dem Namen "<strong>${escapeHtml(deckName)}</strong>" existiert bereits.</p>
+          <p style="margin-bottom: 1rem;">Wenn du nochmal importierst, wird ein <strong>zweites Deck</strong> mit gleichem Namen erstellt.</p>
+          <p style="font-size: 0.875rem; color: var(--text-secondary);">
+            <strong>Tipp:</strong> Um nur die Reihenfolge zu aktualisieren, oeffne das bestehende Deck und nutze "Reihenfolge aus Datei laden".
+          </p>
+        `, [
+          { text: 'Abbrechen', class: 'btn-secondary', action: hideModal },
+          { text: 'Trotzdem importieren', class: 'btn-primary', action: async () => {
+            hideModal();
+            await doImportDeck(deckName, cards, filename);
+            await loadDecks();
+            await updateStats();
+          }}
+        ]);
+        return;
+      }
+
+      await doImportDeck(deckName, cards, filename);
       hideModal();
       await loadDecks();
       await updateStats();
@@ -2671,10 +3744,11 @@ C: Lueckentext mit [Luecke]</pre>
     // Build snapshot from current profile data
     async function buildSnapshot() {
       const decks = await dbGetAll('decks', 'profileId', currentProfile.id);
-      const decksWithCards = [];
+      const decksWithCardsAndGroups = [];
       for (const deck of decks) {
         const cards = await dbGetAll('cards', 'deckId', deck.id);
-        decksWithCards.push({ ...deck, cards });
+        const groups = await dbGetAll('groups', 'deckId', deck.id);
+        decksWithCardsAndGroups.push({ ...deck, cards, groups });
       }
 
       const cardStates = await dbGetAll('cardStates', 'profileId', currentProfile.id);
@@ -2682,6 +3756,7 @@ C: Lueckentext mit [Luecke]</pre>
       const sessions = await dbGetAll('sessions', 'profileId', currentProfile.id);
 
       return {
+        schemaVersion: 4, // For backwards compatibility detection
         profile: {
           name: currentProfile.name,
           avatar: currentProfile.avatar,
@@ -2689,7 +3764,7 @@ C: Lueckentext mit [Luecke]</pre>
           hiddenCards: currentProfile.hiddenCards || [],
           faultyCards: currentProfile.faultyCards || []
         },
-        decks: decksWithCards,
+        decks: decksWithCardsAndGroups,
         cardStates,
         reviews,
         sessions
@@ -2739,6 +3814,15 @@ C: Lueckentext mit [Luecke]</pre>
         return { valid: false, error: 'Snapshot ist kein Objekt' };
       }
 
+      // Schema version validation (optional, for backwards compatibility)
+      if (snapshot.schemaVersion !== undefined && typeof snapshot.schemaVersion !== 'number') {
+        return { valid: false, error: 'schemaVersion muss eine Zahl sein' };
+      }
+      // Log if receiving old schema (no version = pre-v4)
+      if (!snapshot.schemaVersion) {
+        console.log('Received snapshot without schemaVersion (pre-v4), will create default groups');
+      }
+
       // Profile validation (optional but must be object if present)
       if (snapshot.profile !== undefined && typeof snapshot.profile !== 'object') {
         return { valid: false, error: 'profile muss ein Objekt sein' };
@@ -2770,6 +3854,10 @@ C: Lueckentext mit [Luecke]</pre>
           if (!card.id || typeof card.id !== 'string') {
             return { valid: false, error: `deck[${i}].cards[${j}].id fehlt` };
           }
+        }
+        // Groups validation (optional, for v4 compatibility)
+        if (deck.groups !== undefined && !Array.isArray(deck.groups)) {
+          return { valid: false, error: `deck[${i}].groups muss ein Array sein` };
         }
       }
 
@@ -2842,7 +3930,7 @@ C: Lueckentext mit [Luecke]</pre>
 
       return new Promise((resolve, reject) => {
         // Single transaction across ALL affected stores for atomicity
-        const storeNames = ['profiles', 'decks', 'cards', 'cardStates', 'reviews', 'sessions', 'syncState'];
+        const storeNames = ['profiles', 'decks', 'cards', 'groups', 'cardStates', 'reviews', 'sessions', 'syncState'];
         const tx = db.transaction(storeNames, 'readwrite');
 
         tx.onerror = () => reject(new Error('Merge transaction failed: ' + tx.error?.message));
@@ -2852,6 +3940,7 @@ C: Lueckentext mit [Luecke]</pre>
         const profilesStore = tx.objectStore('profiles');
         const decksStore = tx.objectStore('decks');
         const cardsStore = tx.objectStore('cards');
+        const groupsStore = tx.objectStore('groups');
         const cardStatesStore = tx.objectStore('cardStates');
         const reviewsStore = tx.objectStore('reviews');
         const sessionsStore = tx.objectStore('sessions');
@@ -2896,11 +3985,15 @@ C: Lueckentext mit [Luecke]</pre>
             // 2. Collect all existing deck IDs for this profile
             const existingDeckKeys = await collectKeys(decksStore, 'profileId', profileId);
 
-            // 3. For each deck, collect and delete its cards
+            // 3. For each deck, collect and delete its cards and groups
             for (const deckId of existingDeckKeys) {
               const cardKeys = await collectKeys(cardsStore, 'deckId', deckId);
               for (const cardKey of cardKeys) {
                 cardsStore.delete(cardKey);
+              }
+              const groupKeys = await collectKeys(groupsStore, 'deckId', deckId);
+              for (const groupKey of groupKeys) {
+                groupsStore.delete(groupKey);
               }
               decksStore.delete(deckId);
             }
@@ -2923,7 +4016,7 @@ C: Lueckentext mit [Luecke]</pre>
               sessionsStore.delete(key);
             }
 
-            // 7. Import server decks and cards
+            // 7. Import server decks, groups, and cards
             for (const deck of (serverSnapshot.decks || [])) {
               if (!deck.id || !deck.name) continue; // Skip invalid decks
               decksStore.put({
@@ -2931,10 +4024,25 @@ C: Lueckentext mit [Luecke]</pre>
                 profileId: profileId,
                 name: deck.name,
                 notes: deck.notes || '',
+                source: deck.source || '',
                 createdAt: deck.createdAt || new Date().toISOString()
               });
 
-              for (const card of (deck.cards || [])) {
+              // Import groups for this deck
+              for (const group of (deck.groups || [])) {
+                if (!group.id) continue;
+                groupsStore.put({
+                  id: group.id,
+                  deckId: deck.id,
+                  name: (group.name || 'Gruppe').substring(0, 50),
+                  order: group.order || 0,
+                  createdAt: group.createdAt || new Date().toISOString()
+                });
+              }
+
+              // Import cards with importOrder and groupId
+              for (let i = 0; i < (deck.cards || []).length; i++) {
+                const card = deck.cards[i];
                 if (!card.id) continue; // Skip invalid cards
                 cardsStore.put({
                   id: card.id,
@@ -2944,7 +4052,10 @@ C: Lueckentext mit [Luecke]</pre>
                   answer: card.answer || '',
                   cloze: card.cloze || '',
                   front: card.front || '',
-                  back: card.back || ''
+                  back: card.back || '',
+                  importOrder: card.importOrder !== undefined ? card.importOrder : i,
+                  // Normalize null/undefined to explicit default group ID
+                  groupId: card.groupId || `${deck.id}_default`
                 });
               }
             }
@@ -3027,6 +4138,7 @@ C: Lueckentext mit [Luecke]</pre>
         // 2. If server has newer data, merge it
         if (serverVersion > (syncState.snapshotVersion || 0)) {
           await mergeSnapshot(serverSnapshot, serverVersion, syncState, syncProfileId);
+          invalidateGroupsCache(); // Clear all groups cache after sync
           // Reload UI after merge (only if still same profile)
           if (currentProfile?.id === syncProfileId) {
             await loadDecks();
@@ -3211,6 +4323,7 @@ C: Lueckentext mit [Luecke]</pre>
         // Merge server data (this also saves syncState atomically)
         if (snapshot) {
           await mergeSnapshot(snapshot, version, syncState, pairProfileId);
+          invalidateGroupsCache(); // Clear all groups cache after sync
           await loadDecks();
           await updateStats();
           await updateStreakDisplay();
@@ -3451,7 +4564,7 @@ C: Lueckentext mit [Luecke]</pre>
     }
 
     // ===== Practice / FSRS =====
-    async function startPractice(deckId = null, extraMode = false) {
+    async function startPractice(deckId = null, extraMode = false, groupFilter = 'all') {
       if (!currentProfile) return;
 
       const settings = await getSettings();
@@ -3476,6 +4589,11 @@ C: Lueckentext mit [Luecke]</pre>
 
       // Filter out hidden and faulty cards
       allCards = allCards.filter(card => !hiddenCardIds.has(card.id) && !faultyCardIds.has(card.id));
+
+      // Apply group filter
+      if (groupFilter !== 'all') {
+        allCards = await applyGroupFilter(allCards, groupFilter);
+      }
 
       if (allCards.length === 0) {
         showModal('Keine Karten', '<p>Importiere zuerst ein Deck.</p>', [
@@ -4630,8 +5748,22 @@ C: Lueckentext mit [Luecke]</pre>
         document.getElementById('version-display').textContent = 'v' + VERSION;
 
         await initDB();
+        const didMigrateCards = await migrateToV4IfNeeded();
         initOfflineHandling();
         await loadProfiles();
+
+        // Show migration warning if cards were migrated from old version
+        if (didMigrateCards) {
+          showModal('Update auf v1.4', `
+            <p style="margin-bottom: 1rem;">Diese Version unterstuetzt <strong>Gruppen</strong> zum Organisieren von Karten.</p>
+            <p style="margin-bottom: 1rem;">Deine bestehenden Decks wurden migriert, aber die <strong>Karten-Reihenfolge</strong> konnte nicht uebernommen werden.</p>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">
+              <strong>Tipp:</strong> Oeffne ein Deck, tippe auf "Reihenfolge aus Datei laden" und waehle die Original-Quelldatei. Deine Lernfortschritte bleiben erhalten.
+            </p>
+          `, [
+            { text: 'Verstanden', class: 'btn-primary', action: hideModal }
+          ]);
+        }
       } catch (err) {
         console.error('Init error:', err);
         // Show error to user

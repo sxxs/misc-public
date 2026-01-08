@@ -2,71 +2,90 @@
 
 ## Architektur
 
-Single-File PWA (`index.html`, ~4600 Zeilen) mit eingebettetem CSS und JavaScript.
+Single-File PWA (`index.html`, ~5800 Zeilen) mit eingebettetem CSS und JavaScript.
 
 **Kein Build-Step** - Vanilla JS, direkt deploybar.
 
 ## Code-Struktur
 
-Die JavaScript-Sektionen (ab Zeile ~1412):
+Die JavaScript-Sektionen (ab Zeile ~1624):
 
 | Zeile | Sektion | Beschreibung |
 |-------|---------|--------------|
-| 1413 | Version | `VERSION = '1.3.7'` |
-| 1416 | Sync Server | API-URL Konfiguration |
-| 1429 | State | Globale Variablen |
-| 1456 | Phrases | Motivationssätze nach Session |
-| 1480 | Latin Trivia | Fun Facts für Latein-Lerner |
-| 1601 | IndexedDB Setup | DB-Schema und Migration |
-| 1690 | DB Helpers | Promise-Wrapper für IDB |
-| 1742 | Profile Management | CRUD für Profile |
-| 1898 | Deck Management | CRUD für Decks |
-| 2021 | Stats | Statistik-Berechnung |
-| 2063 | Import | Datei-Import UI |
-| 2173 | Markdown Parser | Q:/A:/C: Parsing |
-| 2256 | Export / Import | ZIP-Backup, JSON-Import |
-| 2539 | Sync | Multi-Device Sync-Logik |
-| 3453 | Practice / FSRS | Lern-Session und Queue |
-| 3837 | FSRS Algorithm | Scheduling-Berechnung |
-| 3922 | Settings | Theme, Limits, etc. |
-| 3981 | Modal | Modal-Dialog System |
-| 4011 | Screen Navigation | View-Switching |
-| 4023 | Utilities | Helfer-Funktionen |
-| 4095 | Audio System | Web Audio API Sounds |
-| 4215 | Session Tracking | Lernzeit-Erfassung |
-| 4298 | Streak & Stats | Streak-Berechnung |
-| 4352 | Hidden & Faulty Cards | Karten verstecken/melden |
-| 4488 | Fireworks & Effects | Visuelles Feedback |
-| 4612 | PWA | Service Worker Registration |
-| 4626 | Init | App-Start |
+| 1624 | Version | `VERSION = '1.4.4'` |
+| 1627 | Sync Server | API-URL Konfiguration |
+| 1640 | State | Globale Variablen |
+| 1667 | Phrases | Motivationssätze nach Session |
+| 1691 | Latin Trivia | Fun Facts für Latein-Lerner |
+| 1814 | IndexedDB Setup | DB-Schema und Migration (v4) |
+| 2047 | DB Helpers | Promise-Wrapper für IDB |
+| 2109 | Profile Management | CRUD für Profile |
+| 2264 | Deck Management | CRUD für Decks |
+| 2375 | Group Management | Gruppen-CRUD, Cache, Batch-Ops |
+| 2541 | Group Manager UI | Gruppen-UI und Interaktion |
+| 2721 | Group Filter | Lernbereich-Filter für Practice |
+| 2863 | Stats | Statistik-Berechnung |
+| 2905 | Import | Datei-Import UI |
+| 3081 | Markdown Parser | Q:/A:/C: Parsing |
+| 3248 | Export / Import | ZIP-Backup, JSON-Import |
+| 3612 | Sync | Multi-Device Sync-Logik |
+| 4566 | Practice / FSRS | Lern-Session und Queue |
+| 4955 | FSRS Algorithm | Scheduling-Berechnung |
+| 5040 | Settings | Theme, Limits, etc. |
+| 5099 | Modal | Modal-Dialog System |
+| 5129 | Screen Navigation | View-Switching |
+| 5141 | Utilities | Helfer-Funktionen |
+| 5213 | Audio System | Web Audio API Sounds |
+| 5333 | Session Tracking | Lernzeit-Erfassung |
+| 5416 | Streak & Stats | Streak-Berechnung |
+| 5470 | Hidden & Faulty Cards | Karten verstecken/melden |
+| 5606 | Fireworks & Effects | Visuelles Feedback |
+| 5730 | PWA | Service Worker Registration |
+| 5744 | Init | App-Start |
 
 ## IndexedDB Schema
 
-Database: `hashcards`, Version: 3
+Database: `hashcards`, Version: 4
 
 | Store | KeyPath | Indices | Beschreibung |
 |-------|---------|---------|--------------|
 | `profiles` | `id` | `name` | Lernprofile |
 | `decks` | `id` | `profileId` | Kartenstapel |
-| `cards` | `id` | `deckId` | Einzelne Karten |
+| `cards` | `id` | `deckId` | Einzelne Karten (mit `importOrder`, `groupId`) |
+| `groups` | `id` | `deckId` | Kartengruppen innerhalb von Decks |
 | `reviews` | `id` (auto) | `profileId`, `cardId`, `ts` | Review-Log (append-only) |
 | `cardStates` | `id` | `profileId`, `due` | FSRS-Cache (rebuildbar) |
 | `settings` | `key` | - | App-Einstellungen |
 | `sessions` | `id` (auto) | `profileId`, `date` | Lernzeit-Tracking |
 | `syncState` | `profileId` | - | Sync-Credentials pro Profil |
 
+## Gruppen-System (v1.4)
+
+Karten können in Gruppen organisiert werden:
+- Jedes Deck hat eine Standard-Gruppe (`{deckId}_default`)
+- Gruppen werden durch Trenner zwischen Karten erstellt
+- `importOrder` erhält die Original-Reihenfolge aus der Quelldatei
+- Lernbereich-Filter erlaubt Üben nach Gruppe oder "neueste N Gruppen"
+
+Migration von v3 → v4:
+- Automatisch bei App-Start (`migrateToV4IfNeeded`)
+- Erstellt Standard-Gruppen für existierende Decks
+- Setzt `importOrder` (aber verliert Original-Reihenfolge)
+- "Reihenfolge aus Datei laden" für nachträgliche Korrektur
+
 ## Sync-System
 
 - **Server**: PHP 7 Backend unter `https://ssl.exoneon.de/hashcards-pwa/api`
-- **Protokoll**: Append-only Event-Logs pro Device
+- **Protokoll**: Snapshot-basiert (ersetzt alte Event-Logs)
 - **Auth**: `account_id.account_token` als Bearer Token
-- **Endpoints**: `register.php`, `append.php`, `since.php`, `devices.php`, `snapshot.php`
+- **Endpoints**: `register.php`, `snapshot.php`, `devices.php`
+- **Schema**: `schemaVersion: 4` im Snapshot für Kompatibilität
 
 Details in `SPEC.md` (Abschnitt 5-7) und `SERVER-INSTALL.md`.
 
 ## FSRS-Algorithmus
 
-Vereinfachte FSRS-Implementierung (Zeile ~3837):
+Vereinfachte FSRS-Implementierung (Zeile ~4955):
 - 4 Ratings: again, hard, good, easy
 - Berechnet `stability`, `difficulty`, `due`
 - Rebuildbar aus Review-Events
@@ -74,8 +93,8 @@ Vereinfachte FSRS-Implementierung (Zeile ~3837):
 ## Versionierung
 
 Bei Änderungen aktualisieren:
-1. `VERSION` in index.html (Zeile 1414)
-2. `version` in sw.js
+1. `VERSION` in index.html (Zeile 1624)
+2. `CACHE_NAME` in sw.js
 3. Commit-Message mit Version
 
 ## Theme-System
@@ -91,6 +110,7 @@ Navigation über `.screen.active` CSS-Klassen:
 - `#profile-screen` - Profilauswahl
 - `#home-screen` - Hauptmenü
 - `#deck-screen` - Deck-Verwaltung
+- `#group-manager-screen` - Gruppen-Manager
 - `#practice-screen` - Lern-Session
 - `#stats-screen` - Statistiken
 - `#settings-screen` - Einstellungen
