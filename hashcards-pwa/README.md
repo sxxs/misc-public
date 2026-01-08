@@ -7,6 +7,7 @@ Spaced Repetition Lernkarten-App als Progressive Web App.
 ## Features
 
 - **FSRS-Algorithmus** - Modernes Spaced Repetition Scheduling (lokal)
+- **Gruppen** - Karten in Lernbereiche organisieren, nach Gruppe üben
 - **Multi-Profil** - Mehrere Lernende auf einem Gerät
 - **Multi-Device Sync** - Fortschritt zwischen Geräten synchronisieren
 - **Offline-fähig** - Funktioniert ohne Internet
@@ -49,7 +50,7 @@ C: Speech is [produced] in [Broca's] area.
 
 ## Tech Stack
 
-- Vanilla JS (Single-File, ~4600 Zeilen)
+- Vanilla JS (Single-File, ~5800 Zeilen)
 - IndexedDB für lokale Datenhaltung
 - Service Worker für Offline-Support
 - PHP 7 Backend für Sync (optional)
