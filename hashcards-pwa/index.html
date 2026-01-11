@@ -146,12 +146,12 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.5rem 0 1rem;
-      gap: 1rem;
+      padding: 0.375rem 0 0.5rem;
+      gap: 0.75rem;
     }
 
     .header h1 {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       font-weight: 700;
     }
 
@@ -211,9 +211,9 @@
 
     .btn-large {
       width: 100%;
-      padding: 1.25rem;
-      font-size: 1.25rem;
-      border-radius: 16px;
+      padding: 0.875rem;
+      font-size: 1rem;
+      border-radius: 12px;
     }
 
     .btn-success {
@@ -329,72 +329,65 @@
     .hero-stats {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 1rem;
+      justify-content: center;
+      gap: 1rem;
+      padding: 0.5rem 1rem;
       background: linear-gradient(135deg, var(--accent-light), var(--bg-secondary));
-      border-radius: 16px;
-      margin-bottom: 1rem;
+      border-radius: 12px;
+      margin-bottom: 0.75rem;
     }
 
-    .streak-display {
+    .hero-stat-item {
       display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      align-items: baseline;
+      gap: 0.25rem;
     }
 
-    .streak-fire {
-      font-size: 2rem;
+    .hero-stat-icon {
+      font-size: 1rem;
     }
 
-    .streak-count {
-      font-size: 2rem;
+    .hero-stat-value {
+      font-size: 1.1rem;
       font-weight: 700;
       color: var(--warning);
     }
 
-    .streak-label {
-      font-size: 0.75rem;
+    .hero-stat-label {
+      font-size: 0.7rem;
       color: var(--text-secondary);
     }
 
-    .today-time {
-      text-align: right;
-    }
-
-    .today-time-value {
-      font-size: 1.25rem;
-      font-weight: 600;
-    }
-
-    .today-time-label {
-      font-size: 0.75rem;
-      color: var(--text-secondary);
+    .hero-stat-divider {
+      width: 1px;
+      height: 1rem;
+      background: var(--border);
     }
 
     .stats-bar {
       display: flex;
-      gap: 1rem;
-      margin-bottom: 1rem;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
     }
 
     .stat-item {
       flex: 1;
       text-align: center;
-      padding: 0.75rem;
+      padding: 0.5rem;
       background: var(--bg-secondary);
-      border-radius: 12px;
+      border-radius: 10px;
     }
 
     .stat-value {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       font-weight: 700;
       color: var(--accent);
     }
 
     .stat-label {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: var(--text-secondary);
-      margin-top: 0.25rem;
+      margin-top: 0.125rem;
     }
 
     .sync-indicator {
@@ -452,19 +445,19 @@
     .deck-item {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      padding: 1rem;
+      gap: 0.75rem;
+      padding: 0.75rem;
     }
 
     .deck-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
       background: var(--accent-light);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
+      font-size: 1.25rem;
     }
 
     .deck-info {
@@ -473,11 +466,12 @@
 
     .deck-name {
       font-weight: 600;
-      margin-bottom: 0.25rem;
+      font-size: 0.95rem;
+      margin-bottom: 0.125rem;
     }
 
     .deck-meta {
-      font-size: 0.875rem;
+      font-size: 0.8rem;
       color: var(--text-secondary);
     }
 
@@ -945,12 +939,12 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.25rem;
-      padding: 0.75rem 0.5rem;
+      gap: 0.125rem;
+      padding: 0.5rem 0.25rem;
       border: none;
       background: none;
       color: var(--text-secondary);
-      font-size: 0.75rem;
+      font-size: 0.65rem;
       cursor: pointer;
       transition: color 0.15s ease;
     }
@@ -960,7 +954,7 @@
     }
 
     .nav-item-icon {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
     }
 
     /* ===== Fireworks & Effects ===== */
@@ -1274,27 +1268,27 @@
     }
 
     .group-filter-section {
-      padding: 1rem;
+      padding: 0.5rem 0.75rem;
       background: var(--bg-card);
-      border-radius: 0.75rem;
-      margin-bottom: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 0.75rem;
     }
 
     .group-filter-label {
-      font-size: 0.875rem;
+      font-size: 0.75rem;
       color: var(--text-secondary);
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.25rem;
       display: block;
     }
 
     .group-filter-select {
       width: 100%;
-      padding: 0.75rem;
+      padding: 0.5rem;
       border: 1px solid var(--border);
-      border-radius: 0.5rem;
+      border-radius: 0.375rem;
       background: var(--bg-primary);
       color: var(--text-primary);
-      font-size: 1rem;
+      font-size: 0.9rem;
     }
 
     /* ===== Utilities ===== */
@@ -1336,16 +1330,15 @@
       </div>
 
       <div class="hero-stats">
-        <div class="streak-display">
-          <div class="streak-fire">&#x1F525;</div>
-          <div>
-            <div class="streak-count" id="streak-count">0</div>
-            <div class="streak-label">Tage Streak</div>
-          </div>
+        <div class="hero-stat-item">
+          <span class="hero-stat-icon">&#x1F525;</span>
+          <span class="hero-stat-value" id="streak-count">0</span>
+          <span class="hero-stat-label">Tage</span>
         </div>
-        <div class="today-time">
-          <div class="today-time-value" id="today-time">0 min</div>
-          <div class="today-time-label">heute gelernt</div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat-item">
+          <span class="hero-stat-value" id="today-time">0 min</span>
+          <span class="hero-stat-label">heute</span>
         </div>
       </div>
 
@@ -1377,9 +1370,14 @@
         </select>
       </div>
 
-      <button class="btn btn-primary btn-large mb-2" id="start-practice-btn" onclick="startPracticeWithFilter()">
-        &#x1F4D6; Lernen
-      </button>
+      <div style="display: flex; gap: 0.375rem; margin-bottom: 0.75rem;">
+        <button class="btn btn-primary btn-large" style="flex: 1;" id="start-practice-btn" onclick="startPracticeWithFilter()">
+          &#x1F4D6; Lernen
+        </button>
+        <button class="btn btn-secondary btn-large" style="flex: 1;" id="start-practice-all-btn" onclick="startPracticeWithFilter(true)">
+          &#x1F504; Alle ueben
+        </button>
+      </div>
 
       <div class="deck-list" id="deck-list">
         <!-- Decks will be rendered here -->
@@ -1621,7 +1619,7 @@ C: Lueckentext mit [Luecke]</pre>
 
   <script>
     // ===== Version =====
-    const VERSION = '1.4.4';
+    const VERSION = '1.4.6';
 
     // ===== Sync Server =====
     const SYNC_SERVER = 'https://ssl.exoneon.de/hashcards-pwa/api';
@@ -2798,10 +2796,10 @@ C: Lueckentext mit [Luecke]</pre>
       }
     }
 
-    async function startPracticeWithFilter() {
+    async function startPracticeWithFilter(practiceAllMode = false) {
       const select = document.getElementById('group-filter-select');
       const groupFilter = select?.value || 'all';
-      await startPractice(null, false, groupFilter);
+      await startPractice(null, false, groupFilter, practiceAllMode);
     }
 
     async function applyGroupFilter(cards, filterValue) {
@@ -4564,7 +4562,21 @@ C: Lueckentext mit [Luecke]</pre>
     }
 
     // ===== Practice / FSRS =====
-    async function startPractice(deckId = null, extraMode = false, groupFilter = 'all') {
+
+    function initAndShowPracticeSession() {
+      practiceIndex = 0;
+      originalQueueSize = practiceQueue.length;
+      sessionStats = { reviewed: 0, again: 0, hard: 0, good: 0, easy: 0 };
+      cardsNeededRepeat = new Set();
+      cardAgainCount = new Map();
+      cardRevealed = false;
+      comboCount = 0;
+      startSessionTracking();
+      showScreen('practice-screen');
+      showCurrentCard();
+    }
+
+    async function startPractice(deckId = null, extraMode = false, groupFilter = 'all', practiceAllMode = false) {
       if (!currentProfile) return;
 
       const settings = await getSettings();
@@ -4599,6 +4611,23 @@ C: Lueckentext mit [Luecke]</pre>
         showModal('Keine Karten', '<p>Importiere zuerst ein Deck.</p>', [
           { text: 'OK', class: 'btn-primary', action: hideModal }
         ]);
+        return;
+      }
+
+      // Practice All Mode: Use ALL cards, ignore SR classification and limits
+      if (practiceAllMode) {
+        const cardsWithState = [];
+        for (const card of allCards) {
+          const state = await dbGet('cardStates', `${currentProfile.id}_${card.id}`);
+          cardsWithState.push({ card, state: state || null, isNew: !state });
+        }
+
+        // Shuffle all cards
+        shuffleArray(cardsWithState);
+
+        // No session limit in practiceAllMode
+        practiceQueue = cardsWithState;
+        initAndShowPracticeSession();
         return;
       }
 
@@ -4666,20 +4695,7 @@ C: Lueckentext mit [Luecke]</pre>
         return;
       }
 
-      // Reset session
-      practiceIndex = 0;
-      originalQueueSize = practiceQueue.length;
-      sessionStats = { reviewed: 0, again: 0, hard: 0, good: 0, easy: 0 };
-      cardsNeededRepeat = new Set();
-      cardAgainCount = new Map();
-      cardRevealed = false;
-      comboCount = 0;
-
-      // Start session tracking
-      startSessionTracking();
-
-      showScreen('practice-screen');
-      showCurrentCard();
+      initAndShowPracticeSession();
     }
 
     function showCurrentCard() {
@@ -4889,7 +4905,7 @@ C: Lueckentext mit [Luecke]</pre>
       for (const [cardId, count] of cardAgainCount) {
         if (count > maxAgainCount) {
           maxAgainCount = count;
-          endgegnerCard = allCards.find(c => c.id === cardId);
+          endgegnerCard = practiceQueue.find(item => item.card.id === cardId)?.card;
         }
       }
 
