@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WIAI25 Scanline Prototyp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #e8e8e8;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .canvas-container {
+            background: #f8f8f8;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-width: 100%;
+        }
+
+        #display-canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .controls {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #frame-slider {
+            flex: 1;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #ddd;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        #frame-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #1a5f5f;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .stat {
+            display: flex;
+            gap: 5px;
+        }
+
+        .stat-label {
+            color: #999;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #1a5f5f;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .loading.hidden {
+            display: none;
+        }
+
+        .loading-text {
+            font-size: 1.1rem;
+            color: #1a5f5f;
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 4px;
+            background: #ddd;
+            border-radius: 2px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #1a5f5f;
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        .play-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        button {
+            background: #1a5f5f;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        button:hover {
+            background: #247373;
+        }
+
+        button:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+
+        #speed-display {
+            font-family: 'JetBrains Mono', monospace;
+            color: #666;
+            min-width: 50px;
+        }
+
+        .debug-panel {
+            margin-top: 30px;
+            width: 100%;
+            max-width: 1200px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #0f0;
+        }
+
+        .debug-panel h3 {
+            color: #fff;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .debug-level {
+            margin-bottom: 8px;
+            padding: 8px;
+            background: #333;
+            border-radius: 4px;
+        }
+
+        .debug-level.active {
+            border-left: 3px solid #0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading">
+        <div class="loading-text">Generiere Frames...</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+    </div>
+
+    <h1>WIAI25 Progressive Enhancement Prototyp</h1>
+
+    <div class="canvas-container">
+        <canvas id="display-canvas" width="1200" height="480"></canvas>
+    </div>
+
+    <div class="controls">
+        <div class="slider-row">
+            <input type="range" id="frame-slider" min="0" max="100" value="0">
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <span class="stat-label">Frame:</span>
+                <span class="stat-value" id="frame-num">0</span>
+                <span class="stat-label">/</span>
+                <span class="stat-value" id="frame-total">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Level:</span>
+                <span class="stat-value" id="level-num">1</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Pixel-Größe:</span>
+                <span class="stat-value" id="pixel-size">100</span>
+                <span class="stat-label">px</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Zellen im Level:</span>
+                <span class="stat-value" id="cells-in-level">0</span>
+            </div>
+        </div>
+
+        <div class="play-controls">
+            <button id="play-btn">Play</button>
+            <button id="slower-btn">-</button>
+            <span id="speed-display">1x</span>
+            <button id="faster-btn">+</button>
+        </div>
+    </div>
+
+    <div class="debug-panel" id="debug-panel">
+        <h3>Debug: Level-Statistiken</h3>
+        <div id="debug-content"></div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            canvasWidth: 1200,
+            canvasHeight: 480,
+            text: 'WIAI25',
+            fontSize: 380,
+            fontFamily: 'JetBrains Mono',
+            pixelSizes: [100, 80, 64, 50, 40], // Levels 1-5
+            pixelColor: '#1a5f5f',
+            pixelOpacity: 0.6,
+            overlapThreshold: 0.4, // 40% coverage required
+            bgColor: '#f8f8f8',
+            historyFadePerLevel: 0.85 // Multiply opacity by this each level
+        };
+
+        // State
+        let frames = [];
+        let levelSnapshots = []; // PNG snapshots after each level
+        let levelStats = []; // Debug stats per level
+        let currentFrame = 0;
+        let isPlaying = false;
+        let playInterval = null;
+        const speeds = [0.25, 0.5, 1, 2, 4, 8];
+        let speedIndex = 2;
+
+        // DOM Elements
+        const displayCanvas = document.getElementById('display-canvas');
+        const displayCtx = displayCanvas.getContext('2d');
+        const slider = document.getElementById('frame-slider');
+        const loading = document.getElementById('loading');
+        const progressFill = document.getElementById('progress-fill');
+
+        // Hidden canvas for text mask
+        const maskCanvas = document.createElement('canvas');
+        maskCanvas.width = CONFIG.canvasWidth;
+        maskCanvas.height = CONFIG.canvasHeight;
+        const maskCtx = maskCanvas.getContext('2d');
+
+        // Hidden canvas for rendering history snapshots
+        const historyCanvas = document.createElement('canvas');
+        historyCanvas.width = CONFIG.canvasWidth;
+        historyCanvas.height = CONFIG.canvasHeight;
+        const historyCtx = historyCanvas.getContext('2d');
+
+        // Generate text mask
+        function generateTextMask() {
+            maskCtx.fillStyle = 'white';
+            maskCtx.fillRect(0, 0, CONFIG.canvasWidth, CONFIG.canvasHeight);
+
+            maskCtx.fillStyle = 'black';
+            maskCtx.font = `700 ${CONFIG.fontSize}px "${CONFIG.fontFamily}"`;
+            maskCtx.textAlign = 'center';
+            maskCtx.textBaseline = 'middle';
+            maskCtx.fillText(CONFIG.text, CONFIG.canvasWidth / 2, CONFIG.canvasHeight / 2 + 15);
+        }
+
+        // Check overlap of a cell with the text mask
+        function getCellOverlap(x, y, size) {
+            const imageData = maskCtx.getImageData(x, y, size, size);
+            const pixels = imageData.data;
+            let blackPixels = 0;
+            const totalPixels = size * size;
+
+            for (let i = 0; i < pixels.length; i += 4) {
+                if (pixels[i] < 128) {
+                    blackPixels++;
+                }
+            }
+
+            return blackPixels / totalPixels;
+        }
+
+        // Generate valid cells for a pixel size
+        function getValidCells(pixelSize) {
+            const cells = [];
+            const cols = Math.floor(CONFIG.canvasWidth / pixelSize);
+            const rows = Math.floor(CONFIG.canvasHeight / pixelSize);
+
+            const offsetX = (CONFIG.canvasWidth - cols * pixelSize) / 2;
+            const offsetY = (CONFIG.canvasHeight - rows * pixelSize) / 2;
+
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const x = Math.floor(offsetX + col * pixelSize);
+                    const y = Math.floor(offsetY + row * pixelSize);
+                    const overlap = getCellOverlap(x, y, pixelSize);
+
+                    if (overlap >= CONFIG.overlapThreshold) {
+                        cells.push({ x, y, size: pixelSize, overlap });
+                    }
+                }
+            }
+
+            return cells;
+        }
+
+        // Create a snapshot of the current history
+        function createHistorySnapshot(cells, pixelSize, previousSnapshot) {
+            // Start with previous snapshot (faded)
+            if (previousSnapshot) {
+                historyCtx.globalAlpha = CONFIG.historyFadePerLevel;
+                historyCtx.drawImage(previousSnapshot, 0, 0);
+                historyCtx.globalAlpha = 1;
+            } else {
+                historyCtx.clearRect(0, 0, CONFIG.canvasWidth, CONFIG.canvasHeight);
+            }
+
+            // Draw current level's pixels
+            historyCtx.fillStyle = CONFIG.pixelColor;
+            historyCtx.globalAlpha = CONFIG.pixelOpacity;
+            cells.forEach(cell => {
+                historyCtx.fillRect(cell.x, cell.y, cell.size, cell.size);
+            });
+            historyCtx.globalAlpha = 1;
+
+            // Create image from canvas
+            const img = new Image();
+            img.src = historyCanvas.toDataURL('image/png');
+            return img;
+        }
+
+        // Render a frame using pre-computed history snapshot
+        function renderFrame(frameData) {
+            const { historySnapshotIndex, currentPixels, pixelSize } = frameData;
+
+            // Clear with background
+            displayCtx.fillStyle = CONFIG.bgColor;
+            displayCtx.fillRect(0, 0, CONFIG.canvasWidth, CONFIG.canvasHeight);
+
+            // Draw history snapshot (single PNG, not stacked layers!)
+            if (historySnapshotIndex >= 0 && levelSnapshots[historySnapshotIndex]) {
+                displayCtx.drawImage(levelSnapshots[historySnapshotIndex], 0, 0);
+            }
+
+            // Draw current pixels
+            displayCtx.fillStyle = CONFIG.pixelColor;
+            displayCtx.globalAlpha = CONFIG.pixelOpacity;
+            currentPixels.forEach(cell => {
+                displayCtx.fillRect(cell.x, cell.y, cell.size, cell.size);
+            });
+
+            // Draw outline with difference blend mode
+            displayCtx.globalAlpha = 1;
+            displayCtx.globalCompositeOperation = 'difference';
+            displayCtx.fillStyle = 'white';
+            displayCtx.font = `700 ${CONFIG.fontSize}px "${CONFIG.fontFamily}"`;
+            displayCtx.textAlign = 'center';
+            displayCtx.textBaseline = 'middle';
+            displayCtx.fillText(CONFIG.text, CONFIG.canvasWidth / 2, CONFIG.canvasHeight / 2 + 15);
+
+            displayCtx.globalCompositeOperation = 'source-over';
+        }
+
+        // Update debug panel
+        function updateDebugPanel(currentLevel) {
+            const content = levelStats.map((stat, i) => {
+                const isActive = i + 1 === currentLevel;
+                return `
+                    <div class="debug-level ${isActive ? 'active' : ''}">
+                        <strong>Level ${i + 1}</strong> (${stat.pixelSize}px) |
+                        Grid: ${stat.cols}×${stat.rows} = ${stat.totalCells} |
+                        Gültig: ${stat.validCells} (${(stat.validCells / stat.totalCells * 100).toFixed(1)}%) |
+                        Kumulativ: ${stat.cumulativeFrames}
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('debug-content').innerHTML = content;
+        }
+
+        // Generate all frames
+        async function generateFrames() {
+            generateTextMask();
+
+            let frameIndex = 0;
+            let totalFrames = 0;
+
+            // First pass: count total frames and gather stats
+            for (let level = 0; level < CONFIG.pixelSizes.length; level++) {
+                const pixelSize = CONFIG.pixelSizes[level];
+                const cols = Math.floor(CONFIG.canvasWidth / pixelSize);
+                const rows = Math.floor(CONFIG.canvasHeight / pixelSize);
+                const cells = getValidCells(pixelSize);
+
+                totalFrames += cells.length;
+
+                levelStats.push({
+                    level: level + 1,
+                    pixelSize,
+                    cols,
+                    rows,
+                    totalCells: cols * rows,
+                    validCells: cells.length,
+                    cumulativeFrames: totalFrames
+                });
+            }
+
+            console.log('=== WIAI25 Scanline Debug ===');
+            console.log('Total frames:', totalFrames);
+            console.table(levelStats);
+
+            document.getElementById('frame-total').textContent = totalFrames;
+            slider.max = totalFrames - 1;
+
+            // Initialize history canvas with transparent background
+            historyCtx.clearRect(0, 0, CONFIG.canvasWidth, CONFIG.canvasHeight);
+
+            // Second pass: generate frames
+            for (let level = 0; level < CONFIG.pixelSizes.length; level++) {
+                const pixelSize = CONFIG.pixelSizes[level];
+                const cells = getValidCells(pixelSize);
+
+                for (let i = 0; i < cells.length; i++) {
+                    const currentPixels = cells.slice(0, i + 1);
+
+                    frames.push({
+                        index: frameIndex,
+                        level: level + 1,
+                        pixelSize: pixelSize,
+                        cellsInLevel: cells.length,
+                        cellIndex: i + 1,
+                        historySnapshotIndex: level - 1, // Use previous level's snapshot
+                        currentPixels: currentPixels
+                    });
+
+                    frameIndex++;
+
+                    // Update progress
+                    const progress = (frameIndex / totalFrames) * 100;
+                    progressFill.style.width = `${progress}%`;
+
+                    // Yield to UI every 50 frames
+                    if (frameIndex % 50 === 0) {
+                        await new Promise(r => setTimeout(r, 0));
+                    }
+                }
+
+                // Level complete - create snapshot for next level to use
+                const previousSnapshot = level > 0 ? levelSnapshots[level - 1] : null;
+                const snapshot = createHistorySnapshot(cells, pixelSize, previousSnapshot);
+                levelSnapshots.push(snapshot);
+
+                console.log(`Level ${level + 1} complete: ${cells.length} cells, snapshot created`);
+
+                // Wait for image to load
+                await new Promise(resolve => {
+                    if (snapshot.complete) resolve();
+                    else snapshot.onload = resolve;
+                });
+            }
+
+            loading.classList.add('hidden');
+            updateDebugPanel(1);
+            showFrame(0);
+        }
+
+        // Show a specific frame
+        function showFrame(index) {
+            if (index < 0 || index >= frames.length) return;
+
+            currentFrame = index;
+            const frame = frames[index];
+
+            renderFrame(frame);
+
+            // Update stats
+            document.getElementById('frame-num').textContent = frame.index + 1;
+            document.getElementById('level-num').textContent = frame.level;
+            document.getElementById('pixel-size').textContent = frame.pixelSize;
+            document.getElementById('cells-in-level').textContent = `${frame.cellIndex}/${frame.cellsInLevel}`;
+
+            slider.value = index;
+            updateDebugPanel(frame.level);
+        }
+
+        // Play controls
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            document.getElementById('play-btn').textContent = isPlaying ? 'Pause' : 'Play';
+
+            if (isPlaying) {
+                const interval = 100 / speeds[speedIndex];
+                playInterval = setInterval(() => {
+                    if (currentFrame < frames.length - 1) {
+                        showFrame(currentFrame + 1);
+                    } else {
+                        togglePlay();
+                    }
+                }, interval);
+            } else {
+                clearInterval(playInterval);
+            }
+        }
+
+        function updateSpeed() {
+            document.getElementById('speed-display').textContent = `${speeds[speedIndex]}x`;
+            if (isPlaying) {
+                clearInterval(playInterval);
+                const interval = 100 / speeds[speedIndex];
+                playInterval = setInterval(() => {
+                    if (currentFrame < frames.length - 1) {
+                        showFrame(currentFrame + 1);
+                    } else {
+                        togglePlay();
+                    }
+                }, interval);
+            }
+        }
+
+        // Event listeners
+        slider.addEventListener('input', (e) => {
+            showFrame(parseInt(e.target.value));
+        });
+
+        document.getElementById('play-btn').addEventListener('click', togglePlay);
+
+        document.getElementById('slower-btn').addEventListener('click', () => {
+            if (speedIndex > 0) {
+                speedIndex--;
+                updateSpeed();
+            }
+        });
+
+        document.getElementById('faster-btn').addEventListener('click', () => {
+            if (speedIndex < speeds.length - 1) {
+                speedIndex++;
+                updateSpeed();
+            }
+        });
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') {
+                showFrame(Math.min(currentFrame + 1, frames.length - 1));
+            } else if (e.key === 'ArrowLeft') {
+                showFrame(Math.max(currentFrame - 1, 0));
+            } else if (e.key === ' ') {
+                e.preventDefault();
+                togglePlay();
+            }
+        });
+
+        // Wait for font to load, then generate
+        document.fonts.ready.then(() => {
+            generateFrames();
+        });
+    </script>
+</body>
+</html>
