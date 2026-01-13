@@ -337,9 +337,9 @@
                 <span class="value-display" id="tune-opacity-val">0.6</span>
             </div>
             <div class="tuning-item">
-                <label>History Fade (pro Level)</label>
-                <input type="range" id="tune-fade" min="0.5" max="1" step="0.01" value="0.85">
-                <span class="value-display" id="tune-fade-val">0.85</span>
+                <label>Brightness Gain (pro Level)</label>
+                <input type="range" id="tune-brightness" min="1" max="2" step="0.05" value="1.3">
+                <span class="value-display" id="tune-brightness-val">1.3</span>
             </div>
             <div class="tuning-item">
                 <label>Overlap Threshold</label>
@@ -380,7 +380,7 @@
             pixelOpacity: 0.6,
             overlapThreshold: 0.4,
             bgColor: '#f8f8f8',
-            historyFadePerLevel: 0.85,
+            historyBrightnessGain: 1.3, // Multiply brightness by this each level (>1 = lighter)
             outlineStrokeWidth: 6
         };
 
@@ -466,17 +466,19 @@
         }
 
         // Create a snapshot of the current history
-        function createHistorySnapshot(cells, pixelSize, previousSnapshot) {
-            // Start with previous snapshot (faded)
+        function createHistorySnapshot(cells, pixelSize, previousSnapshot, brightnessMultiplier) {
+            // Start fresh with white background
+            historyCtx.fillStyle = CONFIG.bgColor;
+            historyCtx.fillRect(0, 0, CONFIG.canvasWidth, CONFIG.canvasHeight);
+
+            // Draw previous snapshot with brightness increase (fading toward white)
             if (previousSnapshot) {
-                historyCtx.globalAlpha = CONFIG.historyFadePerLevel;
+                historyCtx.filter = `brightness(${brightnessMultiplier})`;
                 historyCtx.drawImage(previousSnapshot, 0, 0);
-                historyCtx.globalAlpha = 1;
-            } else {
-                historyCtx.clearRect(0, 0, CONFIG.canvasWidth, CONFIG.canvasHeight);
+                historyCtx.filter = 'none';
             }
 
-            // Draw current level's pixels
+            // Draw current level's pixels on top
             historyCtx.fillStyle = CONFIG.pixelColor;
             historyCtx.globalAlpha = CONFIG.pixelOpacity;
             cells.forEach(cell => {
@@ -609,7 +611,7 @@
 
                 // Level complete - create snapshot for next level to use
                 const previousSnapshot = level > 0 ? levelSnapshots[level - 1] : null;
-                const snapshot = createHistorySnapshot(cells, pixelSize, previousSnapshot);
+                const snapshot = createHistorySnapshot(cells, pixelSize, previousSnapshot, CONFIG.historyBrightnessGain);
                 levelSnapshots.push(snapshot);
 
                 console.log(`Level ${level + 1} complete: ${cells.length} cells, snapshot created`);
@@ -714,7 +716,7 @@
 
         // Tuning controls
         const tuneOpacity = document.getElementById('tune-opacity');
-        const tuneFade = document.getElementById('tune-fade');
+        const tuneBrightness = document.getElementById('tune-brightness');
         const tuneOverlap = document.getElementById('tune-overlap');
         const tuneStroke = document.getElementById('tune-stroke');
         const exportField = document.getElementById('export-field');
@@ -722,7 +724,7 @@
         function updateExportField() {
             const params = {
                 pixelOpacity: parseFloat(tuneOpacity.value),
-                historyFadePerLevel: parseFloat(tuneFade.value),
+                historyBrightnessGain: parseFloat(tuneBrightness.value),
                 overlapThreshold: parseFloat(tuneOverlap.value),
                 outlineStrokeWidth: parseInt(tuneStroke.value)
             };
@@ -731,7 +733,7 @@
 
         function updateTuningDisplay() {
             document.getElementById('tune-opacity-val').textContent = tuneOpacity.value;
-            document.getElementById('tune-fade-val').textContent = tuneFade.value;
+            document.getElementById('tune-brightness-val').textContent = tuneBrightness.value;
             document.getElementById('tune-overlap-val').textContent = tuneOverlap.value;
             document.getElementById('tune-stroke-val').textContent = tuneStroke.value;
             updateExportField();
@@ -756,7 +758,7 @@
         });
 
         // These need regeneration
-        tuneFade.addEventListener('input', updateTuningDisplay);
+        tuneBrightness.addEventListener('input', updateTuningDisplay);
         tuneOverlap.addEventListener('input', updateTuningDisplay);
 
         document.getElementById('copy-btn').addEventListener('click', () => {
@@ -770,7 +772,7 @@
 
         document.getElementById('apply-btn').addEventListener('click', async () => {
             CONFIG.pixelOpacity = parseFloat(tuneOpacity.value);
-            CONFIG.historyFadePerLevel = parseFloat(tuneFade.value);
+            CONFIG.historyBrightnessGain = parseFloat(tuneBrightness.value);
             CONFIG.overlapThreshold = parseFloat(tuneOverlap.value);
             CONFIG.outlineStrokeWidth = parseInt(tuneStroke.value);
 
