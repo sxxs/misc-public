@@ -337,9 +337,9 @@
                 <span class="value-display" id="tune-opacity-val">0.6</span>
             </div>
             <div class="tuning-item">
-                <label>Brightness Gain (pro Level)</label>
-                <input type="range" id="tune-brightness" min="1" max="2" step="0.05" value="1.3">
-                <span class="value-display" id="tune-brightness-val">1.3</span>
+                <label>Fade pro Level (0=kein, 0.5=stark)</label>
+                <input type="range" id="tune-brightness" min="0" max="0.5" step="0.05" value="0.3">
+                <span class="value-display" id="tune-brightness-val">0.3</span>
             </div>
             <div class="tuning-item">
                 <label>Overlap Threshold</label>
@@ -354,6 +354,7 @@
             <div class="tuning-item">
                 <label>Outline Color</label>
                 <select id="tune-outline-color">
+                    <option value="smart" selected>Smart (Kontrast)</option>
                     <option value="#ffffff">Weiß</option>
                     <option value="#1a5f5f">Teal</option>
                     <option value="#000000">Schwarz</option>
@@ -388,14 +389,13 @@
             pixelOpacity: 0.6,
             overlapThreshold: 0.4,
             bgColor: '#f8f8f8',
-            historyBrightnessGain: 1.3, // Multiply brightness by this each level (>1 = lighter)
+            historyBrightnessGain: 0.3, // Fade amount per level (0=none, 0.5=strong)
             outlineStrokeWidth: 6,
-            outlineColor: '#ffffff' // white or teal (#1a5f5f)
+            outlineColor: 'smart' // 'smart', '#ffffff', '#1a5f5f', '#000000'
         };
 
         // State
         let frames = [];
-        let levelSnapshots = []; // PNG snapshots after each level
         let levelStats = []; // Debug stats per level
         let currentFrame = 0;
         let isPlaying = false;
@@ -415,12 +415,6 @@
         maskCanvas.width = CONFIG.canvasWidth;
         maskCanvas.height = CONFIG.canvasHeight;
         const maskCtx = maskCanvas.getContext('2d');
-
-        // Hidden canvas for rendering history snapshots
-        const historyCanvas = document.createElement('canvas');
-        historyCanvas.width = CONFIG.canvasWidth;
-        historyCanvas.height = CONFIG.canvasHeight;
-        const historyCtx = historyCanvas.getContext('2d');
 
         // Generate text mask
         function generateTextMask() {
@@ -474,62 +468,76 @@
             return cells;
         }
 
-        // Create a snapshot of the current history
-        function createHistorySnapshot(cells, pixelSize, previousSnapshot, brightnessMultiplier) {
-            // Start fresh with white background
-            historyCtx.fillStyle = CONFIG.bgColor;
-            historyCtx.fillRect(0, 0, CONFIG.canvasWidth, CONFIG.canvasHeight);
+        // Lighten a hex color toward white
+        function lightenColor(hexColor, amount) {
+            // amount: 0 = original, 1 = white
+            const r = parseInt(hexColor.slice(1, 3), 16);
+            const g = parseInt(hexColor.slice(3, 5), 16);
+            const b = parseInt(hexColor.slice(5, 7), 16);
 
-            // Draw previous snapshot with brightness increase (fading toward white)
-            if (previousSnapshot) {
-                historyCtx.filter = `brightness(${brightnessMultiplier})`;
-                historyCtx.drawImage(previousSnapshot, 0, 0);
-                historyCtx.filter = 'none';
-            }
+            const newR = Math.round(r + (255 - r) * amount);
+            const newG = Math.round(g + (255 - g) * amount);
+            const newB = Math.round(b + (255 - b) * amount);
 
-            // Draw current level's pixels on top
-            historyCtx.fillStyle = CONFIG.pixelColor;
-            historyCtx.globalAlpha = CONFIG.pixelOpacity;
-            cells.forEach(cell => {
-                historyCtx.fillRect(cell.x, cell.y, cell.size, cell.size);
-            });
-            historyCtx.globalAlpha = 1;
-
-            // Create image from canvas
-            const img = new Image();
-            img.src = historyCanvas.toDataURL('image/png');
-            return img;
+            return `rgb(${newR}, ${newG}, ${newB})`;
         }
 
-        // Render a frame using pre-computed history snapshot
+        // Store history as array of {cells, fadeLevel} instead of PNG snapshots
+        let historyLevels = []; // [{cells: [...], fadeLevel: 0}, ...]
+
+        // Render a frame using history levels with color fading
         function renderFrame(frameData) {
-            const { historySnapshotIndex, currentPixels, pixelSize } = frameData;
+            const { level, currentPixels } = frameData;
 
             // Clear with background
             displayCtx.fillStyle = CONFIG.bgColor;
             displayCtx.fillRect(0, 0, CONFIG.canvasWidth, CONFIG.canvasHeight);
 
-            // Draw history snapshot (single PNG, not stacked layers!)
-            if (historySnapshotIndex >= 0 && levelSnapshots[historySnapshotIndex]) {
-                displayCtx.drawImage(levelSnapshots[historySnapshotIndex], 0, 0);
-            }
+            // Draw all completed history levels (oldest = most faded)
+            const completedLevels = historyLevels.filter(h => h.level < level);
+            completedLevels.forEach(historyLevel => {
+                // Calculate fade: how many levels ago was this?
+                const levelsAgo = level - historyLevel.level;
+                // fadeAmount: 0 = original color, approaching 1 = white
+                // Use exponential fade: each level multiplies by fadePerLevel
+                const fadeAmount = 1 - Math.pow(1 - CONFIG.historyBrightnessGain, levelsAgo);
+                const fadedColor = lightenColor(CONFIG.pixelColor, Math.min(fadeAmount, 0.95));
 
-            // Draw current pixels
+                displayCtx.fillStyle = fadedColor;
+                displayCtx.globalAlpha = CONFIG.pixelOpacity;
+                historyLevel.cells.forEach(cell => {
+                    displayCtx.fillRect(cell.x, cell.y, cell.size, cell.size);
+                });
+            });
+
+            // Draw current level pixels (no fade)
             displayCtx.fillStyle = CONFIG.pixelColor;
             displayCtx.globalAlpha = CONFIG.pixelOpacity;
             currentPixels.forEach(cell => {
                 displayCtx.fillRect(cell.x, cell.y, cell.size, cell.size);
             });
 
-            // Draw outline (simple stroke, no blend mode)
+            // Draw outline with smart contrast
             displayCtx.globalAlpha = 1;
-            displayCtx.strokeStyle = CONFIG.outlineColor;
             displayCtx.lineWidth = CONFIG.outlineStrokeWidth;
             displayCtx.lineJoin = 'round';
             displayCtx.font = `700 ${CONFIG.fontSize}px "${CONFIG.fontFamily}"`;
             displayCtx.textAlign = 'center';
             displayCtx.textBaseline = 'middle';
-            displayCtx.strokeText(CONFIG.text, CONFIG.canvasWidth / 2, CONFIG.canvasHeight / 2 + 15);
+
+            if (CONFIG.outlineColor === 'smart') {
+                // Draw white outline first (will show on dark pixels)
+                displayCtx.strokeStyle = '#ffffff';
+                displayCtx.strokeText(CONFIG.text, CONFIG.canvasWidth / 2, CONFIG.canvasHeight / 2 + 15);
+                // Draw teal on top with exclusion (will show on light areas)
+                displayCtx.globalCompositeOperation = 'exclusion';
+                displayCtx.strokeStyle = CONFIG.pixelColor;
+                displayCtx.strokeText(CONFIG.text, CONFIG.canvasWidth / 2, CONFIG.canvasHeight / 2 + 15);
+                displayCtx.globalCompositeOperation = 'source-over';
+            } else {
+                displayCtx.strokeStyle = CONFIG.outlineColor;
+                displayCtx.strokeText(CONFIG.text, CONFIG.canvasWidth / 2, CONFIG.canvasHeight / 2 + 15);
+            }
         }
 
         // Update debug panel
@@ -582,8 +590,8 @@
             document.getElementById('frame-total').textContent = totalFrames;
             slider.max = totalFrames - 1;
 
-            // Initialize history canvas with transparent background
-            historyCtx.clearRect(0, 0, CONFIG.canvasWidth, CONFIG.canvasHeight);
+            // Reset history levels
+            historyLevels = [];
 
             // Second pass: generate frames
             for (let level = 0; level < CONFIG.pixelSizes.length; level++) {
@@ -599,7 +607,6 @@
                         pixelSize: pixelSize,
                         cellsInLevel: cells.length,
                         cellIndex: i + 1,
-                        historySnapshotIndex: level - 1, // Use previous level's snapshot
                         currentPixels: currentPixels
                     });
 
@@ -615,18 +622,13 @@
                     }
                 }
 
-                // Level complete - create snapshot for next level to use
-                const previousSnapshot = level > 0 ? levelSnapshots[level - 1] : null;
-                const snapshot = createHistorySnapshot(cells, pixelSize, previousSnapshot, CONFIG.historyBrightnessGain);
-                levelSnapshots.push(snapshot);
-
-                console.log(`Level ${level + 1} complete: ${cells.length} cells, snapshot created`);
-
-                // Wait for image to load
-                await new Promise(resolve => {
-                    if (snapshot.complete) resolve();
-                    else snapshot.onload = resolve;
+                // Level complete - store cells for history rendering
+                historyLevels.push({
+                    level: level + 1,
+                    cells: cells
                 });
+
+                console.log(`Level ${level + 1} complete: ${cells.length} cells`);
             }
 
             loading.classList.add('hidden');
@@ -795,8 +797,8 @@
 
             // Reset and regenerate
             frames = [];
-            levelSnapshots = [];
             levelStats = [];
+            historyLevels = [];
             loading.classList.remove('hidden');
             await generateFrames();
         });
