@@ -201,6 +201,82 @@
         .debug-level.active {
             border-left: 3px solid #0f0;
         }
+
+        .tuning-panel {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 1200px;
+            background: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .tuning-panel h3 {
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            color: #333;
+        }
+
+        .tuning-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .tuning-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .tuning-item label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .tuning-item input[type="range"] {
+            width: 100%;
+        }
+
+        .tuning-item .value-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #1a5f5f;
+        }
+
+        .export-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .export-section label {
+            font-size: 0.8rem;
+            color: #666;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .export-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .export-row input[type="text"] {
+            flex: 1;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f5f5f5;
+        }
+
+        .export-row button {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body>
@@ -252,6 +328,40 @@
         </div>
     </div>
 
+    <div class="tuning-panel">
+        <h3>Parameter-Tuning</h3>
+        <div class="tuning-grid">
+            <div class="tuning-item">
+                <label>Pixel Opacity</label>
+                <input type="range" id="tune-opacity" min="0.1" max="1" step="0.05" value="0.6">
+                <span class="value-display" id="tune-opacity-val">0.6</span>
+            </div>
+            <div class="tuning-item">
+                <label>History Fade (pro Level)</label>
+                <input type="range" id="tune-fade" min="0.5" max="1" step="0.01" value="0.85">
+                <span class="value-display" id="tune-fade-val">0.85</span>
+            </div>
+            <div class="tuning-item">
+                <label>Overlap Threshold</label>
+                <input type="range" id="tune-overlap" min="0.1" max="0.8" step="0.05" value="0.4">
+                <span class="value-display" id="tune-overlap-val">0.4</span>
+            </div>
+            <div class="tuning-item">
+                <label>Outline Stroke Width</label>
+                <input type="range" id="tune-stroke" min="1" max="20" step="1" value="6">
+                <span class="value-display" id="tune-stroke-val">6</span>
+            </div>
+        </div>
+        <div class="export-section">
+            <label>Aktuelle Parameter (zum Kopieren)</label>
+            <div class="export-row">
+                <input type="text" id="export-field" readonly>
+                <button id="copy-btn">Copy</button>
+                <button id="apply-btn">Regenerate</button>
+            </div>
+        </div>
+    </div>
+
     <div class="debug-panel" id="debug-panel">
         <h3>Debug: Level-Statistiken</h3>
         <div id="debug-content"></div>
@@ -264,12 +374,14 @@
             text: 'WIAI25',
             fontSize: 380,
             fontFamily: 'JetBrains Mono',
-            pixelSizes: [100, 80, 64, 50, 40], // Levels 1-5
+            // Levels 1-14 as per PLAN.md
+            pixelSizes: [100, 80, 64, 50, 40, 32, 25, 20, 16, 12, 10, 8],
             pixelColor: '#1a5f5f',
             pixelOpacity: 0.6,
-            overlapThreshold: 0.4, // 40% coverage required
+            overlapThreshold: 0.4,
             bgColor: '#f8f8f8',
-            historyFadePerLevel: 0.85 // Multiply opacity by this each level
+            historyFadePerLevel: 0.85,
+            outlineStrokeWidth: 6
         };
 
         // State
@@ -398,14 +510,16 @@
                 displayCtx.fillRect(cell.x, cell.y, cell.size, cell.size);
             });
 
-            // Draw outline with difference blend mode
+            // Draw outline with difference blend mode (STROKE, not fill!)
             displayCtx.globalAlpha = 1;
             displayCtx.globalCompositeOperation = 'difference';
-            displayCtx.fillStyle = 'white';
+            displayCtx.strokeStyle = 'white';
+            displayCtx.lineWidth = CONFIG.outlineStrokeWidth;
+            displayCtx.lineJoin = 'round';
             displayCtx.font = `700 ${CONFIG.fontSize}px "${CONFIG.fontFamily}"`;
             displayCtx.textAlign = 'center';
             displayCtx.textBaseline = 'middle';
-            displayCtx.fillText(CONFIG.text, CONFIG.canvasWidth / 2, CONFIG.canvasHeight / 2 + 15);
+            displayCtx.strokeText(CONFIG.text, CONFIG.canvasWidth / 2, CONFIG.canvasHeight / 2 + 15);
 
             displayCtx.globalCompositeOperation = 'source-over';
         }
@@ -598,8 +712,79 @@
             }
         });
 
+        // Tuning controls
+        const tuneOpacity = document.getElementById('tune-opacity');
+        const tuneFade = document.getElementById('tune-fade');
+        const tuneOverlap = document.getElementById('tune-overlap');
+        const tuneStroke = document.getElementById('tune-stroke');
+        const exportField = document.getElementById('export-field');
+
+        function updateExportField() {
+            const params = {
+                pixelOpacity: parseFloat(tuneOpacity.value),
+                historyFadePerLevel: parseFloat(tuneFade.value),
+                overlapThreshold: parseFloat(tuneOverlap.value),
+                outlineStrokeWidth: parseInt(tuneStroke.value)
+            };
+            exportField.value = JSON.stringify(params);
+        }
+
+        function updateTuningDisplay() {
+            document.getElementById('tune-opacity-val').textContent = tuneOpacity.value;
+            document.getElementById('tune-fade-val').textContent = tuneFade.value;
+            document.getElementById('tune-overlap-val').textContent = tuneOverlap.value;
+            document.getElementById('tune-stroke-val').textContent = tuneStroke.value;
+            updateExportField();
+        }
+
+        // Live update for stroke width (doesn't need regeneration)
+        tuneStroke.addEventListener('input', () => {
+            CONFIG.outlineStrokeWidth = parseInt(tuneStroke.value);
+            updateTuningDisplay();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
+        // Live update for opacity (doesn't need regeneration for current frame)
+        tuneOpacity.addEventListener('input', () => {
+            CONFIG.pixelOpacity = parseFloat(tuneOpacity.value);
+            updateTuningDisplay();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
+        // These need regeneration
+        tuneFade.addEventListener('input', updateTuningDisplay);
+        tuneOverlap.addEventListener('input', updateTuningDisplay);
+
+        document.getElementById('copy-btn').addEventListener('click', () => {
+            exportField.select();
+            navigator.clipboard.writeText(exportField.value);
+            document.getElementById('copy-btn').textContent = 'Copied!';
+            setTimeout(() => {
+                document.getElementById('copy-btn').textContent = 'Copy';
+            }, 1500);
+        });
+
+        document.getElementById('apply-btn').addEventListener('click', async () => {
+            CONFIG.pixelOpacity = parseFloat(tuneOpacity.value);
+            CONFIG.historyFadePerLevel = parseFloat(tuneFade.value);
+            CONFIG.overlapThreshold = parseFloat(tuneOverlap.value);
+            CONFIG.outlineStrokeWidth = parseInt(tuneStroke.value);
+
+            // Reset and regenerate
+            frames = [];
+            levelSnapshots = [];
+            levelStats = [];
+            loading.classList.remove('hidden');
+            await generateFrames();
+        });
+
         // Wait for font to load, then generate
         document.fonts.ready.then(() => {
+            updateTuningDisplay();
             generateFrames();
         });
     </script>
