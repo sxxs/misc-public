@@ -351,6 +351,14 @@
                 <input type="range" id="tune-stroke" min="1" max="20" step="1" value="6">
                 <span class="value-display" id="tune-stroke-val">6</span>
             </div>
+            <div class="tuning-item">
+                <label>Outline Color</label>
+                <select id="tune-outline-color">
+                    <option value="#ffffff">Weiß</option>
+                    <option value="#1a5f5f">Teal</option>
+                    <option value="#000000">Schwarz</option>
+                </select>
+            </div>
         </div>
         <div class="export-section">
             <label>Aktuelle Parameter (zum Kopieren)</label>
@@ -381,7 +389,8 @@
             overlapThreshold: 0.4,
             bgColor: '#f8f8f8',
             historyBrightnessGain: 1.3, // Multiply brightness by this each level (>1 = lighter)
-            outlineStrokeWidth: 6
+            outlineStrokeWidth: 6,
+            outlineColor: '#ffffff' // white or teal (#1a5f5f)
         };
 
         // State
@@ -512,18 +521,15 @@
                 displayCtx.fillRect(cell.x, cell.y, cell.size, cell.size);
             });
 
-            // Draw outline with difference blend mode (STROKE, not fill!)
+            // Draw outline (simple stroke, no blend mode)
             displayCtx.globalAlpha = 1;
-            displayCtx.globalCompositeOperation = 'difference';
-            displayCtx.strokeStyle = 'white';
+            displayCtx.strokeStyle = CONFIG.outlineColor;
             displayCtx.lineWidth = CONFIG.outlineStrokeWidth;
             displayCtx.lineJoin = 'round';
             displayCtx.font = `700 ${CONFIG.fontSize}px "${CONFIG.fontFamily}"`;
             displayCtx.textAlign = 'center';
             displayCtx.textBaseline = 'middle';
             displayCtx.strokeText(CONFIG.text, CONFIG.canvasWidth / 2, CONFIG.canvasHeight / 2 + 15);
-
-            displayCtx.globalCompositeOperation = 'source-over';
         }
 
         // Update debug panel
@@ -719,6 +725,7 @@
         const tuneBrightness = document.getElementById('tune-brightness');
         const tuneOverlap = document.getElementById('tune-overlap');
         const tuneStroke = document.getElementById('tune-stroke');
+        const tuneOutlineColor = document.getElementById('tune-outline-color');
         const exportField = document.getElementById('export-field');
 
         function updateExportField() {
@@ -726,7 +733,8 @@
                 pixelOpacity: parseFloat(tuneOpacity.value),
                 historyBrightnessGain: parseFloat(tuneBrightness.value),
                 overlapThreshold: parseFloat(tuneOverlap.value),
-                outlineStrokeWidth: parseInt(tuneStroke.value)
+                outlineStrokeWidth: parseInt(tuneStroke.value),
+                outlineColor: tuneOutlineColor.value
             };
             exportField.value = JSON.stringify(params);
         }
@@ -743,6 +751,15 @@
         tuneStroke.addEventListener('input', () => {
             CONFIG.outlineStrokeWidth = parseInt(tuneStroke.value);
             updateTuningDisplay();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
+        // Live update for outline color
+        tuneOutlineColor.addEventListener('change', () => {
+            CONFIG.outlineColor = tuneOutlineColor.value;
+            updateExportField();
             if (frames.length > 0) {
                 showFrame(currentFrame);
             }
