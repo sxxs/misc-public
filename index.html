@@ -638,17 +638,18 @@
 
         // Get fade amount for a pixel based on when it was drawn (pixel-wise mode)
         function getFadeForPixel(drawnAtFrame, currentFrame, totalFrames) {
-            // Interpolate fadeEveryNPixels and maxFadeSteps based on current progress
-            const progress = totalFrames > 0 ? currentFrame / totalFrames : 0;
+            // Interpolate fadeEveryNPixels and maxFadeSteps based on when pixel was DRAWN
+            // This ensures each pixel has consistent fade parameters throughout its lifetime
+            const drawProgress = totalFrames > 0 ? drawnAtFrame / totalFrames : 0;
             const fadeEveryN = Math.max(1, Math.round(interpolateValue(
                 CONFIG.fadeEveryNPixelsStart,
                 CONFIG.fadeEveryNPixelsEnd,
-                progress
+                drawProgress
             )));
             const maxFadeSteps = Math.max(1, Math.round(interpolateValue(
                 CONFIG.maxFadeStepsStart,
                 CONFIG.maxFadeStepsEnd,
-                progress
+                drawProgress
             )));
 
             const framesSince = currentFrame - drawnAtFrame;
