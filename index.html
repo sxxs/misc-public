@@ -612,8 +612,9 @@
             const framesSince = currentFrame - drawnAtFrame;
             // How many "fade steps" have passed?
             const fadeSteps = Math.floor(framesSince / CONFIG.fadeEveryNPixels);
-            // Normalize to 0-1 range based on total possible fade steps
-            const maxFadeSteps = Math.ceil(totalFrames / CONFIG.fadeEveryNPixels);
+            // Use a reasonable max (e.g., after 50 steps you're fully faded)
+            // This makes the fade visible early, not just at the end
+            const maxFadeSteps = 50;
             const t = Math.min(fadeSteps / maxFadeSteps, 1);
             return evaluateBezierCurve(CONFIG.fadeCurve, t);
         }
