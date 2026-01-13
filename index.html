@@ -359,6 +359,12 @@
                 <span class="stat-label">Zellen im Level:</span>
                 <span class="stat-value" id="cells-in-level">0</span>
             </div>
+            <div class="stat" id="interpolated-values" style="display: none;">
+                <span class="stat-label">Fade N:</span>
+                <span class="stat-value" id="current-fade-n">1</span>
+                <span class="stat-label">| Max Steps:</span>
+                <span class="stat-value" id="current-max-steps">10</span>
+            </div>
         </div>
 
         <div class="play-controls">
@@ -409,15 +415,25 @@
                     <option value="pixel">Pro N Pixel</option>
                 </select>
             </div>
-            <div class="tuning-item" id="fade-n-container">
-                <label>Fade alle N Pixel</label>
-                <input type="range" id="tune-fade-n" min="1" max="500" step="1" value="10">
-                <span class="value-display" id="tune-fade-n-val">10</span>
+            <div class="tuning-item" id="fade-n-start-container">
+                <label>Fade N Pixel (Start)</label>
+                <input type="range" id="tune-fade-n-start" min="1" max="1000" step="1" value="1">
+                <span class="value-display" id="tune-fade-n-start-val">1</span>
             </div>
-            <div class="tuning-item" id="max-fade-steps-container">
-                <label>Max Fade Steps (100%)</label>
-                <input type="range" id="tune-max-fade-steps" min="5" max="500" step="5" value="50">
-                <span class="value-display" id="tune-max-fade-steps-val">50</span>
+            <div class="tuning-item" id="fade-n-end-container">
+                <label>Fade N Pixel (Ende)</label>
+                <input type="range" id="tune-fade-n-end" min="1" max="1000" step="1" value="100">
+                <span class="value-display" id="tune-fade-n-end-val">100</span>
+            </div>
+            <div class="tuning-item" id="max-fade-start-container">
+                <label>Max Fade Steps (Start)</label>
+                <input type="range" id="tune-max-fade-start" min="1" max="1000" step="1" value="10">
+                <span class="value-display" id="tune-max-fade-start-val">10</span>
+            </div>
+            <div class="tuning-item" id="max-fade-end-container">
+                <label>Max Fade Steps (Ende)</label>
+                <input type="range" id="tune-max-fade-end" min="1" max="1000" step="1" value="200">
+                <span class="value-display" id="tune-max-fade-end-val">200</span>
             </div>
         </div>
         <div class="curve-editor">
@@ -465,8 +481,10 @@
             shuffleSeed: 42,
             // NEW: Fade mode - 'level' or 'pixel'
             fadeMode: 'level',
-            fadeEveryNPixels: 10,
-            maxFadeSteps: 50
+            fadeEveryNPixelsStart: 1,
+            fadeEveryNPixelsEnd: 100,
+            maxFadeStepsStart: 10,
+            maxFadeStepsEnd: 200
         };
 
         // State
@@ -613,14 +631,29 @@
             return evaluateBezierCurve(CONFIG.fadeCurve, t);
         }
 
+        // Interpolate a value linearly based on progress (0-1)
+        function interpolateValue(startVal, endVal, progress) {
+            return startVal + (endVal - startVal) * progress;
+        }
+
         // Get fade amount for a pixel based on when it was drawn (pixel-wise mode)
         function getFadeForPixel(drawnAtFrame, currentFrame, totalFrames) {
+            // Interpolate fadeEveryNPixels and maxFadeSteps based on current progress
+            const progress = totalFrames > 0 ? currentFrame / totalFrames : 0;
+            const fadeEveryN = Math.max(1, Math.round(interpolateValue(
+                CONFIG.fadeEveryNPixelsStart,
+                CONFIG.fadeEveryNPixelsEnd,
+                progress
+            )));
+            const maxFadeSteps = Math.max(1, Math.round(interpolateValue(
+                CONFIG.maxFadeStepsStart,
+                CONFIG.maxFadeStepsEnd,
+                progress
+            )));
+
             const framesSince = currentFrame - drawnAtFrame;
             // How many "fade steps" have passed?
-            const fadeSteps = Math.floor(framesSince / CONFIG.fadeEveryNPixels);
-            // Use a reasonable max (e.g., after 50 steps you're fully faded)
-            // This makes the fade visible early, not just at the end
-            const maxFadeSteps = CONFIG.maxFadeSteps;
+            const fadeSteps = Math.floor(framesSince / fadeEveryN);
             const t = Math.min(fadeSteps / maxFadeSteps, 1);
             return evaluateBezierCurve(CONFIG.fadeCurve, t);
         }
@@ -807,6 +840,27 @@
             document.getElementById('pixel-size').textContent = frame.pixelSize;
             document.getElementById('cells-in-level').textContent = `${frame.cellIndex}/${frame.cellsInLevel}`;
 
+            // Show interpolated values in pixel mode
+            const interpolatedDiv = document.getElementById('interpolated-values');
+            if (CONFIG.fadeMode === 'pixel') {
+                const progress = frames.length > 0 ? index / frames.length : 0;
+                const currentFadeN = Math.max(1, Math.round(interpolateValue(
+                    CONFIG.fadeEveryNPixelsStart,
+                    CONFIG.fadeEveryNPixelsEnd,
+                    progress
+                )));
+                const currentMaxSteps = Math.max(1, Math.round(interpolateValue(
+                    CONFIG.maxFadeStepsStart,
+                    CONFIG.maxFadeStepsEnd,
+                    progress
+                )));
+                document.getElementById('current-fade-n').textContent = currentFadeN;
+                document.getElementById('current-max-steps').textContent = currentMaxSteps;
+                interpolatedDiv.style.display = 'flex';
+            } else {
+                interpolatedDiv.style.display = 'none';
+            }
+
             slider.value = index;
             updateDebugPanel(frame.level);
         }
@@ -885,10 +939,14 @@
         const tuneOutlineColor = document.getElementById('tune-outline-color');
         const tuneOrder = document.getElementById('tune-order');
         const tuneFadeMode = document.getElementById('tune-fade-mode');
-        const tuneFadeN = document.getElementById('tune-fade-n');
-        const tuneMaxFadeSteps = document.getElementById('tune-max-fade-steps');
-        const fadeNContainer = document.getElementById('fade-n-container');
-        const maxFadeStepsContainer = document.getElementById('max-fade-steps-container');
+        const tuneFadeNStart = document.getElementById('tune-fade-n-start');
+        const tuneFadeNEnd = document.getElementById('tune-fade-n-end');
+        const tuneMaxFadeStart = document.getElementById('tune-max-fade-start');
+        const tuneMaxFadeEnd = document.getElementById('tune-max-fade-end');
+        const fadeNStartContainer = document.getElementById('fade-n-start-container');
+        const fadeNEndContainer = document.getElementById('fade-n-end-container');
+        const maxFadeStartContainer = document.getElementById('max-fade-start-container');
+        const maxFadeEndContainer = document.getElementById('max-fade-end-container');
         const exportField = document.getElementById('export-field');
 
         // Curve editor
@@ -1028,8 +1086,10 @@
                 outlineColor: tuneOutlineColor.value,
                 shufflePixels: CONFIG.shufflePixels,
                 fadeMode: CONFIG.fadeMode,
-                fadeEveryNPixels: CONFIG.fadeEveryNPixels,
-                maxFadeSteps: CONFIG.maxFadeSteps
+                fadeEveryNPixelsStart: CONFIG.fadeEveryNPixelsStart,
+                fadeEveryNPixelsEnd: CONFIG.fadeEveryNPixelsEnd,
+                maxFadeStepsStart: CONFIG.maxFadeStepsStart,
+                maxFadeStepsEnd: CONFIG.maxFadeStepsEnd
             };
             exportField.value = JSON.stringify(params);
         }
@@ -1038,12 +1098,16 @@
             document.getElementById('tune-opacity-val').textContent = tuneOpacity.value;
             document.getElementById('tune-overlap-val').textContent = tuneOverlap.value;
             document.getElementById('tune-stroke-val').textContent = tuneStroke.value;
-            document.getElementById('tune-fade-n-val').textContent = tuneFadeN.value;
-            document.getElementById('tune-max-fade-steps-val').textContent = tuneMaxFadeSteps.value;
+            document.getElementById('tune-fade-n-start-val').textContent = tuneFadeNStart.value;
+            document.getElementById('tune-fade-n-end-val').textContent = tuneFadeNEnd.value;
+            document.getElementById('tune-max-fade-start-val').textContent = tuneMaxFadeStart.value;
+            document.getElementById('tune-max-fade-end-val').textContent = tuneMaxFadeEnd.value;
             // Show/hide pixel-mode sliders based on mode
             const isPixelMode = CONFIG.fadeMode === 'pixel';
-            fadeNContainer.style.display = isPixelMode ? 'flex' : 'none';
-            maxFadeStepsContainer.style.display = isPixelMode ? 'flex' : 'none';
+            fadeNStartContainer.style.display = isPixelMode ? 'flex' : 'none';
+            fadeNEndContainer.style.display = isPixelMode ? 'flex' : 'none';
+            maxFadeStartContainer.style.display = isPixelMode ? 'flex' : 'none';
+            maxFadeEndContainer.style.display = isPixelMode ? 'flex' : 'none';
             updateExportField();
             drawCurveEditor();
         }
@@ -1093,18 +1157,34 @@
             }
         });
 
-        // Fade N slider (live update)
-        tuneFadeN.addEventListener('input', () => {
-            CONFIG.fadeEveryNPixels = parseInt(tuneFadeN.value);
+        // Fade N sliders (live update)
+        tuneFadeNStart.addEventListener('input', () => {
+            CONFIG.fadeEveryNPixelsStart = parseInt(tuneFadeNStart.value);
             updateTuningDisplay();
             if (frames.length > 0) {
                 showFrame(currentFrame);
             }
         });
 
-        // Max fade steps slider (live update)
-        tuneMaxFadeSteps.addEventListener('input', () => {
-            CONFIG.maxFadeSteps = parseInt(tuneMaxFadeSteps.value);
+        tuneFadeNEnd.addEventListener('input', () => {
+            CONFIG.fadeEveryNPixelsEnd = parseInt(tuneFadeNEnd.value);
+            updateTuningDisplay();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
+        // Max fade steps sliders (live update)
+        tuneMaxFadeStart.addEventListener('input', () => {
+            CONFIG.maxFadeStepsStart = parseInt(tuneMaxFadeStart.value);
+            updateTuningDisplay();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
+        tuneMaxFadeEnd.addEventListener('input', () => {
+            CONFIG.maxFadeStepsEnd = parseInt(tuneMaxFadeEnd.value);
             updateTuningDisplay();
             if (frames.length > 0) {
                 showFrame(currentFrame);
@@ -1126,8 +1206,10 @@
             CONFIG.outlineStrokeWidth = parseInt(tuneStroke.value);
             CONFIG.shufflePixels = tuneOrder.value === 'shuffle';
             CONFIG.fadeMode = tuneFadeMode.value;
-            CONFIG.fadeEveryNPixels = parseInt(tuneFadeN.value);
-            CONFIG.maxFadeSteps = parseInt(tuneMaxFadeSteps.value);
+            CONFIG.fadeEveryNPixelsStart = parseInt(tuneFadeNStart.value);
+            CONFIG.fadeEveryNPixelsEnd = parseInt(tuneFadeNEnd.value);
+            CONFIG.maxFadeStepsStart = parseInt(tuneMaxFadeStart.value);
+            CONFIG.maxFadeStepsEnd = parseInt(tuneMaxFadeEnd.value);
             // fadeCurve is already updated live
 
             // Reset and regenerate
@@ -1139,8 +1221,23 @@
             await generateFrames();
         });
 
+        // Initialize sliders from CONFIG
+        function initializeSliders() {
+            tuneOpacity.value = CONFIG.pixelOpacity;
+            tuneOverlap.value = CONFIG.overlapThreshold;
+            tuneStroke.value = CONFIG.outlineStrokeWidth;
+            tuneOutlineColor.value = CONFIG.outlineColor;
+            tuneOrder.value = CONFIG.shufflePixels ? 'shuffle' : 'scanline';
+            tuneFadeMode.value = CONFIG.fadeMode;
+            tuneFadeNStart.value = CONFIG.fadeEveryNPixelsStart;
+            tuneFadeNEnd.value = CONFIG.fadeEveryNPixelsEnd;
+            tuneMaxFadeStart.value = CONFIG.maxFadeStepsStart;
+            tuneMaxFadeEnd.value = CONFIG.maxFadeStepsEnd;
+        }
+
         // Wait for font to load, then generate
         document.fonts.ready.then(() => {
+            initializeSliders();
             updateTuningDisplay();
             generateFrames();
         });
