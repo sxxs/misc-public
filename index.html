@@ -414,6 +414,11 @@
                 <input type="range" id="tune-fade-n" min="1" max="500" step="1" value="10">
                 <span class="value-display" id="tune-fade-n-val">10</span>
             </div>
+            <div class="tuning-item" id="max-fade-steps-container">
+                <label>Max Fade Steps (100%)</label>
+                <input type="range" id="tune-max-fade-steps" min="5" max="500" step="5" value="50">
+                <span class="value-display" id="tune-max-fade-steps-val">50</span>
+            </div>
         </div>
         <div class="curve-editor">
             <label>Fade-Kurve (X: Level, Y: Fade zu Weiß) — Punkte draggen</label>
@@ -460,7 +465,8 @@
             shuffleSeed: 42,
             // NEW: Fade mode - 'level' or 'pixel'
             fadeMode: 'level',
-            fadeEveryNPixels: 10
+            fadeEveryNPixels: 10,
+            maxFadeSteps: 50
         };
 
         // State
@@ -614,7 +620,7 @@
             const fadeSteps = Math.floor(framesSince / CONFIG.fadeEveryNPixels);
             // Use a reasonable max (e.g., after 50 steps you're fully faded)
             // This makes the fade visible early, not just at the end
-            const maxFadeSteps = 50;
+            const maxFadeSteps = CONFIG.maxFadeSteps;
             const t = Math.min(fadeSteps / maxFadeSteps, 1);
             return evaluateBezierCurve(CONFIG.fadeCurve, t);
         }
@@ -880,7 +886,9 @@
         const tuneOrder = document.getElementById('tune-order');
         const tuneFadeMode = document.getElementById('tune-fade-mode');
         const tuneFadeN = document.getElementById('tune-fade-n');
+        const tuneMaxFadeSteps = document.getElementById('tune-max-fade-steps');
         const fadeNContainer = document.getElementById('fade-n-container');
+        const maxFadeStepsContainer = document.getElementById('max-fade-steps-container');
         const exportField = document.getElementById('export-field');
 
         // Curve editor
@@ -1020,7 +1028,8 @@
                 outlineColor: tuneOutlineColor.value,
                 shufflePixels: CONFIG.shufflePixels,
                 fadeMode: CONFIG.fadeMode,
-                fadeEveryNPixels: CONFIG.fadeEveryNPixels
+                fadeEveryNPixels: CONFIG.fadeEveryNPixels,
+                maxFadeSteps: CONFIG.maxFadeSteps
             };
             exportField.value = JSON.stringify(params);
         }
@@ -1030,8 +1039,11 @@
             document.getElementById('tune-overlap-val').textContent = tuneOverlap.value;
             document.getElementById('tune-stroke-val').textContent = tuneStroke.value;
             document.getElementById('tune-fade-n-val').textContent = tuneFadeN.value;
-            // Show/hide fade-n slider based on mode
-            fadeNContainer.style.display = CONFIG.fadeMode === 'pixel' ? 'flex' : 'none';
+            document.getElementById('tune-max-fade-steps-val').textContent = tuneMaxFadeSteps.value;
+            // Show/hide pixel-mode sliders based on mode
+            const isPixelMode = CONFIG.fadeMode === 'pixel';
+            fadeNContainer.style.display = isPixelMode ? 'flex' : 'none';
+            maxFadeStepsContainer.style.display = isPixelMode ? 'flex' : 'none';
             updateExportField();
             drawCurveEditor();
         }
@@ -1090,6 +1102,15 @@
             }
         });
 
+        // Max fade steps slider (live update)
+        tuneMaxFadeSteps.addEventListener('input', () => {
+            CONFIG.maxFadeSteps = parseInt(tuneMaxFadeSteps.value);
+            updateTuningDisplay();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
         document.getElementById('copy-btn').addEventListener('click', () => {
             exportField.select();
             navigator.clipboard.writeText(exportField.value);
@@ -1106,6 +1127,7 @@
             CONFIG.shufflePixels = tuneOrder.value === 'shuffle';
             CONFIG.fadeMode = tuneFadeMode.value;
             CONFIG.fadeEveryNPixels = parseInt(tuneFadeN.value);
+            CONFIG.maxFadeSteps = parseInt(tuneMaxFadeSteps.value);
             // fadeCurve is already updated live
 
             // Reset and regenerate
