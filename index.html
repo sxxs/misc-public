@@ -390,11 +390,29 @@
             <div class="tuning-item">
                 <label>Outline Color</label>
                 <select id="tune-outline-color">
-                    <option value="smart" selected>Smart (Kontrast)</option>
-                    <option value="#ffffff">Weiß</option>
+                    <option value="#ffffff" selected>Weiß</option>
                     <option value="#1a5f5f">Teal</option>
                     <option value="#000000">Schwarz</option>
                 </select>
+            </div>
+            <div class="tuning-item">
+                <label>Pixel-Reihenfolge</label>
+                <select id="tune-order">
+                    <option value="scanline" selected>Scanline</option>
+                    <option value="shuffle">Shuffle</option>
+                </select>
+            </div>
+            <div class="tuning-item">
+                <label>Fade-Modus</label>
+                <select id="tune-fade-mode">
+                    <option value="level" selected>Pro Level</option>
+                    <option value="pixel">Pro N Pixel</option>
+                </select>
+            </div>
+            <div class="tuning-item" id="fade-n-container">
+                <label>Fade alle N Pixel</label>
+                <input type="range" id="tune-fade-n" min="1" max="500" step="1" value="10">
+                <span class="value-display" id="tune-fade-n-val">10</span>
             </div>
         </div>
         <div class="curve-editor">
@@ -425,7 +443,7 @@
             canvasWidth: 1200,
             canvasHeight: 480,
             text: 'WIAI25',
-            fontSize: 380,
+            fontSize: 320,
             fontFamily: 'JetBrains Mono',
             // Levels 1-14 as per PLAN.md
             pixelSizes: [100, 80, 64, 50, 40, 32, 25, 20, 16, 12, 10, 8],
@@ -433,10 +451,16 @@
             pixelOpacity: 0.6,
             overlapThreshold: 0.4,
             bgColor: '#f8f8f8',
-            // Bezier curve control points for fade [x, y] where x=level(0-1), y=fade(0-1)
+            // Bezier curve control points for fade [x, y] where x=progress(0-1), y=fade(0-1)
             fadeCurve: [[0, 0], [0.2, 0.5], [0.5, 0.7], [1, 0.9]],
             outlineStrokeWidth: 6,
-            outlineColor: 'smart' // 'smart', '#ffffff', '#1a5f5f', '#000000'
+            outlineColor: '#ffffff',
+            // NEW: Shuffle vs Scanline
+            shufflePixels: false,
+            shuffleSeed: 42,
+            // NEW: Fade mode - 'level' or 'pixel'
+            fadeMode: 'level',
+            fadeEveryNPixels: 10
         };
 
         // State
@@ -513,6 +537,27 @@
             return cells;
         }
 
+        // Seeded random number generator (Mulberry32)
+        function seededRandom(seed) {
+            return function() {
+                let t = seed += 0x6D2B79F5;
+                t = Math.imul(t ^ t >>> 15, t | 1);
+                t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+                return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            };
+        }
+
+        // Fisher-Yates shuffle with seed
+        function shuffleArray(array, seed) {
+            const result = [...array];
+            const rng = seededRandom(seed);
+            for (let i = result.length - 1; i > 0; i--) {
+                const j = Math.floor(rng() * (i + 1));
+                [result[i], result[j]] = [result[j], result[i]];
+            }
+            return result;
+        }
+
         // Lighten a hex color toward white
         function lightenColor(hexColor, amount) {
             // amount: 0 = original, 1 = white
@@ -529,6 +574,8 @@
 
         // Store history as array of {cells, level}
         let historyLevels = [];
+        // For pixel-wise fading: all pixels with their drawn frame index
+        let allPixelsWithTiming = []; // [{x, y, size, drawnAtFrame}, ...]
 
         // Evaluate cubic bezier curve at t
         function evaluateBezierCurve(points, t) {
@@ -552,44 +599,69 @@
             return result;
         }
 
-        // Get fade amount for a given level using the bezier curve
+        // Get fade amount for a given level using the bezier curve (level-wise mode)
         function getFadeForLevel(historyLevel, currentLevel, totalLevels) {
-            // How far through the timeline is this history level relative to current?
-            // Level 1 at current level 12 means it's been 11 levels
             const levelsAgo = currentLevel - historyLevel;
             const maxLevelsAgo = totalLevels - 1;
             const t = Math.min(levelsAgo / maxLevelsAgo, 1);
             return evaluateBezierCurve(CONFIG.fadeCurve, t);
         }
 
-        // Render a frame using history levels with color fading
+        // Get fade amount for a pixel based on when it was drawn (pixel-wise mode)
+        function getFadeForPixel(drawnAtFrame, currentFrame, totalFrames) {
+            const framesSince = currentFrame - drawnAtFrame;
+            // How many "fade steps" have passed?
+            const fadeSteps = Math.floor(framesSince / CONFIG.fadeEveryNPixels);
+            // Normalize to 0-1 range based on total possible fade steps
+            const maxFadeSteps = Math.ceil(totalFrames / CONFIG.fadeEveryNPixels);
+            const t = Math.min(fadeSteps / maxFadeSteps, 1);
+            return evaluateBezierCurve(CONFIG.fadeCurve, t);
+        }
+
+        // Render a frame
         function renderFrame(frameData) {
-            const { level, currentPixels } = frameData;
+            const { index: frameIndex, level, currentPixels } = frameData;
             const totalLevels = CONFIG.pixelSizes.length;
+            const totalFrames = frames.length;
 
             // Clear with background
             displayCtx.fillStyle = CONFIG.bgColor;
             displayCtx.fillRect(0, 0, CONFIG.canvasWidth, CONFIG.canvasHeight);
 
-            // Draw all completed history levels (oldest = most faded)
-            const completedLevels = historyLevels.filter(h => h.level < level);
-            completedLevels.forEach(historyLevel => {
-                const fadeAmount = getFadeForLevel(historyLevel.level, level, totalLevels);
-                const fadedColor = lightenColor(CONFIG.pixelColor, Math.min(fadeAmount, 0.95));
+            if (CONFIG.fadeMode === 'pixel') {
+                // PIXEL-WISE FADING: Each pixel fades based on when it was drawn
+                // Draw all pixels up to current frame with individual fade
+                for (let i = 0; i <= frameIndex && i < allPixelsWithTiming.length; i++) {
+                    const pixel = allPixelsWithTiming[i];
+                    const fadeAmount = getFadeForPixel(pixel.drawnAtFrame, frameIndex, totalFrames);
+                    const fadedColor = lightenColor(CONFIG.pixelColor, Math.min(fadeAmount, 0.95));
 
-                displayCtx.fillStyle = fadedColor;
+                    displayCtx.fillStyle = fadedColor;
+                    displayCtx.globalAlpha = CONFIG.pixelOpacity;
+                    displayCtx.fillRect(pixel.x, pixel.y, pixel.size, pixel.size);
+                }
+            } else {
+                // LEVEL-WISE FADING: Original behavior
+                // Draw all completed history levels (oldest = most faded)
+                const completedLevels = historyLevels.filter(h => h.level < level);
+                completedLevels.forEach(historyLevel => {
+                    const fadeAmount = getFadeForLevel(historyLevel.level, level, totalLevels);
+                    const fadedColor = lightenColor(CONFIG.pixelColor, Math.min(fadeAmount, 0.95));
+
+                    displayCtx.fillStyle = fadedColor;
+                    displayCtx.globalAlpha = CONFIG.pixelOpacity;
+                    historyLevel.cells.forEach(cell => {
+                        displayCtx.fillRect(cell.x, cell.y, cell.size, cell.size);
+                    });
+                });
+
+                // Draw current level pixels (no fade)
+                displayCtx.fillStyle = CONFIG.pixelColor;
                 displayCtx.globalAlpha = CONFIG.pixelOpacity;
-                historyLevel.cells.forEach(cell => {
+                currentPixels.forEach(cell => {
                     displayCtx.fillRect(cell.x, cell.y, cell.size, cell.size);
                 });
-            });
-
-            // Draw current level pixels (no fade)
-            displayCtx.fillStyle = CONFIG.pixelColor;
-            displayCtx.globalAlpha = CONFIG.pixelOpacity;
-            currentPixels.forEach(cell => {
-                displayCtx.fillRect(cell.x, cell.y, cell.size, cell.size);
-            });
+            }
 
             // Draw outline
             displayCtx.globalAlpha = 1;
@@ -600,20 +672,9 @@
             const textX = CONFIG.canvasWidth / 2;
             const textY = CONFIG.canvasHeight / 2 + 15;
 
-            if (CONFIG.outlineColor === 'smart') {
-                // Smart outline: dark shadow behind, then white stroke
-                // This gives contrast on both light and dark backgrounds
-                displayCtx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
-                displayCtx.lineWidth = CONFIG.outlineStrokeWidth + 4;
-                displayCtx.strokeText(CONFIG.text, textX, textY);
-                displayCtx.strokeStyle = '#ffffff';
-                displayCtx.lineWidth = CONFIG.outlineStrokeWidth;
-                displayCtx.strokeText(CONFIG.text, textX, textY);
-            } else {
-                displayCtx.lineWidth = CONFIG.outlineStrokeWidth;
-                displayCtx.strokeStyle = CONFIG.outlineColor;
-                displayCtx.strokeText(CONFIG.text, textX, textY);
-            }
+            displayCtx.lineWidth = CONFIG.outlineStrokeWidth;
+            displayCtx.strokeStyle = CONFIG.outlineColor;
+            displayCtx.strokeText(CONFIG.text, textX, textY);
         }
 
         // Update debug panel
@@ -666,16 +727,28 @@
             document.getElementById('frame-total').textContent = totalFrames;
             slider.max = totalFrames - 1;
 
-            // Reset history levels
+            // Reset history
             historyLevels = [];
+            allPixelsWithTiming = [];
 
             // Second pass: generate frames
             for (let level = 0; level < CONFIG.pixelSizes.length; level++) {
                 const pixelSize = CONFIG.pixelSizes[level];
-                const cells = getValidCells(pixelSize);
+                let cells = getValidCells(pixelSize);
+
+                // Shuffle if enabled
+                if (CONFIG.shufflePixels) {
+                    cells = shuffleArray(cells, CONFIG.shuffleSeed + level);
+                }
 
                 for (let i = 0; i < cells.length; i++) {
                     const currentPixels = cells.slice(0, i + 1);
+
+                    // Store pixel with timing for pixel-wise fading
+                    allPixelsWithTiming.push({
+                        ...cells[i],
+                        drawnAtFrame: frameIndex
+                    });
 
                     frames.push({
                         index: frameIndex,
@@ -698,13 +771,13 @@
                     }
                 }
 
-                // Level complete - store cells for history rendering
+                // Level complete - store cells for history rendering (level-wise mode)
                 historyLevels.push({
                     level: level + 1,
                     cells: cells
                 });
 
-                console.log(`Level ${level + 1} complete: ${cells.length} cells`);
+                console.log(`Level ${level + 1} complete: ${cells.length} cells${CONFIG.shufflePixels ? ' (shuffled)' : ''}`);
             }
 
             loading.classList.add('hidden');
@@ -803,6 +876,10 @@
         const tuneOverlap = document.getElementById('tune-overlap');
         const tuneStroke = document.getElementById('tune-stroke');
         const tuneOutlineColor = document.getElementById('tune-outline-color');
+        const tuneOrder = document.getElementById('tune-order');
+        const tuneFadeMode = document.getElementById('tune-fade-mode');
+        const tuneFadeN = document.getElementById('tune-fade-n');
+        const fadeNContainer = document.getElementById('fade-n-container');
         const exportField = document.getElementById('export-field');
 
         // Curve editor
@@ -939,7 +1016,10 @@
                 fadeCurve: CONFIG.fadeCurve.map(p => [Math.round(p[0] * 100) / 100, Math.round(p[1] * 100) / 100]),
                 overlapThreshold: parseFloat(tuneOverlap.value),
                 outlineStrokeWidth: parseInt(tuneStroke.value),
-                outlineColor: tuneOutlineColor.value
+                outlineColor: tuneOutlineColor.value,
+                shufflePixels: CONFIG.shufflePixels,
+                fadeMode: CONFIG.fadeMode,
+                fadeEveryNPixels: CONFIG.fadeEveryNPixels
             };
             exportField.value = JSON.stringify(params);
         }
@@ -948,6 +1028,9 @@
             document.getElementById('tune-opacity-val').textContent = tuneOpacity.value;
             document.getElementById('tune-overlap-val').textContent = tuneOverlap.value;
             document.getElementById('tune-stroke-val').textContent = tuneStroke.value;
+            document.getElementById('tune-fade-n-val').textContent = tuneFadeN.value;
+            // Show/hide fade-n slider based on mode
+            fadeNContainer.style.display = CONFIG.fadeMode === 'pixel' ? 'flex' : 'none';
             updateExportField();
             drawCurveEditor();
         }
@@ -982,6 +1065,30 @@
         // These need regeneration
         tuneOverlap.addEventListener('input', updateTuningDisplay);
 
+        // Order toggle (needs regeneration)
+        tuneOrder.addEventListener('change', () => {
+            CONFIG.shufflePixels = tuneOrder.value === 'shuffle';
+            updateExportField();
+        });
+
+        // Fade mode toggle (live update)
+        tuneFadeMode.addEventListener('change', () => {
+            CONFIG.fadeMode = tuneFadeMode.value;
+            updateTuningDisplay();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
+        // Fade N slider (live update)
+        tuneFadeN.addEventListener('input', () => {
+            CONFIG.fadeEveryNPixels = parseInt(tuneFadeN.value);
+            updateTuningDisplay();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
         document.getElementById('copy-btn').addEventListener('click', () => {
             exportField.select();
             navigator.clipboard.writeText(exportField.value);
@@ -995,12 +1102,16 @@
             CONFIG.pixelOpacity = parseFloat(tuneOpacity.value);
             CONFIG.overlapThreshold = parseFloat(tuneOverlap.value);
             CONFIG.outlineStrokeWidth = parseInt(tuneStroke.value);
+            CONFIG.shufflePixels = tuneOrder.value === 'shuffle';
+            CONFIG.fadeMode = tuneFadeMode.value;
+            CONFIG.fadeEveryNPixels = parseInt(tuneFadeN.value);
             // fadeCurve is already updated live
 
             // Reset and regenerate
             frames = [];
             levelStats = [];
             historyLevels = [];
+            allPixelsWithTiming = [];
             loading.classList.remove('hidden');
             await generateFrames();
         });
