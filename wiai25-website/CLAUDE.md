@@ -37,7 +37,7 @@ wiai25-website/
 ## Technical Stack
 
 All mockups use:
-- Tailwind CSS via CDN (`https://cdn.tailwindcss.com`)
+- Tailwind CSS (local: `tailwind.min.js`)
 - Google Fonts (Inter, JetBrains Mono)
 - Self-contained single HTML files
 
