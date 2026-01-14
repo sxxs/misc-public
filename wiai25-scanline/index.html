@@ -1,0 +1,1903 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WIAI25 Scanline Prototyp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #e8e8e8;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .canvas-container {
+            background: #f8f8f8;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-width: 100%;
+        }
+
+        #display-canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .controls {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #frame-slider {
+            flex: 1;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #ddd;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        #frame-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #1a5f5f;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .stat {
+            display: flex;
+            gap: 5px;
+        }
+
+        .stat-label {
+            color: #999;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #1a5f5f;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .loading.hidden {
+            display: none;
+        }
+
+        .loading-text {
+            font-size: 1.1rem;
+            color: #1a5f5f;
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 4px;
+            background: #ddd;
+            border-radius: 2px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #1a5f5f;
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        .play-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        button {
+            background: #1a5f5f;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        button:hover {
+            background: #247373;
+        }
+
+        button:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+
+        #speed-display {
+            font-family: 'JetBrains Mono', monospace;
+            color: #666;
+            min-width: 50px;
+        }
+
+        .debug-panel {
+            margin-top: 30px;
+            width: 100%;
+            max-width: 1200px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #0f0;
+        }
+
+        .debug-panel h3 {
+            color: #fff;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .debug-level {
+            margin-bottom: 8px;
+            padding: 8px;
+            background: #333;
+            border-radius: 4px;
+        }
+
+        .debug-level.active {
+            border-left: 3px solid #0f0;
+        }
+
+        .tuning-panel {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 1200px;
+            background: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .tuning-panel h3 {
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            color: #333;
+        }
+
+        .tuning-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .tuning-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .tuning-item label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .tuning-item input[type="range"] {
+            width: 100%;
+        }
+
+        .tuning-item .value-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #1a5f5f;
+        }
+
+        .export-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .export-section label {
+            font-size: 0.8rem;
+            color: #666;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .export-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .export-row input[type="text"] {
+            flex: 1;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f5f5f5;
+        }
+
+        .export-row button {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+        }
+
+        .curve-editor {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .curve-editor label {
+            font-size: 0.8rem;
+            color: #666;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .curve-canvas-container {
+            position: relative;
+            background: #f0f0f0;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        #curve-canvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        .curve-axis-label {
+            position: absolute;
+            font-size: 0.65rem;
+            color: #999;
+        }
+
+        .curve-axis-label.y-axis {
+            left: 2px;
+            top: 2px;
+        }
+
+        .curve-axis-label.x-axis {
+            right: 2px;
+            bottom: 2px;
+        }
+
+        .curve-section {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .curve-editor-item {
+            flex: 1;
+            min-width: 350px;
+        }
+
+        .curve-editor-item h4 {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .pixel-size-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .pixel-size-controls .tuning-item {
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .color-input-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .color-input-row input[type="color"] {
+            width: 40px;
+            height: 30px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .color-input-row input[type="text"] {
+            flex: 1;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 80px;
+        }
+
+        .color-section {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 15px;
+        }
+
+        .color-section .tuning-item {
+            min-width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading">
+        <div class="loading-text">Generiere Frames...</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+    </div>
+
+    <h1>WIAI25 Progressive Enhancement Prototyp</h1>
+
+    <div class="canvas-container">
+        <canvas id="display-canvas" width="1200" height="480"></canvas>
+    </div>
+
+    <div class="controls">
+        <div class="slider-row">
+            <input type="range" id="frame-slider" min="0" max="100" value="0">
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <span class="stat-label">Frame:</span>
+                <span class="stat-value" id="frame-num">0</span>
+                <span class="stat-label">/</span>
+                <span class="stat-value" id="frame-total">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Level:</span>
+                <span class="stat-value" id="level-num">1</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Pixel-Größe:</span>
+                <span class="stat-value" id="pixel-size">100</span>
+                <span class="stat-label">px</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Zellen im Level:</span>
+                <span class="stat-value" id="cells-in-level">0</span>
+            </div>
+            <div class="stat" id="interpolated-values" style="display: none;">
+                <span class="stat-label">Fade N:</span>
+                <span class="stat-value" id="current-fade-n">1</span>
+                <span class="stat-label">| Max Steps:</span>
+                <span class="stat-value" id="current-max-steps">10</span>
+            </div>
+        </div>
+
+        <div class="play-controls">
+            <button id="play-btn">Play</button>
+            <button id="slower-btn">-</button>
+            <span id="speed-display">1x</span>
+            <button id="faster-btn">+</button>
+        </div>
+    </div>
+
+    <div class="tuning-panel">
+        <h3>Parameter-Tuning</h3>
+        <div class="color-section">
+            <div class="tuning-item">
+                <label>Farbschema</label>
+                <select id="tune-preset">
+                    <option value="classic">Klassisch (Teal/Weiß)</option>
+                    <option value="dark">Dark Mode</option>
+                    <option value="highcontrast" selected>Hoher Kontrast</option>
+                    <option value="ocean">Ozean</option>
+                    <option value="sunset">Sonnenuntergang</option>
+                    <option value="custom">Benutzerdefiniert</option>
+                </select>
+            </div>
+            <div class="tuning-item">
+                <label>Hintergrund</label>
+                <div class="color-input-row">
+                    <input type="color" id="tune-bg-color" value="#000000">
+                    <input type="text" id="tune-bg-color-text" value="#000000" maxlength="7">
+                </div>
+            </div>
+            <div class="tuning-item">
+                <label>Pixel-Farbe</label>
+                <div class="color-input-row">
+                    <input type="color" id="tune-pixel-color" value="#facc15">
+                    <input type="text" id="tune-pixel-color-text" value="#facc15" maxlength="7">
+                </div>
+            </div>
+        </div>
+        <div class="tuning-grid">
+            <div class="tuning-item">
+                <label>Pixel Opacity</label>
+                <input type="range" id="tune-opacity" min="0.1" max="1" step="0.05" value="0.7">
+                <span class="value-display" id="tune-opacity-val">0.7</span>
+            </div>
+            <div class="tuning-item">
+                <label>Overlap Threshold</label>
+                <input type="range" id="tune-overlap" min="0.1" max="0.8" step="0.05" value="0.3">
+                <span class="value-display" id="tune-overlap-val">0.3</span>
+            </div>
+            <div class="tuning-item">
+                <label>Outline Stroke Width</label>
+                <input type="range" id="tune-stroke" min="1" max="20" step="1" value="2">
+                <span class="value-display" id="tune-stroke-val">2</span>
+            </div>
+            <div class="tuning-item">
+                <label>Outline Color</label>
+                <select id="tune-outline-color">
+                    <option value="#ffffff">Weiß</option>
+                    <option value="#1a5f5f">Teal</option>
+                    <option value="#000000" selected>Schwarz</option>
+                </select>
+            </div>
+            <div class="tuning-item">
+                <label>Pixel-Reihenfolge</label>
+                <select id="tune-order">
+                    <option value="scanline">Scanline</option>
+                    <option value="shuffle" selected>Shuffle</option>
+                </select>
+            </div>
+            <div class="tuning-item">
+                <label>Fade-Modus</label>
+                <select id="tune-fade-mode">
+                    <option value="level">Pro Level</option>
+                    <option value="pixel" selected>Pro N Pixel</option>
+                </select>
+            </div>
+            <div class="tuning-item" id="fade-n-start-container">
+                <label>Fade N Pixel (Start)</label>
+                <input type="range" id="tune-fade-n-start" min="1" max="1000" step="1" value="8">
+                <span class="value-display" id="tune-fade-n-start-val">8</span>
+            </div>
+            <div class="tuning-item" id="fade-n-end-container">
+                <label>Fade N Pixel (Ende)</label>
+                <input type="range" id="tune-fade-n-end" min="1" max="1000" step="1" value="164">
+                <span class="value-display" id="tune-fade-n-end-val">164</span>
+            </div>
+            <div class="tuning-item" id="max-fade-start-container">
+                <label>Max Fade Steps (Start)</label>
+                <input type="range" id="tune-max-fade-start" min="1" max="1000" step="1" value="145">
+                <span class="value-display" id="tune-max-fade-start-val">145</span>
+            </div>
+            <div class="tuning-item" id="max-fade-end-container">
+                <label>Max Fade Steps (Ende)</label>
+                <input type="range" id="tune-max-fade-end" min="1" max="1000" step="1" value="695">
+                <span class="value-display" id="tune-max-fade-end-val">695</span>
+            </div>
+            <div class="tuning-item">
+                <label>Puls-Größe</label>
+                <input type="range" id="tune-pulse-scale" min="0" max="0.5" step="0.05" value="0.1">
+                <span class="value-display" id="tune-pulse-scale-val">0.1</span>
+            </div>
+            <div class="tuning-item">
+                <label>Puls-Glow</label>
+                <input type="range" id="tune-pulse-glow" min="0" max="1.5" step="0.1" value="0.8">
+                <span class="value-display" id="tune-pulse-glow-val">0.8</span>
+            </div>
+            <div class="tuning-item">
+                <label>Puls-Helligkeit</label>
+                <input type="range" id="tune-pulse-brightness" min="0" max="1" step="0.1" value="0.5">
+                <span class="value-display" id="tune-pulse-brightness-val">0.5</span>
+            </div>
+            <div class="tuning-item">
+                <label>Puls-Frequenz</label>
+                <input type="range" id="tune-pulse-frequency" min="0.05" max="0.5" step="0.05" value="0.2">
+                <span class="value-display" id="tune-pulse-frequency-val">0.2</span>
+            </div>
+            <div class="tuning-item">
+                <label>Puls-Kurve</label>
+                <select id="tune-pulse-curve">
+                    <option value="linear" selected>Linear</option>
+                    <option value="ease-in">Ease-In (langsamer Start)</option>
+                    <option value="ease-out">Ease-Out (langsames Ende)</option>
+                    <option value="ease-in-out">S-Kurve</option>
+                </select>
+            </div>
+        </div>
+        <div class="curve-editor">
+            <label>Kurven-Editoren — Punkte draggen</label>
+            <div class="curve-section">
+                <div class="curve-editor-item">
+                    <h4>Pixelgrößen-Progression (Y: Größe, X: Level)</h4>
+                    <div class="pixel-size-controls">
+                        <div class="tuning-item">
+                            <label>Max Pixel</label>
+                            <input type="range" id="tune-max-pixel" min="20" max="200" step="1" value="180">
+                            <span class="value-display" id="tune-max-pixel-val">180px</span>
+                        </div>
+                        <div class="tuning-item">
+                            <label>Min Pixel</label>
+                            <input type="range" id="tune-min-pixel" min="2" max="20" step="1" value="4">
+                            <span class="value-display" id="tune-min-pixel-val">4px</span>
+                        </div>
+                        <div class="tuning-item">
+                            <label>Anzahl Levels</label>
+                            <input type="range" id="tune-num-levels" min="3" max="30" step="1" value="11">
+                            <span class="value-display" id="tune-num-levels-val">11</span>
+                        </div>
+                    </div>
+                    <div class="curve-canvas-container">
+                        <canvas id="pixel-curve-canvas" width="400" height="200"></canvas>
+                        <span class="curve-axis-label y-axis">Größe</span>
+                        <span class="curve-axis-label x-axis">Level→</span>
+                    </div>
+                    <div class="value-display" id="pixel-sizes-preview" style="margin-top: 5px; font-size: 0.7rem; word-break: break-all;"></div>
+                </div>
+                <div class="curve-editor-item">
+                    <h4>Fade-Kurve (Y: Fade zu Weiß, X: Level)</h4>
+                    <div class="curve-canvas-container">
+                        <canvas id="curve-canvas" width="400" height="200"></canvas>
+                        <span class="curve-axis-label y-axis">Fade→Weiß</span>
+                        <span class="curve-axis-label x-axis">Level→</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="export-section">
+            <label>Parameter (kopieren oder einfügen zum Teilen)</label>
+            <div class="export-row">
+                <input type="text" id="export-field">
+                <button id="copy-btn">Copy</button>
+                <button id="apply-btn">Apply & Regenerate</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="debug-panel" id="debug-panel">
+        <h3>Debug: Level-Statistiken</h3>
+        <div id="debug-content"></div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            canvasWidth: 1200,
+            canvasHeight: 480,
+            text: 'WIAI25',
+            fontSize: 320,
+            fontFamily: 'JetBrains Mono',
+            // Pixel size progression config
+            maxPixelSize: 180,
+            minPixelSize: 4,
+            numLevels: 11,
+            // Bezier curve for pixel size progression [x, y] where x=level progress(0-1), y=size progress(0-1, 0=max, 1=min)
+            pixelSizeCurve: [[0, 0], [0.04, 0.69], [0.37, 1], [0.75, 0.8], [1, 1]],
+            // Computed pixel sizes (will be calculated from curve)
+            pixelSizes: [],
+            pixelColor: '#facc15',
+            pixelOpacity: 0.7,
+            overlapThreshold: 0.3,
+            bgColor: '#000000',
+            // Bezier curve control points for fade [x, y] where x=progress(0-1), y=fade(0-1)
+            fadeCurve: [[0, 0], [0.2, 0.5], [0.5, 0.7], [1, 0.9]],
+            outlineStrokeWidth: 2,
+            outlineColor: '#000000',
+            // Shuffle vs Scanline
+            shufflePixels: true,
+            shuffleSeed: 42,
+            // Fade mode - 'level' or 'pixel'
+            fadeMode: 'pixel',
+            fadeEveryNPixelsStart: 8,
+            fadeEveryNPixelsEnd: 164,
+            maxFadeStepsStart: 145,
+            maxFadeStepsEnd: 695,
+            // Pulse animation config
+            pulseScale: 0.1,      // size change (0 = none, 0.5 = 50% larger)
+            pulseGlow: 0.8,       // glow/shadow intensity
+            pulseBrightness: 0.5, // color brighten toward white (0 = none, 1 = full white)
+            pulseFrequency: 0.2,  // speed of pulse oscillation
+            pulseCurve: 'linear'  // 'linear', 'ease-in', 'ease-out', 'ease-in-out'
+        };
+
+        // Color presets
+        const COLOR_PRESETS = {
+            classic: { bg: '#f8f8f8', pixel: '#1a5f5f', outline: '#ffffff' },
+            dark: { bg: '#1a1a1a', pixel: '#00ff88', outline: '#333333' },
+            highcontrast: { bg: '#000000', pixel: '#facc15', outline: '#000000' },
+            ocean: { bg: '#0a1628', pixel: '#4fc3f7', outline: '#0a1628' },
+            sunset: { bg: '#2d1b33', pixel: '#ff6b6b', outline: '#2d1b33' }
+        };
+
+        // Pulsing effect state
+        let pulsePhase = 0;
+        let pulseAnimationId = null;
+
+        // Calculate pixel sizes from bezier curve
+        function calculatePixelSizesFromCurve() {
+            const sizes = [];
+            for (let i = 0; i < CONFIG.numLevels; i++) {
+                const t = i / (CONFIG.numLevels - 1);
+                const curveY = evaluateBezierCurve(CONFIG.pixelSizeCurve, t);
+                // curveY 0 = maxPixelSize, curveY 1 = minPixelSize
+                const size = Math.round(CONFIG.maxPixelSize - curveY * (CONFIG.maxPixelSize - CONFIG.minPixelSize));
+                // Avoid duplicates - only add if different from last
+                if (sizes.length === 0 || sizes[sizes.length - 1] !== size) {
+                    sizes.push(size);
+                }
+            }
+            // Ensure we always have at least min pixel at the end
+            if (sizes[sizes.length - 1] !== CONFIG.minPixelSize) {
+                sizes.push(CONFIG.minPixelSize);
+            }
+            CONFIG.pixelSizes = sizes;
+            return sizes;
+        }
+
+        // State
+        let frames = [];
+        let levelStats = []; // Debug stats per level
+        let currentFrame = 0;
+        let isPlaying = false;
+        let playInterval = null;
+        const speeds = [0.25, 0.5, 1, 2, 4, 8];
+        let speedIndex = 2;
+
+        // DOM Elements
+        const displayCanvas = document.getElementById('display-canvas');
+        const displayCtx = displayCanvas.getContext('2d');
+        const slider = document.getElementById('frame-slider');
+        const loading = document.getElementById('loading');
+        const progressFill = document.getElementById('progress-fill');
+
+        // Hidden canvas for text mask
+        const maskCanvas = document.createElement('canvas');
+        maskCanvas.width = CONFIG.canvasWidth;
+        maskCanvas.height = CONFIG.canvasHeight;
+        const maskCtx = maskCanvas.getContext('2d');
+
+        // Generate text mask
+        function generateTextMask() {
+            maskCtx.fillStyle = 'white';
+            maskCtx.fillRect(0, 0, CONFIG.canvasWidth, CONFIG.canvasHeight);
+
+            maskCtx.fillStyle = 'black';
+            maskCtx.font = `700 ${CONFIG.fontSize}px "${CONFIG.fontFamily}"`;
+            maskCtx.textAlign = 'center';
+            maskCtx.textBaseline = 'middle';
+            maskCtx.fillText(CONFIG.text, CONFIG.canvasWidth / 2, CONFIG.canvasHeight / 2 + 15);
+        }
+
+        // Check overlap of a cell with the text mask
+        function getCellOverlap(x, y, size) {
+            const imageData = maskCtx.getImageData(x, y, size, size);
+            const pixels = imageData.data;
+            let blackPixels = 0;
+            const totalPixels = size * size;
+
+            for (let i = 0; i < pixels.length; i += 4) {
+                if (pixels[i] < 128) {
+                    blackPixels++;
+                }
+            }
+
+            return blackPixels / totalPixels;
+        }
+
+        // Generate valid cells for a pixel size
+        function getValidCells(pixelSize) {
+            const cells = [];
+            const cols = Math.floor(CONFIG.canvasWidth / pixelSize);
+            const rows = Math.floor(CONFIG.canvasHeight / pixelSize);
+
+            const offsetX = (CONFIG.canvasWidth - cols * pixelSize) / 2;
+            const offsetY = (CONFIG.canvasHeight - rows * pixelSize) / 2;
+
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const x = Math.floor(offsetX + col * pixelSize);
+                    const y = Math.floor(offsetY + row * pixelSize);
+                    const overlap = getCellOverlap(x, y, pixelSize);
+
+                    if (overlap >= CONFIG.overlapThreshold) {
+                        cells.push({ x, y, size: pixelSize, overlap });
+                    }
+                }
+            }
+
+            return cells;
+        }
+
+        // Seeded random number generator (Mulberry32)
+        function seededRandom(seed) {
+            return function() {
+                let t = seed += 0x6D2B79F5;
+                t = Math.imul(t ^ t >>> 15, t | 1);
+                t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+                return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            };
+        }
+
+        // Fisher-Yates shuffle with seed
+        function shuffleArray(array, seed) {
+            const result = [...array];
+            const rng = seededRandom(seed);
+            for (let i = result.length - 1; i > 0; i--) {
+                const j = Math.floor(rng() * (i + 1));
+                [result[i], result[j]] = [result[j], result[i]];
+            }
+            return result;
+        }
+
+        // Fade color toward background (smart direction based on bg color)
+        function fadeColor(hexColor, bgColor, amount) {
+            // Parse foreground color
+            const r = parseInt(hexColor.slice(1, 3), 16);
+            const g = parseInt(hexColor.slice(3, 5), 16);
+            const b = parseInt(hexColor.slice(5, 7), 16);
+
+            // Parse background color
+            const bgR = parseInt(bgColor.slice(1, 3), 16);
+            const bgG = parseInt(bgColor.slice(3, 5), 16);
+            const bgB = parseInt(bgColor.slice(5, 7), 16);
+
+            // Interpolate toward background
+            const newR = Math.round(r + (bgR - r) * amount);
+            const newG = Math.round(g + (bgG - g) * amount);
+            const newB = Math.round(b + (bgB - b) * amount);
+
+            return `rgb(${newR}, ${newG}, ${newB})`;
+        }
+
+        // Store history as array of {cells, level}
+        let historyLevels = [];
+        // For pixel-wise fading: all pixels with their drawn frame index
+        let allPixelsWithTiming = []; // [{x, y, size, drawnAtFrame}, ...]
+
+        // Evaluate cubic bezier curve at t
+        function evaluateBezierCurve(points, t) {
+            // Interpolate through control points using De Casteljau's algorithm
+            // For our use case: find y value for given x (level progress)
+            // We'll sample the curve and interpolate
+            const n = points.length - 1;
+            let result = 0;
+            for (let i = 0; i <= n; i++) {
+                const binomial = factorial(n) / (factorial(i) * factorial(n - i));
+                const basis = binomial * Math.pow(1 - t, n - i) * Math.pow(t, i);
+                result += points[i][1] * basis;
+            }
+            return Math.max(0, Math.min(1, result));
+        }
+
+        function factorial(n) {
+            if (n <= 1) return 1;
+            let result = 1;
+            for (let i = 2; i <= n; i++) result *= i;
+            return result;
+        }
+
+        // Get fade amount for a given level using the bezier curve (level-wise mode)
+        function getFadeForLevel(historyLevel, currentLevel, totalLevels) {
+            const levelsAgo = currentLevel - historyLevel;
+            const maxLevelsAgo = totalLevels - 1;
+            const t = Math.min(levelsAgo / maxLevelsAgo, 1);
+            return evaluateBezierCurve(CONFIG.fadeCurve, t);
+        }
+
+        // Interpolate a value linearly based on progress (0-1)
+        function interpolateValue(startVal, endVal, progress) {
+            return startVal + (endVal - startVal) * progress;
+        }
+
+        // Get fade amount for a pixel based on when it was drawn (pixel-wise mode)
+        function getFadeForPixel(drawnAtFrame, currentFrame, totalFrames) {
+            // Interpolate fadeEveryNPixels and maxFadeSteps based on when pixel was DRAWN
+            // This ensures each pixel has consistent fade parameters throughout its lifetime
+            const drawProgress = totalFrames > 0 ? drawnAtFrame / totalFrames : 0;
+            const fadeEveryN = Math.max(1, Math.round(interpolateValue(
+                CONFIG.fadeEveryNPixelsStart,
+                CONFIG.fadeEveryNPixelsEnd,
+                drawProgress
+            )));
+            const maxFadeSteps = Math.max(1, Math.round(interpolateValue(
+                CONFIG.maxFadeStepsStart,
+                CONFIG.maxFadeStepsEnd,
+                drawProgress
+            )));
+
+            const framesSince = currentFrame - drawnAtFrame;
+            // How many "fade steps" have passed?
+            const fadeSteps = Math.floor(framesSince / fadeEveryN);
+            const t = Math.min(fadeSteps / maxFadeSteps, 1);
+            return evaluateBezierCurve(CONFIG.fadeCurve, t);
+        }
+
+        // Render a frame
+        function renderFrame(frameData) {
+            const { index: frameIndex, level, currentPixels } = frameData;
+            const totalLevels = CONFIG.pixelSizes.length;
+            const totalFrames = frames.length;
+
+            // Clear with background
+            displayCtx.fillStyle = CONFIG.bgColor;
+            displayCtx.fillRect(0, 0, CONFIG.canvasWidth, CONFIG.canvasHeight);
+
+            if (CONFIG.fadeMode === 'pixel') {
+                // PIXEL-WISE FADING: Each pixel fades based on when it was drawn
+                // Draw all pixels up to current frame with individual fade
+                for (let i = 0; i <= frameIndex && i < allPixelsWithTiming.length; i++) {
+                    const pixel = allPixelsWithTiming[i];
+                    const fadeAmount = getFadeForPixel(pixel.drawnAtFrame, frameIndex, totalFrames);
+                    const fadedColor = fadeColor(CONFIG.pixelColor, CONFIG.bgColor, Math.min(fadeAmount, 0.95));
+
+                    displayCtx.fillStyle = fadedColor;
+                    displayCtx.globalAlpha = CONFIG.pixelOpacity;
+                    displayCtx.fillRect(pixel.x, pixel.y, pixel.size, pixel.size);
+                }
+            } else {
+                // LEVEL-WISE FADING: Original behavior
+                // Draw all completed history levels (oldest = most faded)
+                const completedLevels = historyLevels.filter(h => h.level < level);
+                completedLevels.forEach(historyLevel => {
+                    const fadeAmount = getFadeForLevel(historyLevel.level, level, totalLevels);
+                    const fadedColor = fadeColor(CONFIG.pixelColor, CONFIG.bgColor, Math.min(fadeAmount, 0.95));
+
+                    displayCtx.fillStyle = fadedColor;
+                    displayCtx.globalAlpha = CONFIG.pixelOpacity;
+                    historyLevel.cells.forEach(cell => {
+                        displayCtx.fillRect(cell.x, cell.y, cell.size, cell.size);
+                    });
+                });
+
+                // Draw current level pixels (no fade)
+                displayCtx.fillStyle = CONFIG.pixelColor;
+                displayCtx.globalAlpha = CONFIG.pixelOpacity;
+                currentPixels.forEach(cell => {
+                    displayCtx.fillRect(cell.x, cell.y, cell.size, cell.size);
+                });
+            }
+
+            // Highlight newest pixel with pulsing effect (scale + glow, independently controlled)
+            if (frameIndex >= 0 && frameIndex < allPixelsWithTiming.length) {
+                const newestPixel = allPixelsWithTiming[frameIndex];
+
+                // Apply easing function to pulse phase
+                const normalizedPhase = (Math.sin(pulsePhase) + 1) / 2; // 0 to 1
+                let easedPhase;
+                switch (CONFIG.pulseCurve) {
+                    case 'ease-in':
+                        easedPhase = normalizedPhase * normalizedPhase;
+                        break;
+                    case 'ease-out':
+                        easedPhase = 1 - (1 - normalizedPhase) * (1 - normalizedPhase);
+                        break;
+                    case 'ease-in-out':
+                        easedPhase = normalizedPhase < 0.5
+                            ? 2 * normalizedPhase * normalizedPhase
+                            : 1 - Math.pow(-2 * normalizedPhase + 2, 2) / 2;
+                        break;
+                    default:
+                        easedPhase = normalizedPhase;
+                }
+
+                // Scale effect (independent control)
+                const scaleBonus = easedPhase * CONFIG.pulseScale;
+                const scaledSize = newestPixel.size * (1 + scaleBonus);
+                const offset = (scaledSize - newestPixel.size) / 2;
+
+                // Brightness effect - lighten color toward white for sparkle
+                const brightenAmount = easedPhase * CONFIG.pulseBrightness;
+                const r = parseInt(CONFIG.pixelColor.slice(1, 3), 16);
+                const g = parseInt(CONFIG.pixelColor.slice(3, 5), 16);
+                const b = parseInt(CONFIG.pixelColor.slice(5, 7), 16);
+                const brightR = Math.round(r + (255 - r) * brightenAmount);
+                const brightG = Math.round(g + (255 - g) * brightenAmount);
+                const brightB = Math.round(b + (255 - b) * brightenAmount);
+                const brightColor = `rgb(${brightR}, ${brightG}, ${brightB})`;
+
+                // Glow effect (independent control)
+                displayCtx.shadowColor = brightColor;
+                displayCtx.shadowBlur = 5 + easedPhase * CONFIG.pulseGlow * 40;
+
+                // Draw with brightened color and full opacity for sparkle
+                displayCtx.fillStyle = brightColor;
+                displayCtx.globalAlpha = Math.min(1, CONFIG.pixelOpacity + 0.1 + easedPhase * CONFIG.pulseGlow * 0.4);
+
+                // Draw scaled pixel with glow
+                displayCtx.fillRect(
+                    newestPixel.x - offset,
+                    newestPixel.y - offset,
+                    scaledSize,
+                    scaledSize
+                );
+
+                // Reset shadow
+                displayCtx.shadowBlur = 0;
+            }
+
+            // Draw outline
+            displayCtx.globalAlpha = 1;
+            displayCtx.lineJoin = 'round';
+            displayCtx.font = `700 ${CONFIG.fontSize}px "${CONFIG.fontFamily}"`;
+            displayCtx.textAlign = 'center';
+            displayCtx.textBaseline = 'middle';
+            const textX = CONFIG.canvasWidth / 2;
+            const textY = CONFIG.canvasHeight / 2 + 15;
+
+            displayCtx.lineWidth = CONFIG.outlineStrokeWidth;
+            displayCtx.strokeStyle = CONFIG.outlineColor;
+            displayCtx.strokeText(CONFIG.text, textX, textY);
+        }
+
+        // Update debug panel
+        function updateDebugPanel(currentLevel) {
+            const content = levelStats.map((stat, i) => {
+                const isActive = i + 1 === currentLevel;
+                return `
+                    <div class="debug-level ${isActive ? 'active' : ''}">
+                        <strong>Level ${i + 1}</strong> (${stat.pixelSize}px) |
+                        Grid: ${stat.cols}×${stat.rows} = ${stat.totalCells} |
+                        Gültig: ${stat.validCells} (${(stat.validCells / stat.totalCells * 100).toFixed(1)}%) |
+                        Kumulativ: ${stat.cumulativeFrames}
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('debug-content').innerHTML = content;
+        }
+
+        // Generate all frames
+        async function generateFrames() {
+            generateTextMask();
+            calculatePixelSizesFromCurve();
+
+            let frameIndex = 0;
+            let totalFrames = 0;
+
+            // First pass: count total frames and gather stats
+            for (let level = 0; level < CONFIG.pixelSizes.length; level++) {
+                const pixelSize = CONFIG.pixelSizes[level];
+                const cols = Math.floor(CONFIG.canvasWidth / pixelSize);
+                const rows = Math.floor(CONFIG.canvasHeight / pixelSize);
+                const cells = getValidCells(pixelSize);
+
+                totalFrames += cells.length;
+
+                levelStats.push({
+                    level: level + 1,
+                    pixelSize,
+                    cols,
+                    rows,
+                    totalCells: cols * rows,
+                    validCells: cells.length,
+                    cumulativeFrames: totalFrames
+                });
+            }
+
+            console.log('=== WIAI25 Scanline Debug ===');
+            console.log('Total frames:', totalFrames);
+            console.table(levelStats);
+
+            document.getElementById('frame-total').textContent = totalFrames;
+            slider.max = totalFrames - 1;
+
+            // Reset history
+            historyLevels = [];
+            allPixelsWithTiming = [];
+
+            // Second pass: generate frames
+            for (let level = 0; level < CONFIG.pixelSizes.length; level++) {
+                const pixelSize = CONFIG.pixelSizes[level];
+                let cells = getValidCells(pixelSize);
+
+                // Shuffle if enabled
+                if (CONFIG.shufflePixels) {
+                    cells = shuffleArray(cells, CONFIG.shuffleSeed + level);
+                }
+
+                for (let i = 0; i < cells.length; i++) {
+                    const currentPixels = cells.slice(0, i + 1);
+
+                    // Store pixel with timing for pixel-wise fading
+                    allPixelsWithTiming.push({
+                        ...cells[i],
+                        drawnAtFrame: frameIndex
+                    });
+
+                    frames.push({
+                        index: frameIndex,
+                        level: level + 1,
+                        pixelSize: pixelSize,
+                        cellsInLevel: cells.length,
+                        cellIndex: i + 1,
+                        currentPixels: currentPixels
+                    });
+
+                    frameIndex++;
+
+                    // Update progress
+                    const progress = (frameIndex / totalFrames) * 100;
+                    progressFill.style.width = `${progress}%`;
+
+                    // Yield to UI every 50 frames
+                    if (frameIndex % 50 === 0) {
+                        await new Promise(r => setTimeout(r, 0));
+                    }
+                }
+
+                // Level complete - store cells for history rendering (level-wise mode)
+                historyLevels.push({
+                    level: level + 1,
+                    cells: cells
+                });
+
+                console.log(`Level ${level + 1} complete: ${cells.length} cells${CONFIG.shufflePixels ? ' (shuffled)' : ''}`);
+            }
+
+            loading.classList.add('hidden');
+            updateDebugPanel(1);
+            showFrame(0);
+        }
+
+        // Show a specific frame
+        function showFrame(index) {
+            if (index < 0 || index >= frames.length) return;
+
+            currentFrame = index;
+            const frame = frames[index];
+
+            renderFrame(frame);
+
+            // Update stats
+            document.getElementById('frame-num').textContent = frame.index + 1;
+            document.getElementById('level-num').textContent = frame.level;
+            document.getElementById('pixel-size').textContent = frame.pixelSize;
+            document.getElementById('cells-in-level').textContent = `${frame.cellIndex}/${frame.cellsInLevel}`;
+
+            // Show interpolated values in pixel mode
+            const interpolatedDiv = document.getElementById('interpolated-values');
+            if (CONFIG.fadeMode === 'pixel') {
+                const progress = frames.length > 0 ? index / frames.length : 0;
+                const currentFadeN = Math.max(1, Math.round(interpolateValue(
+                    CONFIG.fadeEveryNPixelsStart,
+                    CONFIG.fadeEveryNPixelsEnd,
+                    progress
+                )));
+                const currentMaxSteps = Math.max(1, Math.round(interpolateValue(
+                    CONFIG.maxFadeStepsStart,
+                    CONFIG.maxFadeStepsEnd,
+                    progress
+                )));
+                document.getElementById('current-fade-n').textContent = currentFadeN;
+                document.getElementById('current-max-steps').textContent = currentMaxSteps;
+                interpolatedDiv.style.display = 'flex';
+            } else {
+                interpolatedDiv.style.display = 'none';
+            }
+
+            slider.value = index;
+            updateDebugPanel(frame.level);
+        }
+
+        // Play controls
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            document.getElementById('play-btn').textContent = isPlaying ? 'Pause' : 'Play';
+
+            if (isPlaying) {
+                const interval = 100 / speeds[speedIndex];
+                playInterval = setInterval(() => {
+                    if (currentFrame < frames.length - 1) {
+                        showFrame(currentFrame + 1);
+                    } else {
+                        togglePlay();
+                    }
+                }, interval);
+            } else {
+                clearInterval(playInterval);
+            }
+        }
+
+        function updateSpeed() {
+            document.getElementById('speed-display').textContent = `${speeds[speedIndex]}x`;
+            if (isPlaying) {
+                clearInterval(playInterval);
+                const interval = 100 / speeds[speedIndex];
+                playInterval = setInterval(() => {
+                    if (currentFrame < frames.length - 1) {
+                        showFrame(currentFrame + 1);
+                    } else {
+                        togglePlay();
+                    }
+                }, interval);
+            }
+        }
+
+        // Event listeners
+        slider.addEventListener('input', (e) => {
+            showFrame(parseInt(e.target.value));
+        });
+
+        document.getElementById('play-btn').addEventListener('click', togglePlay);
+
+        document.getElementById('slower-btn').addEventListener('click', () => {
+            if (speedIndex > 0) {
+                speedIndex--;
+                updateSpeed();
+            }
+        });
+
+        document.getElementById('faster-btn').addEventListener('click', () => {
+            if (speedIndex < speeds.length - 1) {
+                speedIndex++;
+                updateSpeed();
+            }
+        });
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') {
+                showFrame(Math.min(currentFrame + 1, frames.length - 1));
+            } else if (e.key === 'ArrowLeft') {
+                showFrame(Math.max(currentFrame - 1, 0));
+            } else if (e.key === ' ') {
+                e.preventDefault();
+                togglePlay();
+            }
+        });
+
+        // Tuning controls
+        const tuneOpacity = document.getElementById('tune-opacity');
+        const tuneOverlap = document.getElementById('tune-overlap');
+        const tuneStroke = document.getElementById('tune-stroke');
+        const tuneOutlineColor = document.getElementById('tune-outline-color');
+        const tuneOrder = document.getElementById('tune-order');
+        const tuneFadeMode = document.getElementById('tune-fade-mode');
+        const tuneFadeNStart = document.getElementById('tune-fade-n-start');
+        const tuneFadeNEnd = document.getElementById('tune-fade-n-end');
+        const tuneMaxFadeStart = document.getElementById('tune-max-fade-start');
+        const tuneMaxFadeEnd = document.getElementById('tune-max-fade-end');
+        const fadeNStartContainer = document.getElementById('fade-n-start-container');
+        const fadeNEndContainer = document.getElementById('fade-n-end-container');
+        const maxFadeStartContainer = document.getElementById('max-fade-start-container');
+        const maxFadeEndContainer = document.getElementById('max-fade-end-container');
+        const exportField = document.getElementById('export-field');
+
+        // Pixel size curve controls
+        const tuneMaxPixel = document.getElementById('tune-max-pixel');
+        const tuneMinPixel = document.getElementById('tune-min-pixel');
+        const tuneNumLevels = document.getElementById('tune-num-levels');
+
+        // Color controls
+        const tunePreset = document.getElementById('tune-preset');
+        const tuneBgColor = document.getElementById('tune-bg-color');
+        const tuneBgColorText = document.getElementById('tune-bg-color-text');
+        const tunePixelColor = document.getElementById('tune-pixel-color');
+        const tunePixelColorText = document.getElementById('tune-pixel-color-text');
+
+        // Pulse controls
+        const tunePulseScale = document.getElementById('tune-pulse-scale');
+        const tunePulseGlow = document.getElementById('tune-pulse-glow');
+        const tunePulseBrightness = document.getElementById('tune-pulse-brightness');
+        const tunePulseFrequency = document.getElementById('tune-pulse-frequency');
+        const tunePulseCurve = document.getElementById('tune-pulse-curve');
+
+        // Curve editor (fade)
+        const curveCanvas = document.getElementById('curve-canvas');
+        const curveCtx = curveCanvas.getContext('2d');
+        const CURVE_PADDING = 20;
+        let dragPointIndex = -1;
+
+        // Pixel size curve editor
+        const pixelCurveCanvas = document.getElementById('pixel-curve-canvas');
+        const pixelCurveCtx = pixelCurveCanvas.getContext('2d');
+        let pixelDragPointIndex = -1;
+
+        function drawCurveEditor() {
+            const w = curveCanvas.width;
+            const h = curveCanvas.height;
+            const plotW = w - CURVE_PADDING * 2;
+            const plotH = h - CURVE_PADDING * 2;
+
+            curveCtx.clearRect(0, 0, w, h);
+
+            // Draw grid
+            curveCtx.strokeStyle = '#ddd';
+            curveCtx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const x = CURVE_PADDING + (plotW * i / 4);
+                const y = CURVE_PADDING + (plotH * i / 4);
+                curveCtx.beginPath();
+                curveCtx.moveTo(x, CURVE_PADDING);
+                curveCtx.lineTo(x, h - CURVE_PADDING);
+                curveCtx.stroke();
+                curveCtx.beginPath();
+                curveCtx.moveTo(CURVE_PADDING, y);
+                curveCtx.lineTo(w - CURVE_PADDING, y);
+                curveCtx.stroke();
+            }
+
+            // Draw curve
+            curveCtx.strokeStyle = CONFIG.pixelColor;
+            curveCtx.lineWidth = 2;
+            curveCtx.beginPath();
+            for (let t = 0; t <= 1; t += 0.01) {
+                const y = evaluateBezierCurve(CONFIG.fadeCurve, t);
+                const px = CURVE_PADDING + t * plotW;
+                const py = h - CURVE_PADDING - y * plotH;
+                if (t === 0) curveCtx.moveTo(px, py);
+                else curveCtx.lineTo(px, py);
+            }
+            curveCtx.stroke();
+
+            // Draw control points
+            CONFIG.fadeCurve.forEach((point, i) => {
+                const px = CURVE_PADDING + point[0] * plotW;
+                const py = h - CURVE_PADDING - point[1] * plotH;
+
+                curveCtx.fillStyle = i === dragPointIndex ? '#ff6600' : CONFIG.pixelColor;
+                curveCtx.beginPath();
+                curveCtx.arc(px, py, 8, 0, Math.PI * 2);
+                curveCtx.fill();
+
+                curveCtx.fillStyle = '#fff';
+                curveCtx.beginPath();
+                curveCtx.arc(px, py, 4, 0, Math.PI * 2);
+                curveCtx.fill();
+            });
+        }
+
+        function getCurvePoint(e) {
+            const rect = curveCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const w = curveCanvas.width;
+            const h = curveCanvas.height;
+            const plotW = w - CURVE_PADDING * 2;
+            const plotH = h - CURVE_PADDING * 2;
+
+            const normalX = Math.max(0, Math.min(1, (x - CURVE_PADDING) / plotW));
+            const normalY = Math.max(0, Math.min(1, 1 - (y - CURVE_PADDING) / plotH));
+            return [normalX, normalY];
+        }
+
+        function findNearestPoint(e) {
+            const [mx, my] = getCurvePoint(e);
+            let nearest = -1;
+            let minDist = 0.1; // threshold
+
+            CONFIG.fadeCurve.forEach((point, i) => {
+                const dist = Math.sqrt(Math.pow(point[0] - mx, 2) + Math.pow(point[1] - my, 2));
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearest = i;
+                }
+            });
+            return nearest;
+        }
+
+        curveCanvas.addEventListener('mousedown', (e) => {
+            dragPointIndex = findNearestPoint(e);
+            if (dragPointIndex >= 0) {
+                drawCurveEditor();
+            }
+        });
+
+        curveCanvas.addEventListener('mousemove', (e) => {
+            if (dragPointIndex >= 0) {
+                const [x, y] = getCurvePoint(e);
+                // First and last points: only allow Y movement
+                if (dragPointIndex === 0) {
+                    CONFIG.fadeCurve[0] = [0, y];
+                } else if (dragPointIndex === CONFIG.fadeCurve.length - 1) {
+                    CONFIG.fadeCurve[dragPointIndex] = [1, y];
+                } else {
+                    CONFIG.fadeCurve[dragPointIndex] = [x, y];
+                }
+                drawCurveEditor();
+                updateExportField();
+                // Live preview
+                if (frames.length > 0) {
+                    showFrame(currentFrame);
+                }
+            }
+        });
+
+        curveCanvas.addEventListener('mouseup', () => {
+            dragPointIndex = -1;
+            drawCurveEditor();
+        });
+
+        curveCanvas.addEventListener('mouseleave', () => {
+            if (dragPointIndex >= 0) {
+                dragPointIndex = -1;
+                drawCurveEditor();
+            }
+        });
+
+        // Pixel size curve editor functions
+        function drawPixelCurveEditor() {
+            const w = pixelCurveCanvas.width;
+            const h = pixelCurveCanvas.height;
+            const plotW = w - CURVE_PADDING * 2;
+            const plotH = h - CURVE_PADDING * 2;
+
+            pixelCurveCtx.clearRect(0, 0, w, h);
+
+            // Draw grid
+            pixelCurveCtx.strokeStyle = '#ddd';
+            pixelCurveCtx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const x = CURVE_PADDING + (plotW * i / 4);
+                const y = CURVE_PADDING + (plotH * i / 4);
+                pixelCurveCtx.beginPath();
+                pixelCurveCtx.moveTo(x, CURVE_PADDING);
+                pixelCurveCtx.lineTo(x, h - CURVE_PADDING);
+                pixelCurveCtx.stroke();
+                pixelCurveCtx.beginPath();
+                pixelCurveCtx.moveTo(CURVE_PADDING, y);
+                pixelCurveCtx.lineTo(w - CURVE_PADDING, y);
+                pixelCurveCtx.stroke();
+            }
+
+            // Draw axis labels
+            pixelCurveCtx.fillStyle = '#999';
+            pixelCurveCtx.font = '10px system-ui';
+            pixelCurveCtx.textAlign = 'right';
+            pixelCurveCtx.fillText(`${CONFIG.maxPixelSize}px`, CURVE_PADDING - 4, h - CURVE_PADDING + 4);
+            pixelCurveCtx.fillText(`${CONFIG.minPixelSize}px`, CURVE_PADDING - 4, CURVE_PADDING + 4);
+
+            // Draw curve
+            pixelCurveCtx.strokeStyle = '#cc6600';
+            pixelCurveCtx.lineWidth = 2;
+            pixelCurveCtx.beginPath();
+            for (let t = 0; t <= 1; t += 0.01) {
+                const curveY = evaluateBezierCurve(CONFIG.pixelSizeCurve, t);
+                const px = CURVE_PADDING + t * plotW;
+                // curveY=0 means maxPixel (bottom), curveY=1 means minPixel (top)
+                const py = h - CURVE_PADDING - curveY * plotH;
+                if (t === 0) pixelCurveCtx.moveTo(px, py);
+                else pixelCurveCtx.lineTo(px, py);
+            }
+            pixelCurveCtx.stroke();
+
+            // Draw sampled level points
+            pixelCurveCtx.fillStyle = 'rgba(204, 102, 0, 0.3)';
+            for (let i = 0; i < CONFIG.numLevels; i++) {
+                const t = i / (CONFIG.numLevels - 1);
+                const curveY = evaluateBezierCurve(CONFIG.pixelSizeCurve, t);
+                const px = CURVE_PADDING + t * plotW;
+                const py = h - CURVE_PADDING - curveY * plotH;
+                pixelCurveCtx.beginPath();
+                pixelCurveCtx.arc(px, py, 3, 0, Math.PI * 2);
+                pixelCurveCtx.fill();
+            }
+
+            // Draw control points
+            CONFIG.pixelSizeCurve.forEach((point, i) => {
+                const px = CURVE_PADDING + point[0] * plotW;
+                const py = h - CURVE_PADDING - point[1] * plotH;
+
+                pixelCurveCtx.fillStyle = i === pixelDragPointIndex ? '#ff6600' : '#cc6600';
+                pixelCurveCtx.beginPath();
+                pixelCurveCtx.arc(px, py, 8, 0, Math.PI * 2);
+                pixelCurveCtx.fill();
+
+                pixelCurveCtx.fillStyle = '#fff';
+                pixelCurveCtx.beginPath();
+                pixelCurveCtx.arc(px, py, 4, 0, Math.PI * 2);
+                pixelCurveCtx.fill();
+            });
+
+            // Update preview
+            updatePixelSizesPreview();
+        }
+
+        function updatePixelSizesPreview() {
+            const sizes = [];
+            for (let i = 0; i < CONFIG.numLevels; i++) {
+                const t = i / (CONFIG.numLevels - 1);
+                const curveY = evaluateBezierCurve(CONFIG.pixelSizeCurve, t);
+                const size = Math.round(CONFIG.maxPixelSize - curveY * (CONFIG.maxPixelSize - CONFIG.minPixelSize));
+                if (sizes.length === 0 || sizes[sizes.length - 1] !== size) {
+                    sizes.push(size);
+                }
+            }
+            if (sizes[sizes.length - 1] !== CONFIG.minPixelSize) {
+                sizes.push(CONFIG.minPixelSize);
+            }
+            document.getElementById('pixel-sizes-preview').textContent =
+                `${sizes.length} Level: [${sizes.join(', ')}]`;
+        }
+
+        function getPixelCurvePoint(e) {
+            const rect = pixelCurveCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const w = pixelCurveCanvas.width;
+            const h = pixelCurveCanvas.height;
+            const plotW = w - CURVE_PADDING * 2;
+            const plotH = h - CURVE_PADDING * 2;
+
+            const normalX = Math.max(0, Math.min(1, (x - CURVE_PADDING) / plotW));
+            // Y: top = 1 (minPixel), bottom = 0 (maxPixel)
+            const normalY = Math.max(0, Math.min(1, 1 - (y - CURVE_PADDING) / plotH));
+            return [normalX, normalY];
+        }
+
+        function findNearestPixelCurvePoint(e) {
+            const [mx, my] = getPixelCurvePoint(e);
+            let nearest = -1;
+            let minDist = 0.1;
+
+            CONFIG.pixelSizeCurve.forEach((point, i) => {
+                const dist = Math.sqrt(Math.pow(point[0] - mx, 2) + Math.pow(point[1] - my, 2));
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearest = i;
+                }
+            });
+            return nearest;
+        }
+
+        pixelCurveCanvas.addEventListener('mousedown', (e) => {
+            pixelDragPointIndex = findNearestPixelCurvePoint(e);
+            if (pixelDragPointIndex >= 0) {
+                drawPixelCurveEditor();
+            }
+        });
+
+        pixelCurveCanvas.addEventListener('mousemove', (e) => {
+            if (pixelDragPointIndex >= 0) {
+                const [x, y] = getPixelCurvePoint(e);
+                // First and last points: only allow Y movement
+                if (pixelDragPointIndex === 0) {
+                    CONFIG.pixelSizeCurve[0] = [0, y];
+                } else if (pixelDragPointIndex === CONFIG.pixelSizeCurve.length - 1) {
+                    CONFIG.pixelSizeCurve[pixelDragPointIndex] = [1, y];
+                } else {
+                    CONFIG.pixelSizeCurve[pixelDragPointIndex] = [x, y];
+                }
+                drawPixelCurveEditor();
+                updateExportField();
+            }
+        });
+
+        pixelCurveCanvas.addEventListener('mouseup', () => {
+            pixelDragPointIndex = -1;
+            drawPixelCurveEditor();
+        });
+
+        pixelCurveCanvas.addEventListener('mouseleave', () => {
+            if (pixelDragPointIndex >= 0) {
+                pixelDragPointIndex = -1;
+                drawPixelCurveEditor();
+            }
+        });
+
+        // Pixel size slider event listeners
+        tuneMaxPixel.addEventListener('input', () => {
+            CONFIG.maxPixelSize = parseInt(tuneMaxPixel.value);
+            document.getElementById('tune-max-pixel-val').textContent = `${CONFIG.maxPixelSize}px`;
+            drawPixelCurveEditor();
+            updateExportField();
+        });
+
+        tuneMinPixel.addEventListener('input', () => {
+            CONFIG.minPixelSize = parseInt(tuneMinPixel.value);
+            document.getElementById('tune-min-pixel-val').textContent = `${CONFIG.minPixelSize}px`;
+            drawPixelCurveEditor();
+            updateExportField();
+        });
+
+        tuneNumLevels.addEventListener('input', () => {
+            CONFIG.numLevels = parseInt(tuneNumLevels.value);
+            document.getElementById('tune-num-levels-val').textContent = CONFIG.numLevels;
+            drawPixelCurveEditor();
+            updateExportField();
+        });
+
+        function updateExportField() {
+            const params = {
+                bgColor: CONFIG.bgColor,
+                pixelColor: CONFIG.pixelColor,
+                pixelOpacity: parseFloat(tuneOpacity.value),
+                fadeCurve: CONFIG.fadeCurve.map(p => [Math.round(p[0] * 100) / 100, Math.round(p[1] * 100) / 100]),
+                pixelSizeCurve: CONFIG.pixelSizeCurve.map(p => [Math.round(p[0] * 100) / 100, Math.round(p[1] * 100) / 100]),
+                maxPixelSize: CONFIG.maxPixelSize,
+                minPixelSize: CONFIG.minPixelSize,
+                numLevels: CONFIG.numLevels,
+                overlapThreshold: parseFloat(tuneOverlap.value),
+                outlineStrokeWidth: parseInt(tuneStroke.value),
+                outlineColor: CONFIG.outlineColor,
+                shufflePixels: CONFIG.shufflePixels,
+                fadeMode: CONFIG.fadeMode,
+                fadeEveryNPixelsStart: CONFIG.fadeEveryNPixelsStart,
+                fadeEveryNPixelsEnd: CONFIG.fadeEveryNPixelsEnd,
+                maxFadeStepsStart: CONFIG.maxFadeStepsStart,
+                maxFadeStepsEnd: CONFIG.maxFadeStepsEnd,
+                pulseScale: CONFIG.pulseScale,
+                pulseGlow: CONFIG.pulseGlow,
+                pulseBrightness: CONFIG.pulseBrightness,
+                pulseFrequency: CONFIG.pulseFrequency,
+                pulseCurve: CONFIG.pulseCurve
+            };
+            exportField.value = JSON.stringify(params);
+        }
+
+        function updateTuningDisplay() {
+            document.getElementById('tune-opacity-val').textContent = tuneOpacity.value;
+            document.getElementById('tune-overlap-val').textContent = tuneOverlap.value;
+            document.getElementById('tune-stroke-val').textContent = tuneStroke.value;
+            document.getElementById('tune-fade-n-start-val').textContent = tuneFadeNStart.value;
+            document.getElementById('tune-fade-n-end-val').textContent = tuneFadeNEnd.value;
+            document.getElementById('tune-max-fade-start-val').textContent = tuneMaxFadeStart.value;
+            document.getElementById('tune-max-fade-end-val').textContent = tuneMaxFadeEnd.value;
+            // Show/hide pixel-mode sliders based on mode
+            const isPixelMode = CONFIG.fadeMode === 'pixel';
+            fadeNStartContainer.style.display = isPixelMode ? 'flex' : 'none';
+            fadeNEndContainer.style.display = isPixelMode ? 'flex' : 'none';
+            maxFadeStartContainer.style.display = isPixelMode ? 'flex' : 'none';
+            maxFadeEndContainer.style.display = isPixelMode ? 'flex' : 'none';
+            updateExportField();
+            drawCurveEditor();
+            drawPixelCurveEditor();
+        }
+
+        // Live update for stroke width (doesn't need regeneration)
+        tuneStroke.addEventListener('input', () => {
+            CONFIG.outlineStrokeWidth = parseInt(tuneStroke.value);
+            updateTuningDisplay();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
+        // Live update for outline color
+        tuneOutlineColor.addEventListener('change', () => {
+            CONFIG.outlineColor = tuneOutlineColor.value;
+            updateExportField();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
+        // Live update for opacity (doesn't need regeneration for current frame)
+        tuneOpacity.addEventListener('input', () => {
+            CONFIG.pixelOpacity = parseFloat(tuneOpacity.value);
+            updateTuningDisplay();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
+        // These need regeneration
+        tuneOverlap.addEventListener('input', updateTuningDisplay);
+
+        // Order toggle (needs regeneration)
+        tuneOrder.addEventListener('change', () => {
+            CONFIG.shufflePixels = tuneOrder.value === 'shuffle';
+            updateExportField();
+        });
+
+        // Fade mode toggle (live update)
+        tuneFadeMode.addEventListener('change', () => {
+            CONFIG.fadeMode = tuneFadeMode.value;
+            updateTuningDisplay();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
+        // Fade N sliders (live update)
+        tuneFadeNStart.addEventListener('input', () => {
+            CONFIG.fadeEveryNPixelsStart = parseInt(tuneFadeNStart.value);
+            updateTuningDisplay();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
+        tuneFadeNEnd.addEventListener('input', () => {
+            CONFIG.fadeEveryNPixelsEnd = parseInt(tuneFadeNEnd.value);
+            updateTuningDisplay();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
+        // Max fade steps sliders (live update)
+        tuneMaxFadeStart.addEventListener('input', () => {
+            CONFIG.maxFadeStepsStart = parseInt(tuneMaxFadeStart.value);
+            updateTuningDisplay();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
+        tuneMaxFadeEnd.addEventListener('input', () => {
+            CONFIG.maxFadeStepsEnd = parseInt(tuneMaxFadeEnd.value);
+            updateTuningDisplay();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
+        // Color preset handler
+        tunePreset.addEventListener('change', () => {
+            const preset = tunePreset.value;
+            if (preset !== 'custom' && COLOR_PRESETS[preset]) {
+                const colors = COLOR_PRESETS[preset];
+                CONFIG.bgColor = colors.bg;
+                CONFIG.pixelColor = colors.pixel;
+                CONFIG.outlineColor = colors.outline;
+                // Update UI
+                tuneBgColor.value = colors.bg;
+                tuneBgColorText.value = colors.bg;
+                tunePixelColor.value = colors.pixel;
+                tunePixelColorText.value = colors.pixel;
+                tuneOutlineColor.value = colors.outline;
+                updateExportField();
+                if (frames.length > 0) {
+                    showFrame(currentFrame);
+                }
+            }
+        });
+
+        // Background color handlers
+        tuneBgColor.addEventListener('input', () => {
+            CONFIG.bgColor = tuneBgColor.value;
+            tuneBgColorText.value = tuneBgColor.value;
+            tunePreset.value = 'custom';
+            updateExportField();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
+        tuneBgColorText.addEventListener('input', () => {
+            const val = tuneBgColorText.value;
+            if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+                CONFIG.bgColor = val;
+                tuneBgColor.value = val;
+                tunePreset.value = 'custom';
+                updateExportField();
+                if (frames.length > 0) {
+                    showFrame(currentFrame);
+                }
+            }
+        });
+
+        // Pixel color handlers
+        tunePixelColor.addEventListener('input', () => {
+            CONFIG.pixelColor = tunePixelColor.value;
+            tunePixelColorText.value = tunePixelColor.value;
+            tunePreset.value = 'custom';
+            updateExportField();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
+        tunePixelColorText.addEventListener('input', () => {
+            const val = tunePixelColorText.value;
+            if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+                CONFIG.pixelColor = val;
+                tunePixelColor.value = val;
+                tunePreset.value = 'custom';
+                updateExportField();
+                if (frames.length > 0) {
+                    showFrame(currentFrame);
+                }
+            }
+        });
+
+        // Pulse scale handler
+        tunePulseScale.addEventListener('input', () => {
+            CONFIG.pulseScale = parseFloat(tunePulseScale.value);
+            document.getElementById('tune-pulse-scale-val').textContent = CONFIG.pulseScale;
+            updateExportField();
+        });
+
+        // Pulse glow handler
+        tunePulseGlow.addEventListener('input', () => {
+            CONFIG.pulseGlow = parseFloat(tunePulseGlow.value);
+            document.getElementById('tune-pulse-glow-val').textContent = CONFIG.pulseGlow;
+            updateExportField();
+        });
+
+        // Pulse brightness handler
+        tunePulseBrightness.addEventListener('input', () => {
+            CONFIG.pulseBrightness = parseFloat(tunePulseBrightness.value);
+            document.getElementById('tune-pulse-brightness-val').textContent = CONFIG.pulseBrightness;
+            updateExportField();
+        });
+
+        // Pulse frequency handler
+        tunePulseFrequency.addEventListener('input', () => {
+            CONFIG.pulseFrequency = parseFloat(tunePulseFrequency.value);
+            document.getElementById('tune-pulse-frequency-val').textContent = CONFIG.pulseFrequency;
+            updateExportField();
+        });
+
+        // Pulse curve handler
+        tunePulseCurve.addEventListener('change', () => {
+            CONFIG.pulseCurve = tunePulseCurve.value;
+            updateExportField();
+        });
+
+        document.getElementById('copy-btn').addEventListener('click', () => {
+            exportField.select();
+            navigator.clipboard.writeText(exportField.value);
+            document.getElementById('copy-btn').textContent = 'Copied!';
+            setTimeout(() => {
+                document.getElementById('copy-btn').textContent = 'Copy';
+            }, 1500);
+        });
+
+        document.getElementById('apply-btn').addEventListener('click', async () => {
+            // Try to parse JSON from export field first
+            try {
+                const jsonStr = exportField.value.trim();
+                if (jsonStr) {
+                    const params = JSON.parse(jsonStr);
+
+                    // Apply all parsed values to CONFIG
+                    if (params.bgColor !== undefined) CONFIG.bgColor = params.bgColor;
+                    if (params.pixelColor !== undefined) CONFIG.pixelColor = params.pixelColor;
+                    if (params.pixelOpacity !== undefined) CONFIG.pixelOpacity = params.pixelOpacity;
+                    if (params.overlapThreshold !== undefined) CONFIG.overlapThreshold = params.overlapThreshold;
+                    if (params.outlineStrokeWidth !== undefined) CONFIG.outlineStrokeWidth = params.outlineStrokeWidth;
+                    if (params.outlineColor !== undefined) CONFIG.outlineColor = params.outlineColor;
+                    if (params.shufflePixels !== undefined) CONFIG.shufflePixels = params.shufflePixels;
+                    if (params.fadeMode !== undefined) CONFIG.fadeMode = params.fadeMode;
+                    if (params.fadeEveryNPixelsStart !== undefined) CONFIG.fadeEveryNPixelsStart = params.fadeEveryNPixelsStart;
+                    if (params.fadeEveryNPixelsEnd !== undefined) CONFIG.fadeEveryNPixelsEnd = params.fadeEveryNPixelsEnd;
+                    if (params.maxFadeStepsStart !== undefined) CONFIG.maxFadeStepsStart = params.maxFadeStepsStart;
+                    if (params.maxFadeStepsEnd !== undefined) CONFIG.maxFadeStepsEnd = params.maxFadeStepsEnd;
+                    if (params.maxPixelSize !== undefined) CONFIG.maxPixelSize = params.maxPixelSize;
+                    if (params.minPixelSize !== undefined) CONFIG.minPixelSize = params.minPixelSize;
+                    if (params.numLevels !== undefined) CONFIG.numLevels = params.numLevels;
+                    if (params.fadeCurve !== undefined) CONFIG.fadeCurve = params.fadeCurve;
+                    if (params.pixelSizeCurve !== undefined) CONFIG.pixelSizeCurve = params.pixelSizeCurve;
+                    if (params.pulseScale !== undefined) CONFIG.pulseScale = params.pulseScale;
+                    if (params.pulseGlow !== undefined) CONFIG.pulseGlow = params.pulseGlow;
+                    if (params.pulseBrightness !== undefined) CONFIG.pulseBrightness = params.pulseBrightness;
+                    if (params.pulseFrequency !== undefined) CONFIG.pulseFrequency = params.pulseFrequency;
+                    if (params.pulseCurve !== undefined) CONFIG.pulseCurve = params.pulseCurve;
+
+                    // Update all UI elements to match CONFIG
+                    initializeSliders();
+                    updateTuningDisplay();
+                    drawCurveEditor();
+                    drawPixelCurveEditor();
+
+                    // Set preset to custom since we loaded external values
+                    tunePreset.value = 'custom';
+                }
+            } catch (e) {
+                console.warn('Could not parse JSON from export field, using current slider values:', e);
+            }
+
+            // Reset and regenerate
+            frames = [];
+            levelStats = [];
+            historyLevels = [];
+            allPixelsWithTiming = [];
+            loading.classList.remove('hidden');
+            await generateFrames();
+        });
+
+        // Initialize sliders from CONFIG
+        function initializeSliders() {
+            tuneOpacity.value = CONFIG.pixelOpacity;
+            tuneOverlap.value = CONFIG.overlapThreshold;
+            tuneStroke.value = CONFIG.outlineStrokeWidth;
+            tuneOutlineColor.value = CONFIG.outlineColor;
+            tuneOrder.value = CONFIG.shufflePixels ? 'shuffle' : 'scanline';
+            tuneFadeMode.value = CONFIG.fadeMode;
+            tuneFadeNStart.value = CONFIG.fadeEveryNPixelsStart;
+            tuneFadeNEnd.value = CONFIG.fadeEveryNPixelsEnd;
+            tuneMaxFadeStart.value = CONFIG.maxFadeStepsStart;
+            tuneMaxFadeEnd.value = CONFIG.maxFadeStepsEnd;
+            // Pixel size curve sliders
+            tuneMaxPixel.value = CONFIG.maxPixelSize;
+            tuneMinPixel.value = CONFIG.minPixelSize;
+            tuneNumLevels.value = CONFIG.numLevels;
+            document.getElementById('tune-max-pixel-val').textContent = `${CONFIG.maxPixelSize}px`;
+            document.getElementById('tune-min-pixel-val').textContent = `${CONFIG.minPixelSize}px`;
+            document.getElementById('tune-num-levels-val').textContent = CONFIG.numLevels;
+            // Color controls
+            tuneBgColor.value = CONFIG.bgColor;
+            tuneBgColorText.value = CONFIG.bgColor;
+            tunePixelColor.value = CONFIG.pixelColor;
+            tunePixelColorText.value = CONFIG.pixelColor;
+            // Pulse controls
+            tunePulseScale.value = CONFIG.pulseScale;
+            document.getElementById('tune-pulse-scale-val').textContent = CONFIG.pulseScale;
+            tunePulseGlow.value = CONFIG.pulseGlow;
+            document.getElementById('tune-pulse-glow-val').textContent = CONFIG.pulseGlow;
+            tunePulseBrightness.value = CONFIG.pulseBrightness;
+            document.getElementById('tune-pulse-brightness-val').textContent = CONFIG.pulseBrightness;
+            tunePulseFrequency.value = CONFIG.pulseFrequency;
+            document.getElementById('tune-pulse-frequency-val').textContent = CONFIG.pulseFrequency;
+            tunePulseCurve.value = CONFIG.pulseCurve;
+        }
+
+        // Pulse animation loop
+        function startPulseAnimation() {
+            function animate() {
+                pulsePhase = (pulsePhase + CONFIG.pulseFrequency) % (Math.PI * 2);
+                if (frames.length > 0 && !isPlaying) {
+                    // Only re-render when not playing (playing already re-renders)
+                    showFrame(currentFrame);
+                }
+                pulseAnimationId = requestAnimationFrame(animate);
+            }
+            if (!pulseAnimationId) {
+                animate();
+            }
+        }
+
+        // Wait for font to load, then generate
+        document.fonts.ready.then(() => {
+            initializeSliders();
+            updateTuningDisplay();
+            generateFrames();
+            startPulseAnimation();
+        });
+    </script>
+</body>
+</html>
