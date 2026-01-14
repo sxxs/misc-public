@@ -318,6 +318,35 @@
             right: 2px;
             bottom: 2px;
         }
+
+        .curve-section {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .curve-editor-item {
+            flex: 1;
+            min-width: 350px;
+        }
+
+        .curve-editor-item h4 {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .pixel-size-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .pixel-size-controls .tuning-item {
+            flex: 1;
+            min-width: 100px;
+        }
     </style>
 </head>
 <body>
@@ -437,11 +466,42 @@
             </div>
         </div>
         <div class="curve-editor">
-            <label>Fade-Kurve (X: Level, Y: Fade zu Weiß) — Punkte draggen</label>
-            <div class="curve-canvas-container">
-                <canvas id="curve-canvas" width="400" height="200"></canvas>
-                <span class="curve-axis-label y-axis">Fade→Weiß</span>
-                <span class="curve-axis-label x-axis">Level→</span>
+            <label>Kurven-Editoren — Punkte draggen</label>
+            <div class="curve-section">
+                <div class="curve-editor-item">
+                    <h4>Pixelgrößen-Progression (Y: Größe, X: Level)</h4>
+                    <div class="pixel-size-controls">
+                        <div class="tuning-item">
+                            <label>Max Pixel</label>
+                            <input type="range" id="tune-max-pixel" min="20" max="200" step="1" value="100">
+                            <span class="value-display" id="tune-max-pixel-val">100px</span>
+                        </div>
+                        <div class="tuning-item">
+                            <label>Min Pixel</label>
+                            <input type="range" id="tune-min-pixel" min="2" max="20" step="1" value="4">
+                            <span class="value-display" id="tune-min-pixel-val">4px</span>
+                        </div>
+                        <div class="tuning-item">
+                            <label>Anzahl Levels</label>
+                            <input type="range" id="tune-num-levels" min="3" max="30" step="1" value="15">
+                            <span class="value-display" id="tune-num-levels-val">15</span>
+                        </div>
+                    </div>
+                    <div class="curve-canvas-container">
+                        <canvas id="pixel-curve-canvas" width="400" height="200"></canvas>
+                        <span class="curve-axis-label y-axis">Größe</span>
+                        <span class="curve-axis-label x-axis">Level→</span>
+                    </div>
+                    <div class="value-display" id="pixel-sizes-preview" style="margin-top: 5px; font-size: 0.7rem; word-break: break-all;"></div>
+                </div>
+                <div class="curve-editor-item">
+                    <h4>Fade-Kurve (Y: Fade zu Weiß, X: Level)</h4>
+                    <div class="curve-canvas-container">
+                        <canvas id="curve-canvas" width="400" height="200"></canvas>
+                        <span class="curve-axis-label y-axis">Fade→Weiß</span>
+                        <span class="curve-axis-label x-axis">Level→</span>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="export-section">
@@ -466,8 +526,14 @@
             text: 'WIAI25',
             fontSize: 320,
             fontFamily: 'JetBrains Mono',
-            // Levels 1-14 as per PLAN.md
-            pixelSizes: [100, 80, 64, 50, 40, 32, 25, 20, 16, 12, 10, 8, 6, 5, 4],
+            // Pixel size progression config
+            maxPixelSize: 100,
+            minPixelSize: 4,
+            numLevels: 15,
+            // Bezier curve for pixel size progression [x, y] where x=level progress(0-1), y=size progress(0-1, 0=max, 1=min)
+            pixelSizeCurve: [[0, 0], [0.25, 0.2], [0.5, 0.5], [0.75, 0.8], [1, 1]],
+            // Computed pixel sizes (will be calculated from curve)
+            pixelSizes: [],
             pixelColor: '#1a5f5f',
             pixelOpacity: 0.6,
             overlapThreshold: 0.4,
@@ -486,6 +552,27 @@
             maxFadeStepsStart: 10,
             maxFadeStepsEnd: 200
         };
+
+        // Calculate pixel sizes from bezier curve
+        function calculatePixelSizesFromCurve() {
+            const sizes = [];
+            for (let i = 0; i < CONFIG.numLevels; i++) {
+                const t = i / (CONFIG.numLevels - 1);
+                const curveY = evaluateBezierCurve(CONFIG.pixelSizeCurve, t);
+                // curveY 0 = maxPixelSize, curveY 1 = minPixelSize
+                const size = Math.round(CONFIG.maxPixelSize - curveY * (CONFIG.maxPixelSize - CONFIG.minPixelSize));
+                // Avoid duplicates - only add if different from last
+                if (sizes.length === 0 || sizes[sizes.length - 1] !== size) {
+                    sizes.push(size);
+                }
+            }
+            // Ensure we always have at least min pixel at the end
+            if (sizes[sizes.length - 1] !== CONFIG.minPixelSize) {
+                sizes.push(CONFIG.minPixelSize);
+            }
+            CONFIG.pixelSizes = sizes;
+            return sizes;
+        }
 
         // State
         let frames = [];
@@ -737,6 +824,7 @@
         // Generate all frames
         async function generateFrames() {
             generateTextMask();
+            calculatePixelSizesFromCurve();
 
             let frameIndex = 0;
             let totalFrames = 0;
@@ -950,11 +1038,21 @@
         const maxFadeEndContainer = document.getElementById('max-fade-end-container');
         const exportField = document.getElementById('export-field');
 
-        // Curve editor
+        // Pixel size curve controls
+        const tuneMaxPixel = document.getElementById('tune-max-pixel');
+        const tuneMinPixel = document.getElementById('tune-min-pixel');
+        const tuneNumLevels = document.getElementById('tune-num-levels');
+
+        // Curve editor (fade)
         const curveCanvas = document.getElementById('curve-canvas');
         const curveCtx = curveCanvas.getContext('2d');
         const CURVE_PADDING = 20;
         let dragPointIndex = -1;
+
+        // Pixel size curve editor
+        const pixelCurveCanvas = document.getElementById('pixel-curve-canvas');
+        const pixelCurveCtx = pixelCurveCanvas.getContext('2d');
+        let pixelDragPointIndex = -1;
 
         function drawCurveEditor() {
             const w = curveCanvas.width;
@@ -1078,10 +1176,196 @@
             }
         });
 
+        // Pixel size curve editor functions
+        function drawPixelCurveEditor() {
+            const w = pixelCurveCanvas.width;
+            const h = pixelCurveCanvas.height;
+            const plotW = w - CURVE_PADDING * 2;
+            const plotH = h - CURVE_PADDING * 2;
+
+            pixelCurveCtx.clearRect(0, 0, w, h);
+
+            // Draw grid
+            pixelCurveCtx.strokeStyle = '#ddd';
+            pixelCurveCtx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const x = CURVE_PADDING + (plotW * i / 4);
+                const y = CURVE_PADDING + (plotH * i / 4);
+                pixelCurveCtx.beginPath();
+                pixelCurveCtx.moveTo(x, CURVE_PADDING);
+                pixelCurveCtx.lineTo(x, h - CURVE_PADDING);
+                pixelCurveCtx.stroke();
+                pixelCurveCtx.beginPath();
+                pixelCurveCtx.moveTo(CURVE_PADDING, y);
+                pixelCurveCtx.lineTo(w - CURVE_PADDING, y);
+                pixelCurveCtx.stroke();
+            }
+
+            // Draw axis labels
+            pixelCurveCtx.fillStyle = '#999';
+            pixelCurveCtx.font = '10px system-ui';
+            pixelCurveCtx.textAlign = 'right';
+            pixelCurveCtx.fillText(`${CONFIG.maxPixelSize}px`, CURVE_PADDING - 4, h - CURVE_PADDING + 4);
+            pixelCurveCtx.fillText(`${CONFIG.minPixelSize}px`, CURVE_PADDING - 4, CURVE_PADDING + 4);
+
+            // Draw curve
+            pixelCurveCtx.strokeStyle = '#cc6600';
+            pixelCurveCtx.lineWidth = 2;
+            pixelCurveCtx.beginPath();
+            for (let t = 0; t <= 1; t += 0.01) {
+                const curveY = evaluateBezierCurve(CONFIG.pixelSizeCurve, t);
+                const px = CURVE_PADDING + t * plotW;
+                // curveY=0 means maxPixel (bottom), curveY=1 means minPixel (top)
+                const py = h - CURVE_PADDING - curveY * plotH;
+                if (t === 0) pixelCurveCtx.moveTo(px, py);
+                else pixelCurveCtx.lineTo(px, py);
+            }
+            pixelCurveCtx.stroke();
+
+            // Draw sampled level points
+            pixelCurveCtx.fillStyle = 'rgba(204, 102, 0, 0.3)';
+            for (let i = 0; i < CONFIG.numLevels; i++) {
+                const t = i / (CONFIG.numLevels - 1);
+                const curveY = evaluateBezierCurve(CONFIG.pixelSizeCurve, t);
+                const px = CURVE_PADDING + t * plotW;
+                const py = h - CURVE_PADDING - curveY * plotH;
+                pixelCurveCtx.beginPath();
+                pixelCurveCtx.arc(px, py, 3, 0, Math.PI * 2);
+                pixelCurveCtx.fill();
+            }
+
+            // Draw control points
+            CONFIG.pixelSizeCurve.forEach((point, i) => {
+                const px = CURVE_PADDING + point[0] * plotW;
+                const py = h - CURVE_PADDING - point[1] * plotH;
+
+                pixelCurveCtx.fillStyle = i === pixelDragPointIndex ? '#ff6600' : '#cc6600';
+                pixelCurveCtx.beginPath();
+                pixelCurveCtx.arc(px, py, 8, 0, Math.PI * 2);
+                pixelCurveCtx.fill();
+
+                pixelCurveCtx.fillStyle = '#fff';
+                pixelCurveCtx.beginPath();
+                pixelCurveCtx.arc(px, py, 4, 0, Math.PI * 2);
+                pixelCurveCtx.fill();
+            });
+
+            // Update preview
+            updatePixelSizesPreview();
+        }
+
+        function updatePixelSizesPreview() {
+            const sizes = [];
+            for (let i = 0; i < CONFIG.numLevels; i++) {
+                const t = i / (CONFIG.numLevels - 1);
+                const curveY = evaluateBezierCurve(CONFIG.pixelSizeCurve, t);
+                const size = Math.round(CONFIG.maxPixelSize - curveY * (CONFIG.maxPixelSize - CONFIG.minPixelSize));
+                if (sizes.length === 0 || sizes[sizes.length - 1] !== size) {
+                    sizes.push(size);
+                }
+            }
+            if (sizes[sizes.length - 1] !== CONFIG.minPixelSize) {
+                sizes.push(CONFIG.minPixelSize);
+            }
+            document.getElementById('pixel-sizes-preview').textContent =
+                `${sizes.length} Level: [${sizes.join(', ')}]`;
+        }
+
+        function getPixelCurvePoint(e) {
+            const rect = pixelCurveCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const w = pixelCurveCanvas.width;
+            const h = pixelCurveCanvas.height;
+            const plotW = w - CURVE_PADDING * 2;
+            const plotH = h - CURVE_PADDING * 2;
+
+            const normalX = Math.max(0, Math.min(1, (x - CURVE_PADDING) / plotW));
+            // Y: top = 1 (minPixel), bottom = 0 (maxPixel)
+            const normalY = Math.max(0, Math.min(1, 1 - (y - CURVE_PADDING) / plotH));
+            return [normalX, normalY];
+        }
+
+        function findNearestPixelCurvePoint(e) {
+            const [mx, my] = getPixelCurvePoint(e);
+            let nearest = -1;
+            let minDist = 0.1;
+
+            CONFIG.pixelSizeCurve.forEach((point, i) => {
+                const dist = Math.sqrt(Math.pow(point[0] - mx, 2) + Math.pow(point[1] - my, 2));
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearest = i;
+                }
+            });
+            return nearest;
+        }
+
+        pixelCurveCanvas.addEventListener('mousedown', (e) => {
+            pixelDragPointIndex = findNearestPixelCurvePoint(e);
+            if (pixelDragPointIndex >= 0) {
+                drawPixelCurveEditor();
+            }
+        });
+
+        pixelCurveCanvas.addEventListener('mousemove', (e) => {
+            if (pixelDragPointIndex >= 0) {
+                const [x, y] = getPixelCurvePoint(e);
+                // First and last points: only allow Y movement
+                if (pixelDragPointIndex === 0) {
+                    CONFIG.pixelSizeCurve[0] = [0, y];
+                } else if (pixelDragPointIndex === CONFIG.pixelSizeCurve.length - 1) {
+                    CONFIG.pixelSizeCurve[pixelDragPointIndex] = [1, y];
+                } else {
+                    CONFIG.pixelSizeCurve[pixelDragPointIndex] = [x, y];
+                }
+                drawPixelCurveEditor();
+                updateExportField();
+            }
+        });
+
+        pixelCurveCanvas.addEventListener('mouseup', () => {
+            pixelDragPointIndex = -1;
+            drawPixelCurveEditor();
+        });
+
+        pixelCurveCanvas.addEventListener('mouseleave', () => {
+            if (pixelDragPointIndex >= 0) {
+                pixelDragPointIndex = -1;
+                drawPixelCurveEditor();
+            }
+        });
+
+        // Pixel size slider event listeners
+        tuneMaxPixel.addEventListener('input', () => {
+            CONFIG.maxPixelSize = parseInt(tuneMaxPixel.value);
+            document.getElementById('tune-max-pixel-val').textContent = `${CONFIG.maxPixelSize}px`;
+            drawPixelCurveEditor();
+            updateExportField();
+        });
+
+        tuneMinPixel.addEventListener('input', () => {
+            CONFIG.minPixelSize = parseInt(tuneMinPixel.value);
+            document.getElementById('tune-min-pixel-val').textContent = `${CONFIG.minPixelSize}px`;
+            drawPixelCurveEditor();
+            updateExportField();
+        });
+
+        tuneNumLevels.addEventListener('input', () => {
+            CONFIG.numLevels = parseInt(tuneNumLevels.value);
+            document.getElementById('tune-num-levels-val').textContent = CONFIG.numLevels;
+            drawPixelCurveEditor();
+            updateExportField();
+        });
+
         function updateExportField() {
             const params = {
                 pixelOpacity: parseFloat(tuneOpacity.value),
                 fadeCurve: CONFIG.fadeCurve.map(p => [Math.round(p[0] * 100) / 100, Math.round(p[1] * 100) / 100]),
+                pixelSizeCurve: CONFIG.pixelSizeCurve.map(p => [Math.round(p[0] * 100) / 100, Math.round(p[1] * 100) / 100]),
+                maxPixelSize: CONFIG.maxPixelSize,
+                minPixelSize: CONFIG.minPixelSize,
+                numLevels: CONFIG.numLevels,
                 overlapThreshold: parseFloat(tuneOverlap.value),
                 outlineStrokeWidth: parseInt(tuneStroke.value),
                 outlineColor: tuneOutlineColor.value,
@@ -1111,6 +1395,7 @@
             maxFadeEndContainer.style.display = isPixelMode ? 'flex' : 'none';
             updateExportField();
             drawCurveEditor();
+            drawPixelCurveEditor();
         }
 
         // Live update for stroke width (doesn't need regeneration)
@@ -1211,7 +1496,11 @@
             CONFIG.fadeEveryNPixelsEnd = parseInt(tuneFadeNEnd.value);
             CONFIG.maxFadeStepsStart = parseInt(tuneMaxFadeStart.value);
             CONFIG.maxFadeStepsEnd = parseInt(tuneMaxFadeEnd.value);
-            // fadeCurve is already updated live
+            // Pixel size curve (already updated live via sliders)
+            CONFIG.maxPixelSize = parseInt(tuneMaxPixel.value);
+            CONFIG.minPixelSize = parseInt(tuneMinPixel.value);
+            CONFIG.numLevels = parseInt(tuneNumLevels.value);
+            // pixelSizeCurve is already updated live
 
             // Reset and regenerate
             frames = [];
@@ -1234,6 +1523,13 @@
             tuneFadeNEnd.value = CONFIG.fadeEveryNPixelsEnd;
             tuneMaxFadeStart.value = CONFIG.maxFadeStepsStart;
             tuneMaxFadeEnd.value = CONFIG.maxFadeStepsEnd;
+            // Pixel size curve sliders
+            tuneMaxPixel.value = CONFIG.maxPixelSize;
+            tuneMinPixel.value = CONFIG.minPixelSize;
+            tuneNumLevels.value = CONFIG.numLevels;
+            document.getElementById('tune-max-pixel-val').textContent = `${CONFIG.maxPixelSize}px`;
+            document.getElementById('tune-min-pixel-val').textContent = `${CONFIG.minPixelSize}px`;
+            document.getElementById('tune-num-levels-val').textContent = CONFIG.numLevels;
         }
 
         // Wait for font to load, then generate
