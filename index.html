@@ -589,11 +589,11 @@
             </div>
         </div>
         <div class="export-section">
-            <label>Aktuelle Parameter (zum Kopieren)</label>
+            <label>Parameter (kopieren oder einfügen zum Teilen)</label>
             <div class="export-row">
-                <input type="text" id="export-field" readonly>
+                <input type="text" id="export-field">
                 <button id="copy-btn">Copy</button>
-                <button id="apply-btn">Regenerate</button>
+                <button id="apply-btn">Apply & Regenerate</button>
             </div>
         </div>
     </div>
@@ -1750,20 +1750,46 @@
         });
 
         document.getElementById('apply-btn').addEventListener('click', async () => {
-            CONFIG.pixelOpacity = parseFloat(tuneOpacity.value);
-            CONFIG.overlapThreshold = parseFloat(tuneOverlap.value);
-            CONFIG.outlineStrokeWidth = parseInt(tuneStroke.value);
-            CONFIG.shufflePixels = tuneOrder.value === 'shuffle';
-            CONFIG.fadeMode = tuneFadeMode.value;
-            CONFIG.fadeEveryNPixelsStart = parseInt(tuneFadeNStart.value);
-            CONFIG.fadeEveryNPixelsEnd = parseInt(tuneFadeNEnd.value);
-            CONFIG.maxFadeStepsStart = parseInt(tuneMaxFadeStart.value);
-            CONFIG.maxFadeStepsEnd = parseInt(tuneMaxFadeEnd.value);
-            // Pixel size curve (already updated live via sliders)
-            CONFIG.maxPixelSize = parseInt(tuneMaxPixel.value);
-            CONFIG.minPixelSize = parseInt(tuneMinPixel.value);
-            CONFIG.numLevels = parseInt(tuneNumLevels.value);
-            // pixelSizeCurve is already updated live
+            // Try to parse JSON from export field first
+            try {
+                const jsonStr = exportField.value.trim();
+                if (jsonStr) {
+                    const params = JSON.parse(jsonStr);
+
+                    // Apply all parsed values to CONFIG
+                    if (params.bgColor !== undefined) CONFIG.bgColor = params.bgColor;
+                    if (params.pixelColor !== undefined) CONFIG.pixelColor = params.pixelColor;
+                    if (params.pixelOpacity !== undefined) CONFIG.pixelOpacity = params.pixelOpacity;
+                    if (params.overlapThreshold !== undefined) CONFIG.overlapThreshold = params.overlapThreshold;
+                    if (params.outlineStrokeWidth !== undefined) CONFIG.outlineStrokeWidth = params.outlineStrokeWidth;
+                    if (params.outlineColor !== undefined) CONFIG.outlineColor = params.outlineColor;
+                    if (params.shufflePixels !== undefined) CONFIG.shufflePixels = params.shufflePixels;
+                    if (params.fadeMode !== undefined) CONFIG.fadeMode = params.fadeMode;
+                    if (params.fadeEveryNPixelsStart !== undefined) CONFIG.fadeEveryNPixelsStart = params.fadeEveryNPixelsStart;
+                    if (params.fadeEveryNPixelsEnd !== undefined) CONFIG.fadeEveryNPixelsEnd = params.fadeEveryNPixelsEnd;
+                    if (params.maxFadeStepsStart !== undefined) CONFIG.maxFadeStepsStart = params.maxFadeStepsStart;
+                    if (params.maxFadeStepsEnd !== undefined) CONFIG.maxFadeStepsEnd = params.maxFadeStepsEnd;
+                    if (params.maxPixelSize !== undefined) CONFIG.maxPixelSize = params.maxPixelSize;
+                    if (params.minPixelSize !== undefined) CONFIG.minPixelSize = params.minPixelSize;
+                    if (params.numLevels !== undefined) CONFIG.numLevels = params.numLevels;
+                    if (params.fadeCurve !== undefined) CONFIG.fadeCurve = params.fadeCurve;
+                    if (params.pixelSizeCurve !== undefined) CONFIG.pixelSizeCurve = params.pixelSizeCurve;
+                    if (params.pulseIntensity !== undefined) CONFIG.pulseIntensity = params.pulseIntensity;
+                    if (params.pulseFrequency !== undefined) CONFIG.pulseFrequency = params.pulseFrequency;
+                    if (params.pulseCurve !== undefined) CONFIG.pulseCurve = params.pulseCurve;
+
+                    // Update all UI elements to match CONFIG
+                    initializeSliders();
+                    updateTuningDisplay();
+                    drawCurveEditor();
+                    drawPixelCurveEditor();
+
+                    // Set preset to custom since we loaded external values
+                    tunePreset.value = 'custom';
+                }
+            } catch (e) {
+                console.warn('Could not parse JSON from export field, using current slider values:', e);
+            }
 
             // Reset and regenerate
             frames = [];
