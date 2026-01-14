@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WIAI25 – 25 Jahre Fakultät WIAI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        'accent': '#FACC15',
+                        'accent-dark': '#EAB308',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .section-heading {
+            display: inline-block;
+            background: #171717;
+            color: #FACC15;
+            padding: 10px 28px 10px 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transform: skewX(-6deg);
+            margin-bottom: 1.5rem;
+        }
+        .section-heading span {
+            display: inline-block;
+            transform: skewX(6deg);
+        }
+        .section-heading-light {
+            background: #171717;
+            color: #fff;
+        }
+    </style>
+</head>
+<body class="bg-neutral-100 text-neutral-900 font-sans antialiased">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-neutral-200 px-6 py-4">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div>
+                <a href="#" class="text-xl font-bold tracking-tight">WIAI25</a>
+                <span class="text-neutral-500 text-sm ml-2">Universität Bamberg</span>
+            </div>
+            <div class="flex items-center gap-6">
+                <a href="#programm" class="text-sm text-neutral-600 hover:text-neutral-900">Programm</a>
+                <a href="#geschichten" class="text-sm text-neutral-600 hover:text-neutral-900">Geschichten</a>
+                <a href="#projekte" class="text-sm text-neutral-600 hover:text-neutral-900">Projekte</a>
+                <a href="#anmeldung" class="text-sm font-medium bg-accent hover:bg-accent-dark px-4 py-2 transition-colors">
+                    Anmelden
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="bg-white px-6 py-24 lg:py-32 border-b border-neutral-200">
+        <div class="max-w-5xl mx-auto text-center">
+            
+            <!-- Logo Animation Placeholder -->
+            <div class="mb-12">
+                <div class="inline-block bg-neutral-50 border border-neutral-200 rounded px-16 py-12">
+                    <div class="text-6xl lg:text-8xl font-bold tracking-tight text-neutral-300">
+                        WIAI25
+                    </div>
+                    <div class="text-xs font-mono text-neutral-400 mt-4">
+                        [Animation – wächst mit jedem Besuch]
+                    </div>
+                </div>
+            </div>
+            
+            <h1 class="text-4xl lg:text-5xl font-bold mb-6 text-balance">
+                25 Jahre Informatik in Bamberg.
+            </h1>
+            
+            <p class="text-lg text-neutral-600 mb-10 max-w-2xl mx-auto text-pretty">
+                Vorträge, Live-Demos, Mitmach-Stationen, Kinderuni, Karriere-Gespräche 
+                und 25 Jahre Geschichten. Wir laden ein zur Jubiläumsfeier.
+            </p>
+            
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="#programm" class="bg-neutral-900 text-white px-6 py-3 font-medium hover:bg-neutral-800 transition-colors">
+                    Zum Programm
+                </a>
+                <a href="#anmeldung" class="bg-accent text-neutral-900 px-6 py-3 font-medium hover:bg-accent-dark transition-colors">
+                    Anmeldung
+                </a>
+            </div>
+            
+            <div class="mt-16 pt-8 border-t border-neutral-200 text-sm text-neutral-500">
+                <span class="font-mono">27. Juni 2026</span>
+                <span class="mx-3">·</span>
+                <span>ERBA-Campus, An der Weberei 5, Bamberg</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Für jeden etwas -->
+    <section class="px-6 py-16" id="programm">
+        <div class="max-w-6xl mx-auto">
+            <div class="section-heading"><span>Ein Tag, viele Perspektiven</span></div>
+            
+            <p class="text-neutral-600 mb-10 max-w-2xl">
+                Das Programm bietet Einstiege für verschiedene Interessen – 
+                von der Kinderuni bis zum Fachgespräch.
+            </p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Studieninteressierte -->
+                <div class="bg-white border border-neutral-200 p-6 flex gap-5">
+                    <div class="w-1 bg-accent shrink-0"></div>
+                    <div>
+                        <h3 class="font-semibold mb-2">Studiengänge live erleben</h3>
+                        <p class="text-neutral-600 text-sm mb-3">
+                            Infos zu Bachelor und Master, Gespräche mit Studierenden, 
+                            Einblick in Projekte und Labore. Für alle, die überlegen 
+                            hier zu studieren.
+                        </p>
+                        <span class="text-xs font-mono text-neutral-400">Für Studieninteressierte</span>
+                    </div>
+                </div>
+                
+                <!-- Kinder & Familien -->
+                <div class="bg-white border border-neutral-200 p-6 flex gap-5">
+                    <div class="w-1 bg-accent shrink-0"></div>
+                    <div>
+                        <h3 class="font-semibold mb-2">Kinderuni: Wie denkt ein Computer?</h3>
+                        <p class="text-neutral-600 text-sm mb-3">
+                            Eine Vorlesung für Kinder ab 8 Jahren – parallel zum 
+                            Hauptprogramm. Eltern können in der Zeit die Ausstellung 
+                            besuchen oder Kaffee trinken.
+                        </p>
+                        <span class="text-xs font-mono text-neutral-400">Für Familien</span>
+                    </div>
+                </div>
+                
+                <!-- Alumni -->
+                <div class="bg-white border border-neutral-200 p-6 flex gap-5">
+                    <div class="w-1 bg-accent shrink-0"></div>
+                    <div>
+                        <h3 class="font-semibold mb-2">Wiedersehen nach Jahren</h3>
+                        <p class="text-neutral-600 text-sm mb-3">
+                            Alumni-Treffen nach Jahrgängen, Anekdoten aus der eigenen 
+                            Studienzeit, Wiedersehen mit Ehemaligen und Lehrenden.
+                        </p>
+                        <span class="text-xs font-mono text-neutral-400">Für Alumni</span>
+                    </div>
+                </div>
+                
+                <!-- Unternehmen -->
+                <div class="bg-white border border-neutral-200 p-6 flex gap-5">
+                    <div class="w-1 bg-accent shrink-0"></div>
+                    <div>
+                        <h3 class="font-semibold mb-2">Talente treffen</h3>
+                        <p class="text-neutral-600 text-sm mb-3">
+                            Gespräche mit Studierenden und Promovierenden, Einblick 
+                            in aktuelle Forschungsprojekte, Möglichkeiten zur Zusammenarbeit.
+                        </p>
+                        <span class="text-xs font-mono text-neutral-400">Für Unternehmen & Partner</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Programm Ablauf -->
+    <section class="bg-white px-6 py-16 border-y border-neutral-200">
+        <div class="max-w-6xl mx-auto">
+            <div class="section-heading section-heading-light"><span>Ablauf</span></div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div>
+                    <p class="text-neutral-600 mb-6">
+                        Das vollständige Programm folgt im Frühjahr 2026.
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex gap-4">
+                            <div class="font-mono text-sm text-neutral-400 w-16 shrink-0">14:00</div>
+                            <div>
+                                <div class="font-medium">Ankommen</div>
+                                <div class="text-neutral-500 text-sm">Empfang, erste Gespräche, Ausstellung</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="font-mono text-sm text-neutral-400 w-16 shrink-0">15:00</div>
+                            <div>
+                                <div class="font-medium">Vorträge & Demos</div>
+                                <div class="text-neutral-500 text-sm">Keynote, Kurzvorträge, Live-Demos</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="font-mono text-sm text-neutral-400 w-16 shrink-0">15:00</div>
+                            <div>
+                                <div class="font-medium">Kinderuni</div>
+                                <div class="text-neutral-500 text-sm">Parallel: Vorlesung für Kinder ab 8</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="font-mono text-sm text-neutral-400 w-16 shrink-0">16:30</div>
+                            <div>
+                                <div class="font-medium">Mitmachen & Entdecken</div>
+                                <div class="text-neutral-500 text-sm">Installationen, Stationen, Exponate</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="font-mono text-sm text-neutral-400 w-16 shrink-0">18:00</div>
+                            <div>
+                                <div class="font-medium">Feiern</div>
+                                <div class="text-neutral-500 text-sm">Musik, Essen, Gespräche</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <h3 class="font-semibold">Im Programm</h3>
+                    <ul class="space-y-3 text-sm text-neutral-600">
+                        <li class="flex gap-3">
+                            <span class="text-accent font-bold">—</span>
+                            <span>Keynote von [Name]</span>
+                        </li>
+                        <li class="flex gap-3">
+                            <span class="text-accent font-bold">—</span>
+                            <span>Interaktive Installationen von Studierenden</span>
+                        </li>
+                        <li class="flex gap-3">
+                            <span class="text-accent font-bold">—</span>
+                            <span>Mitmach-Stationen zu KI, Security, HCI</span>
+                        </li>
+                        <li class="flex gap-3">
+                            <span class="text-accent font-bold">—</span>
+                            <span>Studienberatung und Infos zu allen Studiengängen</span>
+                        </li>
+                        <li class="flex gap-3">
+                            <span class="text-accent font-bold">—</span>
+                            <span>Kuriositäten-Ausstellung: 25 Jahre in Bildern</span>
+                        </li>
+                        <li class="flex gap-3">
+                            <span class="text-accent font-bold">—</span>
+                            <span>Alumni-Treffen nach Jahrgängen</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Geschichten -->
+    <section class="px-6 py-16" id="geschichten">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex flex-wrap justify-between items-end gap-4 mb-8">
+                <div class="section-heading"><span>25 Wochen · 25 Geschichten</span></div>
+                <span class="text-sm text-neutral-500 font-mono bg-white border border-neutral-200 px-3 py-1">Woche 1 / 25</span>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+                <!-- Story Card -->
+                <div class="lg:col-span-3 bg-white border border-neutral-200">
+                    <div class="aspect-video bg-neutral-200 flex items-center justify-center text-neutral-400 font-mono text-sm">
+                        [Archivbild]
+                    </div>
+                    <div class="p-6">
+                        <span class="text-sm font-mono text-accent-dark">#01</span>
+                        <h3 class="text-xl font-bold mt-1 mb-3">Wie alles begann</h3>
+                        <p class="text-neutral-600 text-sm mb-4 text-pretty">
+                            2001 öffnet die WIAI ihre Türen. Drei Professoren, fünfundvierzig 
+                            Studierende und eine Idee: Informatik interdisziplinär denken.
+                        </p>
+                        <a href="#" class="text-sm font-medium hover:underline">
+                            Weiterlesen →
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Teaser -->
+                <div class="lg:col-span-2 space-y-4">
+                    <p class="text-neutral-600 text-sm">
+                        Jede Woche bis zur Feier erscheint eine neue Geschichte aus 25 Jahren WIAI.
+                    </p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-3 text-neutral-400">
+                            <span class="font-mono w-8">#02</span>
+                            <span>Nächste Woche</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-neutral-400">
+                            <span class="font-mono w-8">#03</span>
+                            <span>In 2 Wochen</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-neutral-400">
+                            <span class="font-mono w-8">...</span>
+                            <span></span>
+                        </div>
+                        <div class="flex items-center gap-3 text-neutral-400">
+                            <span class="font-mono w-8">#25</span>
+                            <span>Zur Feier am 27.06.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Die WIAI heute -->
+    <section class="px-6 py-12 bg-neutral-900 text-white">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex flex-wrap justify-between items-center gap-8">
+                <div>
+                    <h2 class="font-bold text-lg mb-1">Die WIAI heute</h2>
+                    <p class="text-neutral-400 text-sm">Wirtschaftsinformatik & Angewandte Informatik</p>
+                </div>
+                <div class="flex flex-wrap gap-8 lg:gap-12">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold tabular-nums">33</div>
+                        <div class="text-xs text-neutral-500">Professuren</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold tabular-nums">~200</div>
+                        <div class="text-xs text-neutral-500">Mitarbeitende</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold tabular-nums">8</div>
+                        <div class="text-xs text-neutral-500">Studiengänge</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold tabular-nums">~1.500</div>
+                        <div class="text-xs text-neutral-500">Studierende</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projekte -->
+    <section class="bg-white px-6 py-16 border-b border-neutral-200" id="projekte">
+        <div class="max-w-6xl mx-auto">
+            <div class="section-heading"><span>Hinter den Kulissen</span></div>
+            
+            <p class="text-neutral-600 mb-8 max-w-xl">
+                Studierende entwickeln die interaktiven Stationen für die Feier. 
+                Hier gibt es Updates zum Stand der Dinge.
+            </p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="border-l-4 border-accent bg-neutral-50 p-5">
+                    <h4 class="font-semibold text-sm mb-2">Pattern Match</h4>
+                    <p class="text-neutral-500 text-xs mb-3">
+                        Zwei-Spieler-Spiel: Muster erkennen, schneller sein.
+                    </p>
+                    <span class="text-xs font-mono text-neutral-400">In Arbeit</span>
+                </div>
+                
+                <div class="border-l-4 border-accent bg-neutral-50 p-5">
+                    <h4 class="font-semibold text-sm mb-2">Generative Kunst</h4>
+                    <p class="text-neutral-500 text-xs mb-3">
+                        Per Tastendruck Muster erzeugen, ausdrucken, mitnehmen.
+                    </p>
+                    <span class="text-xs font-mono text-accent-dark">Prototyp läuft</span>
+                </div>
+                
+                <div class="border-l-4 border-neutral-300 bg-neutral-50 p-5">
+                    <h4 class="font-semibold text-sm mb-2">Vorlieben-Quiz</h4>
+                    <p class="text-neutral-500 text-xs mb-3">
+                        Tabs oder Spaces? Live-Visualisierung aller Antworten.
+                    </p>
+                    <span class="text-xs font-mono text-neutral-400">Konzept</span>
+                </div>
+                
+                <div class="border-l-4 border-green-500 bg-neutral-50 p-5">
+                    <h4 class="font-semibold text-sm mb-2">Diese Website</h4>
+                    <p class="text-neutral-500 text-xs mb-3">
+                        Das wachsende Logo, die Geschichten – Sie sind hier.
+                    </p>
+                    <span class="text-xs font-mono text-green-600">Live</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Anmeldung -->
+    <section class="px-6 py-20 bg-neutral-900 text-white" id="anmeldung">
+        <div class="max-w-2xl mx-auto">
+            <h2 class="text-3xl font-bold mb-4 text-center">Anmeldung</h2>
+            <p class="text-neutral-400 mb-10 text-center">
+                27. Juni 2026, ab 14 Uhr<br>
+                ERBA-Campus, An der Weberei 5, Bamberg
+            </p>
+            
+            <div class="bg-neutral-800 p-8 rounded">
+                <p class="text-sm text-neutral-400 mb-6">
+                    Die Anmeldung öffnet im Frühjahr 2026. 
+                    Tragen Sie sich ein, wir erinnern Sie rechtzeitig.
+                </p>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-neutral-400 mb-2">E-Mail</label>
+                        <input type="email" placeholder="ihre@email.de" 
+                               class="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 text-white placeholder-neutral-500 focus:outline-none focus:border-accent">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-neutral-400 mb-2">Ich komme als...</label>
+                        <select class="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 text-white focus:outline-none focus:border-accent">
+                            <option value="">Bitte auswählen</option>
+                            <option value="studieninteressiert">Studieninteressiert / Schüler:in</option>
+                            <option value="familie">Mit Familie / Kindern</option>
+                            <option value="alumni">Alumni</option>
+                            <option value="unternehmen">Unternehmen / Industrie</option>
+                            <option value="forschung">Forschungspartner</option>
+                            <option value="presse">Presse</option>
+                            <option value="sonstige">Interessierte:r</option>
+                        </select>
+                    </div>
+                    
+                    <button class="w-full bg-accent text-neutral-900 px-6 py-3 font-semibold hover:bg-accent-dark transition-colors mt-4">
+                        Erinnerung eintragen
+                    </button>
+                </div>
+                
+                <p class="text-xs text-neutral-500 mt-6">
+                    Wir verwenden die Angabe nur zur Planung und um relevante Infos zu schicken.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="px-6 py-12 bg-white border-t border-neutral-200">
+        <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div class="md:col-span-2">
+                <div class="font-bold mb-2">WIAI25</div>
+                <p class="text-sm text-neutral-500 max-w-sm">
+                    25 Jahre Fakultät Wirtschaftsinformatik und Angewandte Informatik 
+                    an der Otto-Friedrich-Universität Bamberg.
+                </p>
+            </div>
+            <div>
+                <div class="font-medium text-sm mb-3">Jubiläum</div>
+                <div class="flex flex-col gap-2 text-sm text-neutral-600">
+                    <a href="#programm" class="hover:text-neutral-900">Programm</a>
+                    <a href="#geschichten" class="hover:text-neutral-900">Geschichten</a>
+                    <a href="#projekte" class="hover:text-neutral-900">Projekte</a>
+                    <a href="#anmeldung" class="hover:text-neutral-900">Anmeldung</a>
+                </div>
+            </div>
+            <div>
+                <div class="font-medium text-sm mb-3">Mehr</div>
+                <div class="flex flex-col gap-2 text-sm text-neutral-600">
+                    <a href="#" class="hover:text-neutral-900">Über die WIAI</a>
+                    <a href="#" class="hover:text-neutral-900">Studiengänge</a>
+                    <a href="#" class="hover:text-neutral-900">uni-bamberg.de</a>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-6xl mx-auto mt-12 pt-6 border-t border-neutral-200 text-sm text-neutral-400">
+            © 2026 Universität Bamberg · Fakultät WIAI
+        </div>
+    </footer>
+
+</body>
+</html>

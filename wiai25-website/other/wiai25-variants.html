@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WIAI25 – Design Varianten</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;700;800&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'instrument': ['Instrument Serif', 'serif'],
+                        'mono': ['JetBrains Mono', 'monospace'],
+                        'syne': ['Syne', 'sans-serif'],
+                        'crimson': ['Crimson Pro', 'serif'],
+                        'dm': ['DM Sans', 'sans-serif'],
+                        'libre': ['Libre Baskerville', 'serif'],
+                    },
+                    colors: {
+                        'ink': '#0a0a0a',
+                        'paper': '#f5f2eb',
+                        'cream': '#faf8f3',
+                        'ochre': '#c9a227',
+                        'rust': '#bf5b3a',
+                        'forest': '#2d4a3e',
+                        'slate': '#64748b',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Variant selector */
+        .variant-btn {
+            transition: all 0.15s ease-out;
+        }
+        .variant-btn:hover {
+            transform: translateY(-2px);
+        }
+        .variant-btn.active {
+            box-shadow: 0 0 0 2px currentColor;
+        }
+        
+        /* Hide all variants by default */
+        .variant { display: none; }
+        .variant.active { display: block; }
+        
+        /* Brutalist specific */
+        .brutalist-heading {
+            text-shadow: 4px 4px 0 #000;
+            -webkit-text-stroke: 1px #000;
+        }
+        
+        /* Editorial underline */
+        .editorial-underline {
+            background-image: linear-gradient(to right, currentColor 100%, transparent 100%);
+            background-position: 0 1.1em;
+            background-repeat: no-repeat;
+            background-size: 100% 2px;
+        }
+        
+        /* Stagger animation */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up {
+            animation: fadeUp 0.6s ease-out forwards;
+        }
+        .delay-1 { animation-delay: 0.1s; opacity: 0; }
+        .delay-2 { animation-delay: 0.2s; opacity: 0; }
+        .delay-3 { animation-delay: 0.3s; opacity: 0; }
+        .delay-4 { animation-delay: 0.4s; opacity: 0; }
+        
+        /* Noise texture overlay */
+        .noise::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+        }
+        
+        @media (prefers-reduced-motion: reduce) {
+            .animate-fade-up {
+                animation: none;
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body class="bg-neutral-100">
+
+    <!-- Variant Selector -->
+    <div class="fixed top-4 right-4 z-50 bg-white p-3 rounded-lg shadow-lg">
+        <div class="text-xs font-medium text-neutral-500 mb-2">Design Variante</div>
+        <div class="flex gap-2">
+            <button onclick="showVariant('brutalist')" class="variant-btn active px-3 py-1.5 text-sm font-medium bg-black text-white" data-variant="brutalist">
+                Brutalist
+            </button>
+            <button onclick="showVariant('editorial')" class="variant-btn px-3 py-1.5 text-sm font-medium bg-paper text-ink border border-ink" data-variant="editorial">
+                Editorial
+            </button>
+            <button onclick="showVariant('terminal')" class="variant-btn px-3 py-1.5 text-sm font-mono bg-emerald-950 text-emerald-400" data-variant="terminal">
+                Terminal
+            </button>
+            <button onclick="showVariant('geometric')" class="variant-btn px-3 py-1.5 text-sm font-medium bg-ochre text-ink" data-variant="geometric">
+                Geometric
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- VARIANT 1: BRUTALIST -->
+    <!-- ============================================ -->
+    <div class="variant active" id="brutalist">
+        <div class="min-h-dvh bg-white relative noise">
+            <!-- Nav -->
+            <nav class="border-b-4 border-black px-6 py-4 flex justify-between items-end">
+                <div>
+                    <span class="font-syne font-extrabold text-3xl tracking-tight">WIAI25</span>
+                    <span class="block text-xs uppercase tracking-widest mt-1">Universität Bamberg</span>
+                </div>
+                <div class="flex gap-8 text-sm font-medium uppercase tracking-wide">
+                    <a href="#" class="hover:line-through">Geschichten</a>
+                    <a href="#" class="hover:line-through">Programm</a>
+                    <a href="#" class="hover:line-through">Anmelden</a>
+                </div>
+            </nav>
+            
+            <!-- Hero -->
+            <section class="px-6 py-24 border-b-4 border-black">
+                <div class="max-w-6xl mx-auto">
+                    <div class="mb-8">
+                        <span class="inline-block bg-black text-white px-4 py-2 text-sm font-mono -rotate-1">
+                            SAVE THE DATE: 27.06.2026
+                        </span>
+                    </div>
+                    
+                    <h1 class="font-syne font-extrabold text-[12vw] leading-[0.85] tracking-tight uppercase mb-12">
+                        <span class="block">Fünfund-</span>
+                        <span class="block text-stroke">zwanzig</span>
+                        <span class="block">Jahre</span>
+                    </h1>
+                    
+                    <div class="grid grid-cols-3 gap-8 mt-16">
+                        <div class="border-l-4 border-black pl-4">
+                            <div class="font-mono text-5xl font-bold">33</div>
+                            <div class="text-sm uppercase tracking-wide mt-1">Professuren</div>
+                        </div>
+                        <div class="border-l-4 border-black pl-4">
+                            <div class="font-mono text-5xl font-bold">~200</div>
+                            <div class="text-sm uppercase tracking-wide mt-1">Menschen</div>
+                        </div>
+                        <div class="border-l-4 border-black pl-4">
+                            <div class="font-mono text-5xl font-bold">8</div>
+                            <div class="text-sm uppercase tracking-wide mt-1">Studiengänge</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Keynote -->
+            <section class="px-6 py-16 bg-black text-white">
+                <div class="max-w-6xl mx-auto grid grid-cols-2 gap-16">
+                    <div>
+                        <span class="inline-block bg-yellow-400 text-black px-3 py-1 text-xs font-mono uppercase mb-6 -rotate-2">
+                            Keynote
+                        </span>
+                        <h2 class="font-syne font-extrabold text-5xl mb-4">Prof. Dr. [Name]</h2>
+                        <p class="text-neutral-400 text-lg leading-relaxed">
+                            Kurzer Teaser zur Keynote-Speakerin. Was macht sie? 
+                            Warum ist ihr Vortrag relevant? Zwei prägnante Sätze.
+                        </p>
+                    </div>
+                    <div class="bg-neutral-800 aspect-square flex items-center justify-center font-mono text-neutral-600">
+                        [FOTO]
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Story -->
+            <section class="px-6 py-24">
+                <div class="max-w-6xl mx-auto">
+                    <div class="flex justify-between items-end mb-12">
+                        <div>
+                            <span class="font-mono text-sm">25 WOCHEN · 25 GESCHICHTEN</span>
+                            <h2 class="font-syne font-extrabold text-6xl mt-2">Geschichte #01</h2>
+                        </div>
+                        <span class="font-mono text-sm bg-yellow-400 px-3 py-1">WOCHE 1/25</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-0 border-4 border-black">
+                        <div class="bg-neutral-200 aspect-video flex items-center justify-center font-mono text-neutral-500">
+                            [ARCHIVBILD]
+                        </div>
+                        <div class="p-8 flex flex-col justify-center">
+                            <h3 class="font-syne font-bold text-3xl mb-4">Wie alles begann</h3>
+                            <p class="text-neutral-600 mb-6 leading-relaxed">
+                                2001 öffnet die WIAI ihre Türen. Die erste Geschichte erzählt 
+                                von den Anfängen, den Visionären und den ersten Studierenden.
+                            </p>
+                            <a href="#" class="inline-block bg-black text-white px-6 py-3 font-medium hover:bg-yellow-400 hover:text-black transition-colors w-fit">
+                                WEITERLESEN →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- VARIANT 2: EDITORIAL / MAGAZINE -->
+    <!-- ============================================ -->
+    <div class="variant" id="editorial">
+        <div class="min-h-dvh bg-paper relative">
+            <!-- Nav -->
+            <nav class="px-8 py-6 flex justify-between items-center border-b border-ink/10">
+                <div class="flex items-baseline gap-3">
+                    <span class="font-instrument text-4xl italic">WIAI</span>
+                    <span class="font-crimson text-lg">25 Jahre</span>
+                </div>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="font-crimson italic text-slate">Universität Bamberg</span>
+                    <span class="text-slate">·</span>
+                    <span class="font-crimson italic text-slate">Est. 2001</span>
+                </div>
+            </nav>
+            
+            <!-- Hero -->
+            <section class="px-8 py-32 max-w-5xl mx-auto text-center">
+                <p class="font-crimson italic text-slate text-lg mb-6 animate-fade-up delay-1">
+                    Einladung zur Jubiläumsfeier
+                </p>
+                <h1 class="font-instrument text-[8vw] leading-[1.05] mb-8 animate-fade-up delay-2 text-balance">
+                    Fünfundzwanzig Jahre<br>
+                    <em>Wirtschaftsinformatik &</em><br>
+                    Angewandte Informatik
+                </h1>
+                <p class="font-crimson text-xl text-slate max-w-xl mx-auto mb-12 animate-fade-up delay-3 text-pretty">
+                    Am 27. Juni 2026 feiern wir ein Vierteljahrhundert Forschung, 
+                    Lehre und die Menschen, die beides zusammenbringen.
+                </p>
+                <a href="#" class="inline-block font-crimson italic text-lg border-b-2 border-ink pb-1 hover:border-ochre transition-colors animate-fade-up delay-4">
+                    Zur Anmeldung →
+                </a>
+            </section>
+            
+            <!-- Divider -->
+            <div class="flex items-center gap-4 px-8 max-w-5xl mx-auto">
+                <div class="flex-1 h-px bg-ink/20"></div>
+                <span class="font-crimson italic text-slate text-sm">№ 01</span>
+                <div class="flex-1 h-px bg-ink/20"></div>
+            </div>
+            
+            <!-- Keynote -->
+            <section class="px-8 py-24 max-w-5xl mx-auto">
+                <div class="grid grid-cols-12 gap-8 items-center">
+                    <div class="col-span-4">
+                        <div class="aspect-[3/4] bg-cream border border-ink/10 flex items-center justify-center">
+                            <span class="font-crimson italic text-slate text-sm">[Portrait]</span>
+                        </div>
+                    </div>
+                    <div class="col-span-1"></div>
+                    <div class="col-span-7">
+                        <span class="font-mono text-xs uppercase tracking-widest text-slate mb-4 block">Keynote</span>
+                        <h2 class="font-instrument text-5xl mb-3">Prof. Dr. [Name]</h2>
+                        <p class="font-crimson italic text-slate text-lg mb-6">[Institution / Rolle]</p>
+                        <p class="font-crimson text-ink/80 text-lg leading-relaxed text-pretty">
+                            Ein kurzer, eleganter Teaser über die Keynote-Speakerin. 
+                            Was macht ihre Perspektive besonders? Welche Fragen wird sie aufwerfen?
+                            Die Antworten gibt es am 27. Juni.
+                        </p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Story -->
+            <section class="px-8 py-24 bg-cream">
+                <div class="max-w-5xl mx-auto">
+                    <div class="flex items-end justify-between mb-16">
+                        <div>
+                            <span class="font-mono text-xs uppercase tracking-widest text-slate block mb-2">
+                                25 Wochen · 25 Geschichten
+                            </span>
+                            <h2 class="font-instrument text-5xl">Diese Woche</h2>
+                        </div>
+                        <span class="font-crimson italic text-slate">Woche 1 von 25</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-12">
+                        <div class="aspect-[4/3] bg-paper border border-ink/10 flex items-center justify-center">
+                            <span class="font-crimson italic text-slate text-sm">[Archivbild 2001]</span>
+                        </div>
+                        <div class="flex flex-col justify-center">
+                            <span class="font-mono text-xs text-ochre mb-3">Geschichte № 01</span>
+                            <h3 class="font-instrument text-4xl mb-4">Wie alles begann</h3>
+                            <p class="font-crimson text-ink/70 text-lg leading-relaxed mb-8 text-pretty">
+                                Im Jahr 2001 öffnet die Fakultät ihre Türen. Drei Professoren, 
+                                fünfundvierzig Studierende, und eine Vision: Informatik anders denken.
+                            </p>
+                            <a href="#" class="font-crimson italic editorial-underline w-fit">
+                                Weiterlesen
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Stats -->
+            <section class="px-8 py-24 max-w-5xl mx-auto text-center">
+                <span class="font-mono text-xs uppercase tracking-widest text-slate block mb-12">
+                    Die WIAI heute
+                </span>
+                <div class="grid grid-cols-4 gap-8">
+                    <div>
+                        <div class="font-instrument text-6xl mb-2">33</div>
+                        <div class="font-crimson italic text-slate">Professuren</div>
+                    </div>
+                    <div>
+                        <div class="font-instrument text-6xl mb-2">~200</div>
+                        <div class="font-crimson italic text-slate">Mitarbeitende</div>
+                    </div>
+                    <div>
+                        <div class="font-instrument text-6xl mb-2">8</div>
+                        <div class="font-crimson italic text-slate">Studiengänge</div>
+                    </div>
+                    <div>
+                        <div class="font-instrument text-6xl mb-2">~1.500</div>
+                        <div class="font-crimson italic text-slate">Studierende</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- VARIANT 3: TERMINAL / HACKER -->
+    <!-- ============================================ -->
+    <div class="variant" id="terminal">
+        <div class="min-h-dvh bg-emerald-950 text-emerald-400 font-mono relative overflow-hidden">
+            <!-- Scanlines overlay -->
+            <div class="fixed inset-0 pointer-events-none opacity-[0.03]" 
+                 style="background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.3) 2px, rgba(0,0,0,0.3) 4px);">
+            </div>
+            
+            <!-- Nav -->
+            <nav class="px-6 py-4 border-b border-emerald-800 flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <span class="text-emerald-500">█</span>
+                    <span class="text-lg">wiai25.uni-bamberg.de</span>
+                </div>
+                <div class="flex gap-6 text-sm text-emerald-600">
+                    <a href="#" class="hover:text-emerald-400">[stories]</a>
+                    <a href="#" class="hover:text-emerald-400">[programm]</a>
+                    <a href="#" class="hover:text-emerald-400">[register]</a>
+                </div>
+            </nav>
+            
+            <!-- Hero -->
+            <section class="px-6 py-16">
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-emerald-600 text-sm mb-4">
+                        $ cat /var/log/wiai/anniversary.log
+                    </div>
+                    
+                    <pre class="text-[3vw] leading-tight mb-8 text-emerald-400">
+ █     █ ██ ███ ██ ██████ █████ 
+ █  █  █ ██ ███ ██   ██   █     
+ █ ███ █ ██ ███ ██   ██   █████ 
+ ██   ██ ██ █████    ██       █ 
+ █     █ ██ ██ ██  ██████ █████ 
+                    </pre>
+                    
+                    <div class="text-emerald-600 text-sm mb-2">---</div>
+                    <div class="text-lg mb-8">
+                        <span class="text-emerald-600">&gt;</span> 25 Jahre Fakultät Wirtschaftsinformatik<br>
+                        <span class="text-emerald-600">&gt;</span> und Angewandte Informatik<br>
+                        <span class="text-emerald-600">&gt;</span> Universität Bamberg
+                    </div>
+                    
+                    <div class="flex gap-8 text-sm border-t border-emerald-800 pt-8 mt-8">
+                        <div>
+                            <span class="text-emerald-600">DATE:</span> 2026-06-27
+                        </div>
+                        <div>
+                            <span class="text-emerald-600">STATUS:</span> <span class="text-yellow-400">SAVE_THE_DATE</span>
+                        </div>
+                        <div>
+                            <span class="text-emerald-600">LOCATION:</span> Campus Bamberg
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Stats -->
+            <section class="px-6 py-8 bg-emerald-900/30">
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-emerald-600 text-sm mb-4">$ wiai --stats</div>
+                    <div class="grid grid-cols-4 gap-4 text-center">
+                        <div class="border border-emerald-800 p-4">
+                            <div class="text-3xl font-bold tabular-nums">33</div>
+                            <div class="text-emerald-600 text-xs mt-1">PROFESSUREN</div>
+                        </div>
+                        <div class="border border-emerald-800 p-4">
+                            <div class="text-3xl font-bold tabular-nums">~200</div>
+                            <div class="text-emerald-600 text-xs mt-1">MITARBEITER</div>
+                        </div>
+                        <div class="border border-emerald-800 p-4">
+                            <div class="text-3xl font-bold tabular-nums">8</div>
+                            <div class="text-emerald-600 text-xs mt-1">STUDIENGÄNGE</div>
+                        </div>
+                        <div class="border border-emerald-800 p-4">
+                            <div class="text-3xl font-bold tabular-nums">~1500</div>
+                            <div class="text-emerald-600 text-xs mt-1">STUDIERENDE</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Keynote -->
+            <section class="px-6 py-16">
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-emerald-600 text-sm mb-4">$ cat keynote.md</div>
+                    <div class="border border-emerald-800 p-6">
+                        <div class="text-yellow-400 mb-2"># KEYNOTE</div>
+                        <div class="text-2xl mb-2">Prof. Dr. [Name]</div>
+                        <div class="text-emerald-600 mb-4">[Institution / Rolle]</div>
+                        <p class="text-emerald-500 leading-relaxed">
+                            Kurzer Teaser zur Keynote-Speakerin. Zwei prägnante Sätze,
+                            die neugierig machen ohne zu viel zu verraten.
+                        </p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Story -->
+            <section class="px-6 py-16">
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-emerald-600 text-sm mb-4">
+                        $ ls stories/ | head -1
+                    </div>
+                    <div class="flex gap-2 mb-8">
+                        <span class="text-yellow-400">[01/25]</span>
+                        <span>wie-alles-begann.md</span>
+                    </div>
+                    
+                    <div class="border border-emerald-800">
+                        <div class="border-b border-emerald-800 px-4 py-2 text-sm text-emerald-600">
+                            WOCHE 1/25 — GESCHICHTE #01
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl mb-4 text-yellow-400">&gt; Wie alles begann</h3>
+                            <p class="text-emerald-500 leading-relaxed mb-4">
+                                2001. Die WIAI öffnet ihre Türen. Drei Professoren, 
+                                fünfundvierzig Studierende. Eine neue Fakultät entsteht.
+                            </p>
+                            <a href="#" class="text-emerald-400 hover:text-yellow-400">
+                                [mehr lesen] →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Footer -->
+            <footer class="px-6 py-8 border-t border-emerald-800 text-emerald-600 text-sm">
+                <div class="max-w-4xl mx-auto flex justify-between">
+                    <span>© 2026 WIAI · Universität Bamberg</span>
+                    <span>
+                        <span class="text-emerald-400">●</span> SYSTEM ONLINE
+                    </span>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- VARIANT 4: GEOMETRIC / BAUHAUS -->
+    <!-- ============================================ -->
+    <div class="variant" id="geometric">
+        <div class="min-h-dvh bg-neutral-100 relative">
+            <!-- Nav -->
+            <nav class="px-8 py-6 flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <div class="size-10 bg-ochre"></div>
+                    <span class="font-dm font-bold text-xl">WIAI 25</span>
+                </div>
+                <div class="flex gap-1">
+                    <a href="#" class="px-4 py-2 text-sm font-medium hover:bg-black hover:text-white transition-colors">Geschichten</a>
+                    <a href="#" class="px-4 py-2 text-sm font-medium hover:bg-black hover:text-white transition-colors">Programm</a>
+                    <a href="#" class="px-4 py-2 text-sm font-medium bg-ochre">Anmelden</a>
+                </div>
+            </nav>
+            
+            <!-- Hero -->
+            <section class="px-8 py-24">
+                <div class="max-w-6xl mx-auto grid grid-cols-12 gap-8">
+                    <!-- Left: Typography -->
+                    <div class="col-span-7">
+                        <div class="flex items-center gap-4 mb-8">
+                            <div class="size-4 bg-ochre rounded-full"></div>
+                            <span class="font-dm text-sm font-medium uppercase tracking-wide">27. Juni 2026 · Universität Bamberg</span>
+                        </div>
+                        
+                        <h1 class="font-libre text-7xl font-bold leading-[1.1] mb-8">
+                            Fünfundzwanzig<br>
+                            Jahre <em class="font-normal">WIAI</em>
+                        </h1>
+                        
+                        <p class="font-dm text-lg text-neutral-600 max-w-md mb-12 text-pretty">
+                            Die Fakultät für Wirtschaftsinformatik und Angewandte Informatik 
+                            feiert Jubiläum. Feiern Sie mit.
+                        </p>
+                        
+                        <a href="#" class="inline-flex items-center gap-3 bg-black text-white px-8 py-4 font-dm font-medium hover:bg-ochre hover:text-black transition-colors">
+                            <span>Zur Anmeldung</span>
+                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                            </svg>
+                        </a>
+                    </div>
+                    
+                    <!-- Right: Geometric shapes -->
+                    <div class="col-span-5 relative">
+                        <div class="absolute top-0 right-0 size-48 bg-ochre"></div>
+                        <div class="absolute top-24 right-24 size-32 bg-black"></div>
+                        <div class="absolute top-48 right-48 size-24 bg-neutral-300 rounded-full"></div>
+                        <div class="absolute bottom-0 right-16 w-64 h-4 bg-black"></div>
+                        <div class="absolute bottom-16 right-0 w-4 h-32 bg-ochre"></div>
+                        
+                        <!-- 25 -->
+                        <div class="absolute top-8 right-8 font-libre text-[160px] font-bold leading-none text-white mix-blend-difference">
+                            25
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Stats Bar -->
+            <section class="bg-black text-white">
+                <div class="max-w-6xl mx-auto grid grid-cols-4">
+                    <div class="px-8 py-8 border-r border-neutral-800">
+                        <div class="font-libre text-5xl font-bold tabular-nums">33</div>
+                        <div class="font-dm text-sm text-neutral-400 mt-2">Professuren</div>
+                    </div>
+                    <div class="px-8 py-8 border-r border-neutral-800">
+                        <div class="font-libre text-5xl font-bold tabular-nums">~200</div>
+                        <div class="font-dm text-sm text-neutral-400 mt-2">Mitarbeitende</div>
+                    </div>
+                    <div class="px-8 py-8 border-r border-neutral-800">
+                        <div class="font-libre text-5xl font-bold tabular-nums">8</div>
+                        <div class="font-dm text-sm text-neutral-400 mt-2">Studiengänge</div>
+                    </div>
+                    <div class="px-8 py-8 bg-ochre text-black">
+                        <div class="font-libre text-5xl font-bold tabular-nums">~1.500</div>
+                        <div class="font-dm text-sm text-neutral-800 mt-2">Studierende</div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Keynote -->
+            <section class="px-8 py-24 bg-neutral-200">
+                <div class="max-w-6xl mx-auto">
+                    <div class="flex items-center gap-4 mb-12">
+                        <div class="w-12 h-1 bg-ochre"></div>
+                        <span class="font-dm text-sm font-medium uppercase tracking-wide">Keynote</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-12">
+                        <div class="aspect-square bg-neutral-300 flex items-center justify-center font-dm text-neutral-500">
+                            [Foto]
+                        </div>
+                        <div class="col-span-2 flex flex-col justify-center">
+                            <h2 class="font-libre text-5xl font-bold mb-4">Prof. Dr. [Name]</h2>
+                            <p class="font-dm text-neutral-600 mb-6">[Institution / Rolle]</p>
+                            <p class="font-dm text-lg text-neutral-700 leading-relaxed max-w-xl text-pretty">
+                                Kurzer Teaser zur Keynote-Speakerin. Was macht sie? 
+                                Warum ist ihr Vortrag relevant? Prägnant und neugierig machend.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Story -->
+            <section class="px-8 py-24">
+                <div class="max-w-6xl mx-auto">
+                    <div class="flex justify-between items-end mb-12">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-1 bg-black"></div>
+                            <span class="font-dm text-sm font-medium uppercase tracking-wide">25 Wochen · 25 Geschichten</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="size-3 bg-ochre rounded-full"></div>
+                            <span class="font-dm text-sm">Woche 1 von 25</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-0">
+                        <div class="aspect-video bg-neutral-200 flex items-center justify-center font-dm text-neutral-500">
+                            [Archivbild]
+                        </div>
+                        <div class="bg-black text-white p-12 flex flex-col justify-center">
+                            <span class="font-dm text-ochre text-sm mb-4">№ 01</span>
+                            <h3 class="font-libre text-4xl font-bold mb-4">Wie alles begann</h3>
+                            <p class="font-dm text-neutral-400 leading-relaxed mb-8">
+                                2001 öffnet die WIAI ihre Türen. Die erste Geschichte einer 
+                                25-teiligen Serie über Menschen, Meilensteine und Merkwürdigkeiten.
+                            </p>
+                            <a href="#" class="inline-flex items-center gap-2 text-ochre font-dm font-medium hover:underline w-fit">
+                                Weiterlesen
+                                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        function showVariant(id) {
+            // Hide all variants
+            document.querySelectorAll('.variant').forEach(v => v.classList.remove('active'));
+            // Show selected
+            document.getElementById(id).classList.add('active');
+            
+            // Update buttons
+            document.querySelectorAll('.variant-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.variant === id) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WIAI - Jubiläum 25 Jahre - Universität Bamberg</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #333;
+            background: #fff;
+        }
+        a {
+            color: #004a99;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Header */
+        .uni-header {
+            background: linear-gradient(to bottom, #00407a, #003366);
+            color: white;
+            padding: 15px 20px;
+        }
+        .uni-header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .uni-logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .uni-seal {
+            width: 70px;
+            height: 70px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            text-align: center;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .uni-name {
+            font-size: 18px;
+        }
+        .uni-meta {
+            font-size: 12px;
+            display: flex;
+            gap: 15px;
+        }
+        .uni-meta a {
+            color: white;
+        }
+        
+        /* Fakultätsleiste */
+        .fak-bar {
+            background: #00407a;
+            border-top: 1px solid #003060;
+            padding: 10px 20px;
+            color: white;
+            font-size: 12px;
+        }
+        .fak-bar-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .fak-title {
+            font-size: 16px;
+        }
+        .wiai-logo {
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #f0c000;
+        }
+        
+        /* Breadcrumb */
+        .breadcrumb {
+            background: #f5f5f5;
+            padding: 8px 20px;
+            font-size: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        .breadcrumb-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .breadcrumb a {
+            color: #004a99;
+        }
+        
+        /* Main Layout */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 220px;
+            flex-shrink: 0;
+        }
+        .sidebar-menu {
+            background: #00407a;
+            margin-bottom: 15px;
+        }
+        .sidebar-menu a {
+            display: block;
+            padding: 10px 15px;
+            color: white;
+            border-bottom: 1px solid #003366;
+            font-size: 13px;
+        }
+        .sidebar-menu a:hover {
+            background: #003366;
+            text-decoration: none;
+        }
+        .sidebar-menu a.has-arrow::after {
+            content: ' ›';
+            float: right;
+        }
+        
+        .yellow-box {
+            background: #f0c000;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+        }
+        .yellow-box-title {
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .yellow-box a {
+            display: block;
+            font-size: 12px;
+            padding: 3px 0;
+            color: #004a99;
+        }
+        .yellow-box a::before {
+            content: '› ';
+            color: #004a99;
+        }
+        
+        .sidebar-image {
+            margin-bottom: 15px;
+        }
+        .sidebar-image img {
+            width: 100%;
+            border: 1px solid #ddd;
+        }
+        .sidebar-image-caption {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        /* Content */
+        .content {
+            flex: 1;
+        }
+        .page-title {
+            font-size: 22px;
+            color: #004a99;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0c000;
+        }
+        
+        /* Hero Slider fake */
+        .hero-slider {
+            position: relative;
+            margin-bottom: 25px;
+            background: #e8e8e8;
+        }
+        .hero-image {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #00407a 0%, #006699 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .hero-content {
+            text-align: center;
+            padding: 20px;
+        }
+        .hero-content h2 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .hero-content p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .hero-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 64, 122, 0.9);
+            padding: 15px 20px;
+            color: white;
+        }
+        .hero-overlay strong {
+            color: #f0c000;
+        }
+        .slider-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background: rgba(0,0,0,0.3);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .slider-nav.prev { left: 10px; }
+        .slider-nav.next { right: 10px; }
+        .slider-dots {
+            position: absolute;
+            bottom: 70px;
+            right: 15px;
+            display: flex;
+            gap: 5px;
+        }
+        .slider-dot {
+            width: 12px;
+            height: 12px;
+            background: rgba(255,255,255,0.5);
+            border: none;
+        }
+        .slider-dot.active {
+            background: white;
+        }
+        
+        /* Content Sections */
+        .section-title {
+            font-size: 18px;
+            color: #004a99;
+            margin: 25px 0 15px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .two-col {
+            display: flex;
+            gap: 30px;
+        }
+        .two-col > div {
+            flex: 1;
+        }
+        
+        .link-list {
+            list-style: none;
+        }
+        .link-list li {
+            padding: 5px 0;
+            border-bottom: 1px dotted #ccc;
+        }
+        .link-list a::before {
+            content: '› ';
+            color: #f0c000;
+        }
+        
+        /* Info Box */
+        .info-box {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-left: 4px solid #f0c000;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .info-box h4 {
+            color: #004a99;
+            margin-bottom: 10px;
+        }
+        
+        /* Program Table */
+        .program-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .program-table th {
+            background: #00407a;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-weight: normal;
+        }
+        .program-table td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            vertical-align: top;
+        }
+        .program-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        .program-time {
+            color: #004a99;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        
+        /* News Section */
+        .news-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .news-image {
+            width: 120px;
+            height: 80px;
+            background: #ddd;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: #999;
+        }
+        .news-content h4 {
+            color: #004a99;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .news-content h4 a {
+            color: #004a99;
+        }
+        .news-meta {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .news-content p {
+            font-size: 13px;
+            color: #555;
+        }
+        
+        /* Footer */
+        .footer {
+            background: #00407a;
+            color: white;
+            padding: 30px 20px;
+            margin-top: 30px;
+            font-size: 12px;
+        }
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 40px;
+        }
+        .footer-col {
+            flex: 1;
+        }
+        .footer-col h4 {
+            color: #f0c000;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+        .footer-col a {
+            color: white;
+            display: block;
+            padding: 3px 0;
+        }
+        .footer-col a:hover {
+            text-decoration: underline;
+        }
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 20px auto 0;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            display: flex;
+            justify-content: space-between;
+        }
+        .footer-bottom a {
+            color: rgba(255,255,255,0.7);
+            margin-right: 15px;
+        }
+        
+        /* Button old school */
+        .btn-old {
+            display: inline-block;
+            background: linear-gradient(to bottom, #f5d000, #d4a000);
+            border: 1px solid #b08000;
+            color: #333 !important;
+            padding: 8px 20px;
+            font-size: 13px;
+            font-weight: bold;
+            text-decoration: none !important;
+            cursor: pointer;
+        }
+        .btn-old:hover {
+            background: linear-gradient(to bottom, #ffe040, #e4b000);
+        }
+        
+        /* RSS Icon */
+        .rss-icon {
+            float: right;
+            width: 20px;
+            height: 20px;
+            background: orange;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Uni Header -->
+    <div class="uni-header">
+        <div class="uni-header-inner">
+            <div class="uni-logo">
+                <div class="uni-seal" style="background: none; border: none;">
+                    <img src="uba-logo-weiss.svg" alt="Universität Bamberg" style="width: 60px; height: 60px;">
+                </div>
+                <div class="uni-name">Universität Bamberg</div>
+            </div>
+            <div class="uni-meta">
+                <a href="#">⚙ Kontrast</a>
+                <span>Deutsch | <a href="#">English</a></span>
+                <a href="#">🔍</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Fakultätsleiste -->
+    <div class="fak-bar">
+        <div class="fak-bar-inner">
+            <div>
+                <small>Fakultäten</small><br>
+                <span class="fak-title">Wirtschaftsinformatik und Angewandte Informatik</span>
+            </div>
+            <div class="wiai-logo">WIAI</div>
+        </div>
+    </div>
+    
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <div class="breadcrumb-inner">
+            🏠 › <a href="#">Fakultäten</a> › <a href="#">Wirtschaftsinformatik und Angewandte Informatik</a> › <strong>Jubiläum 25 Jahre</strong>
+        </div>
+    </div>
+    
+    <!-- Main -->
+    <div class="main-container">
+        
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-menu">
+                <a href="#" class="has-arrow">Studium</a>
+                <a href="#">Forschung</a>
+                <a href="#" class="has-arrow">Professuren und Lehrstühle</a>
+                <a href="#" class="has-arrow">Personen und Einrichtungen</a>
+                <a href="#" class="has-arrow">Über die Fakultät</a>
+            </div>
+            
+            <div class="yellow-box">
+                <div class="yellow-box-title">Für spezielle Zielgruppen</div>
+                <a href="#">Für Schülerinnen & Schüler</a>
+                <a href="#">Für Unternehmen</a>
+                <a href="#">Für Alumni</a>
+                <a href="#">Für Familien</a>
+            </div>
+            
+            <div class="sidebar-image">
+                <div style="background: #003366; color: white; padding: 20px; text-align: center;">
+                    <div style="font-size: 48px; font-weight: bold; color: #f0c000;">25</div>
+                    <div style="font-size: 14px;">Jahre WIAI</div>
+                    <div style="font-size: 11px; margin-top: 10px; opacity: 0.7;">2001 – 2026</div>
+                </div>
+                <div class="sidebar-image-caption">
+                    Jubiläumslogo der Fakultät WIAI
+                </div>
+            </div>
+            
+            <div class="yellow-box">
+                <div class="yellow-box-title">Veranstaltungen</div>
+                <a href="#">26. Juni 2026<br><small>Jubiläumsfeier 25 Jahre WIAI</small></a>
+                <a href="#">20. Mai 2026<br><small>Karrieretag</small></a>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <h1 class="page-title">Jubiläum: 25 Jahre Fakultät WIAI</h1>
+            
+            <!-- Hero -->
+            <div class="hero-slider">
+                <div class="hero-image">
+                    <div class="hero-content">
+                        <h2>25 Jahre WIAI</h2>
+                        <p>Wirtschaftsinformatik und Angewandte Informatik</p>
+                    </div>
+                </div>
+                <div class="hero-overlay">
+                    <strong>Save the Date:</strong> Am 26. Juni 2026 feiern wir 25 Jahre Fakultät WIAI. 
+                    Alle Interessierten sind herzlich eingeladen! <a href="#" style="color: #f0c000;">Mehr erfahren ›</a>
+                </div>
+                <div class="slider-nav prev">‹</div>
+                <div class="slider-nav next">›</div>
+                <div class="slider-dots">
+                    <div class="slider-dot active"></div>
+                    <div class="slider-dot"></div>
+                    <div class="slider-dot"></div>
+                </div>
+            </div>
+            
+            <p>
+                Die Fakultät Wirtschaftsinformatik und Angewandte Informatik (WIAI) wurde im Jahr 2001 gegründet 
+                und feiert im Jahr 2026 ihr 25-jähriges Bestehen. Aus diesem Anlass laden wir herzlich ein 
+                zur <strong>Jubiläumsfeier am 26. Juni 2026</strong> auf dem ERBA-Campus.
+            </p>
+            
+            <div class="info-box">
+                <h4>📅 Veranstaltungsinformationen</h4>
+                <p>
+                    <strong>Datum:</strong> 26. Juni 2026<br>
+                    <strong>Uhrzeit:</strong> ab 14:00 Uhr<br>
+                    <strong>Ort:</strong> ERBA-Campus, An der Weberei 5, 96047 Bamberg<br><br>
+                    <a href="#" class="btn-old">› Zur Anmeldung</a>
+                </p>
+            </div>
+            
+            <h2 class="section-title">Programm</h2>
+            
+            <p>Das vollständige Programm wird im Frühjahr 2026 veröffentlicht. Hier finden Sie einen ersten Überblick:</p>
+            
+            <table class="program-table">
+                <tr>
+                    <th width="100">Uhrzeit</th>
+                    <th>Programmpunkt</th>
+                </tr>
+                <tr>
+                    <td class="program-time">14:00 Uhr</td>
+                    <td><strong>Ankommen</strong><br>Empfang, Ausstellung, erste Gespräche</td>
+                </tr>
+                <tr>
+                    <td class="program-time">15:00 Uhr</td>
+                    <td><strong>Vorträge & Demos</strong><br>Keynote, Kurzvorträge, Live-Demos</td>
+                </tr>
+                <tr>
+                    <td class="program-time">15:00 Uhr</td>
+                    <td><strong>Kinderuni</strong><br>Parallel: „Wie denkt ein Computer?" – Vorlesung für Kinder ab 8 Jahren</td>
+                </tr>
+                <tr>
+                    <td class="program-time">16:30 Uhr</td>
+                    <td><strong>Mitmachen & Entdecken</strong><br>Interaktive Installationen, Stationen, Exponate</td>
+                </tr>
+                <tr>
+                    <td class="program-time">18:00 Uhr</td>
+                    <td><strong>Abendprogramm</strong><br>Musik, Essen, Gespräche</td>
+                </tr>
+            </table>
+            
+            <h2 class="section-title">Für spezielle Zielgruppen</h2>
+            
+            <div class="two-col">
+                <div>
+                    <h4 style="color: #004a99; margin-bottom: 10px;">Für Studieninteressierte</h4>
+                    <ul class="link-list">
+                        <li><a href="#">Informationen zu allen Studiengängen</a></li>
+                        <li><a href="#">Gespräche mit Studierenden</a></li>
+                        <li><a href="#">Einblick in aktuelle Projekte</a></li>
+                        <li><a href="#">Studienberatung vor Ort</a></li>
+                    </ul>
+                    
+                    <h4 style="color: #004a99; margin: 20px 0 10px;">Für Familien</h4>
+                    <ul class="link-list">
+                        <li><a href="#">Kinderuni: „Wie denkt ein Computer?"</a></li>
+                        <li><a href="#">Mitmach-Stationen für alle Altersgruppen</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="color: #004a99; margin-bottom: 10px;">Für Alumni</h4>
+                    <ul class="link-list">
+                        <li><a href="#">Wiedersehen mit Ehemaligen</a></li>
+                        <li><a href="#">Netzwerken mit Aktiven</a></li>
+                        <li><a href="#">25 Jahre in Bildern</a></li>
+                    </ul>
+                    
+                    <h4 style="color: #004a99; margin: 20px 0 10px;">Für Unternehmen</h4>
+                    <ul class="link-list">
+                        <li><a href="#">Gespräche mit Studierenden und Promovierenden</a></li>
+                        <li><a href="#">Einblick in aktuelle Forschungsprojekte</a></li>
+                        <li><a href="#">Kooperationsmöglichkeiten</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <h2 class="section-title">25 Wochen – 25 Geschichten <span class="rss-icon">RSS</span></h2>
+            
+            <p>In den 25 Wochen vor der Jubiläumsfeier veröffentlichen wir jede Woche eine Geschichte aus 25 Jahren WIAI.</p>
+            
+            <div class="news-item">
+                <div class="news-image" style="background: #ddd; padding: 0;">
+                    <img src="wiai-2021.png" alt="WIAI-Website 2001" style="width: 100%; height: 100%; object-fit: cover; object-position: top;">
+                </div>
+                <div class="news-content">
+                    <div class="news-meta">GESCHICHTE #01 · Januar 2026</div>
+                    <h4><a href="#">28. September 2001: Die WIAI geht online</a></h4>
+                    <p>
+                        Drei Professoren, eine Handvoll Lehrstühle, und eine Website, 
+                        die heute wie ein Artefakt aus einer anderen Zeit wirkt. FlexNow! war schon dabei.
+                        <a href="#">› Weiterlesen</a>
+                    </p>
+                </div>
+            </div>
+            
+            <div class="news-item">
+                <div class="news-image">[Bild]</div>
+                <div class="news-content">
+                    <div class="news-meta">GESCHICHTE #02 · Kommt nächste Woche</div>
+                    <h4><a href="#" style="color: #999;">Wird noch veröffentlicht...</a></h4>
+                    <p style="color: #999;">
+                        Die nächste Geschichte erscheint in Kürze.
+                    </p>
+                </div>
+            </div>
+            
+            <p style="margin-top: 15px;"><a href="#">› Alle Geschichten ansehen</a></p>
+            
+            <h2 class="section-title">Kontakt</h2>
+            
+            <div class="two-col">
+                <div>
+                    <strong>Dekanat der Fakultät WIAI</strong><br>
+                    An der Weberei 5<br>
+                    96047 Bamberg<br><br>
+                    E-Mail: <a href="#">dekanat.wiai@uni-bamberg.de</a><br>
+                    Telefon: +49 951 863-2801
+                </div>
+                <div>
+                    <strong>Fragen zur Veranstaltung?</strong><br><br>
+                    <a href="#" class="btn-old">› Kontaktformular</a>
+                </div>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-inner">
+            <div class="footer-col">
+                <h4>Zentrale Online-Services</h4>
+                <a href="#">Bamberger Katalog (Universitätsbibliothek) ↗</a>
+                <a href="#">FIS (Forschungsinformationssystem) ↗</a>
+                <a href="#">FlexNow2 für Studierende</a>
+                <a href="#">FlexNow2 für Mitarbeitende</a>
+                <a href="#">Intranet</a>
+                <a href="#">Office 365 ↗</a>
+                <a href="#">Virtueller Campus ↗</a>
+            </div>
+            <div class="footer-col">
+                <h4>Wichtige Links</h4>
+                <a href="#">Presse</a>
+                <a href="#">Öffnungszeiten</a>
+                <a href="#">Prüfungsamt</a>
+                <a href="#">IT-Service der Universität</a>
+                <a href="#">Studierendenkanzlei</a>
+                <a href="#">Universitätsbibliothek</a>
+                <a href="#">Vorlesungszeiten & Fristen</a>
+            </div>
+            <div class="footer-col">
+                <h4>Zentraler Kontakt</h4>
+                Otto-Friedrich-Universität Bamberg<br>
+                Kapuzinerstraße 16<br>
+                96047 Bamberg<br><br>
+                Telefon: 0951/ 863-0<br>
+                E-Mail: post@uni-bamberg.de ↗
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div>
+                <a href="#">Kontakt</a>
+                <a href="#">Impressum</a>
+                <a href="#">Datenschutz</a>
+            </div>
+            <div style="color: rgba(255,255,255,0.5);">
+                Seite 63
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

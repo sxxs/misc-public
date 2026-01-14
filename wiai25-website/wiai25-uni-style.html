@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WIAI25 – 25 Jahre Fakultät WIAI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        'petrol': {
+                            900: '#1a2f2f',
+                            800: '#243d3d',
+                            700: '#2d4a4a',
+                            600: '#3a5c5c',
+                        },
+                        'sand': {
+                            50: '#faf9f7',
+                            100: '#f5f3ef',
+                            200: '#ebe7e0',
+                            300: '#ddd7cc',
+                        },
+                        'copper': {
+                            500: '#c17f59',
+                            600: '#a66b47',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .section-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #c17f59;
+        }
+        .section-label::before {
+            content: '';
+            width: 24px;
+            height: 2px;
+            background: #c17f59;
+        }
+    </style>
+</head>
+<body class="bg-sand-50 text-petrol-900 font-sans antialiased">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-sand-200 px-6 py-4">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div class="text-xl font-bold text-petrol-800">WIAI<span class="text-copper-500">25</span></div>
+                <span class="text-sand-300">|</span>
+                <span class="text-petrol-600 text-sm">Universität Bamberg</span>
+            </div>
+            <div class="flex items-center gap-8">
+                <a href="#programm" class="text-sm text-petrol-600 hover:text-petrol-900 transition-colors">Programm</a>
+                <a href="#geschichten" class="text-sm text-petrol-600 hover:text-petrol-900 transition-colors">Geschichten</a>
+                <a href="#anmeldung" class="text-sm font-medium text-white bg-petrol-800 hover:bg-petrol-700 px-5 py-2.5 transition-colors">
+                    Anmelden
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="bg-petrol-800 text-white">
+        <div class="max-w-6xl mx-auto px-6 py-20 lg:py-28">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                
+                <!-- Left: Content -->
+                <div class="lg:col-span-7">
+                    <div class="section-label text-copper-500 mb-6">
+                        Jubiläum 2026
+                    </div>
+                    
+                    <h1 class="text-4xl lg:text-5xl font-bold leading-tight mb-6">
+                        25 Jahre Wirtschafts­informatik und Angewandte Informatik
+                    </h1>
+                    
+                    <p class="text-xl text-petrol-600/80 text-white/70 max-w-lg mb-10 leading-relaxed">
+                        Menschzentrierte Informatik an der Uni Bamberg. 
+                        Wir laden ein zu Vorträgen, Demos, Mitmach-Stationen und einem Fest für alle, die die WIAI geprägt haben.
+                    </p>
+                    
+                    <div class="flex flex-wrap gap-4 mb-12">
+                        <a href="#programm" class="bg-white text-petrol-800 px-6 py-3.5 font-medium hover:bg-sand-100 transition-colors">
+                            Programm ansehen
+                        </a>
+                        <a href="#anmeldung" class="border border-white/30 text-white px-6 py-3.5 font-medium hover:bg-white/10 transition-colors">
+                            Zur Anmeldung
+                        </a>
+                    </div>
+                    
+                    <div class="flex items-center gap-6 text-sm text-white/60">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span>26. Juni 2026</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span>ERBA-Campus, Bamberg</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right: Stats + Animation Placeholder -->
+                <div class="lg:col-span-5">
+                    <div class="bg-petrol-700/50 border border-petrol-600/30 p-8 mb-6">
+                        <div class="text-center mb-6">
+                            <div class="text-6xl font-bold text-white/20 tracking-tight">WIAI25</div>
+                            <div class="text-sm text-white/40 mt-2">[Animation – wächst mit jedem Besuch]</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="bg-petrol-700/30 border border-petrol-600/20 p-4 text-center">
+                            <div class="text-2xl font-bold">1.672</div>
+                            <div class="text-xs text-white/50 mt-1">Studierende</div>
+                        </div>
+                        <div class="bg-petrol-700/30 border border-petrol-600/20 p-4 text-center">
+                            <div class="text-2xl font-bold">33</div>
+                            <div class="text-xs text-white/50 mt-1">Professuren</div>
+                        </div>
+                        <div class="bg-petrol-700/30 border border-petrol-600/20 p-4 text-center">
+                            <div class="text-2xl font-bold">5+7</div>
+                            <div class="text-xs text-white/50 mt-1">Bachelor+Master</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Ein Tag, viele Perspektiven -->
+    <section class="px-6 py-20 bg-white" id="programm">
+        <div class="max-w-6xl mx-auto">
+            
+            <div class="max-w-2xl mb-12">
+                <div class="section-label mb-4">Für alle etwas</div>
+                <h2 class="text-3xl font-bold mb-4">Ein Tag, viele Perspektiven</h2>
+                <p class="text-petrol-600">
+                    Studierende, Alumni, Familien, Unternehmen – das Programm bietet 
+                    Einstiege für verschiedene Interessen.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                
+                <div class="bg-sand-50 p-6 border-t-4 border-petrol-800">
+                    <div class="w-12 h-12 bg-petrol-800 flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                    </div>
+                    <div class="text-xs text-copper-500 font-medium uppercase tracking-wider mb-2">Für Studieninteressierte</div>
+                    <h3 class="font-bold text-lg mb-2">Studiengänge live</h3>
+                    <p class="text-petrol-600 text-sm">
+                        Infos zu Bachelor und Master, Gespräche mit Studierenden, Einblick in Projekte.
+                    </p>
+                </div>
+                
+                <div class="bg-sand-50 p-6 border-t-4 border-copper-500">
+                    <div class="w-12 h-12 bg-copper-500 flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="text-xs text-copper-500 font-medium uppercase tracking-wider mb-2">Für Familien</div>
+                    <h3 class="font-bold text-lg mb-2">Kinderuni</h3>
+                    <p class="text-petrol-600 text-sm">
+                        „Wie denkt ein Computer?" – Vorlesung für Kinder ab 8, parallel zum Hauptprogramm.
+                    </p>
+                </div>
+                
+                <div class="bg-sand-50 p-6 border-t-4 border-petrol-600">
+                    <div class="w-12 h-12 bg-petrol-600 flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </div>
+                    <div class="text-xs text-copper-500 font-medium uppercase tracking-wider mb-2">Zum Netzwerken</div>
+                    <h3 class="font-bold text-lg mb-2">Begegnungen</h3>
+                    <p class="text-petrol-600 text-sm">
+                        Ehemalige treffen Aktive, Forschende treffen Praxis. 25 Jahre bedeuten viele Verbindungen.
+                    </p>
+                </div>
+                
+                <div class="bg-sand-50 p-6 border-t-4 border-sand-300">
+                    <div class="w-12 h-12 bg-sand-300 flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-petrol-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div class="text-xs text-copper-500 font-medium uppercase tracking-wider mb-2">Für Unternehmen</div>
+                    <h3 class="font-bold text-lg mb-2">Talente treffen</h3>
+                    <p class="text-petrol-600 text-sm">
+                        Gespräche mit Studierenden und Promovierenden, Einblick in aktuelle Forschung.
+                    </p>
+                </div>
+                
+            </div>
+        </div>
+    </section>
+
+    <!-- Programm / Ablauf -->
+    <section class="px-6 py-20 bg-sand-100">
+        <div class="max-w-6xl mx-auto">
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                
+                <!-- Ablauf -->
+                <div>
+                    <div class="section-label mb-4">Tagesablauf</div>
+                    <h2 class="text-3xl font-bold mb-8">Ablauf</h2>
+                    
+                    <div class="space-y-0">
+                        <div class="flex gap-6 py-5 border-b border-sand-300">
+                            <div class="text-copper-500 font-bold w-16 shrink-0">14:00</div>
+                            <div>
+                                <div class="font-semibold">Ankommen</div>
+                                <div class="text-petrol-600 text-sm">Empfang, Ausstellung, erste Gespräche</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-6 py-5 border-b border-sand-300">
+                            <div class="text-copper-500 font-bold w-16 shrink-0">15:00</div>
+                            <div>
+                                <div class="font-semibold">Vorträge & Demos</div>
+                                <div class="text-petrol-600 text-sm">Keynote, Kurzvorträge, Live-Demos</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-6 py-5 border-b border-sand-300">
+                            <div class="text-copper-500 font-bold w-16 shrink-0">15:00</div>
+                            <div>
+                                <div class="font-semibold">Kinderuni</div>
+                                <div class="text-petrol-600 text-sm">Parallel: Vorlesung für Kinder ab 8</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-6 py-5 border-b border-sand-300">
+                            <div class="text-copper-500 font-bold w-16 shrink-0">16:30</div>
+                            <div>
+                                <div class="font-semibold">Mitmachen</div>
+                                <div class="text-petrol-600 text-sm">Installationen, Stationen, Exponate</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-6 py-5">
+                            <div class="text-copper-500 font-bold w-16 shrink-0">18:00</div>
+                            <div>
+                                <div class="font-semibold">Feiern</div>
+                                <div class="text-petrol-600 text-sm">Musik, Essen, Gespräche</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Highlights -->
+                <div>
+                    <div class="section-label mb-4">Im Programm</div>
+                    <h2 class="text-3xl font-bold mb-8">Highlights</h2>
+                    
+                    <div class="bg-white p-8">
+                        <ul class="space-y-5">
+                            <li class="flex gap-4">
+                                <span class="text-copper-500 font-semibold">→</span>
+                                <span>Keynote von [Name]</span>
+                            </li>
+                            <li class="flex gap-4">
+                                <span class="text-copper-500 font-semibold">→</span>
+                                <span>Interaktive Installationen von Studierenden</span>
+                            </li>
+                            <li class="flex gap-4">
+                                <span class="text-copper-500 font-semibold">→</span>
+                                <span>Mitmach-Stationen: KI, Security, HCI</span>
+                            </li>
+                            <li class="flex gap-4">
+                                <span class="text-copper-500 font-semibold">→</span>
+                                <span>Studienberatung für alle Studiengänge</span>
+                            </li>
+                            <li class="flex gap-4">
+                                <span class="text-copper-500 font-semibold">→</span>
+                                <span>25 Jahre in Bildern: Kuriositäten-Ausstellung</span>
+                            </li>
+                        </ul>
+                        
+                        <p class="text-sm text-petrol-600 mt-8 pt-6 border-t border-sand-200">
+                            Das vollständige Programm erscheint im Frühjahr 2026.
+                        </p>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </section>
+
+    <!-- Geschichten -->
+    <section class="px-6 py-20 bg-white" id="geschichten">
+        <div class="max-w-6xl mx-auto">
+            
+            <div class="flex flex-wrap justify-between items-end gap-6 mb-12">
+                <div>
+                    <div class="section-label mb-4">Rückblick</div>
+                    <h2 class="text-3xl font-bold">25 Wochen · 25 Geschichten</h2>
+                </div>
+                <div class="text-sm text-petrol-600 bg-sand-100 px-4 py-2">
+                    Woche 01 / 25
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Main Story -->
+                <div class="lg:col-span-2 bg-sand-50">
+                    <!-- Screenshot der alten Website -->
+                    <div class="aspect-[16/10] bg-sand-200 overflow-hidden">
+                        <img src="wiai-2021.png" alt="WIAI-Website 2001" class="w-full h-full object-cover object-top">
+                    </div>
+                    <div class="p-8">
+                        <div class="text-copper-500 text-sm font-medium mb-2">#01</div>
+                        <h3 class="text-2xl font-bold mb-4">28. September 2001</h3>
+                        <p class="text-petrol-600 mb-6 leading-relaxed">
+                            Die WIAI geht online. Drei Professoren, eine Handvoll Lehrstühle, 
+                            und eine Website, die heute wie ein Artefakt aus einer anderen Zeit wirkt. 
+                            FlexNow! war schon dabei.
+                        </p>
+                        <a href="#" class="inline-flex items-center gap-2 text-copper-500 font-medium hover:text-copper-600 transition-colors">
+                            Weiterlesen
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Upcoming -->
+                <div class="lg:col-span-1">
+                    <div class="bg-sand-50 p-8 h-full">
+                        <h3 class="font-bold mb-6">Kommende Geschichten</h3>
+                        <p class="text-petrol-600 text-sm mb-8">
+                            Jede Woche bis zur Feier: eine neue Geschichte. 
+                            Kurioses, Wegweisendes, Menschliches.
+                        </p>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between py-3 border-b border-sand-200">
+                                <span class="text-sand-300 font-medium">#02</span>
+                                <span class="text-petrol-600 text-sm">Nächste Woche</span>
+                            </div>
+                            <div class="flex items-center justify-between py-3 border-b border-sand-200">
+                                <span class="text-sand-300 font-medium">#03</span>
+                                <span class="text-petrol-600 text-sm">In 2 Wochen</span>
+                            </div>
+                            <div class="flex items-center justify-between py-3 border-b border-sand-200">
+                                <span class="text-sand-300 font-medium">...</span>
+                                <span class="text-petrol-600 text-sm"></span>
+                            </div>
+                            <div class="flex items-center justify-between py-3">
+                                <span class="text-copper-500 font-medium">#25</span>
+                                <span class="text-petrol-600 text-sm">Zur Feier am 26.06.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </section>
+
+    <!-- Über die WIAI -->
+    <section class="px-6 py-16 bg-sand-100 border-y border-sand-200">
+        <div class="max-w-6xl mx-auto">
+            <div class="max-w-3xl">
+                <p class="text-xl leading-relaxed text-petrol-700">
+                    Die Fakultät <strong class="text-petrol-900">Wirtschaftsinformatik und Angewandte Informatik (WIAI)</strong> 
+                    wurde 2001 gegründet. Heute forschen und lehren hier 33 Professuren 
+                    an der Schnittstelle von Technik, Mensch und Gesellschaft – 
+                    von KI bis Psychologie, von Security bis Sozioinformatik.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projekte -->
+    <section class="bg-white px-6 py-20" id="projekte">
+        <div class="max-w-6xl mx-auto">
+            <div class="section-label mb-4">Work in Progress</div>
+            <h2 class="text-3xl font-bold mb-4">Hinter den Kulissen</h2>
+            <p class="text-petrol-600 mb-10 max-w-xl">
+                Studierende entwickeln die interaktiven Stationen für die Feier.
+            </p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="border border-sand-200 p-6">
+                    <h4 class="font-semibold mb-2">Pattern Match</h4>
+                    <p class="text-petrol-600 text-sm mb-4">
+                        Zwei-Spieler: Muster erkennen, schneller sein.
+                    </p>
+                    <span class="text-xs text-petrol-600/60">In Arbeit</span>
+                </div>
+                
+                <div class="border border-sand-200 p-6">
+                    <h4 class="font-semibold mb-2">Generative Kunst</h4>
+                    <p class="text-petrol-600 text-sm mb-4">
+                        Per Tastendruck Muster erzeugen, ausdrucken.
+                    </p>
+                    <span class="text-xs text-copper-500">Prototyp läuft</span>
+                </div>
+                
+                <div class="border border-sand-200 p-6">
+                    <h4 class="font-semibold mb-2">Vorlieben-Quiz</h4>
+                    <p class="text-petrol-600 text-sm mb-4">
+                        Tabs oder Spaces? Live-Visualisierung.
+                    </p>
+                    <span class="text-xs text-petrol-600/60">Konzept</span>
+                </div>
+                
+                <div class="bg-petrol-800 text-white p-6">
+                    <h4 class="font-semibold mb-2">Diese Website</h4>
+                    <p class="text-white/60 text-sm mb-4">
+                        Das wachsende Logo. Sie sind hier.
+                    </p>
+                    <span class="text-xs text-green-400">Live</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Anmeldung -->
+    <section class="bg-petrol-800 text-white px-6 py-20" id="anmeldung">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                
+                <div>
+                    <div class="section-label text-copper-500 mb-4">Save the Date</div>
+                    <h2 class="text-3xl font-bold mb-6">Dabei sein</h2>
+                    <p class="text-white/70 mb-8 leading-relaxed">
+                        26. Juni 2026, ab 14 Uhr<br>
+                        ERBA-Campus, An der Weberei 5, Bamberg
+                    </p>
+                    <p class="text-white/50 text-sm">
+                        Die Anmeldung öffnet im Frühjahr 2026. 
+                        Tragen Sie sich ein – wir erinnern rechtzeitig.
+                    </p>
+                </div>
+                
+                <div class="bg-white text-petrol-900 p-8">
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-sm text-petrol-600 mb-2">E-Mail</label>
+                            <input type="email" placeholder="ihre@email.de" 
+                                   class="w-full px-4 py-3 bg-sand-50 border border-sand-200 focus:outline-none focus:border-petrol-600 transition-colors">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm text-petrol-600 mb-2">Ich komme als...</label>
+                            <select class="w-full px-4 py-3 bg-sand-50 border border-sand-200 focus:outline-none focus:border-petrol-600 transition-colors">
+                                <option value="">Bitte auswählen</option>
+                                <option value="studieninteressiert">Studieninteressiert / Schüler:in</option>
+                                <option value="familie">Mit Familie / Kindern</option>
+                                <option value="alumni">Alumni</option>
+                                <option value="unternehmen">Unternehmen / Industrie</option>
+                                <option value="forschung">Forschungspartner</option>
+                                <option value="presse">Presse</option>
+                                <option value="sonstige">Interessierte:r</option>
+                            </select>
+                        </div>
+                        
+                        <button class="w-full bg-petrol-800 text-white px-6 py-4 font-medium hover:bg-petrol-700 transition-colors">
+                            Erinnerung eintragen
+                        </button>
+                    </div>
+                    
+                    <p class="text-xs text-petrol-600/60 mt-4">
+                        Wir verwenden die Angabe nur zur Planung und um relevante Infos zu schicken.
+                    </p>
+                </div>
+                
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-petrol-900 text-white px-6 py-16">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+                <div class="md:col-span-2">
+                    <div class="text-xl font-bold mb-4">WIAI<span class="text-copper-500">25</span></div>
+                    <p class="text-white/50 max-w-sm text-sm leading-relaxed">
+                        25 Jahre Fakultät Wirtschaftsinformatik und Angewandte Informatik 
+                        an der Otto-Friedrich-Universität Bamberg.
+                    </p>
+                </div>
+                <div>
+                    <div class="text-xs text-white/30 uppercase tracking-wider mb-4">Jubiläum</div>
+                    <div class="flex flex-col gap-3 text-sm">
+                        <a href="#programm" class="text-white/60 hover:text-white transition-colors">Programm</a>
+                        <a href="#geschichten" class="text-white/60 hover:text-white transition-colors">Geschichten</a>
+                        <a href="#projekte" class="text-white/60 hover:text-white transition-colors">Projekte</a>
+                        <a href="#anmeldung" class="text-white/60 hover:text-white transition-colors">Anmeldung</a>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-xs text-white/30 uppercase tracking-wider mb-4">Mehr</div>
+                    <div class="flex flex-col gap-3 text-sm">
+                        <a href="#" class="text-white/60 hover:text-white transition-colors">Über die WIAI</a>
+                        <a href="#" class="text-white/60 hover:text-white transition-colors">Studiengänge</a>
+                        <a href="#" class="text-white/60 hover:text-white transition-colors">uni-bamberg.de</a>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-8 border-t border-white/10 flex flex-wrap justify-between items-center gap-4 text-sm text-white/40">
+                <div class="flex items-center gap-4">
+                    <img src="uba-logo-social-weiss-transparent.svg" alt="Universität Bamberg" class="h-7 opacity-50">
+                    <span>© 2026 Universität Bamberg · Fakultät WIAI</span>
+                </div>
+                <span>Studieren im Welterbe</span>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
