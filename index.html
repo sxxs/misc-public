@@ -347,6 +347,44 @@
             flex: 1;
             min-width: 100px;
         }
+
+        .color-input-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .color-input-row input[type="color"] {
+            width: 40px;
+            height: 30px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .color-input-row input[type="text"] {
+            flex: 1;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 80px;
+        }
+
+        .color-section {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 15px;
+        }
+
+        .color-section .tuning-item {
+            min-width: 150px;
+        }
     </style>
 </head>
 <body>
@@ -406,63 +444,109 @@
 
     <div class="tuning-panel">
         <h3>Parameter-Tuning</h3>
+        <div class="color-section">
+            <div class="tuning-item">
+                <label>Farbschema</label>
+                <select id="tune-preset">
+                    <option value="classic">Klassisch (Teal/Weiß)</option>
+                    <option value="dark">Dark Mode</option>
+                    <option value="highcontrast" selected>Hoher Kontrast</option>
+                    <option value="ocean">Ozean</option>
+                    <option value="sunset">Sonnenuntergang</option>
+                    <option value="custom">Benutzerdefiniert</option>
+                </select>
+            </div>
+            <div class="tuning-item">
+                <label>Hintergrund</label>
+                <div class="color-input-row">
+                    <input type="color" id="tune-bg-color" value="#000000">
+                    <input type="text" id="tune-bg-color-text" value="#000000" maxlength="7">
+                </div>
+            </div>
+            <div class="tuning-item">
+                <label>Pixel-Farbe</label>
+                <div class="color-input-row">
+                    <input type="color" id="tune-pixel-color" value="#facc15">
+                    <input type="text" id="tune-pixel-color-text" value="#facc15" maxlength="7">
+                </div>
+            </div>
+        </div>
         <div class="tuning-grid">
             <div class="tuning-item">
                 <label>Pixel Opacity</label>
-                <input type="range" id="tune-opacity" min="0.1" max="1" step="0.05" value="0.6">
-                <span class="value-display" id="tune-opacity-val">0.6</span>
+                <input type="range" id="tune-opacity" min="0.1" max="1" step="0.05" value="0.7">
+                <span class="value-display" id="tune-opacity-val">0.7</span>
             </div>
             <div class="tuning-item">
                 <label>Overlap Threshold</label>
-                <input type="range" id="tune-overlap" min="0.1" max="0.8" step="0.05" value="0.4">
-                <span class="value-display" id="tune-overlap-val">0.4</span>
+                <input type="range" id="tune-overlap" min="0.1" max="0.8" step="0.05" value="0.3">
+                <span class="value-display" id="tune-overlap-val">0.3</span>
             </div>
             <div class="tuning-item">
                 <label>Outline Stroke Width</label>
-                <input type="range" id="tune-stroke" min="1" max="20" step="1" value="6">
-                <span class="value-display" id="tune-stroke-val">6</span>
+                <input type="range" id="tune-stroke" min="1" max="20" step="1" value="2">
+                <span class="value-display" id="tune-stroke-val">2</span>
             </div>
             <div class="tuning-item">
                 <label>Outline Color</label>
                 <select id="tune-outline-color">
-                    <option value="#ffffff" selected>Weiß</option>
+                    <option value="#ffffff">Weiß</option>
                     <option value="#1a5f5f">Teal</option>
-                    <option value="#000000">Schwarz</option>
+                    <option value="#000000" selected>Schwarz</option>
                 </select>
             </div>
             <div class="tuning-item">
                 <label>Pixel-Reihenfolge</label>
                 <select id="tune-order">
-                    <option value="scanline" selected>Scanline</option>
-                    <option value="shuffle">Shuffle</option>
+                    <option value="scanline">Scanline</option>
+                    <option value="shuffle" selected>Shuffle</option>
                 </select>
             </div>
             <div class="tuning-item">
                 <label>Fade-Modus</label>
                 <select id="tune-fade-mode">
-                    <option value="level" selected>Pro Level</option>
-                    <option value="pixel">Pro N Pixel</option>
+                    <option value="level">Pro Level</option>
+                    <option value="pixel" selected>Pro N Pixel</option>
                 </select>
             </div>
             <div class="tuning-item" id="fade-n-start-container">
                 <label>Fade N Pixel (Start)</label>
-                <input type="range" id="tune-fade-n-start" min="1" max="1000" step="1" value="1">
-                <span class="value-display" id="tune-fade-n-start-val">1</span>
+                <input type="range" id="tune-fade-n-start" min="1" max="1000" step="1" value="8">
+                <span class="value-display" id="tune-fade-n-start-val">8</span>
             </div>
             <div class="tuning-item" id="fade-n-end-container">
                 <label>Fade N Pixel (Ende)</label>
-                <input type="range" id="tune-fade-n-end" min="1" max="1000" step="1" value="100">
-                <span class="value-display" id="tune-fade-n-end-val">100</span>
+                <input type="range" id="tune-fade-n-end" min="1" max="1000" step="1" value="164">
+                <span class="value-display" id="tune-fade-n-end-val">164</span>
             </div>
             <div class="tuning-item" id="max-fade-start-container">
                 <label>Max Fade Steps (Start)</label>
-                <input type="range" id="tune-max-fade-start" min="1" max="1000" step="1" value="10">
-                <span class="value-display" id="tune-max-fade-start-val">10</span>
+                <input type="range" id="tune-max-fade-start" min="1" max="1000" step="1" value="145">
+                <span class="value-display" id="tune-max-fade-start-val">145</span>
             </div>
             <div class="tuning-item" id="max-fade-end-container">
                 <label>Max Fade Steps (Ende)</label>
-                <input type="range" id="tune-max-fade-end" min="1" max="1000" step="1" value="200">
-                <span class="value-display" id="tune-max-fade-end-val">200</span>
+                <input type="range" id="tune-max-fade-end" min="1" max="1000" step="1" value="695">
+                <span class="value-display" id="tune-max-fade-end-val">695</span>
+            </div>
+            <div class="tuning-item">
+                <label>Puls-Intensität</label>
+                <input type="range" id="tune-pulse-intensity" min="0.1" max="1.5" step="0.1" value="0.5">
+                <span class="value-display" id="tune-pulse-intensity-val">0.5</span>
+            </div>
+            <div class="tuning-item">
+                <label>Puls-Frequenz</label>
+                <input type="range" id="tune-pulse-frequency" min="0.05" max="0.5" step="0.05" value="0.2">
+                <span class="value-display" id="tune-pulse-frequency-val">0.2</span>
+            </div>
+            <div class="tuning-item">
+                <label>Puls-Kurve</label>
+                <select id="tune-pulse-curve">
+                    <option value="linear" selected>Linear</option>
+                    <option value="ease-in">Ease-In (langsamer Start)</option>
+                    <option value="ease-out">Ease-Out (langsames Ende)</option>
+                    <option value="ease-in-out">S-Kurve</option>
+                </select>
             </div>
         </div>
         <div class="curve-editor">
@@ -473,8 +557,8 @@
                     <div class="pixel-size-controls">
                         <div class="tuning-item">
                             <label>Max Pixel</label>
-                            <input type="range" id="tune-max-pixel" min="20" max="200" step="1" value="100">
-                            <span class="value-display" id="tune-max-pixel-val">100px</span>
+                            <input type="range" id="tune-max-pixel" min="20" max="200" step="1" value="180">
+                            <span class="value-display" id="tune-max-pixel-val">180px</span>
                         </div>
                         <div class="tuning-item">
                             <label>Min Pixel</label>
@@ -483,8 +567,8 @@
                         </div>
                         <div class="tuning-item">
                             <label>Anzahl Levels</label>
-                            <input type="range" id="tune-num-levels" min="3" max="30" step="1" value="15">
-                            <span class="value-display" id="tune-num-levels-val">15</span>
+                            <input type="range" id="tune-num-levels" min="3" max="30" step="1" value="11">
+                            <span class="value-display" id="tune-num-levels-val">11</span>
                         </div>
                     </div>
                     <div class="curve-canvas-container">
@@ -527,31 +611,48 @@
             fontSize: 320,
             fontFamily: 'JetBrains Mono',
             // Pixel size progression config
-            maxPixelSize: 100,
+            maxPixelSize: 180,
             minPixelSize: 4,
-            numLevels: 15,
+            numLevels: 11,
             // Bezier curve for pixel size progression [x, y] where x=level progress(0-1), y=size progress(0-1, 0=max, 1=min)
-            pixelSizeCurve: [[0, 0], [0.25, 0.2], [0.5, 0.5], [0.75, 0.8], [1, 1]],
+            pixelSizeCurve: [[0, 0], [0.04, 0.69], [0.37, 1], [0.75, 0.8], [1, 1]],
             // Computed pixel sizes (will be calculated from curve)
             pixelSizes: [],
-            pixelColor: '#1a5f5f',
-            pixelOpacity: 0.6,
-            overlapThreshold: 0.4,
-            bgColor: '#f8f8f8',
+            pixelColor: '#facc15',
+            pixelOpacity: 0.7,
+            overlapThreshold: 0.3,
+            bgColor: '#000000',
             // Bezier curve control points for fade [x, y] where x=progress(0-1), y=fade(0-1)
             fadeCurve: [[0, 0], [0.2, 0.5], [0.5, 0.7], [1, 0.9]],
-            outlineStrokeWidth: 6,
-            outlineColor: '#ffffff',
-            // NEW: Shuffle vs Scanline
-            shufflePixels: false,
+            outlineStrokeWidth: 2,
+            outlineColor: '#000000',
+            // Shuffle vs Scanline
+            shufflePixels: true,
             shuffleSeed: 42,
-            // NEW: Fade mode - 'level' or 'pixel'
-            fadeMode: 'level',
-            fadeEveryNPixelsStart: 1,
-            fadeEveryNPixelsEnd: 100,
-            maxFadeStepsStart: 10,
-            maxFadeStepsEnd: 200
+            // Fade mode - 'level' or 'pixel'
+            fadeMode: 'pixel',
+            fadeEveryNPixelsStart: 8,
+            fadeEveryNPixelsEnd: 164,
+            maxFadeStepsStart: 145,
+            maxFadeStepsEnd: 695,
+            // Pulse animation config
+            pulseIntensity: 0.5,  // intensity multiplier for pulse effect
+            pulseFrequency: 0.2,  // speed of pulse oscillation
+            pulseCurve: 'linear'  // 'linear', 'ease-in', 'ease-out', 'ease-in-out'
         };
+
+        // Color presets
+        const COLOR_PRESETS = {
+            classic: { bg: '#f8f8f8', pixel: '#1a5f5f', outline: '#ffffff' },
+            dark: { bg: '#1a1a1a', pixel: '#00ff88', outline: '#333333' },
+            highcontrast: { bg: '#000000', pixel: '#facc15', outline: '#000000' },
+            ocean: { bg: '#0a1628', pixel: '#4fc3f7', outline: '#0a1628' },
+            sunset: { bg: '#2d1b33', pixel: '#ff6b6b', outline: '#2d1b33' }
+        };
+
+        // Pulsing effect state
+        let pulsePhase = 0;
+        let pulseAnimationId = null;
 
         // Calculate pixel sizes from bezier curve
         function calculatePixelSizesFromCurve() {
@@ -669,16 +770,22 @@
             return result;
         }
 
-        // Lighten a hex color toward white
-        function lightenColor(hexColor, amount) {
-            // amount: 0 = original, 1 = white
+        // Fade color toward background (smart direction based on bg color)
+        function fadeColor(hexColor, bgColor, amount) {
+            // Parse foreground color
             const r = parseInt(hexColor.slice(1, 3), 16);
             const g = parseInt(hexColor.slice(3, 5), 16);
             const b = parseInt(hexColor.slice(5, 7), 16);
 
-            const newR = Math.round(r + (255 - r) * amount);
-            const newG = Math.round(g + (255 - g) * amount);
-            const newB = Math.round(b + (255 - b) * amount);
+            // Parse background color
+            const bgR = parseInt(bgColor.slice(1, 3), 16);
+            const bgG = parseInt(bgColor.slice(3, 5), 16);
+            const bgB = parseInt(bgColor.slice(5, 7), 16);
+
+            // Interpolate toward background
+            const newR = Math.round(r + (bgR - r) * amount);
+            const newG = Math.round(g + (bgG - g) * amount);
+            const newB = Math.round(b + (bgB - b) * amount);
 
             return `rgb(${newR}, ${newG}, ${newB})`;
         }
@@ -762,7 +869,7 @@
                 for (let i = 0; i <= frameIndex && i < allPixelsWithTiming.length; i++) {
                     const pixel = allPixelsWithTiming[i];
                     const fadeAmount = getFadeForPixel(pixel.drawnAtFrame, frameIndex, totalFrames);
-                    const fadedColor = lightenColor(CONFIG.pixelColor, Math.min(fadeAmount, 0.95));
+                    const fadedColor = fadeColor(CONFIG.pixelColor, CONFIG.bgColor, Math.min(fadeAmount, 0.95));
 
                     displayCtx.fillStyle = fadedColor;
                     displayCtx.globalAlpha = CONFIG.pixelOpacity;
@@ -774,7 +881,7 @@
                 const completedLevels = historyLevels.filter(h => h.level < level);
                 completedLevels.forEach(historyLevel => {
                     const fadeAmount = getFadeForLevel(historyLevel.level, level, totalLevels);
-                    const fadedColor = lightenColor(CONFIG.pixelColor, Math.min(fadeAmount, 0.95));
+                    const fadedColor = fadeColor(CONFIG.pixelColor, CONFIG.bgColor, Math.min(fadeAmount, 0.95));
 
                     displayCtx.fillStyle = fadedColor;
                     displayCtx.globalAlpha = CONFIG.pixelOpacity;
@@ -789,6 +896,56 @@
                 currentPixels.forEach(cell => {
                     displayCtx.fillRect(cell.x, cell.y, cell.size, cell.size);
                 });
+            }
+
+            // Highlight newest pixel with pulsing effect (opacity + scale + glow)
+            if (frameIndex >= 0 && frameIndex < allPixelsWithTiming.length) {
+                const newestPixel = allPixelsWithTiming[frameIndex];
+
+                // Apply easing function to pulse phase
+                const normalizedPhase = (Math.sin(pulsePhase) + 1) / 2; // 0 to 1
+                let easedPhase;
+                switch (CONFIG.pulseCurve) {
+                    case 'ease-in':
+                        easedPhase = normalizedPhase * normalizedPhase;
+                        break;
+                    case 'ease-out':
+                        easedPhase = 1 - (1 - normalizedPhase) * (1 - normalizedPhase);
+                        break;
+                    case 'ease-in-out':
+                        easedPhase = normalizedPhase < 0.5
+                            ? 2 * normalizedPhase * normalizedPhase
+                            : 1 - Math.pow(-2 * normalizedPhase + 2, 2) / 2;
+                        break;
+                    default:
+                        easedPhase = normalizedPhase;
+                }
+
+                const intensity = CONFIG.pulseIntensity;
+
+                // Scale effect: pixel grows/shrinks
+                const scaleBonus = easedPhase * intensity * 0.5; // up to 50% larger
+                const scaledSize = newestPixel.size * (1 + scaleBonus);
+                const offset = (scaledSize - newestPixel.size) / 2;
+
+                // Glow effect
+                displayCtx.shadowColor = CONFIG.pixelColor;
+                displayCtx.shadowBlur = 10 + easedPhase * intensity * 30;
+
+                // Opacity boost
+                displayCtx.fillStyle = CONFIG.pixelColor;
+                displayCtx.globalAlpha = Math.min(1, CONFIG.pixelOpacity + 0.2 + easedPhase * intensity * 0.3);
+
+                // Draw scaled pixel with glow
+                displayCtx.fillRect(
+                    newestPixel.x - offset,
+                    newestPixel.y - offset,
+                    scaledSize,
+                    scaledSize
+                );
+
+                // Reset shadow
+                displayCtx.shadowBlur = 0;
             }
 
             // Draw outline
@@ -1042,6 +1199,18 @@
         const tuneMaxPixel = document.getElementById('tune-max-pixel');
         const tuneMinPixel = document.getElementById('tune-min-pixel');
         const tuneNumLevels = document.getElementById('tune-num-levels');
+
+        // Color controls
+        const tunePreset = document.getElementById('tune-preset');
+        const tuneBgColor = document.getElementById('tune-bg-color');
+        const tuneBgColorText = document.getElementById('tune-bg-color-text');
+        const tunePixelColor = document.getElementById('tune-pixel-color');
+        const tunePixelColorText = document.getElementById('tune-pixel-color-text');
+
+        // Pulse controls
+        const tunePulseIntensity = document.getElementById('tune-pulse-intensity');
+        const tunePulseFrequency = document.getElementById('tune-pulse-frequency');
+        const tunePulseCurve = document.getElementById('tune-pulse-curve');
 
         // Curve editor (fade)
         const curveCanvas = document.getElementById('curve-canvas');
@@ -1360,6 +1529,8 @@
 
         function updateExportField() {
             const params = {
+                bgColor: CONFIG.bgColor,
+                pixelColor: CONFIG.pixelColor,
                 pixelOpacity: parseFloat(tuneOpacity.value),
                 fadeCurve: CONFIG.fadeCurve.map(p => [Math.round(p[0] * 100) / 100, Math.round(p[1] * 100) / 100]),
                 pixelSizeCurve: CONFIG.pixelSizeCurve.map(p => [Math.round(p[0] * 100) / 100, Math.round(p[1] * 100) / 100]),
@@ -1368,13 +1539,16 @@
                 numLevels: CONFIG.numLevels,
                 overlapThreshold: parseFloat(tuneOverlap.value),
                 outlineStrokeWidth: parseInt(tuneStroke.value),
-                outlineColor: tuneOutlineColor.value,
+                outlineColor: CONFIG.outlineColor,
                 shufflePixels: CONFIG.shufflePixels,
                 fadeMode: CONFIG.fadeMode,
                 fadeEveryNPixelsStart: CONFIG.fadeEveryNPixelsStart,
                 fadeEveryNPixelsEnd: CONFIG.fadeEveryNPixelsEnd,
                 maxFadeStepsStart: CONFIG.maxFadeStepsStart,
-                maxFadeStepsEnd: CONFIG.maxFadeStepsEnd
+                maxFadeStepsEnd: CONFIG.maxFadeStepsEnd,
+                pulseIntensity: CONFIG.pulseIntensity,
+                pulseFrequency: CONFIG.pulseFrequency,
+                pulseCurve: CONFIG.pulseCurve
             };
             exportField.value = JSON.stringify(params);
         }
@@ -1477,6 +1651,95 @@
             }
         });
 
+        // Color preset handler
+        tunePreset.addEventListener('change', () => {
+            const preset = tunePreset.value;
+            if (preset !== 'custom' && COLOR_PRESETS[preset]) {
+                const colors = COLOR_PRESETS[preset];
+                CONFIG.bgColor = colors.bg;
+                CONFIG.pixelColor = colors.pixel;
+                CONFIG.outlineColor = colors.outline;
+                // Update UI
+                tuneBgColor.value = colors.bg;
+                tuneBgColorText.value = colors.bg;
+                tunePixelColor.value = colors.pixel;
+                tunePixelColorText.value = colors.pixel;
+                tuneOutlineColor.value = colors.outline;
+                updateExportField();
+                if (frames.length > 0) {
+                    showFrame(currentFrame);
+                }
+            }
+        });
+
+        // Background color handlers
+        tuneBgColor.addEventListener('input', () => {
+            CONFIG.bgColor = tuneBgColor.value;
+            tuneBgColorText.value = tuneBgColor.value;
+            tunePreset.value = 'custom';
+            updateExportField();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
+        tuneBgColorText.addEventListener('input', () => {
+            const val = tuneBgColorText.value;
+            if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+                CONFIG.bgColor = val;
+                tuneBgColor.value = val;
+                tunePreset.value = 'custom';
+                updateExportField();
+                if (frames.length > 0) {
+                    showFrame(currentFrame);
+                }
+            }
+        });
+
+        // Pixel color handlers
+        tunePixelColor.addEventListener('input', () => {
+            CONFIG.pixelColor = tunePixelColor.value;
+            tunePixelColorText.value = tunePixelColor.value;
+            tunePreset.value = 'custom';
+            updateExportField();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
+        tunePixelColorText.addEventListener('input', () => {
+            const val = tunePixelColorText.value;
+            if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+                CONFIG.pixelColor = val;
+                tunePixelColor.value = val;
+                tunePreset.value = 'custom';
+                updateExportField();
+                if (frames.length > 0) {
+                    showFrame(currentFrame);
+                }
+            }
+        });
+
+        // Pulse intensity handler
+        tunePulseIntensity.addEventListener('input', () => {
+            CONFIG.pulseIntensity = parseFloat(tunePulseIntensity.value);
+            document.getElementById('tune-pulse-intensity-val').textContent = CONFIG.pulseIntensity;
+            updateExportField();
+        });
+
+        // Pulse frequency handler
+        tunePulseFrequency.addEventListener('input', () => {
+            CONFIG.pulseFrequency = parseFloat(tunePulseFrequency.value);
+            document.getElementById('tune-pulse-frequency-val').textContent = CONFIG.pulseFrequency;
+            updateExportField();
+        });
+
+        // Pulse curve handler
+        tunePulseCurve.addEventListener('change', () => {
+            CONFIG.pulseCurve = tunePulseCurve.value;
+            updateExportField();
+        });
+
         document.getElementById('copy-btn').addEventListener('click', () => {
             exportField.select();
             navigator.clipboard.writeText(exportField.value);
@@ -1530,6 +1793,32 @@
             document.getElementById('tune-max-pixel-val').textContent = `${CONFIG.maxPixelSize}px`;
             document.getElementById('tune-min-pixel-val').textContent = `${CONFIG.minPixelSize}px`;
             document.getElementById('tune-num-levels-val').textContent = CONFIG.numLevels;
+            // Color controls
+            tuneBgColor.value = CONFIG.bgColor;
+            tuneBgColorText.value = CONFIG.bgColor;
+            tunePixelColor.value = CONFIG.pixelColor;
+            tunePixelColorText.value = CONFIG.pixelColor;
+            // Pulse controls
+            tunePulseIntensity.value = CONFIG.pulseIntensity;
+            document.getElementById('tune-pulse-intensity-val').textContent = CONFIG.pulseIntensity;
+            tunePulseFrequency.value = CONFIG.pulseFrequency;
+            document.getElementById('tune-pulse-frequency-val').textContent = CONFIG.pulseFrequency;
+            tunePulseCurve.value = CONFIG.pulseCurve;
+        }
+
+        // Pulse animation loop
+        function startPulseAnimation() {
+            function animate() {
+                pulsePhase = (pulsePhase + CONFIG.pulseFrequency) % (Math.PI * 2);
+                if (frames.length > 0 && !isPlaying) {
+                    // Only re-render when not playing (playing already re-renders)
+                    showFrame(currentFrame);
+                }
+                pulseAnimationId = requestAnimationFrame(animate);
+            }
+            if (!pulseAnimationId) {
+                animate();
+            }
         }
 
         // Wait for font to load, then generate
@@ -1537,6 +1826,7 @@
             initializeSliders();
             updateTuningDisplay();
             generateFrames();
+            startPulseAnimation();
         });
     </script>
 </body>
