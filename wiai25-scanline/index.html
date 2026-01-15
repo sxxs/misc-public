@@ -621,6 +621,26 @@
                 <span class="value-display" id="tune-twoline-gap-val">-20px</span>
             </div>
         </div>
+        <div class="tuning-grid" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+            <div class="tuning-item" style="grid-column: 1 / -1;">
+                <label style="font-weight: 600; font-size: 0.9rem;">Canvas-Dimensionen</label>
+            </div>
+            <div class="tuning-item">
+                <label>Breite (px)</label>
+                <input type="range" id="tune-canvas-width" min="400" max="2000" step="50" value="1200">
+                <span class="value-display" id="tune-canvas-width-val">1200px</span>
+            </div>
+            <div class="tuning-item">
+                <label>Höhe (px)</label>
+                <input type="range" id="tune-canvas-height" min="200" max="1000" step="50" value="480">
+                <span class="value-display" id="tune-canvas-height-val">480px</span>
+            </div>
+            <div class="tuning-item">
+                <label>Text Y-Offset (px)</label>
+                <input type="range" id="tune-text-offset-y" min="-100" max="100" step="5" value="15">
+                <span class="value-display" id="tune-text-offset-y-val">15px</span>
+            </div>
+        </div>
         <div class="curve-editor">
             <label>Kurven-Editoren — Punkte draggen</label>
             <div class="curve-section">
@@ -693,6 +713,7 @@
         const CONFIG = {
             canvasWidth: 1200,
             canvasHeight: 480,
+            textOffsetY: 15,      // vertical offset for text positioning
             text: 'WIAI25',
             fontSize: 320,
             fontFamily: 'JetBrains Mono',
@@ -805,6 +826,16 @@
         maskCanvasTwoLine.height = CONFIG.canvasHeight;
         const maskCtxTwoLine = maskCanvasTwoLine.getContext('2d');
 
+        // Update all canvas dimensions
+        function updateCanvasDimensions() {
+            displayCanvas.width = CONFIG.canvasWidth;
+            displayCanvas.height = CONFIG.canvasHeight;
+            maskCanvas.width = CONFIG.canvasWidth;
+            maskCanvas.height = CONFIG.canvasHeight;
+            maskCanvasTwoLine.width = CONFIG.canvasWidth;
+            maskCanvasTwoLine.height = CONFIG.canvasHeight;
+        }
+
         // Generate text mask (single-line: "WIAI25")
         function generateTextMask() {
             maskCtx.fillStyle = 'white';
@@ -814,7 +845,7 @@
             maskCtx.font = `700 ${CONFIG.fontSize}px "${CONFIG.fontFamily}"`;
             maskCtx.textAlign = 'center';
             maskCtx.textBaseline = 'middle';
-            maskCtx.fillText(CONFIG.text, CONFIG.canvasWidth / 2, CONFIG.canvasHeight / 2 + 15);
+            maskCtx.fillText(CONFIG.text, CONFIG.canvasWidth / 2, CONFIG.canvasHeight / 2 + CONFIG.textOffsetY);
         }
 
         // Generate two-line text mask ("WIAI" on top, "25" below, larger)
@@ -831,7 +862,7 @@
 
             // Total height of both lines
             const totalHeight = wiaiSize + gap + num25Size;
-            const startY = (CONFIG.canvasHeight - totalHeight) / 2;
+            const startY = (CONFIG.canvasHeight - totalHeight) / 2 + CONFIG.textOffsetY;
 
             // Draw "WIAI" (smaller, top)
             maskCtxTwoLine.font = `700 ${wiaiSize}px "${CONFIG.fontFamily}"`;
@@ -1145,7 +1176,7 @@
                     const num25Size = CONFIG.twoLine25Size;
                     const gap = CONFIG.twoLineGap;
                     const totalHeight = wiaiSize + gap + num25Size;
-                    const startY = (CONFIG.canvasHeight - totalHeight) / 2;
+                    const startY = (CONFIG.canvasHeight - totalHeight) / 2 + CONFIG.textOffsetY;
 
                     displayCtx.textAlign = 'center';
 
@@ -1162,7 +1193,7 @@
                     displayCtx.font = `700 ${CONFIG.fontSize}px "${CONFIG.fontFamily}"`;
                     displayCtx.textAlign = 'center';
                     displayCtx.textBaseline = 'middle';
-                    displayCtx.strokeText(CONFIG.text, CONFIG.canvasWidth / 2, CONFIG.canvasHeight / 2 + 15);
+                    displayCtx.strokeText(CONFIG.text, CONFIG.canvasWidth / 2, CONFIG.canvasHeight / 2 + CONFIG.textOffsetY);
                 }
             }
         }
@@ -1185,6 +1216,8 @@
 
         // Generate all frames
         async function generateFrames() {
+            // Update canvas dimensions first
+            updateCanvasDimensions();
             // Generate text masks for both layouts
             generateTextMask();
             generateTextMaskTwoLine();
@@ -1542,6 +1575,10 @@
         // Fade limit controls
         const tuneFadeLimitLevels = document.getElementById('tune-fade-limit-levels');
         const tuneFadeLimitStep = document.getElementById('tune-fade-limit-step');
+        // Canvas dimension controls
+        const tuneCanvasWidth = document.getElementById('tune-canvas-width');
+        const tuneCanvasHeight = document.getElementById('tune-canvas-height');
+        const tuneTextOffsetY = document.getElementById('tune-text-offset-y');
 
         // Curve editor (fade)
         const curveCanvas = document.getElementById('curve-canvas');
@@ -1890,7 +1927,10 @@
                 twoLine25Size: CONFIG.twoLine25Size,
                 twoLineGap: CONFIG.twoLineGap,
                 fadeLimitLevels: CONFIG.fadeLimitLevels,
-                fadeLimitStep: CONFIG.fadeLimitStep
+                fadeLimitStep: CONFIG.fadeLimitStep,
+                canvasWidth: CONFIG.canvasWidth,
+                canvasHeight: CONFIG.canvasHeight,
+                textOffsetY: CONFIG.textOffsetY
             };
             exportField.value = JSON.stringify(params);
         }
@@ -2171,6 +2211,27 @@
             }
         });
 
+        // Canvas width handler (needs regeneration)
+        tuneCanvasWidth.addEventListener('input', () => {
+            CONFIG.canvasWidth = parseInt(tuneCanvasWidth.value);
+            document.getElementById('tune-canvas-width-val').textContent = `${CONFIG.canvasWidth}px`;
+            updateExportField();
+        });
+
+        // Canvas height handler (needs regeneration)
+        tuneCanvasHeight.addEventListener('input', () => {
+            CONFIG.canvasHeight = parseInt(tuneCanvasHeight.value);
+            document.getElementById('tune-canvas-height-val').textContent = `${CONFIG.canvasHeight}px`;
+            updateExportField();
+        });
+
+        // Text Y offset handler (needs regeneration)
+        tuneTextOffsetY.addEventListener('input', () => {
+            CONFIG.textOffsetY = parseInt(tuneTextOffsetY.value);
+            document.getElementById('tune-text-offset-y-val').textContent = `${CONFIG.textOffsetY}px`;
+            updateExportField();
+        });
+
         document.getElementById('copy-btn').addEventListener('click', () => {
             exportField.select();
             navigator.clipboard.writeText(exportField.value);
@@ -2219,6 +2280,9 @@
                     if (params.twoLineGap !== undefined) CONFIG.twoLineGap = params.twoLineGap;
                     if (params.fadeLimitLevels !== undefined) CONFIG.fadeLimitLevels = params.fadeLimitLevels;
                     if (params.fadeLimitStep !== undefined) CONFIG.fadeLimitStep = params.fadeLimitStep;
+                    if (params.canvasWidth !== undefined) CONFIG.canvasWidth = params.canvasWidth;
+                    if (params.canvasHeight !== undefined) CONFIG.canvasHeight = params.canvasHeight;
+                    if (params.textOffsetY !== undefined) CONFIG.textOffsetY = params.textOffsetY;
 
                     // Update all UI elements to match CONFIG
                     initializeSliders();
@@ -2296,6 +2360,13 @@
             document.getElementById('tune-fade-limit-levels-val').textContent = CONFIG.fadeLimitLevels;
             tuneFadeLimitStep.value = CONFIG.fadeLimitStep;
             document.getElementById('tune-fade-limit-step-val').textContent = `${Math.round(CONFIG.fadeLimitStep * 100)}%`;
+            // Canvas dimension controls
+            tuneCanvasWidth.value = CONFIG.canvasWidth;
+            document.getElementById('tune-canvas-width-val').textContent = `${CONFIG.canvasWidth}px`;
+            tuneCanvasHeight.value = CONFIG.canvasHeight;
+            document.getElementById('tune-canvas-height-val').textContent = `${CONFIG.canvasHeight}px`;
+            tuneTextOffsetY.value = CONFIG.textOffsetY;
+            document.getElementById('tune-text-offset-y-val').textContent = `${CONFIG.textOffsetY}px`;
         }
 
         // Pulse animation loop
