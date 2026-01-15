@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Fira+Code:wght@700&family=Source+Code+Pro:wght@700&family=IBM+Plex+Mono:wght@700&family=Roboto+Mono:wght@700&family=Space+Mono:wght@700&family=Inconsolata:wght@700&family=Ubuntu+Mono:wght@700&family=Courier+Prime:wght@700&family=Anonymous+Pro:wght@700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -688,6 +689,17 @@
                 <button id="apply-btn">Apply & Regenerate</button>
             </div>
         </div>
+        <div class="export-section" style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #ddd;">
+            <label>Frame-Export für Deployment</label>
+            <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.8rem;">
+                    <input type="checkbox" id="compress-export" checked>
+                    Komprimieren
+                </label>
+                <button id="save-frames-btn">Save Frames (JSON)</button>
+                <span id="export-size-estimate" style="font-size: 0.75rem; color: #666;"></span>
+            </div>
+        </div>
     </div>
 
     <div class="debug-panel" id="debug-panel">
@@ -711,12 +723,12 @@
         ];
 
         const CONFIG = {
-            canvasWidth: 1200,
-            canvasHeight: 480,
-            textOffsetY: 15,      // vertical offset for text positioning
+            canvasWidth: 600,
+            canvasHeight: 600,
+            textOffsetY: -35,      // vertical offset for text positioning
             text: 'WIAI25',
             fontSize: 320,
-            fontFamily: 'JetBrains Mono',
+            fontFamily: 'IBM Plex Mono',
             // Outline visibility: hide from this level onwards (0 = never hide)
             outlineHideFromLevel: 0,
             // Two-line mode config
@@ -724,10 +736,10 @@
             twoLineBreakpoint: 600, // px - below this width, use two-line layout
             twoLineWiaiSize: 200,   // font size for "WIAI"
             twoLine25Size: 380,     // font size for "25" (larger)
-            twoLineGap: -20,        // vertical gap between lines
+            twoLineGap: -65,        // vertical gap between lines
             // Fade limit for early levels (prevents complete fadeout)
-            fadeLimitLevels: 4,     // apply fade limit to first N levels (0 = disabled)
-            fadeLimitStep: 0.02,    // each level fades 2% less than max (level 1: 98%, level 2: 96%, etc.)
+            fadeLimitLevels: 9,     // apply fade limit to first N levels (0 = disabled)
+            fadeLimitStep: 0.03,    // each level fades 3% less than max
             // Pixel size progression config
             maxPixelSize: 180,
             minPixelSize: 4,
@@ -738,12 +750,12 @@
             pixelSizes: [],
             pixelColor: '#facc15',
             pixelOpacity: 0.7,
-            overlapThreshold: 0.3,
+            overlapThreshold: 0.25,
             bgColor: '#000000',
             // Bezier curve control points for fade [x, y] where x=progress(0-1), y=fade(0-1)
             fadeCurve: [[0, 0], [0.2, 0.5], [0.5, 0.7], [1, 0.9]],
             outlineStrokeWidth: 2,
-            outlineColor: '#000000',
+            outlineColor: '#ffffff',
             // Shuffle vs Scanline
             shufflePixels: true,
             shuffleSeed: 42,
@@ -805,7 +817,7 @@
         let playInterval = null;
         const speeds = [0.25, 0.5, 1, 2, 4, 8];
         let speedIndex = 2;
-        let currentLayoutMode = 'single'; // 'single' or 'twoline'
+        let currentLayoutMode = 'twoline'; // 'single' or 'twoline'
 
         // DOM Elements
         const displayCanvas = document.getElementById('display-canvas');
@@ -1935,6 +1947,138 @@
             exportField.value = JSON.stringify(params);
         }
 
+        // ========== FRAME EXPORT FOR DEPLOYMENT ==========
+
+        // Format bytes to human-readable string
+        function formatBytes(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // Build complete export data structure for viewer
+        function buildFrameExportData() {
+            return {
+                version: "1.0.0",
+                exportedAt: new Date().toISOString(),
+                config: {
+                    canvasWidth: CONFIG.canvasWidth,
+                    canvasHeight: CONFIG.canvasHeight,
+                    textOffsetY: CONFIG.textOffsetY,
+                    text: CONFIG.text,
+                    fontSize: CONFIG.fontSize,
+                    fontFamily: CONFIG.fontFamily,
+                    outlineHideFromLevel: CONFIG.outlineHideFromLevel,
+                    twoLineEnabled: CONFIG.twoLineEnabled,
+                    twoLineBreakpoint: CONFIG.twoLineBreakpoint,
+                    twoLineWiaiSize: CONFIG.twoLineWiaiSize,
+                    twoLine25Size: CONFIG.twoLine25Size,
+                    twoLineGap: CONFIG.twoLineGap,
+                    fadeLimitLevels: CONFIG.fadeLimitLevels,
+                    fadeLimitStep: CONFIG.fadeLimitStep,
+                    maxPixelSize: CONFIG.maxPixelSize,
+                    minPixelSize: CONFIG.minPixelSize,
+                    numLevels: CONFIG.numLevels,
+                    pixelSizeCurve: CONFIG.pixelSizeCurve,
+                    pixelSizes: CONFIG.pixelSizes,
+                    pixelColor: CONFIG.pixelColor,
+                    pixelOpacity: CONFIG.pixelOpacity,
+                    overlapThreshold: CONFIG.overlapThreshold,
+                    bgColor: CONFIG.bgColor,
+                    fadeCurve: CONFIG.fadeCurve,
+                    outlineStrokeWidth: CONFIG.outlineStrokeWidth,
+                    outlineColor: CONFIG.outlineColor,
+                    shufflePixels: CONFIG.shufflePixels,
+                    shuffleSeed: CONFIG.shuffleSeed,
+                    fadeMode: CONFIG.fadeMode,
+                    fadeEveryNPixelsStart: CONFIG.fadeEveryNPixelsStart,
+                    fadeEveryNPixelsEnd: CONFIG.fadeEveryNPixelsEnd,
+                    maxFadeStepsStart: CONFIG.maxFadeStepsStart,
+                    maxFadeStepsEnd: CONFIG.maxFadeStepsEnd,
+                    pulseScalePixels: CONFIG.pulseScalePixels,
+                    pulseGlow: CONFIG.pulseGlow,
+                    pulseBrightness: CONFIG.pulseBrightness,
+                    pulseFrequency: CONFIG.pulseFrequency,
+                    pulseCurve: CONFIG.pulseCurve
+                },
+                metadata: {
+                    singleLine: {
+                        totalFrames: frames.length,
+                        totalPixels: allPixelsWithTiming.length
+                    },
+                    twoLine: {
+                        totalFrames: framesTwoLine.length,
+                        totalPixels: allPixelsWithTimingTwoLine.length
+                    }
+                },
+                frames: {
+                    singleLine: allPixelsWithTiming,
+                    twoLine: allPixelsWithTimingTwoLine
+                }
+            };
+        }
+
+        // Download file helper
+        function downloadFile(content, filename, mimeType = 'application/json') {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Update file size estimate display
+        function updateFrameExportSizeEstimate() {
+            const sizeDisplay = document.getElementById('export-size-estimate');
+            if (allPixelsWithTiming.length === 0) {
+                sizeDisplay.textContent = '(keine Frames)';
+                return;
+            }
+
+            const compress = document.getElementById('compress-export').checked;
+            const data = buildFrameExportData();
+            const jsonString = JSON.stringify(data);
+            const uncompressedSize = new Blob([jsonString]).size;
+
+            if (compress && typeof LZString !== 'undefined') {
+                const compressed = LZString.compressToBase64(jsonString);
+                const compressedSize = new Blob([compressed]).size;
+                const ratio = Math.round((1 - compressedSize / uncompressedSize) * 100);
+                sizeDisplay.textContent = `~${formatBytes(compressedSize)} (${ratio}% kleiner)`;
+            } else {
+                sizeDisplay.textContent = `~${formatBytes(uncompressedSize)}`;
+            }
+        }
+
+        // Main export function
+        function exportFramesToFile() {
+            if (allPixelsWithTiming.length === 0) {
+                alert('Keine Frames verfügbar. Bitte erst "Regenerate Frames" klicken.');
+                return;
+            }
+
+            const compress = document.getElementById('compress-export').checked;
+            const data = buildFrameExportData();
+            const jsonString = JSON.stringify(data);
+
+            let finalContent = jsonString;
+            let filename = `wiai25-frames-${Date.now()}.json`;
+
+            if (compress && typeof LZString !== 'undefined') {
+                finalContent = LZString.compressToBase64(jsonString);
+                filename = `wiai25-frames-${Date.now()}.lz.json`;
+            }
+
+            downloadFile(finalContent, filename);
+            console.log(`Export: ${filename} (${formatBytes(new Blob([finalContent]).size)})`);
+        }
+
+        // ========== END FRAME EXPORT ==========
+
         function updateTuningDisplay() {
             document.getElementById('tune-opacity-val').textContent = tuneOpacity.value;
             document.getElementById('tune-overlap-val').textContent = tuneOverlap.value;
@@ -2143,6 +2287,7 @@
             // Regenerate frames with new font
             loading.classList.remove('hidden');
             await generateFrames();
+            updateFrameExportSizeEstimate();
         });
 
         // Outline hide level handler (live update)
@@ -2304,7 +2449,12 @@
             allPixelsWithTiming = [];
             loading.classList.remove('hidden');
             await generateFrames();
+            updateFrameExportSizeEstimate();
         });
+
+        // Frame export event handlers
+        document.getElementById('compress-export').addEventListener('change', updateFrameExportSizeEstimate);
+        document.getElementById('save-frames-btn').addEventListener('click', exportFramesToFile);
 
         // Initialize sliders from CONFIG
         function initializeSliders() {
@@ -2385,10 +2535,11 @@
         }
 
         // Wait for font to load, then generate
-        document.fonts.ready.then(() => {
+        document.fonts.ready.then(async () => {
             initializeSliders();
             updateTuningDisplay();
-            generateFrames();
+            await generateFrames();
+            updateFrameExportSizeEstimate();
             startPulseAnimation();
         });
     </script>
