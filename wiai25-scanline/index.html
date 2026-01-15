@@ -6,7 +6,7 @@
     <title>WIAI25 Scanline Prototyp</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Fira+Code:wght@700&family=Source+Code+Pro:wght@700&family=IBM+Plex+Mono:wght@700&family=Roboto+Mono:wght@700&family=Space+Mono:wght@700&family=Inconsolata:wght@700&family=Ubuntu+Mono:wght@700&family=Courier+Prime:wght@700&family=Anonymous+Pro:wght@700&display=swap" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box;
@@ -439,12 +439,29 @@
             <button id="slower-btn">-</button>
             <span id="speed-display">1x</span>
             <button id="faster-btn">+</button>
+            <span style="margin-left: 20px; color: #999;">|</span>
+            <button id="layout-toggle-btn" style="margin-left: 10px;">Two-Line (T)</button>
         </div>
     </div>
 
     <div class="tuning-panel">
         <h3>Parameter-Tuning</h3>
         <div class="color-section">
+            <div class="tuning-item">
+                <label>Schriftart</label>
+                <select id="tune-font">
+                    <option value="JetBrains Mono">JetBrains Mono</option>
+                    <option value="Fira Code">Fira Code</option>
+                    <option value="Source Code Pro">Source Code Pro</option>
+                    <option value="IBM Plex Mono">IBM Plex Mono</option>
+                    <option value="Roboto Mono">Roboto Mono</option>
+                    <option value="Space Mono">Space Mono</option>
+                    <option value="Inconsolata">Inconsolata</option>
+                    <option value="Ubuntu Mono">Ubuntu Mono</option>
+                    <option value="Courier Prime">Courier Prime</option>
+                    <option value="Anonymous Pro">Anonymous Pro</option>
+                </select>
+            </div>
             <div class="tuning-item">
                 <label>Farbschema</label>
                 <select id="tune-preset">
@@ -494,6 +511,11 @@
                     <option value="#1a5f5f">Teal</option>
                     <option value="#000000" selected>Schwarz</option>
                 </select>
+            </div>
+            <div class="tuning-item">
+                <label>Outline ausblenden ab Level</label>
+                <input type="range" id="tune-outline-hide" min="0" max="20" step="1" value="0">
+                <span class="value-display" id="tune-outline-hide-val">nie</span>
             </div>
             <div class="tuning-item">
                 <label>Pixel-Reihenfolge</label>
@@ -559,6 +581,36 @@
                 </select>
             </div>
         </div>
+        <div class="tuning-grid" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+            <div class="tuning-item" style="grid-column: 1 / -1;">
+                <label style="font-weight: 600; font-size: 0.9rem;">Two-Line Layout (Mobile)</label>
+            </div>
+            <div class="tuning-item">
+                <label>Breakpoint (px)</label>
+                <input type="range" id="tune-twoline-breakpoint" min="300" max="1000" step="10" value="600">
+                <span class="value-display" id="tune-twoline-breakpoint-val">600px</span>
+            </div>
+            <div class="tuning-item">
+                <label>Single-Line Schriftgröße</label>
+                <input type="range" id="tune-singleline-fontsize" min="100" max="500" step="10" value="320">
+                <span class="value-display" id="tune-singleline-fontsize-val">320px</span>
+            </div>
+            <div class="tuning-item">
+                <label>WIAI Schriftgröße (Two-Line)</label>
+                <input type="range" id="tune-twoline-wiai" min="80" max="400" step="10" value="200">
+                <span class="value-display" id="tune-twoline-wiai-val">200px</span>
+            </div>
+            <div class="tuning-item">
+                <label>25 Schriftgröße (Two-Line)</label>
+                <input type="range" id="tune-twoline-25" min="100" max="600" step="10" value="380">
+                <span class="value-display" id="tune-twoline-25-val">380px</span>
+            </div>
+            <div class="tuning-item">
+                <label>Zeilenabstand (Two-Line)</label>
+                <input type="range" id="tune-twoline-gap" min="-100" max="100" step="5" value="-20">
+                <span class="value-display" id="tune-twoline-gap-val">-20px</span>
+            </div>
+        </div>
         <div class="curve-editor">
             <label>Kurven-Editoren — Punkte draggen</label>
             <div class="curve-section">
@@ -614,12 +666,34 @@
     </div>
 
     <script>
+        // Available monospace fonts
+        const AVAILABLE_FONTS = [
+            'JetBrains Mono',
+            'Fira Code',
+            'Source Code Pro',
+            'IBM Plex Mono',
+            'Roboto Mono',
+            'Space Mono',
+            'Inconsolata',
+            'Ubuntu Mono',
+            'Courier Prime',
+            'Anonymous Pro'
+        ];
+
         const CONFIG = {
             canvasWidth: 1200,
             canvasHeight: 480,
             text: 'WIAI25',
             fontSize: 320,
             fontFamily: 'JetBrains Mono',
+            // Outline visibility: hide from this level onwards (0 = never hide)
+            outlineHideFromLevel: 0,
+            // Two-line mode config
+            twoLineEnabled: true,
+            twoLineBreakpoint: 600, // px - below this width, use two-line layout
+            twoLineWiaiSize: 200,   // font size for "WIAI"
+            twoLine25Size: 380,     // font size for "25" (larger)
+            twoLineGap: -20,        // vertical gap between lines
             // Pixel size progression config
             maxPixelSize: 180,
             minPixelSize: 4,
@@ -689,12 +763,15 @@
 
         // State
         let frames = [];
+        let framesTwoLine = []; // Two-line layout frames
         let levelStats = []; // Debug stats per level
+        let levelStatsTwoLine = []; // Debug stats for two-line mode
         let currentFrame = 0;
         let isPlaying = false;
         let playInterval = null;
         const speeds = [0.25, 0.5, 1, 2, 4, 8];
         let speedIndex = 2;
+        let currentLayoutMode = 'single'; // 'single' or 'twoline'
 
         // DOM Elements
         const displayCanvas = document.getElementById('display-canvas');
@@ -703,13 +780,19 @@
         const loading = document.getElementById('loading');
         const progressFill = document.getElementById('progress-fill');
 
-        // Hidden canvas for text mask
+        // Hidden canvas for text mask (single-line)
         const maskCanvas = document.createElement('canvas');
         maskCanvas.width = CONFIG.canvasWidth;
         maskCanvas.height = CONFIG.canvasHeight;
         const maskCtx = maskCanvas.getContext('2d');
 
-        // Generate text mask
+        // Hidden canvas for two-line text mask
+        const maskCanvasTwoLine = document.createElement('canvas');
+        maskCanvasTwoLine.width = CONFIG.canvasWidth;
+        maskCanvasTwoLine.height = CONFIG.canvasHeight;
+        const maskCtxTwoLine = maskCanvasTwoLine.getContext('2d');
+
+        // Generate text mask (single-line: "WIAI25")
         function generateTextMask() {
             maskCtx.fillStyle = 'white';
             maskCtx.fillRect(0, 0, CONFIG.canvasWidth, CONFIG.canvasHeight);
@@ -721,7 +804,51 @@
             maskCtx.fillText(CONFIG.text, CONFIG.canvasWidth / 2, CONFIG.canvasHeight / 2 + 15);
         }
 
-        // Check overlap of a cell with the text mask
+        // Generate two-line text mask ("WIAI" on top, "25" below, larger)
+        function generateTextMaskTwoLine() {
+            maskCtxTwoLine.fillStyle = 'white';
+            maskCtxTwoLine.fillRect(0, 0, CONFIG.canvasWidth, CONFIG.canvasHeight);
+
+            maskCtxTwoLine.fillStyle = 'black';
+
+            // Calculate vertical positions
+            const wiaiSize = CONFIG.twoLineWiaiSize;
+            const num25Size = CONFIG.twoLine25Size;
+            const gap = CONFIG.twoLineGap;
+
+            // Total height of both lines
+            const totalHeight = wiaiSize + gap + num25Size;
+            const startY = (CONFIG.canvasHeight - totalHeight) / 2;
+
+            // Draw "WIAI" (smaller, top)
+            maskCtxTwoLine.font = `700 ${wiaiSize}px "${CONFIG.fontFamily}"`;
+            maskCtxTwoLine.textAlign = 'center';
+            maskCtxTwoLine.textBaseline = 'top';
+            maskCtxTwoLine.fillText('WIAI', CONFIG.canvasWidth / 2, startY);
+
+            // Draw "25" (larger, bottom)
+            maskCtxTwoLine.font = `700 ${num25Size}px "${CONFIG.fontFamily}"`;
+            maskCtxTwoLine.textBaseline = 'top';
+            maskCtxTwoLine.fillText('25', CONFIG.canvasWidth / 2, startY + wiaiSize + gap);
+        }
+
+        // Check overlap of a cell with the text mask (generic version)
+        function getCellOverlapWithMask(x, y, size, ctx) {
+            const imageData = ctx.getImageData(x, y, size, size);
+            const pixels = imageData.data;
+            let blackPixels = 0;
+            const totalPixels = size * size;
+
+            for (let i = 0; i < pixels.length; i += 4) {
+                if (pixels[i] < 128) {
+                    blackPixels++;
+                }
+            }
+
+            return blackPixels / totalPixels;
+        }
+
+        // Check overlap of a cell with the text mask (single-line)
         function getCellOverlap(x, y, size) {
             const imageData = maskCtx.getImageData(x, y, size, size);
             const pixels = imageData.data;
@@ -737,8 +864,8 @@
             return blackPixels / totalPixels;
         }
 
-        // Generate valid cells for a pixel size
-        function getValidCells(pixelSize) {
+        // Generate valid cells for a pixel size (generic version with mask ctx)
+        function getValidCellsWithMask(pixelSize, maskCtxToUse) {
             const cells = [];
             const cols = Math.floor(CONFIG.canvasWidth / pixelSize);
             const rows = Math.floor(CONFIG.canvasHeight / pixelSize);
@@ -750,7 +877,7 @@
                 for (let col = 0; col < cols; col++) {
                     const x = Math.floor(offsetX + col * pixelSize);
                     const y = Math.floor(offsetY + row * pixelSize);
-                    const overlap = getCellOverlap(x, y, pixelSize);
+                    const overlap = getCellOverlapWithMask(x, y, pixelSize, maskCtxToUse);
 
                     if (overlap >= CONFIG.overlapThreshold) {
                         cells.push({ x, y, size: pixelSize, overlap });
@@ -759,6 +886,16 @@
             }
 
             return cells;
+        }
+
+        // Generate valid cells for a pixel size (single-line)
+        function getValidCells(pixelSize) {
+            return getValidCellsWithMask(pixelSize, maskCtx);
+        }
+
+        // Generate valid cells for two-line layout
+        function getValidCellsTwoLine(pixelSize) {
+            return getValidCellsWithMask(pixelSize, maskCtxTwoLine);
         }
 
         // Seeded random number generator (Mulberry32)
@@ -804,8 +941,10 @@
 
         // Store history as array of {cells, level}
         let historyLevels = [];
+        let historyLevelsTwoLine = []; // For two-line mode
         // For pixel-wise fading: all pixels with their drawn frame index
         let allPixelsWithTiming = []; // [{x, y, size, drawnAtFrame}, ...]
+        let allPixelsWithTimingTwoLine = []; // For two-line mode
 
         // Evaluate cubic bezier curve at t
         function evaluateBezierCurve(points, t) {
@@ -865,11 +1004,16 @@
             return evaluateBezierCurve(CONFIG.fadeCurve, t);
         }
 
-        // Render a frame
-        function renderFrame(frameData) {
+        // Render a frame (supports both single-line and two-line modes)
+        function renderFrame(frameData, layoutMode = 'single') {
             const { index: frameIndex, level, currentPixels } = frameData;
             const totalLevels = CONFIG.pixelSizes.length;
-            const totalFrames = frames.length;
+
+            // Select data based on layout mode
+            const isTwoLine = layoutMode === 'twoline';
+            const pixelTiming = isTwoLine ? allPixelsWithTimingTwoLine : allPixelsWithTiming;
+            const history = isTwoLine ? historyLevelsTwoLine : historyLevels;
+            const totalFrames = isTwoLine ? framesTwoLine.length : frames.length;
 
             // Clear with background
             displayCtx.fillStyle = CONFIG.bgColor;
@@ -877,9 +1021,8 @@
 
             if (CONFIG.fadeMode === 'pixel') {
                 // PIXEL-WISE FADING: Each pixel fades based on when it was drawn
-                // Draw all pixels up to current frame with individual fade
-                for (let i = 0; i <= frameIndex && i < allPixelsWithTiming.length; i++) {
-                    const pixel = allPixelsWithTiming[i];
+                for (let i = 0; i <= frameIndex && i < pixelTiming.length; i++) {
+                    const pixel = pixelTiming[i];
                     const fadeAmount = getFadeForPixel(pixel.drawnAtFrame, frameIndex, totalFrames);
                     const fadedColor = fadeColor(CONFIG.pixelColor, CONFIG.bgColor, Math.min(fadeAmount, 0.95));
 
@@ -889,8 +1032,7 @@
                 }
             } else {
                 // LEVEL-WISE FADING: Original behavior
-                // Draw all completed history levels (oldest = most faded)
-                const completedLevels = historyLevels.filter(h => h.level < level);
+                const completedLevels = history.filter(h => h.level < level);
                 completedLevels.forEach(historyLevel => {
                     const fadeAmount = getFadeForLevel(historyLevel.level, level, totalLevels);
                     const fadedColor = fadeColor(CONFIG.pixelColor, CONFIG.bgColor, Math.min(fadeAmount, 0.95));
@@ -910,12 +1052,11 @@
                 });
             }
 
-            // Highlight newest pixel with pulsing effect (scale + glow, independently controlled)
-            if (frameIndex >= 0 && frameIndex < allPixelsWithTiming.length) {
-                const newestPixel = allPixelsWithTiming[frameIndex];
+            // Highlight newest pixel with pulsing effect
+            if (frameIndex >= 0 && frameIndex < pixelTiming.length) {
+                const newestPixel = pixelTiming[frameIndex];
 
-                // Apply easing function to pulse phase
-                const normalizedPhase = (Math.sin(pulsePhase) + 1) / 2; // 0 to 1
+                const normalizedPhase = (Math.sin(pulsePhase) + 1) / 2;
                 let easedPhase;
                 switch (CONFIG.pulseCurve) {
                     case 'ease-in':
@@ -933,12 +1074,10 @@
                         easedPhase = normalizedPhase;
                 }
 
-                // Scale effect (independent control)
                 const scaleBonus = easedPhase * CONFIG.pulseScale;
                 const scaledSize = newestPixel.size * (1 + scaleBonus);
                 const offset = (scaledSize - newestPixel.size) / 2;
 
-                // Brightness effect - lighten color toward white for sparkle
                 const brightenAmount = easedPhase * CONFIG.pulseBrightness;
                 const r = parseInt(CONFIG.pixelColor.slice(1, 3), 16);
                 const g = parseInt(CONFIG.pixelColor.slice(3, 5), 16);
@@ -948,15 +1087,11 @@
                 const brightB = Math.round(b + (255 - b) * brightenAmount);
                 const brightColor = `rgb(${brightR}, ${brightG}, ${brightB})`;
 
-                // Glow effect (independent control)
                 displayCtx.shadowColor = brightColor;
                 displayCtx.shadowBlur = 5 + easedPhase * CONFIG.pulseGlow * 40;
-
-                // Draw with brightened color and full opacity for sparkle
                 displayCtx.fillStyle = brightColor;
                 displayCtx.globalAlpha = Math.min(1, CONFIG.pixelOpacity + 0.1 + easedPhase * CONFIG.pulseGlow * 0.4);
 
-                // Draw scaled pixel with glow
                 displayCtx.fillRect(
                     newestPixel.x - offset,
                     newestPixel.y - offset,
@@ -964,22 +1099,43 @@
                     scaledSize
                 );
 
-                // Reset shadow
                 displayCtx.shadowBlur = 0;
             }
 
-            // Draw outline
-            displayCtx.globalAlpha = 1;
-            displayCtx.lineJoin = 'round';
-            displayCtx.font = `700 ${CONFIG.fontSize}px "${CONFIG.fontFamily}"`;
-            displayCtx.textAlign = 'center';
-            displayCtx.textBaseline = 'middle';
-            const textX = CONFIG.canvasWidth / 2;
-            const textY = CONFIG.canvasHeight / 2 + 15;
+            // Draw outline (only if not hidden for this level)
+            const shouldHideOutline = CONFIG.outlineHideFromLevel > 0 && level >= CONFIG.outlineHideFromLevel;
+            if (!shouldHideOutline) {
+                displayCtx.globalAlpha = 1;
+                displayCtx.lineJoin = 'round';
+                displayCtx.lineWidth = CONFIG.outlineStrokeWidth;
+                displayCtx.strokeStyle = CONFIG.outlineColor;
 
-            displayCtx.lineWidth = CONFIG.outlineStrokeWidth;
-            displayCtx.strokeStyle = CONFIG.outlineColor;
-            displayCtx.strokeText(CONFIG.text, textX, textY);
+                if (isTwoLine) {
+                    // Two-line outline: "WIAI" on top, "25" below
+                    const wiaiSize = CONFIG.twoLineWiaiSize;
+                    const num25Size = CONFIG.twoLine25Size;
+                    const gap = CONFIG.twoLineGap;
+                    const totalHeight = wiaiSize + gap + num25Size;
+                    const startY = (CONFIG.canvasHeight - totalHeight) / 2;
+
+                    displayCtx.textAlign = 'center';
+
+                    // Draw "WIAI" outline
+                    displayCtx.font = `700 ${wiaiSize}px "${CONFIG.fontFamily}"`;
+                    displayCtx.textBaseline = 'top';
+                    displayCtx.strokeText('WIAI', CONFIG.canvasWidth / 2, startY);
+
+                    // Draw "25" outline
+                    displayCtx.font = `700 ${num25Size}px "${CONFIG.fontFamily}"`;
+                    displayCtx.strokeText('25', CONFIG.canvasWidth / 2, startY + wiaiSize + gap);
+                } else {
+                    // Single-line outline: "WIAI25"
+                    displayCtx.font = `700 ${CONFIG.fontSize}px "${CONFIG.fontFamily}"`;
+                    displayCtx.textAlign = 'center';
+                    displayCtx.textBaseline = 'middle';
+                    displayCtx.strokeText(CONFIG.text, CONFIG.canvasWidth / 2, CONFIG.canvasHeight / 2 + 15);
+                }
+            }
         }
 
         // Update debug panel
@@ -1000,21 +1156,35 @@
 
         // Generate all frames
         async function generateFrames() {
+            // Generate text masks for both layouts
             generateTextMask();
+            generateTextMaskTwoLine();
             calculatePixelSizesFromCurve();
 
-            let frameIndex = 0;
-            let totalFrames = 0;
+            // Reset state
+            frames = [];
+            framesTwoLine = [];
+            levelStats = [];
+            levelStatsTwoLine = [];
+            historyLevels = [];
+            historyLevelsTwoLine = [];
+            allPixelsWithTiming = [];
+            allPixelsWithTimingTwoLine = [];
 
-            // First pass: count total frames and gather stats
+            let frameIndex = 0;
+            let frameIndexTwoLine = 0;
+            let totalFrames = 0;
+            let totalFramesTwoLine = 0;
+
+            // First pass: count total frames and gather stats for BOTH layouts
             for (let level = 0; level < CONFIG.pixelSizes.length; level++) {
                 const pixelSize = CONFIG.pixelSizes[level];
                 const cols = Math.floor(CONFIG.canvasWidth / pixelSize);
                 const rows = Math.floor(CONFIG.canvasHeight / pixelSize);
+
+                // Single-line stats
                 const cells = getValidCells(pixelSize);
-
                 totalFrames += cells.length;
-
                 levelStats.push({
                     level: level + 1,
                     pixelSize,
@@ -1024,25 +1194,39 @@
                     validCells: cells.length,
                     cumulativeFrames: totalFrames
                 });
+
+                // Two-line stats
+                const cellsTwoLine = getValidCellsTwoLine(pixelSize);
+                totalFramesTwoLine += cellsTwoLine.length;
+                levelStatsTwoLine.push({
+                    level: level + 1,
+                    pixelSize,
+                    cols,
+                    rows,
+                    totalCells: cols * rows,
+                    validCells: cellsTwoLine.length,
+                    cumulativeFrames: totalFramesTwoLine
+                });
             }
 
             console.log('=== WIAI25 Scanline Debug ===');
-            console.log('Total frames:', totalFrames);
+            console.log('Single-line total frames:', totalFrames);
+            console.log('Two-line total frames:', totalFramesTwoLine);
             console.table(levelStats);
 
+            // Use single-line frame count for slider (they should be similar)
             document.getElementById('frame-total').textContent = totalFrames;
             slider.max = totalFrames - 1;
 
-            // Reset history
-            historyLevels = [];
-            allPixelsWithTiming = [];
+            // Calculate total for progress bar (both layouts)
+            const totalForProgress = totalFrames + totalFramesTwoLine;
+            let progressCount = 0;
 
-            // Second pass: generate frames
+            // Second pass: generate frames for SINGLE-LINE
             for (let level = 0; level < CONFIG.pixelSizes.length; level++) {
                 const pixelSize = CONFIG.pixelSizes[level];
                 let cells = getValidCells(pixelSize);
 
-                // Shuffle if enabled
                 if (CONFIG.shufflePixels) {
                     cells = shuffleArray(cells, CONFIG.shuffleSeed + level);
                 }
@@ -1050,7 +1234,6 @@
                 for (let i = 0; i < cells.length; i++) {
                     const currentPixels = cells.slice(0, i + 1);
 
-                    // Store pixel with timing for pixel-wise fading
                     allPixelsWithTiming.push({
                         ...cells[i],
                         drawnAtFrame: frameIndex
@@ -1066,24 +1249,67 @@
                     });
 
                     frameIndex++;
+                    progressCount++;
 
-                    // Update progress
-                    const progress = (frameIndex / totalFrames) * 100;
+                    const progress = (progressCount / totalForProgress) * 100;
                     progressFill.style.width = `${progress}%`;
 
-                    // Yield to UI every 50 frames
                     if (frameIndex % 50 === 0) {
                         await new Promise(r => setTimeout(r, 0));
                     }
                 }
 
-                // Level complete - store cells for history rendering (level-wise mode)
                 historyLevels.push({
                     level: level + 1,
                     cells: cells
                 });
 
-                console.log(`Level ${level + 1} complete: ${cells.length} cells${CONFIG.shufflePixels ? ' (shuffled)' : ''}`);
+                console.log(`Single-line Level ${level + 1} complete: ${cells.length} cells`);
+            }
+
+            // Third pass: generate frames for TWO-LINE
+            for (let level = 0; level < CONFIG.pixelSizes.length; level++) {
+                const pixelSize = CONFIG.pixelSizes[level];
+                let cells = getValidCellsTwoLine(pixelSize);
+
+                if (CONFIG.shufflePixels) {
+                    cells = shuffleArray(cells, CONFIG.shuffleSeed + level + 1000); // Different seed
+                }
+
+                for (let i = 0; i < cells.length; i++) {
+                    const currentPixels = cells.slice(0, i + 1);
+
+                    allPixelsWithTimingTwoLine.push({
+                        ...cells[i],
+                        drawnAtFrame: frameIndexTwoLine
+                    });
+
+                    framesTwoLine.push({
+                        index: frameIndexTwoLine,
+                        level: level + 1,
+                        pixelSize: pixelSize,
+                        cellsInLevel: cells.length,
+                        cellIndex: i + 1,
+                        currentPixels: currentPixels
+                    });
+
+                    frameIndexTwoLine++;
+                    progressCount++;
+
+                    const progress = (progressCount / totalForProgress) * 100;
+                    progressFill.style.width = `${progress}%`;
+
+                    if (frameIndexTwoLine % 50 === 0) {
+                        await new Promise(r => setTimeout(r, 0));
+                    }
+                }
+
+                historyLevelsTwoLine.push({
+                    level: level + 1,
+                    cells: cells
+                });
+
+                console.log(`Two-line Level ${level + 1} complete: ${cells.length} cells`);
             }
 
             loading.classList.add('hidden');
@@ -1093,12 +1319,16 @@
 
         // Show a specific frame
         function showFrame(index) {
-            if (index < 0 || index >= frames.length) return;
+            // Select frame array based on layout mode
+            const frameArray = currentLayoutMode === 'twoline' ? framesTwoLine : frames;
+            const statsArray = currentLayoutMode === 'twoline' ? levelStatsTwoLine : levelStats;
+
+            if (index < 0 || index >= frameArray.length) return;
 
             currentFrame = index;
-            const frame = frames[index];
+            const frame = frameArray[index];
 
-            renderFrame(frame);
+            renderFrame(frame, currentLayoutMode);
 
             // Update stats
             document.getElementById('frame-num').textContent = frame.index + 1;
@@ -1106,10 +1336,13 @@
             document.getElementById('pixel-size').textContent = frame.pixelSize;
             document.getElementById('cells-in-level').textContent = `${frame.cellIndex}/${frame.cellsInLevel}`;
 
+            // Update frame total for current mode
+            document.getElementById('frame-total').textContent = frameArray.length;
+
             // Show interpolated values in pixel mode
             const interpolatedDiv = document.getElementById('interpolated-values');
             if (CONFIG.fadeMode === 'pixel') {
-                const progress = frames.length > 0 ? index / frames.length : 0;
+                const progress = frameArray.length > 0 ? index / frameArray.length : 0;
                 const currentFadeN = Math.max(1, Math.round(interpolateValue(
                     CONFIG.fadeEveryNPixelsStart,
                     CONFIG.fadeEveryNPixelsEnd,
@@ -1127,8 +1360,25 @@
                 interpolatedDiv.style.display = 'none';
             }
 
+            // Update slider max for current mode
+            slider.max = frameArray.length - 1;
             slider.value = index;
             updateDebugPanel(frame.level);
+        }
+
+        // Switch layout mode
+        function setLayoutMode(mode) {
+            if (mode !== currentLayoutMode) {
+                const oldFrameArray = currentLayoutMode === 'twoline' ? framesTwoLine : frames;
+                const newFrameArray = mode === 'twoline' ? framesTwoLine : frames;
+
+                // Map current frame to equivalent position in new mode
+                const progress = oldFrameArray.length > 0 ? currentFrame / oldFrameArray.length : 0;
+                const newIndex = Math.min(Math.floor(progress * newFrameArray.length), newFrameArray.length - 1);
+
+                currentLayoutMode = mode;
+                showFrame(Math.max(0, newIndex));
+            }
         }
 
         // Play controls
@@ -1139,7 +1389,8 @@
             if (isPlaying) {
                 const interval = 100 / speeds[speedIndex];
                 playInterval = setInterval(() => {
-                    if (currentFrame < frames.length - 1) {
+                    const frameArray = currentLayoutMode === 'twoline' ? framesTwoLine : frames;
+                    if (currentFrame < frameArray.length - 1) {
                         showFrame(currentFrame + 1);
                     } else {
                         togglePlay();
@@ -1156,7 +1407,8 @@
                 clearInterval(playInterval);
                 const interval = 100 / speeds[speedIndex];
                 playInterval = setInterval(() => {
-                    if (currentFrame < frames.length - 1) {
+                    const frameArray = currentLayoutMode === 'twoline' ? framesTwoLine : frames;
+                    if (currentFrame < frameArray.length - 1) {
                         showFrame(currentFrame + 1);
                     } else {
                         togglePlay();
@@ -1186,15 +1438,29 @@
             }
         });
 
+        // Layout toggle button
+        const layoutToggleBtn = document.getElementById('layout-toggle-btn');
+        layoutToggleBtn.addEventListener('click', () => {
+            const newMode = currentLayoutMode === 'single' ? 'twoline' : 'single';
+            setLayoutMode(newMode);
+            layoutToggleBtn.textContent = newMode === 'single' ? 'Two-Line (T)' : 'Single-Line (T)';
+        });
+
         // Keyboard controls
         document.addEventListener('keydown', (e) => {
+            const frameArray = currentLayoutMode === 'twoline' ? framesTwoLine : frames;
             if (e.key === 'ArrowRight') {
-                showFrame(Math.min(currentFrame + 1, frames.length - 1));
+                showFrame(Math.min(currentFrame + 1, frameArray.length - 1));
             } else if (e.key === 'ArrowLeft') {
                 showFrame(Math.max(currentFrame - 1, 0));
             } else if (e.key === ' ') {
                 e.preventDefault();
                 togglePlay();
+            } else if (e.key === 't' || e.key === 'T') {
+                // Toggle layout mode with 't' key
+                const newMode = currentLayoutMode === 'single' ? 'twoline' : 'single';
+                setLayoutMode(newMode);
+                layoutToggleBtn.textContent = newMode === 'single' ? 'Two-Line (T)' : 'Single-Line (T)';
             }
         });
 
@@ -1233,6 +1499,15 @@
         const tunePulseBrightness = document.getElementById('tune-pulse-brightness');
         const tunePulseFrequency = document.getElementById('tune-pulse-frequency');
         const tunePulseCurve = document.getElementById('tune-pulse-curve');
+
+        // New controls: Font, Outline hide, Two-line layout
+        const tuneFont = document.getElementById('tune-font');
+        const tuneOutlineHide = document.getElementById('tune-outline-hide');
+        const tuneTwolineBreakpoint = document.getElementById('tune-twoline-breakpoint');
+        const tuneSinglelineFontsize = document.getElementById('tune-singleline-fontsize');
+        const tuneTwolineWiai = document.getElementById('tune-twoline-wiai');
+        const tuneTwoline25 = document.getElementById('tune-twoline-25');
+        const tuneTwolineGap = document.getElementById('tune-twoline-gap');
 
         // Curve editor (fade)
         const curveCanvas = document.getElementById('curve-canvas');
@@ -1572,7 +1847,14 @@
                 pulseGlow: CONFIG.pulseGlow,
                 pulseBrightness: CONFIG.pulseBrightness,
                 pulseFrequency: CONFIG.pulseFrequency,
-                pulseCurve: CONFIG.pulseCurve
+                pulseCurve: CONFIG.pulseCurve,
+                // New parameters
+                fontFamily: CONFIG.fontFamily,
+                outlineHideFromLevel: CONFIG.outlineHideFromLevel,
+                twoLineBreakpoint: CONFIG.twoLineBreakpoint,
+                twoLineWiaiSize: CONFIG.twoLineWiaiSize,
+                twoLine25Size: CONFIG.twoLine25Size,
+                twoLineGap: CONFIG.twoLineGap
             };
             exportField.value = JSON.stringify(params);
         }
@@ -1778,6 +2060,61 @@
             updateExportField();
         });
 
+        // Font selection handler (needs regeneration)
+        tuneFont.addEventListener('change', async () => {
+            CONFIG.fontFamily = tuneFont.value;
+            updateExportField();
+            // Regenerate frames with new font
+            loading.classList.remove('hidden');
+            await generateFrames();
+        });
+
+        // Outline hide level handler (live update)
+        tuneOutlineHide.addEventListener('input', () => {
+            CONFIG.outlineHideFromLevel = parseInt(tuneOutlineHide.value);
+            const displayVal = CONFIG.outlineHideFromLevel === 0 ? 'nie' : `ab Level ${CONFIG.outlineHideFromLevel}`;
+            document.getElementById('tune-outline-hide-val').textContent = displayVal;
+            updateExportField();
+            if (frames.length > 0) {
+                showFrame(currentFrame);
+            }
+        });
+
+        // Single-line font size handler (needs regeneration)
+        tuneSinglelineFontsize.addEventListener('input', () => {
+            CONFIG.fontSize = parseInt(tuneSinglelineFontsize.value);
+            document.getElementById('tune-singleline-fontsize-val').textContent = `${CONFIG.fontSize}px`;
+            updateExportField();
+        });
+
+        // Two-line breakpoint handler (live update - switches mode)
+        tuneTwolineBreakpoint.addEventListener('input', () => {
+            CONFIG.twoLineBreakpoint = parseInt(tuneTwolineBreakpoint.value);
+            document.getElementById('tune-twoline-breakpoint-val').textContent = `${CONFIG.twoLineBreakpoint}px`;
+            updateExportField();
+        });
+
+        // Two-line WIAI size handler (needs regeneration)
+        tuneTwolineWiai.addEventListener('input', () => {
+            CONFIG.twoLineWiaiSize = parseInt(tuneTwolineWiai.value);
+            document.getElementById('tune-twoline-wiai-val').textContent = `${CONFIG.twoLineWiaiSize}px`;
+            updateExportField();
+        });
+
+        // Two-line 25 size handler (needs regeneration)
+        tuneTwoline25.addEventListener('input', () => {
+            CONFIG.twoLine25Size = parseInt(tuneTwoline25.value);
+            document.getElementById('tune-twoline-25-val').textContent = `${CONFIG.twoLine25Size}px`;
+            updateExportField();
+        });
+
+        // Two-line gap handler (needs regeneration)
+        tuneTwolineGap.addEventListener('input', () => {
+            CONFIG.twoLineGap = parseInt(tuneTwolineGap.value);
+            document.getElementById('tune-twoline-gap-val').textContent = `${CONFIG.twoLineGap}px`;
+            updateExportField();
+        });
+
         document.getElementById('copy-btn').addEventListener('click', () => {
             exportField.select();
             navigator.clipboard.writeText(exportField.value);
@@ -1817,6 +2154,13 @@
                     if (params.pulseBrightness !== undefined) CONFIG.pulseBrightness = params.pulseBrightness;
                     if (params.pulseFrequency !== undefined) CONFIG.pulseFrequency = params.pulseFrequency;
                     if (params.pulseCurve !== undefined) CONFIG.pulseCurve = params.pulseCurve;
+                    // New parameters
+                    if (params.fontFamily !== undefined) CONFIG.fontFamily = params.fontFamily;
+                    if (params.outlineHideFromLevel !== undefined) CONFIG.outlineHideFromLevel = params.outlineHideFromLevel;
+                    if (params.twoLineBreakpoint !== undefined) CONFIG.twoLineBreakpoint = params.twoLineBreakpoint;
+                    if (params.twoLineWiaiSize !== undefined) CONFIG.twoLineWiaiSize = params.twoLineWiaiSize;
+                    if (params.twoLine25Size !== undefined) CONFIG.twoLine25Size = params.twoLine25Size;
+                    if (params.twoLineGap !== undefined) CONFIG.twoLineGap = params.twoLineGap;
 
                     // Update all UI elements to match CONFIG
                     initializeSliders();
@@ -1874,6 +2218,21 @@
             tunePulseFrequency.value = CONFIG.pulseFrequency;
             document.getElementById('tune-pulse-frequency-val').textContent = CONFIG.pulseFrequency;
             tunePulseCurve.value = CONFIG.pulseCurve;
+            // New controls
+            tuneFont.value = CONFIG.fontFamily;
+            tuneOutlineHide.value = CONFIG.outlineHideFromLevel;
+            const outlineDisplayVal = CONFIG.outlineHideFromLevel === 0 ? 'nie' : `ab Level ${CONFIG.outlineHideFromLevel}`;
+            document.getElementById('tune-outline-hide-val').textContent = outlineDisplayVal;
+            tuneSinglelineFontsize.value = CONFIG.fontSize;
+            document.getElementById('tune-singleline-fontsize-val').textContent = `${CONFIG.fontSize}px`;
+            tuneTwolineBreakpoint.value = CONFIG.twoLineBreakpoint;
+            document.getElementById('tune-twoline-breakpoint-val').textContent = `${CONFIG.twoLineBreakpoint}px`;
+            tuneTwolineWiai.value = CONFIG.twoLineWiaiSize;
+            document.getElementById('tune-twoline-wiai-val').textContent = `${CONFIG.twoLineWiaiSize}px`;
+            tuneTwoline25.value = CONFIG.twoLine25Size;
+            document.getElementById('tune-twoline-25-val').textContent = `${CONFIG.twoLine25Size}px`;
+            tuneTwolineGap.value = CONFIG.twoLineGap;
+            document.getElementById('tune-twoline-gap-val').textContent = `${CONFIG.twoLineGap}px`;
         }
 
         // Pulse animation loop
