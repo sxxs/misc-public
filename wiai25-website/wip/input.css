@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Outfit - Variable Font (400-800) */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('fonts/outfit-latin.woff2') format('woff2');
+}
+
+/* Rubik - Variable Font (400-800) */
+@font-face {
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('fonts/rubik-latin.woff2') format('woff2');
+}
+
+/* IBM Plex Mono - Regular */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/ibm-plex-mono-latin.woff2') format('woff2');
+}
+
+/* IBM Plex Mono - Medium */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('fonts/ibm-plex-mono-latin-500.woff2') format('woff2');
+}
+
+/* IBM Plex Mono - Bold */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('fonts/ibm-plex-mono-latin-700.woff2') format('woff2');
+}
+
+/* Custom styles */
+.section-heading {
+  display: inline-block;
+  background: #000;
+  color: #FACC15;
+  padding: 12px 32px 12px 24px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transform: skewX(-6deg);
+}
+
+.section-heading span {
+  display: inline-block;
+  transform: skewX(6deg);
+}
+
+.section-heading-white {
+  color: #fff;
+}
