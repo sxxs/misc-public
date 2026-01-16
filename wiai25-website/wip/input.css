@@ -68,3 +68,16 @@
 .section-heading-white {
   color: #fff;
 }
+
+/* WIAI25 Viewer */
+#viewer-container {
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+}
+
+#display-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
