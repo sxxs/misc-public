@@ -669,7 +669,7 @@
                         <span class="curve-axis-label y-axis">Größe</span>
                         <span class="curve-axis-label x-axis">Level→</span>
                     </div>
-                    <div class="value-display" id="pixel-sizes-preview" style="margin-top: 5px; font-size: 0.7rem; word-break: break-all;"></div>
+                    <input type="text" id="pixel-sizes-input" style="margin-top: 5px; font-size: 0.7rem; width: 100%; padding: 4px; font-family: monospace;" placeholder="z.B. 180, 120, 80, 40, 20, 4">
                 </div>
                 <div class="curve-editor-item">
                     <h4>Fade-Kurve (Y: Fade zu Weiß, X: Level)</h4>
@@ -786,8 +786,13 @@
         let pulsePhase = 0;
         let pulseAnimationId = null;
 
-        // Calculate pixel sizes from bezier curve
+        // Calculate pixel sizes from bezier curve (or use manual override)
         function calculatePixelSizesFromCurve() {
+            // Skip calculation if user manually edited sizes
+            if (typeof pixelSizesManuallyEdited !== 'undefined' && pixelSizesManuallyEdited && CONFIG.pixelSizes && CONFIG.pixelSizes.length > 0) {
+                return CONFIG.pixelSizes;
+            }
+
             const sizes = [];
             for (let i = 0; i < CONFIG.numLevels; i++) {
                 const t = i / (CONFIG.numLevels - 1);
@@ -1803,7 +1808,13 @@
             updatePixelSizesPreview();
         }
 
+        // Track if user has manually edited pixel sizes
+        let pixelSizesManuallyEdited = false;
+
         function updatePixelSizesPreview() {
+            // Don't overwrite if user manually edited
+            if (pixelSizesManuallyEdited) return;
+
             const sizes = [];
             for (let i = 0; i < CONFIG.numLevels; i++) {
                 const t = i / (CONFIG.numLevels - 1);
@@ -1816,8 +1827,20 @@
             if (sizes[sizes.length - 1] !== CONFIG.minPixelSize) {
                 sizes.push(CONFIG.minPixelSize);
             }
-            document.getElementById('pixel-sizes-preview').textContent =
-                `${sizes.length} Level: [${sizes.join(', ')}]`;
+            document.getElementById('pixel-sizes-input').value = sizes.join(', ');
+        }
+
+        function parsePixelSizesInput() {
+            const input = document.getElementById('pixel-sizes-input').value;
+            const sizes = input.split(',')
+                .map(s => parseInt(s.trim(), 10))
+                .filter(n => !isNaN(n) && n > 0);
+            if (sizes.length > 0) {
+                CONFIG.pixelSizes = sizes;
+                CONFIG.numLevels = sizes.length;
+                document.getElementById('tune-num-levels').value = sizes.length;
+                document.getElementById('tune-num-levels-val').textContent = sizes.length;
+            }
         }
 
         function getPixelCurvePoint(e) {
@@ -1853,6 +1876,7 @@
         pixelCurveCanvas.addEventListener('mousedown', (e) => {
             pixelDragPointIndex = findNearestPixelCurvePoint(e);
             if (pixelDragPointIndex >= 0) {
+                pixelSizesManuallyEdited = false; // Reset manual override when curve is edited
                 drawPixelCurveEditor();
             }
         });
@@ -1885,10 +1909,21 @@
             }
         });
 
+        // Pixel sizes input - manual override
+        const pixelSizesInput = document.getElementById('pixel-sizes-input');
+        pixelSizesInput.addEventListener('input', () => {
+            pixelSizesManuallyEdited = true;
+        });
+        pixelSizesInput.addEventListener('change', () => {
+            parsePixelSizesInput();
+            updateExportField();
+        });
+
         // Pixel size slider event listeners
         tuneMaxPixel.addEventListener('input', () => {
             CONFIG.maxPixelSize = parseInt(tuneMaxPixel.value);
             document.getElementById('tune-max-pixel-val').textContent = `${CONFIG.maxPixelSize}px`;
+            pixelSizesManuallyEdited = false; // Reset manual override
             drawPixelCurveEditor();
             updateExportField();
         });
@@ -1896,6 +1931,7 @@
         tuneMinPixel.addEventListener('input', () => {
             CONFIG.minPixelSize = parseInt(tuneMinPixel.value);
             document.getElementById('tune-min-pixel-val').textContent = `${CONFIG.minPixelSize}px`;
+            pixelSizesManuallyEdited = false; // Reset manual override
             drawPixelCurveEditor();
             updateExportField();
         });
@@ -1903,6 +1939,7 @@
         tuneNumLevels.addEventListener('input', () => {
             CONFIG.numLevels = parseInt(tuneNumLevels.value);
             document.getElementById('tune-num-levels-val').textContent = CONFIG.numLevels;
+            pixelSizesManuallyEdited = false; // Reset manual override
             drawPixelCurveEditor();
             updateExportField();
         });
@@ -1944,6 +1981,10 @@
                 canvasHeight: CONFIG.canvasHeight,
                 textOffsetY: CONFIG.textOffsetY
             };
+            // Include manual pixel sizes if overridden
+            if (pixelSizesManuallyEdited && CONFIG.pixelSizes) {
+                params.pixelSizes = CONFIG.pixelSizes;
+            }
             exportField.value = JSON.stringify(params);
         }
 
@@ -2411,6 +2452,14 @@
                     if (params.numLevels !== undefined) CONFIG.numLevels = params.numLevels;
                     if (params.fadeCurve !== undefined) CONFIG.fadeCurve = params.fadeCurve;
                     if (params.pixelSizeCurve !== undefined) CONFIG.pixelSizeCurve = params.pixelSizeCurve;
+                    // Handle manual pixel sizes override
+                    if (params.pixelSizes !== undefined && Array.isArray(params.pixelSizes)) {
+                        CONFIG.pixelSizes = params.pixelSizes;
+                        pixelSizesManuallyEdited = true;
+                        document.getElementById('pixel-sizes-input').value = params.pixelSizes.join(', ');
+                    } else {
+                        pixelSizesManuallyEdited = false;
+                    }
                     if (params.pulseScalePixels !== undefined) CONFIG.pulseScalePixels = params.pulseScalePixels;
                     if (params.pulseGlow !== undefined) CONFIG.pulseGlow = params.pulseGlow;
                     if (params.pulseBrightness !== undefined) CONFIG.pulseBrightness = params.pulseBrightness;
