@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WIAI25</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Fira+Code:wght@700&family=Source+Code+Pro:wght@700&family=IBM+Plex+Mono:wght@700&family=Roboto+Mono:wght@700&family=Space+Mono:wght@700&family=Inconsolata:wght@700&family=Ubuntu+Mono:wght@700&family=Courier+Prime:wght@700&family=Anonymous+Pro:wght@700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+        }
+
+        /* Checkerboard for testing - remove in production */
+        .checkerboard {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(45deg, #1a1a1a 25%, transparent 25%),
+                linear-gradient(-45deg, #1a1a1a 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #1a1a1a 75%),
+                linear-gradient(-45deg, transparent 75%, #1a1a1a 75%);
+            background-size: 40px 40px;
+            background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+            background-color: #0d0d0d;
+            z-index: -1;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0s linear;
+        }
+
+        #display-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .error {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ff6b6b;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 1rem;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="checkerboard"></div>
+    <div id="canvas-container">
+        <canvas id="display-canvas"></canvas>
+    </div>
+
+    <script>
+        // ========== VIEWER CONFIGURATION ==========
+        const VIEWER_CONFIG = {
+            framesUrl: 'frames.json',
+            currentUrl: 'current.json',
+            introFrames: 120,
+            introFps: 40,
+            fadeDuration: 1.2,
+            fadeDelay: 0.1
+        };
+
+        // ========== STATE ==========
+        let frameData = null;
+        let config = null;
+        let currentFrame = 0;
+        let pulsePhase = 0;
+        let isIntroPlaying = false;
+        let isVisible = true;
+        let animationId = null;
+
+        // DOM elements
+        const canvas = document.getElementById('display-canvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvas-container');
+
+        // ========== DATA LOADING ==========
+
+        async function loadFrameData() {
+            try {
+                const url = VIEWER_CONFIG.framesUrl + '?t=' + Date.now();
+                const response = await fetch(url, { cache: 'no-store' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const text = await response.text();
+                let data;
+                if (text.trim().startsWith('{')) {
+                    data = JSON.parse(text);
+                } else {
+                    const decompressed = LZString.decompressFromBase64(text);
+                    data = JSON.parse(decompressed);
+                }
+                return data;
+            } catch (error) {
+                throw new Error(`Failed to load frames: ${error.message}`);
+            }
+        }
+
+        async function loadCurrentFrame() {
+            try {
+                const url = VIEWER_CONFIG.currentUrl + '?t=' + Date.now();
+                const response = await fetch(url, { cache: 'no-store' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                return data.currentFrame || data.frame || 0;
+            } catch (error) {
+                console.warn('Could not load current frame, using last frame:', error);
+                return -1;
+            }
+        }
+
+        // ========== RENDERING UTILITIES ==========
+
+        function factorial(n) {
+            if (n <= 1) return 1;
+            let result = 1;
+            for (let i = 2; i <= n; i++) result *= i;
+            return result;
+        }
+
+        function evaluateBezierCurve(points, t) {
+            const n = points.length - 1;
+            let result = 0;
+            for (let i = 0; i <= n; i++) {
+                const binomial = factorial(n) / (factorial(i) * factorial(n - i));
+                const basis = binomial * Math.pow(1 - t, n - i) * Math.pow(t, i);
+                result += points[i][1] * basis;
+            }
+            return Math.max(0, Math.min(1, result));
+        }
+
+        function interpolateValue(startVal, endVal, progress) {
+            return startVal + (endVal - startVal) * progress;
+        }
+
+        function fadeColor(hexColor, bgColor, amount) {
+            const r = parseInt(hexColor.slice(1, 3), 16);
+            const g = parseInt(hexColor.slice(3, 5), 16);
+            const b = parseInt(hexColor.slice(5, 7), 16);
+            const bgR = parseInt(bgColor.slice(1, 3), 16);
+            const bgG = parseInt(bgColor.slice(3, 5), 16);
+            const bgB = parseInt(bgColor.slice(5, 7), 16);
+            const newR = Math.round(r + (bgR - r) * amount);
+            const newG = Math.round(g + (bgG - g) * amount);
+            const newB = Math.round(b + (bgB - b) * amount);
+            return `rgb(${newR}, ${newG}, ${newB})`;
+        }
+
+        function getFadeForPixel(drawnAtFrame, currentFrame, totalFrames) {
+            const drawProgress = totalFrames > 0 ? drawnAtFrame / totalFrames : 0;
+            const fadeEveryN = Math.max(1, Math.round(interpolateValue(
+                config.fadeEveryNPixelsStart,
+                config.fadeEveryNPixelsEnd,
+                drawProgress
+            )));
+            const maxFadeSteps = Math.max(1, Math.round(interpolateValue(
+                config.maxFadeStepsStart,
+                config.maxFadeStepsEnd,
+                drawProgress
+            )));
+            const framesSince = currentFrame - drawnAtFrame;
+            const fadeSteps = Math.floor(framesSince / fadeEveryN);
+            const t = Math.min(fadeSteps / maxFadeSteps, 1);
+            return evaluateBezierCurve(config.fadeCurve, t);
+        }
+
+        function getMaxFadeForLevel(pixelLevel) {
+            if (config.fadeLimitLevels === 0 || pixelLevel > config.fadeLimitLevels) {
+                return 1.0;
+            }
+            return 1.0 - pixelLevel * config.fadeLimitStep;
+        }
+
+        // ========== MAIN RENDERING ==========
+
+        function renderFrame(frameIndex, highlightMode = 'pulse') {
+            // Always use twoLine layout
+            const pixels = frameData.frames.twoLine;
+            const totalFrames = pixels.length;
+
+            // Clear to transparent
+            ctx.clearRect(0, 0, config.canvasWidth, config.canvasHeight);
+
+            // Pixel-wise fading
+            for (let i = 0; i <= frameIndex && i < pixels.length; i++) {
+                const pixel = pixels[i];
+                const rawFadeAmount = getFadeForPixel(pixel.drawnAtFrame, frameIndex, totalFrames);
+                const maxFade = getMaxFadeForLevel(pixel.level);
+                const fadeAmount = Math.min(rawFadeAmount, maxFade, 0.95);
+
+                const useAlphaFade = config.fadeLimitLevels > 0 && pixel.level <= config.fadeLimitLevels;
+
+                if (useAlphaFade) {
+                    ctx.fillStyle = config.pixelColor;
+                    ctx.globalAlpha = config.pixelOpacity * (1 - fadeAmount);
+                } else {
+                    const fadedColor = fadeColor(config.pixelColor, config.bgColor, fadeAmount);
+                    ctx.fillStyle = fadedColor;
+                    ctx.globalAlpha = config.pixelOpacity;
+                }
+
+                ctx.fillRect(pixel.x, pixel.y, pixel.size, pixel.size);
+            }
+
+            // Highlight newest pixel
+            if (highlightMode !== 'none' && frameIndex >= 0 && frameIndex < pixels.length) {
+                const newestPixel = pixels[frameIndex];
+
+                if (highlightMode === 'intro') {
+                    const introGlowSize = 6;
+                    ctx.shadowColor = '#ffffff';
+                    ctx.shadowBlur = 15;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.globalAlpha = 0.8;
+                    ctx.fillRect(
+                        newestPixel.x - introGlowSize / 2,
+                        newestPixel.y - introGlowSize / 2,
+                        newestPixel.size + introGlowSize,
+                        newestPixel.size + introGlowSize
+                    );
+                    ctx.shadowBlur = 0;
+                    ctx.fillStyle = config.pixelColor;
+                    ctx.globalAlpha = 1;
+                    ctx.fillRect(newestPixel.x, newestPixel.y, newestPixel.size, newestPixel.size);
+
+                } else {
+                    // Pulse mode
+                    const normalizedPhase = (Math.sin(pulsePhase) + 1) / 2;
+                    let easedPhase;
+                    switch (config.pulseCurve) {
+                        case 'ease-in':
+                            easedPhase = normalizedPhase * normalizedPhase;
+                            break;
+                        case 'ease-out':
+                            easedPhase = 1 - (1 - normalizedPhase) * (1 - normalizedPhase);
+                            break;
+                        case 'ease-in-out':
+                            easedPhase = normalizedPhase < 0.5
+                                ? 2 * normalizedPhase * normalizedPhase
+                                : 1 - Math.pow(-2 * normalizedPhase + 2, 2) / 2;
+                            break;
+                        default:
+                            easedPhase = normalizedPhase;
+                    }
+
+                    const sizeIncrease = easedPhase * config.pulseScalePixels;
+                    const scaledSize = newestPixel.size + sizeIncrease;
+                    const offset = sizeIncrease / 2;
+
+                    const brightenAmount = easedPhase * config.pulseBrightness;
+                    const r = parseInt(config.pixelColor.slice(1, 3), 16);
+                    const g = parseInt(config.pixelColor.slice(3, 5), 16);
+                    const b = parseInt(config.pixelColor.slice(5, 7), 16);
+                    const brightR = Math.round(r + (255 - r) * brightenAmount);
+                    const brightG = Math.round(g + (255 - g) * brightenAmount);
+                    const brightB = Math.round(b + (255 - b) * brightenAmount);
+                    const brightColor = `rgb(${brightR}, ${brightG}, ${brightB})`;
+
+                    ctx.shadowColor = brightColor;
+                    ctx.shadowBlur = 5 + easedPhase * config.pulseGlow * 40;
+                    ctx.fillStyle = brightColor;
+                    ctx.globalAlpha = Math.min(1, config.pixelOpacity + 0.1 + easedPhase * config.pulseGlow * 0.4);
+
+                    ctx.fillRect(
+                        newestPixel.x - offset,
+                        newestPixel.y - offset,
+                        scaledSize,
+                        scaledSize
+                    );
+
+                    ctx.shadowBlur = 0;
+                }
+            }
+
+            // Draw outline (always twoLine)
+            const level = frameIndex < pixels.length ? pixels[frameIndex].level : config.numLevels;
+            const shouldHideOutline = config.outlineHideFromLevel > 0 && level >= config.outlineHideFromLevel;
+
+            if (!shouldHideOutline) {
+                ctx.globalAlpha = 1;
+                ctx.lineJoin = 'round';
+                ctx.lineWidth = config.outlineStrokeWidth;
+                ctx.strokeStyle = config.outlineColor;
+
+                const wiaiSize = config.twoLineWiaiSize;
+                const num25Size = config.twoLine25Size;
+                const gap = config.twoLineGap;
+                const totalHeight = wiaiSize + gap + num25Size;
+                const startY = (config.canvasHeight - totalHeight) / 2 + config.textOffsetY;
+
+                ctx.textAlign = 'center';
+                ctx.font = `700 ${wiaiSize}px "${config.fontFamily}"`;
+                ctx.textBaseline = 'top';
+                ctx.strokeText('WIAI', config.canvasWidth / 2, startY);
+
+                ctx.font = `700 ${num25Size}px "${config.fontFamily}"`;
+                ctx.strokeText('25', config.canvasWidth / 2, startY + wiaiSize + gap);
+            }
+        }
+
+        // ========== ANIMATION CONTROL ==========
+
+        function startIntroAnimation(targetFrame) {
+            isIntroPlaying = true;
+            const pixels = frameData.frames.twoLine;
+            const frameDuration = 1000 / VIEWER_CONFIG.introFps;
+
+            const sampledFrames = [];
+            const step = targetFrame / VIEWER_CONFIG.introFrames;
+            for (let i = 0; i < VIEWER_CONFIG.introFrames; i++) {
+                sampledFrames.push(Math.floor(i * step));
+            }
+            sampledFrames.push(targetFrame);
+
+            setTimeout(() => {
+                container.style.transition = `opacity ${VIEWER_CONFIG.fadeDuration}s ease-out`;
+                container.style.opacity = '1';
+            }, VIEWER_CONFIG.fadeDelay * 1000);
+
+            let introIndex = 0;
+
+            function playIntroFrame() {
+                if (introIndex < sampledFrames.length) {
+                    const frame = sampledFrames[introIndex];
+                    const isLastFrame = introIndex === sampledFrames.length - 1;
+                    renderFrame(frame, isLastFrame ? 'pulse' : 'intro');
+                    introIndex++;
+                    setTimeout(playIntroFrame, frameDuration);
+                } else {
+                    isIntroPlaying = false;
+                    currentFrame = targetFrame;
+                    startPulseAnimation();
+                }
+            }
+
+            playIntroFrame();
+        }
+
+        function startPulseAnimation() {
+            let lastTime = performance.now();
+            let lastRenderTime = 0;
+            const pulseSpeed = config.pulseFrequency * 60;
+            const minFrameInterval = 1000 / 8;
+
+            function animate(currentTime) {
+                animationId = requestAnimationFrame(animate);
+
+                if (!isVisible) {
+                    lastTime = currentTime;
+                    return;
+                }
+
+                if (currentTime - lastRenderTime < minFrameInterval) {
+                    return;
+                }
+
+                const deltaTime = (currentTime - lastTime) / 1000;
+                lastTime = currentTime;
+                lastRenderTime = currentTime;
+
+                pulsePhase = (pulsePhase + pulseSpeed * deltaTime) % (Math.PI * 2);
+                renderFrame(currentFrame, 'pulse');
+            }
+            animationId = requestAnimationFrame(animate);
+        }
+
+        function setupVisibilityObserver() {
+            const observer = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach(entry => {
+                        isVisible = entry.isIntersecting;
+                    });
+                },
+                { threshold: 0.1 }
+            );
+            observer.observe(container);
+        }
+
+        // ========== INITIALIZATION ==========
+
+        async function init() {
+            try {
+                const data = await loadFrameData();
+                frameData = data;
+                config = data.config;
+
+                // Setup canvas with native resolution
+                canvas.width = config.canvasWidth;
+                canvas.height = config.canvasHeight;
+
+                // Load current frame
+                let targetFrame = await loadCurrentFrame();
+                const pixels = frameData.frames.twoLine;
+                if (targetFrame < 0 || targetFrame >= pixels.length) {
+                    targetFrame = pixels.length - 1;
+                }
+
+                await document.fonts.ready;
+                setupVisibilityObserver();
+                startIntroAnimation(targetFrame);
+
+            } catch (error) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error';
+                errorDiv.textContent = error.message;
+                document.body.appendChild(errorDiv);
+                console.error('Viewer init error:', error);
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
