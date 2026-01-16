@@ -395,8 +395,8 @@
             let lastRenderTime = 0;
             // pulseFrequency is designed for ~60fps, so multiply by 60 to get per-second rate
             const pulseSpeed = config.pulseFrequency * 60;
-            // Throttle to ~12 FPS for performance (83ms between frames)
-            const minFrameInterval = 1000 / 12;
+            // Throttle to ~8 FPS for performance (125ms between frames)
+            const minFrameInterval = 1000 / 8;
 
             function animate(currentTime) {
                 // Always continue the loop, but only render when visible
