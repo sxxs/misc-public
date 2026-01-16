@@ -6,7 +6,7 @@
     <title>WIAI25</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Fira+Code:wght@700&family=Source+Code+Pro:wght@700&family=IBM+Plex+Mono:wght@700&family=Roboto+Mono:wght@700&family=Space+Mono:wght@700&family=Inconsolata:wght@700&family=Ubuntu+Mono:wght@700&family=Courier+Prime:wght@700&family=Anonymous+Pro:wght@700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
     <style>
         * {
@@ -76,7 +76,7 @@
         const VIEWER_CONFIG = {
             framesUrl: 'frames.json',      // Frame data file (or frames.lz.json for compressed)
             currentUrl: 'current.json',    // Current frame endpoint (later: wiai.json)
-            introFrames: 30,               // Number of frames to play as intro
+            introFrames: 120,               // Number of frames to play as intro
             introFps: 40,                  // Intro animation speed
             fadeDuration: 1.2,             // Fade-in duration in seconds
             fadeDelay: 0.1                 // When to start fade (0 = immediate)
@@ -101,7 +101,9 @@
 
         async function loadFrameData() {
             try {
-                const response = await fetch(VIEWER_CONFIG.framesUrl);
+                // Add cache-busting timestamp
+                const url = VIEWER_CONFIG.framesUrl + '?t=' + Date.now();
+                const response = await fetch(url, { cache: 'no-store' });
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
                 const text = await response.text();
@@ -129,7 +131,9 @@
 
         async function loadCurrentFrame() {
             try {
-                const response = await fetch(VIEWER_CONFIG.currentUrl);
+                // Add cache-busting timestamp
+                const url = VIEWER_CONFIG.currentUrl + '?t=' + Date.now();
+                const response = await fetch(url, { cache: 'no-store' });
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
                 const data = await response.json();
