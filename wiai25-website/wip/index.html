@@ -187,29 +187,29 @@
                         <div class="flex border-b border-neutral-200 py-6">
                             <div class="font-mono text-primary-dark font-bold w-24 shrink-0 text-lg">16:00</div>
                             <div>
+                                <div class="font-bold text-lg">Mitmachen</div>
+                                <div class="text-neutral-500">Installationen, Stationen, Exponate</div>
+                            </div>
+                        </div>
+                        <div class="flex border-b border-neutral-200 py-6">
+                            <div class="font-mono text-primary-dark font-bold w-24 shrink-0 text-lg">17:00</div>
+                            <div>
                                 <div class="font-bold text-lg">Opening & Keynote</div>
                                 <div class="text-neutral-500">Begrüßung, Programmvorstellung und Keynote</div>
                             </div>
                         </div>
                         <div class="flex border-b border-neutral-200 py-6">
-                            <div class="font-mono text-primary-dark font-bold w-24 shrink-0 text-lg">16:00</div>
+                            <div class="font-mono text-primary-dark font-bold w-24 shrink-0 text-lg">17:00</div>
                             <div>
                                 <div class="font-bold text-lg">Kinderuni <span class="font-normal text-sm text-neutral-400">(parallel)</span></div>
                                 <div class="text-neutral-500">„Smart City: Was macht eine Stadt schlau?" – Vorlesung für Kinder ab 8</div>
                             </div>
                         </div>
                         <div class="flex border-b border-neutral-200 py-6">
-                            <div class="font-mono text-primary-dark font-bold w-24 shrink-0 text-lg">17:00</div>
+                            <div class="font-mono text-primary-dark font-bold w-24 shrink-0 text-lg">17:30</div>
                             <div>
-                                <div class="font-bold text-lg">Talks</div>
+                                <div class="font-bold text-lg">Talks <span class="font-normal text-sm text-neutral-400">(je 45 min)</span></div>
                                 <div class="text-neutral-500">Kurzvorlesungen mit Einblicken in Forschungsthemen</div>
-                            </div>
-                        </div>
-                        <div class="flex border-b border-neutral-200 py-6">
-                            <div class="font-mono text-primary-dark font-bold w-24 shrink-0 text-lg">17:00</div>
-                            <div>
-                                <div class="font-bold text-lg">Mitmachen <span class="font-normal text-sm text-neutral-400">(parallel)</span></div>
-                                <div class="text-neutral-500">Installationen, Stationen, Exponate</div>
                             </div>
                         </div>
                         <div class="flex py-6">
@@ -294,7 +294,7 @@
                                     an Hochschulen in ganz Deutschland im Einsatz. Aber das ist eine andere Geschichte.
                                 </p>
                             </div>
-                            <a href="https://web.archive.org/web/20011009193254/http://www.wiai.uni-bamberg.de/"
+                            <a href="https://web.archive.org/web/20011222170632if_/http://www.uni-bamberg.de:80/wiai/"
                                target="_blank"
                                rel="noopener"
                                class="inline-block mt-6 bg-black text-white px-8 py-4 font-bold hover:bg-neutral-800 transition-colors">
@@ -372,8 +372,8 @@
                 ERBA-Campus, An der Weberei 5, Bamberg
             </p>
 
-            <a href="wiai25-event.ics"
-               download="wiai25-event.ics"
+            <a href="event.ics"
+               download="event.ics"
                class="inline-flex items-center gap-3 bg-black text-primary px-8 py-5 font-black text-lg hover:bg-neutral-800 transition-colors">
                 <!-- Heroicon: calendar -->
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -440,8 +440,8 @@
     </footer>
 
     <!-- Viewer Info Overlay -->
-    <div id="viewer-info-overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; padding: 24px;">
-        <div style="background: #171717; border: 1px solid #404040; max-width: min(42rem, 90vw); width: 100%; padding: 32px 40px; position: relative; color: white;">
+    <div id="viewer-info-overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 9999; padding: 24px; overflow-y: auto;">
+        <div style="background: #171717; border: 1px solid #404040; max-width: min(42rem, 90vw); width: 100%; padding: 32px 40px; position: relative; color: white; margin: 0 auto;">
             <button id="viewer-info-close" style="position: absolute; top: 16px; right: 16px; color: #a3a3a3; background: none; border: none; cursor: pointer;">
                 <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -982,16 +982,19 @@
         const infoClose = document.getElementById('viewer-info-close');
 
         infoBtn.addEventListener('click', () => {
-            infoOverlay.style.display = 'flex';
+            infoOverlay.style.display = 'block';
+            document.body.style.overflow = 'hidden';
         });
 
         infoClose.addEventListener('click', () => {
             infoOverlay.style.display = 'none';
+            document.body.style.overflow = '';
         });
 
         infoOverlay.addEventListener('click', (e) => {
             if (e.target === infoOverlay) {
                 infoOverlay.style.display = 'none';
+                document.body.style.overflow = '';
             }
         });
     </script>
