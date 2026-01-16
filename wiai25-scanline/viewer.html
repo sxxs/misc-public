@@ -90,6 +90,8 @@
         let pulsePhase = 0;
         let isIntroPlaying = false;
         let introStartTime = 0;
+        let isVisible = true;          // Track viewport visibility
+        let animationId = null;        // For cancelling animation
 
         // DOM elements
         const canvas = document.getElementById('display-canvas');
@@ -390,18 +392,48 @@
 
         function startPulseAnimation() {
             let lastTime = performance.now();
+            let lastRenderTime = 0;
             // pulseFrequency is designed for ~60fps, so multiply by 60 to get per-second rate
             const pulseSpeed = config.pulseFrequency * 60;
+            // Throttle to ~12 FPS for performance (83ms between frames)
+            const minFrameInterval = 1000 / 12;
 
             function animate(currentTime) {
+                // Always continue the loop, but only render when visible
+                animationId = requestAnimationFrame(animate);
+
+                // Skip rendering if not visible
+                if (!isVisible) {
+                    lastTime = currentTime; // Keep time in sync
+                    return;
+                }
+
+                // Throttle to target FPS
+                if (currentTime - lastRenderTime < minFrameInterval) {
+                    return;
+                }
+
                 const deltaTime = (currentTime - lastTime) / 1000; // seconds
                 lastTime = currentTime;
+                lastRenderTime = currentTime;
 
                 pulsePhase = (pulsePhase + pulseSpeed * deltaTime) % (Math.PI * 2);
                 renderFrame(currentFrame, 'pulse');
-                requestAnimationFrame(animate);
             }
-            requestAnimationFrame(animate);
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // Setup Intersection Observer for visibility tracking
+        function setupVisibilityObserver() {
+            const observer = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach(entry => {
+                        isVisible = entry.isIntersecting;
+                    });
+                },
+                { threshold: 0.1 } // Trigger when 10% visible
+            );
+            observer.observe(container);
         }
 
         // ========== INITIALIZATION ==========
@@ -437,6 +469,9 @@
 
                 // Wait for font to load
                 await document.fonts.ready;
+
+                // Setup visibility tracking for performance
+                setupVisibilityObserver();
 
                 // Start intro animation
                 startIntroAnimation(targetFrame);
