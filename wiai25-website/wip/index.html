@@ -479,7 +479,12 @@
             fadeDuration: 1.5,
             fadeDelay: 0,
             pulseDuration: 0.8,
-            pulsePause: 1.0
+            pulsePause: 1.0,
+            // Live-Polling Configuration
+            counterUrl: 'https://wiai25.de/wiai.json',
+            defaultFrame: 180,  // Fallback wenn Backend nicht erreichbar - wöchentlich anpassen!
+            pollDelayAfterMinute: 5000,  // 5s nach Minutenwechsel (Backend-Cron läuft dann)
+            transitionDuration: 0.8  // Sekunden für Frame-Übergang
         };
 
         // ========== STATE ==========
@@ -488,8 +493,12 @@
         let currentFrame = 0;
         let pulsePhase = 0;
         let isIntroPlaying = false;
+        let isTransitioning = false;
         let isVisible = true;
         let animationId = null;
+        let pollIntervalId = null;
+        let pollTimeoutId = null;
+        let lastTotal = null;
 
         // DOM elements
         const canvas = document.getElementById('display-canvas');
@@ -529,6 +538,123 @@
                 console.warn('Could not load current frame, using last frame:', error);
                 return -1;
             }
+        }
+
+        // ========== LIVE POLLING ==========
+
+        function epochMinute() {
+            return Math.floor(Date.now() / 60000);
+        }
+
+        function msToNextMinute() {
+            const now = Date.now();
+            const next = (epochMinute() + 1) * 60000;
+            return next - now;
+        }
+
+        async function fetchCounter() {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+            try {
+                const url = `${VIEWER_CONFIG.counterUrl}?t=${epochMinute()}`;
+                const response = await fetch(url, {
+                    cache: 'no-store',
+                    signal: controller.signal
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            } finally {
+                clearTimeout(timeoutId);
+            }
+        }
+
+        async function checkForNewFrame() {
+            if (isIntroPlaying || isTransitioning || !frameData) return;
+
+            try {
+                const data = await fetchCounter();
+                const total = Number(data.total ?? 0);
+                const maxFrame = frameData.frames.twoLine.length - 1;
+                const targetFrame = Math.min(total, maxFrame);
+
+                if (lastTotal === null) {
+                    lastTotal = total;
+                    return;
+                }
+
+                if (targetFrame > currentFrame) {
+                    lastTotal = total;  // Update state before animation
+                    console.log(`New frame: ${currentFrame} → ${targetFrame}`);
+                    animateToFrame(targetFrame);
+                }
+            } catch (error) {
+                console.debug('Counter fetch failed:', error);
+                // Graceful degradation: keep current state
+            }
+        }
+
+        function animateToFrame(targetFrame) {
+            if (isTransitioning) return;
+            isTransitioning = true;
+
+            // Stop current pulse animation
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+
+            const startFrame = currentFrame;
+            const startTime = performance.now();
+            const duration = VIEWER_CONFIG.transitionDuration * 1000;
+
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // Ease-out cubic for smooth deceleration
+                const eased = 1 - Math.pow(1 - progress, 3);
+
+                const frameFloat = startFrame + (targetFrame - startFrame) * eased;
+                const frame = Math.floor(frameFloat);
+
+                renderFrame(frame, progress < 1 ? 'intro' : 'pulse');
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    currentFrame = targetFrame;
+                    isTransitioning = false;
+                    startPulseAnimation();
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        let isPollingActive = false;
+
+        function startPolling() {
+            if (isPollingActive) return;
+            isPollingActive = true;
+
+            // Initial check
+            checkForNewFrame();
+
+            // Align to minute boundary + delay for backend cron
+            const firstDelay = msToNextMinute() + VIEWER_CONFIG.pollDelayAfterMinute;
+            pollTimeoutId = setTimeout(() => {
+                checkForNewFrame();
+                pollIntervalId = setInterval(checkForNewFrame, 60000);
+            }, firstDelay);
+        }
+
+        function stopPolling() {
+            isPollingActive = false;
+            if (pollIntervalId) clearInterval(pollIntervalId);
+            if (pollTimeoutId) clearTimeout(pollTimeoutId);
+            pollIntervalId = null;
+            pollTimeoutId = null;
         }
 
         // ========== RENDERING UTILITIES ==========
@@ -811,20 +937,42 @@
                 canvas.width = config.canvasWidth;
                 canvas.height = config.canvasHeight;
 
-                let targetFrame = await loadCurrentFrame();
                 const pixels = frameData.frames.twoLine;
-                if (targetFrame < 0 || targetFrame >= pixels.length) {
-                    targetFrame = pixels.length - 1;
+                const maxFrame = pixels.length - 1;
+
+                // Try to get current frame from live backend
+                let targetFrame;
+                try {
+                    const counterData = await fetchCounter();
+                    const total = Number(counterData.total ?? 0);
+                    targetFrame = Math.min(total, maxFrame);
+                    lastTotal = total;
+                } catch (e) {
+                    // Backend nicht erreichbar - Fallback verwenden
+                    console.warn('Backend not reachable, using default frame:', e);
+                    targetFrame = Math.min(VIEWER_CONFIG.defaultFrame, maxFrame);
+                    lastTotal = targetFrame;
                 }
 
                 await document.fonts.ready;
                 setupVisibilityObserver();
                 startIntroAnimation(targetFrame);
 
+                // Start polling after init (checks isIntroPlaying internally)
+                startPolling();
+
             } catch (error) {
                 console.error('Viewer init error:', error);
             }
         }
+
+        // BFCache handler: restart polling when page is restored from cache
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                stopPolling();
+                startPolling();
+            }
+        });
 
         initViewer();
 
