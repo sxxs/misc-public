@@ -730,7 +730,7 @@
             fontSize: 320,
             fontFamily: 'IBM Plex Mono',
             // Outline visibility: hide from this level onwards (0 = never hide)
-            outlineHideFromLevel: 0,
+            outlineHideFromLevel: 6,
             // Two-line mode config
             twoLineEnabled: true,
             twoLineBreakpoint: 600, // px - below this width, use two-line layout
@@ -738,39 +738,39 @@
             twoLine25Size: 380,     // font size for "25" (larger)
             twoLineGap: -65,        // vertical gap between lines
             // Fade limit for early levels (prevents complete fadeout)
-            fadeLimitLevels: 9,     // apply fade limit to first N levels (0 = disabled)
-            fadeLimitStep: 0.03,    // each level fades 3% less than max
+            fadeLimitLevels: 15,    // apply fade limit to first N levels (0 = disabled)
+            fadeLimitStep: 0.07,    // each level fades 7% less than max
             // Pixel size progression config
             maxPixelSize: 180,
             minPixelSize: 4,
-            numLevels: 11,
+            numLevels: 12,
             // Bezier curve for pixel size progression [x, y] where x=level progress(0-1), y=size progress(0-1, 0=max, 1=min)
-            pixelSizeCurve: [[0, 0], [0.04, 0.69], [0.37, 1], [0.75, 0.8], [1, 1]],
+            pixelSizeCurve: [[0, 0], [0.01, 0.96], [0.37, 1], [0.71, 1], [1, 1]],
             // Computed pixel sizes (will be calculated from curve)
             pixelSizes: [],
             pixelColor: '#facc15',
-            pixelOpacity: 0.7,
+            pixelOpacity: 0.4,
             overlapThreshold: 0.25,
             bgColor: '#000000',
             // Bezier curve control points for fade [x, y] where x=progress(0-1), y=fade(0-1)
-            fadeCurve: [[0, 0], [0.2, 0.5], [0.5, 0.7], [1, 0.9]],
-            outlineStrokeWidth: 2,
-            outlineColor: '#ffffff',
+            fadeCurve: [[0, 0], [0.08, 0.62], [0.52, 0.87], [1, 0.9]],
+            outlineStrokeWidth: 4,
+            outlineColor: '#000000',
             // Shuffle vs Scanline
             shufflePixels: true,
             shuffleSeed: 42,
             // Fade mode - 'level' or 'pixel'
             fadeMode: 'pixel',
             fadeEveryNPixelsStart: 8,
-            fadeEveryNPixelsEnd: 164,
-            maxFadeStepsStart: 145,
-            maxFadeStepsEnd: 695,
+            fadeEveryNPixelsEnd: 651,
+            maxFadeStepsStart: 35,
+            maxFadeStepsEnd: 908,
             // Pulse animation config
-            pulseScalePixels: 4,  // absolute size change in pixels (0-10)
+            pulseScalePixels: 5,  // absolute size change in pixels (0-10)
             pulseGlow: 0.8,       // glow/shadow intensity
-            pulseBrightness: 0.5, // color brighten toward white (0 = none, 1 = full white)
-            pulseFrequency: 0.2,  // speed of pulse oscillation
-            pulseCurve: 'linear'  // 'linear', 'ease-in', 'ease-out', 'ease-in-out'
+            pulseBrightness: 1,   // color brighten toward white (0 = none, 1 = full white)
+            pulseFrequency: 0.1,  // speed of pulse oscillation
+            pulseCurve: 'ease-in' // 'linear', 'ease-in', 'ease-out', 'ease-in-out'
         };
 
         // Color presets
