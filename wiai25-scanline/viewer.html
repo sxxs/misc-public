@@ -66,7 +66,7 @@
     </style>
 </head>
 <body>
-    <div class="loading" id="loading">Loading...</div>
+    <div class="loading hidden" id="loading"></div>
     <div id="canvas-container">
         <canvas id="display-canvas"></canvas>
     </div>
@@ -208,7 +208,7 @@
 
         // ========== MAIN RENDERING ==========
 
-        function renderFrame(frameIndex, showPulse = true) {
+        function renderFrame(frameIndex, highlightMode = 'pulse') {
             const isTwoLine = layoutMode === 'twoline';
             const pixels = isTwoLine ? frameData.frames.twoLine : frameData.frames.singleLine;
             const totalFrames = pixels.length;
@@ -230,54 +230,81 @@
                 ctx.fillRect(pixel.x, pixel.y, pixel.size, pixel.size);
             }
 
-            // Pulse effect on newest pixel
-            if (showPulse && frameIndex >= 0 && frameIndex < pixels.length) {
+            // Highlight newest pixel (pulse or intro mode)
+            // highlightMode: 'none', 'pulse', 'intro'
+            if (highlightMode !== 'none' && frameIndex >= 0 && frameIndex < pixels.length) {
                 const newestPixel = pixels[frameIndex];
-                const normalizedPhase = (Math.sin(pulsePhase) + 1) / 2;
 
-                let easedPhase;
-                switch (config.pulseCurve) {
-                    case 'ease-in':
-                        easedPhase = normalizedPhase * normalizedPhase;
-                        break;
-                    case 'ease-out':
-                        easedPhase = 1 - (1 - normalizedPhase) * (1 - normalizedPhase);
-                        break;
-                    case 'ease-in-out':
-                        easedPhase = normalizedPhase < 0.5
-                            ? 2 * normalizedPhase * normalizedPhase
-                            : 1 - Math.pow(-2 * normalizedPhase + 2, 2) / 2;
-                        break;
-                    default:
-                        easedPhase = normalizedPhase;
+                if (highlightMode === 'intro') {
+                    // Intro highlight: white glow (6px larger) + yellow pixel
+                    const introGlowSize = 6;
+
+                    // Draw white glow behind
+                    ctx.shadowColor = '#ffffff';
+                    ctx.shadowBlur = 15;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.globalAlpha = 0.8;
+                    ctx.fillRect(
+                        newestPixel.x - introGlowSize / 2,
+                        newestPixel.y - introGlowSize / 2,
+                        newestPixel.size + introGlowSize,
+                        newestPixel.size + introGlowSize
+                    );
+                    ctx.shadowBlur = 0;
+
+                    // Draw yellow pixel on top
+                    ctx.fillStyle = config.pixelColor;
+                    ctx.globalAlpha = 1;
+                    ctx.fillRect(newestPixel.x, newestPixel.y, newestPixel.size, newestPixel.size);
+
+                } else {
+                    // Pulse mode: animated pulse effect
+                    const normalizedPhase = (Math.sin(pulsePhase) + 1) / 2;
+
+                    let easedPhase;
+                    switch (config.pulseCurve) {
+                        case 'ease-in':
+                            easedPhase = normalizedPhase * normalizedPhase;
+                            break;
+                        case 'ease-out':
+                            easedPhase = 1 - (1 - normalizedPhase) * (1 - normalizedPhase);
+                            break;
+                        case 'ease-in-out':
+                            easedPhase = normalizedPhase < 0.5
+                                ? 2 * normalizedPhase * normalizedPhase
+                                : 1 - Math.pow(-2 * normalizedPhase + 2, 2) / 2;
+                            break;
+                        default:
+                            easedPhase = normalizedPhase;
+                    }
+
+                    const sizeIncrease = easedPhase * config.pulseScalePixels;
+                    const scaledSize = newestPixel.size + sizeIncrease;
+                    const offset = sizeIncrease / 2;
+
+                    const brightenAmount = easedPhase * config.pulseBrightness;
+                    const r = parseInt(config.pixelColor.slice(1, 3), 16);
+                    const g = parseInt(config.pixelColor.slice(3, 5), 16);
+                    const b = parseInt(config.pixelColor.slice(5, 7), 16);
+                    const brightR = Math.round(r + (255 - r) * brightenAmount);
+                    const brightG = Math.round(g + (255 - g) * brightenAmount);
+                    const brightB = Math.round(b + (255 - b) * brightenAmount);
+                    const brightColor = `rgb(${brightR}, ${brightG}, ${brightB})`;
+
+                    ctx.shadowColor = brightColor;
+                    ctx.shadowBlur = 5 + easedPhase * config.pulseGlow * 40;
+                    ctx.fillStyle = brightColor;
+                    ctx.globalAlpha = Math.min(1, config.pixelOpacity + 0.1 + easedPhase * config.pulseGlow * 0.4);
+
+                    ctx.fillRect(
+                        newestPixel.x - offset,
+                        newestPixel.y - offset,
+                        scaledSize,
+                        scaledSize
+                    );
+
+                    ctx.shadowBlur = 0;
                 }
-
-                const sizeIncrease = easedPhase * config.pulseScalePixels;
-                const scaledSize = newestPixel.size + sizeIncrease;
-                const offset = sizeIncrease / 2;
-
-                const brightenAmount = easedPhase * config.pulseBrightness;
-                const r = parseInt(config.pixelColor.slice(1, 3), 16);
-                const g = parseInt(config.pixelColor.slice(3, 5), 16);
-                const b = parseInt(config.pixelColor.slice(5, 7), 16);
-                const brightR = Math.round(r + (255 - r) * brightenAmount);
-                const brightG = Math.round(g + (255 - g) * brightenAmount);
-                const brightB = Math.round(b + (255 - b) * brightenAmount);
-                const brightColor = `rgb(${brightR}, ${brightG}, ${brightB})`;
-
-                ctx.shadowColor = brightColor;
-                ctx.shadowBlur = 5 + easedPhase * config.pulseGlow * 40;
-                ctx.fillStyle = brightColor;
-                ctx.globalAlpha = Math.min(1, config.pixelOpacity + 0.1 + easedPhase * config.pulseGlow * 0.4);
-
-                ctx.fillRect(
-                    newestPixel.x - offset,
-                    newestPixel.y - offset,
-                    scaledSize,
-                    scaledSize
-                );
-
-                ctx.shadowBlur = 0;
             }
 
             // Draw outline
@@ -325,10 +352,15 @@
             introStartTime = performance.now();
 
             const pixels = layoutMode === 'twoline' ? frameData.frames.twoLine : frameData.frames.singleLine;
-            const startFrame = Math.max(0, targetFrame - VIEWER_CONFIG.introFrames);
-            const totalIntroFrames = targetFrame - startFrame;
             const frameDuration = 1000 / VIEWER_CONFIG.introFps;
-            const introDuration = totalIntroFrames * frameDuration;
+
+            // Sample frames from entire range (0 to targetFrame) for more visual movement
+            const sampledFrames = [];
+            const step = targetFrame / VIEWER_CONFIG.introFrames;
+            for (let i = 0; i < VIEWER_CONFIG.introFrames; i++) {
+                sampledFrames.push(Math.floor(i * step));
+            }
+            sampledFrames.push(targetFrame); // Always end with target frame
 
             // Start fade transition
             setTimeout(() => {
@@ -336,12 +368,14 @@
                 container.style.opacity = '1';
             }, VIEWER_CONFIG.fadeDelay * 1000);
 
-            let introFrame = startFrame;
+            let introIndex = 0;
 
             function playIntroFrame() {
-                if (introFrame <= targetFrame) {
-                    renderFrame(introFrame, introFrame === targetFrame);
-                    introFrame++;
+                if (introIndex < sampledFrames.length) {
+                    const frame = sampledFrames[introIndex];
+                    const isLastFrame = introIndex === sampledFrames.length - 1;
+                    renderFrame(frame, isLastFrame ? 'pulse' : 'intro');
+                    introIndex++;
                     setTimeout(playIntroFrame, frameDuration);
                 } else {
                     // Intro complete, start pulse animation
@@ -355,12 +389,19 @@
         }
 
         function startPulseAnimation() {
-            function animate() {
-                pulsePhase = (pulsePhase + config.pulseFrequency) % (Math.PI * 2);
-                renderFrame(currentFrame, true);
+            let lastTime = performance.now();
+            // pulseFrequency is designed for ~60fps, so multiply by 60 to get per-second rate
+            const pulseSpeed = config.pulseFrequency * 60;
+
+            function animate(currentTime) {
+                const deltaTime = (currentTime - lastTime) / 1000; // seconds
+                lastTime = currentTime;
+
+                pulsePhase = (pulsePhase + pulseSpeed * deltaTime) % (Math.PI * 2);
+                renderFrame(currentFrame, 'pulse');
                 requestAnimationFrame(animate);
             }
-            animate();
+            requestAnimationFrame(animate);
         }
 
         // ========== INITIALIZATION ==========
