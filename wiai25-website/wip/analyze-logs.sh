@@ -14,7 +14,7 @@ echo
 
 # Dekomprimieren falls nötig
 if [[ "$LOG_FILE" == *.gz ]]; then
-    DATA=$(zcat "$LOG_FILE")
+    DATA=$(gunzip -c "$LOG_FILE")
 else
     DATA=$(cat "$LOG_FILE")
 fi
