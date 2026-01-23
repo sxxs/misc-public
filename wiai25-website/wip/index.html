@@ -181,7 +181,7 @@
                             <div class="font-mono text-primary-dark font-bold w-24 shrink-0 text-lg">14:00</div>
                             <div>
                                 <div class="font-bold text-lg">Festakt für geladene Gäste</div>
-                                <div class="text-neutral-500">Empfang, Ausstellung, erste Gespräche</div>
+                                <div class="text-neutral-500">Empfang, Keynote, Ausstellung</div>
                             </div>
                         </div>
                         <div class="flex border-b border-neutral-200 py-6">
@@ -194,8 +194,8 @@
                         <div class="flex border-b border-neutral-200 py-6">
                             <div class="font-mono text-primary-dark font-bold w-24 shrink-0 text-lg">17:00</div>
                             <div>
-                                <div class="font-bold text-lg">Opening & Keynote</div>
-                                <div class="text-neutral-500">Begrüßung, Programmvorstellung und Keynote</div>
+                                <div class="font-bold text-lg">Opening</div>
+                                <div class="text-neutral-500">Begrüßung und Programmvorstellung</div>
                             </div>
                         </div>
                         <div class="flex border-b border-neutral-200 py-6">
@@ -257,16 +257,34 @@
 
             <div class="flex flex-wrap justify-between items-end gap-6 mb-12">
                 <div class="section-heading"><span>25 Geschichten aus 25 Jahren</span></div>
-                <div class="font-mono text-sm bg-black text-primary px-4 py-2">
-                    #01 VON 25
+                <div id="story-counter" class="font-mono text-sm bg-black text-primary px-4 py-2">
+                    #02 VON 25
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <!-- Main Story -->
-                <div class="lg:col-span-8">
-                    <article class="bg-white border border-neutral-200" data-story="01">
-                        <!-- Screenshot der alten Website -->
+                <!-- Main Story Container -->
+                <div class="lg:col-span-8" id="story-main">
+
+                    <!-- Story #02 (aktuell) -->
+                    <article class="bg-white border border-neutral-200" data-story="02">
+                        <div class="aspect-[16/9] bg-neutral-100 overflow-hidden border-b border-neutral-200 flex items-center justify-center">
+                            <span class="text-neutral-400 text-lg">Bild folgt</span>
+                        </div>
+                        <div class="p-8">
+                            <div class="font-mono text-primary-dark text-sm mb-2">#02 · 23. Januar 2026</div>
+                            <h3 class="text-3xl font-bold mb-6">Titel folgt</h3>
+                            <div class="text-neutral-600 text-lg leading-relaxed space-y-4">
+                                <p>
+                                    Die zweite Geschichte erscheint diese Woche. Der vollständige Inhalt
+                                    wird noch ergänzt.
+                                </p>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- Story #01 (versteckt) -->
+                    <article class="bg-white border border-neutral-200 hidden" data-story="01">
                         <div class="aspect-[16/9] bg-neutral-100 overflow-hidden border-b border-neutral-200">
                             <img src="screenshot-2001.png" alt="WIAI-Website 2001" class="w-full h-full object-cover object-top">
                         </div>
@@ -302,32 +320,61 @@
                             </a>
                         </div>
                     </article>
+
                 </div>
 
-                <!-- Upcoming -->
-                <div class="lg:col-span-4 flex flex-col justify-between">
-                    <div>
-                        <p class="text-neutral-600 mb-6">
-                            Jede Woche bis zur Feier eine neue Geschichte.
-                            Die 25. erzählen wir am 26. Juni.
-                        </p>
-                        <div class="space-y-3">
-                            <div class="flex items-center gap-4 py-3 border-b border-neutral-200">
-                                <span class="font-mono text-neutral-300 w-12">#02</span>
-                                <span class="text-neutral-500">Nächste Woche</span>
+                <!-- Story Navigation -->
+                <div class="lg:col-span-4">
+                    <p class="text-neutral-600 mb-6">
+                        Jede Woche bis zur Feier eine neue Geschichte.
+                        Die 25. erzählen wir am 26. Juni.
+                    </p>
+
+                    <div class="space-y-3" id="story-nav">
+
+                        <!-- Story #02 Navigation (aktiv) -->
+                        <div
+                            class="story-nav-item story-nav-active cursor-pointer p-3 transition-colors bg-black"
+                            data-target="02"
+                            role="button"
+                            tabindex="0"
+                            aria-current="true">
+                            <div class="flex gap-3 items-start">
+                                <div class="story-thumb w-14 h-14 bg-neutral-800 shrink-0 overflow-hidden flex items-center justify-center">
+                                    <span class="text-neutral-600 text-[10px]">Bild</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="story-date font-mono text-[11px] text-primary">#02 · 23. Jan 2026</div>
+                                    <div class="story-title font-bold text-[13px] text-white leading-snug mt-0.5">Titel folgt</div>
+                                    <div class="story-teaser text-[11px] text-neutral-400 mt-1 leading-snug">Diese Woche neu</div>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-4 py-3 border-b border-neutral-200">
-                                <span class="font-mono text-neutral-300 w-12">#03</span>
-                                <span class="text-neutral-500">In 2 Wochen</span>
+                        </div>
+
+                        <!-- Story #01 Navigation (inaktiv) -->
+                        <div
+                            class="story-nav-item cursor-pointer p-3 transition-colors bg-white border border-neutral-200 hover:border-neutral-400"
+                            data-target="01"
+                            role="button"
+                            tabindex="0">
+                            <div class="flex gap-3 items-start">
+                                <div class="story-thumb w-14 h-14 bg-neutral-100 shrink-0 overflow-hidden">
+                                    <img src="screenshot-2001.png" alt="WIAI-Website 2001" class="w-full h-full object-cover object-top">
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="story-date font-mono text-[11px] text-neutral-500">#01 · 16. Jan 2026</div>
+                                    <div class="story-title font-bold text-[13px] text-neutral-900 leading-snug mt-0.5">Die WIAI geht online</div>
+                                    <div class="story-teaser text-[11px] text-neutral-500 mt-1 leading-snug">Am 1. Oktober 2001 startet die Fakultät.</div>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-4 py-3 border-b border-neutral-200">
-                                <span class="font-mono text-neutral-300 w-12">...</span>
-                                <span class="text-neutral-500"></span>
-                            </div>
-                            <div class="flex items-center gap-4 py-3">
-                                <span class="font-mono text-primary-dark w-12">#25</span>
-                                <span class="text-neutral-600">Zur Feier</span>
-                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Kommende Stories -->
+                    <div class="mt-6 pt-6 border-t border-neutral-200">
+                        <div class="text-neutral-400 text-sm">
+                            Weitere Geschichten folgen wöchentlich bis zum 26. Juni.
                         </div>
                     </div>
                 </div>
@@ -997,6 +1044,80 @@
                 document.body.style.overflow = '';
             }
         });
+    </script>
+
+    <!-- Story Navigation Script -->
+    <script>
+        (function() {
+            const storyMain = document.getElementById('story-main');
+            const storyNav = document.getElementById('story-nav');
+            const storyCounter = document.getElementById('story-counter');
+
+            if (!storyNav) return;
+
+            function showStory(storyId) {
+                // Hide all stories, show selected
+                storyMain.querySelectorAll('article[data-story]').forEach(story => {
+                    story.classList.toggle('hidden', story.dataset.story !== storyId);
+                });
+
+                // Update navigation states
+                storyNav.querySelectorAll('.story-nav-item').forEach(item => {
+                    const isActive = item.dataset.target === storyId;
+
+                    // Toggle active class
+                    item.classList.toggle('story-nav-active', isActive);
+
+                    // Background
+                    item.classList.toggle('bg-black', isActive);
+                    item.classList.toggle('bg-white', !isActive);
+                    item.classList.toggle('border', !isActive);
+                    item.classList.toggle('border-neutral-200', !isActive);
+                    item.classList.toggle('hover:border-neutral-400', !isActive);
+
+                    // Text colors
+                    const dateEl = item.querySelector('.story-date');
+                    const titleEl = item.querySelector('.story-title');
+                    const teaserEl = item.querySelector('.story-teaser');
+                    const thumbEl = item.querySelector('.story-thumb');
+
+                    if (dateEl) {
+                        dateEl.classList.toggle('text-primary', isActive);
+                        dateEl.classList.toggle('text-neutral-500', !isActive);
+                    }
+                    if (titleEl) {
+                        titleEl.classList.toggle('text-white', isActive);
+                        titleEl.classList.toggle('text-neutral-900', !isActive);
+                    }
+                    if (teaserEl) {
+                        teaserEl.classList.toggle('text-neutral-400', isActive);
+                        teaserEl.classList.toggle('text-neutral-500', !isActive);
+                    }
+                    if (thumbEl && !thumbEl.querySelector('img')) {
+                        thumbEl.classList.toggle('bg-neutral-800', isActive);
+                        thumbEl.classList.toggle('bg-neutral-100', !isActive);
+                    }
+
+                    item.setAttribute('aria-current', isActive ? 'true' : 'false');
+                });
+
+                // Update counter badge
+                if (storyCounter) {
+                    storyCounter.textContent = `#${storyId} VON 25`;
+                }
+            }
+
+            // Add click handlers
+            storyNav.querySelectorAll('.story-nav-item').forEach(item => {
+                item.addEventListener('click', () => showStory(item.dataset.target));
+                item.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        showStory(item.dataset.target);
+                    }
+                });
+            });
+        })();
     </script>
 
 </body>
