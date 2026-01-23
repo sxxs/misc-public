@@ -378,9 +378,9 @@
                             <div class="flex gap-3 items-start">
                                 <div class="story-thumb w-14 h-14 bg-neutral-800 shrink-0 overflow-hidden flex items-center justify-center font-mono font-bold text-primary text-xl">36</div>
                                 <div class="min-w-0">
-                                    <div class="story-date font-mono text-[11px] text-primary">#02 · 23. Jan 2026</div>
-                                    <div class="story-title font-bold text-[13px] text-white leading-snug mt-0.5">WIAI in Zahlen</div>
-                                    <div class="story-teaser text-[11px] text-neutral-400 mt-1 leading-snug">Was 2025 im Dekanat passiert ist</div>
+                                    <div class="story-date font-mono text-xs text-primary">#02 · 23. Jan 2026</div>
+                                    <div class="story-title font-bold text-sm text-white leading-snug mt-0.5">WIAI in Zahlen</div>
+                                    <div class="story-teaser text-xs text-neutral-300 mt-1 leading-snug">Was 2025 im Dekanat passiert ist</div>
                                 </div>
                             </div>
                         </div>
@@ -396,9 +396,9 @@
                                     <img src="screenshot-2001.png" alt="WIAI-Website 2001" class="w-full h-full object-cover object-top">
                                 </div>
                                 <div class="min-w-0">
-                                    <div class="story-date font-mono text-[11px] text-neutral-500">#01 · 16. Jan 2026</div>
-                                    <div class="story-title font-bold text-[13px] text-neutral-900 leading-snug mt-0.5">Die WIAI geht online</div>
-                                    <div class="story-teaser text-[11px] text-neutral-500 mt-1 leading-snug">Am 1. Oktober 2001 startet die Fakultät.</div>
+                                    <div class="story-date font-mono text-xs text-neutral-600">#01 · 16. Jan 2026</div>
+                                    <div class="story-title font-bold text-sm text-neutral-900 leading-snug mt-0.5">Die WIAI geht online</div>
+                                    <div class="story-teaser text-xs text-neutral-600 mt-1 leading-snug">Am 1. Oktober 2001 startet die Fakultät.</div>
                                 </div>
                             </div>
                         </div>
@@ -1117,15 +1117,15 @@
 
                     if (dateEl) {
                         dateEl.classList.toggle('text-primary', isActive);
-                        dateEl.classList.toggle('text-neutral-500', !isActive);
+                        dateEl.classList.toggle('text-neutral-600', !isActive);
                     }
                     if (titleEl) {
                         titleEl.classList.toggle('text-white', isActive);
                         titleEl.classList.toggle('text-neutral-900', !isActive);
                     }
                     if (teaserEl) {
-                        teaserEl.classList.toggle('text-neutral-400', isActive);
-                        teaserEl.classList.toggle('text-neutral-500', !isActive);
+                        teaserEl.classList.toggle('text-neutral-300', isActive);
+                        teaserEl.classList.toggle('text-neutral-600', !isActive);
                     }
                     if (thumbEl && !thumbEl.querySelector('img')) {
                         thumbEl.classList.toggle('bg-neutral-800', isActive);
