@@ -268,16 +268,51 @@
 
                     <!-- Story #02 (aktuell) -->
                     <article class="bg-white border border-neutral-200" data-story="02">
-                        <div class="aspect-[16/9] bg-neutral-100 overflow-hidden border-b border-neutral-200 flex items-center justify-center">
-                            <span class="text-neutral-400 text-lg">Bild folgt</span>
-                        </div>
                         <div class="p-8">
                             <div class="font-mono text-primary-dark text-sm mb-2">#02 · 23. Januar 2026</div>
-                            <h3 class="text-3xl font-bold mb-6">Titel folgt</h3>
+                            <h3 class="text-3xl font-bold mb-6">WIAI in Zahlen (2025)</h3>
+
+                            <!-- Zahlen-Grid -->
+                            <div class="grid grid-cols-3 gap-3 mb-8" id="zahlen-grid">
+                                <div class="zahlen-kachel bg-neutral-100 border-2 border-neutral-200 p-4 cursor-pointer transition-all duration-300 hover:border-primary" data-expanded="false">
+                                    <div class="zahlen-nummer font-mono font-bold text-4xl sm:text-5xl text-black text-center">36</div>
+                                    <div class="zahlen-detail hidden mt-3 text-sm text-neutral-600 text-center">Vereidigungen an 4 Terminen</div>
+                                </div>
+                                <div class="zahlen-kachel bg-neutral-100 border-2 border-neutral-200 p-4 cursor-pointer transition-all duration-300 hover:border-primary" data-expanded="false">
+                                    <div class="zahlen-nummer font-mono font-bold text-4xl sm:text-5xl text-black text-center">31</div>
+                                    <div class="zahlen-detail hidden mt-3 text-sm text-neutral-600 text-center">Einstellungsverträge in 2025</div>
+                                </div>
+                                <div class="zahlen-kachel bg-neutral-100 border-2 border-neutral-200 p-4 cursor-pointer transition-all duration-300 hover:border-primary" data-expanded="false">
+                                    <div class="zahlen-nummer font-mono font-bold text-4xl sm:text-5xl text-black text-center">5</div>
+                                    <div class="zahlen-detail hidden mt-3 text-sm text-neutral-600 text-center">Abgeschlossene Berufungsverfahren</div>
+                                </div>
+                                <div class="zahlen-kachel bg-neutral-100 border-2 border-neutral-200 p-4 cursor-pointer transition-all duration-300 hover:border-primary" data-expanded="false">
+                                    <div class="zahlen-nummer font-mono font-bold text-4xl sm:text-5xl text-black text-center">30</div>
+                                    <div class="zahlen-detail hidden mt-3 text-sm text-neutral-600 text-center">Unterschriften des Dekans pro Woche <span class="text-neutral-400">(in einzelnen Wochen >100)</span></div>
+                                </div>
+                                <div class="zahlen-kachel bg-neutral-100 border-2 border-neutral-200 p-4 cursor-pointer transition-all duration-300 hover:border-primary" data-expanded="false">
+                                    <div class="zahlen-nummer font-mono font-bold text-4xl sm:text-5xl text-black text-center">245</div>
+                                    <div class="zahlen-detail hidden mt-3 text-sm text-neutral-600 text-center">Lehrveranstaltungen im Wintersemester</div>
+                                </div>
+                                <div class="zahlen-kachel bg-primary border-2 border-primary p-4 cursor-pointer transition-all duration-300 hover:bg-primary-dark" data-expanded="false">
+                                    <div class="zahlen-nummer font-mono font-bold text-4xl sm:text-5xl text-black text-center">?</div>
+                                    <div class="zahlen-detail hidden mt-3 text-sm text-amber-900/80 text-center">Gespülte Kaffeetassen im Dekanat: unbekannt, aber viele</div>
+                                </div>
+                            </div>
+                            <p class="text-xs text-neutral-400 mb-8 text-center">Klicken Sie auf eine Zahl, um mehr zu erfahren</p>
+
                             <div class="text-neutral-600 text-lg leading-relaxed space-y-4">
                                 <p>
-                                    Die zweite Geschichte erscheint diese Woche. Der vollständige Inhalt
-                                    wird noch ergänzt.
+                                    <strong class="text-neutral-800">Was passiert eigentlich im Dekanat?</strong> Die WIAI ist
+                                    in den letzten Jahren stark gewachsen – 33 Professuren, über 1.600 Studierende,
+                                    245 Lehrveranstaltungen pro Semester. Das Dekanat ist inzwischen ein richtig großer
+                                    Bürobetrieb: Einstellungen, Berufungen, Raumplanung, Prüfungsorganisation – pro Semester
+                                    werden allein 181 Aufsichten für zentrale Prüfungen koordiniert.
+                                </p>
+                                <p>
+                                    Trotzdem versuchen wir, kein Massengeschäft daraus zu machen.
+                                    Wer einen Raum braucht, eine Frage hat oder einen Sonderfall klären muss,
+                                    bekommt keine Nummer, sondern eine Antwort.
                                 </p>
                             </div>
                         </div>
@@ -340,13 +375,11 @@
                             tabindex="0"
                             aria-current="true">
                             <div class="flex gap-3 items-start">
-                                <div class="story-thumb w-14 h-14 bg-neutral-800 shrink-0 overflow-hidden flex items-center justify-center">
-                                    <span class="text-neutral-600 text-[10px]">Bild</span>
-                                </div>
+                                <div class="story-thumb w-14 h-14 bg-neutral-800 shrink-0 overflow-hidden flex items-center justify-center font-mono font-bold text-primary text-xl">36</div>
                                 <div class="min-w-0">
                                     <div class="story-date font-mono text-[11px] text-primary">#02 · 23. Jan 2026</div>
-                                    <div class="story-title font-bold text-[13px] text-white leading-snug mt-0.5">Titel folgt</div>
-                                    <div class="story-teaser text-[11px] text-neutral-400 mt-1 leading-snug">Diese Woche neu</div>
+                                    <div class="story-title font-bold text-[13px] text-white leading-snug mt-0.5">WIAI in Zahlen</div>
+                                    <div class="story-teaser text-[11px] text-neutral-400 mt-1 leading-snug">Was 2025 im Dekanat passiert ist</div>
                                 </div>
                             </div>
                         </div>
@@ -1114,6 +1147,90 @@
                     if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
                         showStory(item.dataset.target);
+                    }
+                });
+            });
+        })();
+    </script>
+
+    <!-- Zahlen-Grid Expand/Collapse Script -->
+    <script>
+        (function() {
+            const grid = document.getElementById('zahlen-grid');
+            if (!grid) return;
+
+            const kacheln = grid.querySelectorAll('.zahlen-kachel');
+
+            kacheln.forEach(kachel => {
+                kachel.addEventListener('click', () => {
+                    const isExpanded = kachel.dataset.expanded === 'true';
+                    const detail = kachel.querySelector('.zahlen-detail');
+
+                    if (isExpanded) {
+                        // Collapse
+                        kachel.dataset.expanded = 'false';
+                        detail.classList.add('hidden');
+                        kachel.classList.remove('col-span-3');
+                        kachel.style.backgroundColor = '';
+                        kachel.style.borderColor = '';
+
+                        // Restore text colors
+                        const nummer = kachel.querySelector('.zahlen-nummer');
+                        nummer.classList.remove('text-primary');
+                        nummer.classList.add('text-black');
+
+                        // Restore detail text color and background
+                        detail.classList.remove('text-neutral-400');
+
+                        // Special case for the yellow "?" kachel
+                        if (nummer.textContent.trim() === '?') {
+                            kachel.classList.add('bg-primary', 'border-primary', 'hover:bg-primary-dark');
+                            detail.classList.add('text-amber-900/80');
+                        } else {
+                            kachel.classList.add('bg-neutral-100', 'border-neutral-200', 'hover:border-primary');
+                            detail.classList.add('text-neutral-600');
+                        }
+                    } else {
+                        // Collapse all others first
+                        kacheln.forEach(k => {
+                            if (k !== kachel && k.dataset.expanded === 'true') {
+                                k.dataset.expanded = 'false';
+                                const det = k.querySelector('.zahlen-detail');
+                                det.classList.add('hidden');
+                                k.classList.remove('col-span-3');
+                                k.style.backgroundColor = '';
+                                k.style.borderColor = '';
+                                const num = k.querySelector('.zahlen-nummer');
+                                num.classList.remove('text-primary');
+                                num.classList.add('text-black');
+                                det.classList.remove('text-neutral-400');
+
+                                if (num.textContent.trim() === '?') {
+                                    k.classList.add('bg-primary', 'border-primary', 'hover:bg-primary-dark');
+                                    det.classList.add('text-amber-900/80');
+                                } else {
+                                    k.classList.add('bg-neutral-100', 'border-neutral-200', 'hover:border-primary');
+                                    det.classList.add('text-neutral-600');
+                                }
+                            }
+                        });
+
+                        // Expand this one
+                        kachel.dataset.expanded = 'true';
+                        detail.classList.remove('hidden');
+                        kachel.classList.add('col-span-3');
+                        kachel.classList.remove('bg-neutral-100', 'bg-primary', 'border-neutral-200', 'border-primary', 'hover:bg-primary-dark', 'hover:border-primary');
+                        kachel.style.backgroundColor = '#000';
+                        kachel.style.borderColor = '#000';
+
+                        // Update text colors
+                        const nummer = kachel.querySelector('.zahlen-nummer');
+                        nummer.classList.add('text-primary');
+                        nummer.classList.remove('text-black');
+
+                        // Update detail text color for expanded state
+                        detail.classList.remove('text-neutral-600', 'text-amber-900/80');
+                        detail.classList.add('text-neutral-400');
                     }
                 });
             });
