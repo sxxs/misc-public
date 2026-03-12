@@ -1,0 +1,20 @@
+{
+  "name": "remotion-demo-reel",
+  "version": "1.0.0",
+  "description": "Demo reel video for misc-public projects built with Remotion",
+  "scripts": {
+    "start": "npx remotion studio src/index.ts",
+    "build": "npx remotion render src/index.ts DemoReel out/demo-reel.mp4",
+    "preview": "npx remotion preview src/index.ts"
+  },
+  "dependencies": {
+    "@remotion/bundler": "^4.0.435",
+    "@remotion/cli": "^4.0.435",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "remotion": "^4.0.435",
+    "typescript": "^5.9.3"
+  }
+}
