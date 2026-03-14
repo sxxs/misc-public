@@ -1,0 +1,969 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+
+const STEPS = 8;
+const DEFAULT_BPM = 110;
+
+const INSTRUMENTS = [
+  { name: 'Kick', color: '#ef4444', type: 'kick' },
+  { name: 'Snare', color: '#f97316', type: 'snare' },
+  { name: 'HiHat', color: '#eab308', type: 'hihat' },
+  { name: 'Bass', color: '#22c55e', type: 'bass' },
+];
+
+// Extended melodies - 32 steps (4 bars), all public domain
+// 0 = rest, frequencies in Hz
+const MELODIES = [
+  { 
+    name: "None", 
+    chords: [], 
+    melody: Array(32).fill(0),
+    colors: ['#1f2937', '#374151']
+  },
+  { 
+    name: "Jingle Bells 🎄", 
+    chords: [261.63, 329.63, 392.00], // C major
+    melody: [
+      659, 659, 659, 0, 659, 659, 659, 0,  // E E E - E E E -
+      659, 784, 523, 587, 659, 0, 0, 0,     // E G C D E - - -
+      698, 698, 698, 698, 698, 659, 659, 659, // F F F F F E E E
+      659, 587, 587, 659, 587, 0, 784, 0    // E D D E D - G -
+    ],
+    colors: ['#dc2626', '#16a34a'] // red & green
+  },
+  { 
+    name: "Ode to Joy", 
+    chords: [293.66, 369.99, 440.00], // D major
+    melody: [
+      659, 659, 698, 784, 784, 698, 659, 587, // E E F G G F E D
+      523, 523, 587, 659, 659, 587, 587, 0,   // C C D E E D D -
+      659, 659, 698, 784, 784, 698, 659, 587, // E E F G G F E D
+      523, 523, 587, 659, 587, 523, 523, 0    // C C D E D C C -
+    ],
+    colors: ['#fbbf24', '#f59e0b']
+  },
+  { 
+    name: "Twinkle Star ⭐", 
+    chords: [261.63, 329.63, 392.00], // C major
+    melody: [
+      523, 523, 784, 784, 880, 880, 784, 0,  // C C G G A A G -
+      698, 698, 659, 659, 587, 587, 523, 0,  // F F E E D D C -
+      784, 784, 698, 698, 659, 659, 587, 0,  // G G F F E E D -
+      784, 784, 698, 698, 659, 659, 587, 0   // G G F F E E D -
+    ],
+    colors: ['#8b5cf6', '#a855f7']
+  },
+  { 
+    name: "Für Elise", 
+    chords: [220.00, 261.63, 329.63], // A minor
+    melody: [
+      659, 622, 659, 622, 659, 494, 587, 523, // E D# E D# E B D C
+      440, 0, 262, 330, 440, 494, 0, 330,     // A - C E A B - E
+      415, 494, 523, 0, 330, 659, 622, 659,   // G# B C - E E D# E
+      622, 659, 494, 587, 523, 440, 0, 0      // D# E B D C A - -
+    ],
+    colors: ['#ec4899', '#db2777']
+  },
+  { 
+    name: "When Saints", 
+    chords: [261.63, 329.63, 392.00], // C major
+    melody: [
+      523, 659, 698, 784, 0, 0, 0, 0,        // C E F G - - - -
+      523, 659, 698, 784, 0, 0, 0, 0,        // C E F G - - - -
+      523, 659, 698, 784, 659, 523, 659, 587, // C E F G E C E D
+      523, 0, 0, 0, 0, 0, 0, 0               // C - - - - - - -
+    ],
+    colors: ['#f97316', '#ea580c']
+  },
+  { 
+    name: "Silent Night 🎄", 
+    chords: [196.00, 246.94, 293.66], // G major  
+    melody: [
+      392, 440, 392, 587, 0, 0, 0, 0,        // G A G D - - - -
+      392, 440, 392, 587, 0, 0, 0, 0,        // G A G D - - - -
+      880, 880, 659, 784, 784, 587, 0, 0,    // A A E G G D - -
+      523, 523, 392, 440, 392, 587, 0, 0     // C C G A G D - -
+    ],
+    colors: ['#0ea5e9', '#f0f9ff'] // icy blue & white
+  },
+  { 
+    name: "Deck the Halls 🎄", 
+    chords: [174.61, 220.00, 261.63], // F major
+    melody: [
+      523, 494, 440, 392, 440, 494, 523, 523, // C B A G A B C C
+      494, 440, 392, 440, 494, 523, 440, 0,   // B A G A B C A -
+      494, 523, 494, 440, 392, 349, 440, 392, // B C B A G F A G
+      349, 330, 349, 392, 440, 392, 0, 0      // F E F G A G - -
+    ],
+    colors: ['#dc2626', '#fbbf24'] // red & gold
+  },
+  { 
+    name: "Funky", 
+    chords: [164.81, 207.65, 246.94], // E minor
+    melody: [
+      330, 392, 0, 494, 0, 392, 330, 0,
+      330, 0, 494, 0, 392, 0, 330, 370,
+      330, 392, 0, 494, 0, 392, 330, 0,
+      370, 330, 0, 294, 330, 0, 0, 0
+    ],
+    colors: ['#a855f7', '#7c3aed']
+  },
+  { 
+    name: "Techno", 
+    chords: [130.81, 164.81, 196.00], // C low
+    melody: [
+      262, 0, 262, 0, 330, 0, 262, 0,
+      294, 0, 262, 0, 247, 0, 262, 0,
+      262, 0, 262, 0, 330, 0, 392, 0,
+      349, 0, 330, 0, 294, 0, 262, 0
+    ],
+    colors: ['#06b6d4', '#0891b2']
+  },
+];
+
+const PRESET_GROOVES = [
+  { name: "Classic Rock", pattern: [[1,0,0,0,1,0,0,0],[0,0,1,0,0,0,1,0],[1,1,1,1,1,1,1,1],[1,0,0,0,1,0,0,0]], melodyIdx: 2 },
+  { name: "Disco", pattern: [[1,0,1,0,1,0,1,0],[0,0,1,0,0,0,1,0],[0,1,0,1,0,1,0,1],[1,0,0,1,0,0,1,0]], melodyIdx: 8 },
+  { name: "Hip Hop", pattern: [[1,0,0,1,0,0,1,0],[0,0,1,0,0,0,1,0],[1,0,1,0,1,0,1,0],[1,0,0,1,0,0,0,0]], melodyIdx: 8 },
+  { name: "Techno", pattern: [[1,0,1,0,1,0,1,0],[0,0,0,0,0,0,0,0],[0,1,0,1,0,1,0,1],[1,0,0,0,0,0,0,0]], melodyIdx: 9 },
+  { name: "Xmas Rock 🎄", pattern: [[1,0,0,0,1,0,0,0],[0,0,1,0,0,0,1,0],[1,1,1,1,1,1,1,1],[1,0,0,0,1,0,0,0]], melodyIdx: 1 },
+  { name: "Silent Groove 🎄", pattern: [[1,0,0,0,0,0,1,0],[0,0,0,0,1,0,0,0],[0,1,0,1,0,1,0,1],[1,0,0,0,1,0,0,0]], melodyIdx: 6 },
+  { name: "Deck Beats 🎄", pattern: [[1,0,1,0,1,0,1,0],[0,0,1,0,0,0,1,0],[1,1,1,1,1,1,1,1],[1,0,0,1,0,0,1,0]], melodyIdx: 7 },
+  { name: "Funk", pattern: [[1,0,0,1,0,0,1,0],[0,0,1,0,0,1,0,0],[1,0,1,1,1,0,1,1],[1,0,0,1,0,1,0,0]], melodyIdx: 8 },
+];
+
+// Encode/decode for sharing
+const encodePattern = (grid, melodyIdx) => {
+  let bits = 0n;
+  for (let r = 0; r < 4; r++) {
+    for (let c = 0; c < 8; c++) {
+      if (grid[r][c]) bits |= (1n << BigInt(r * 8 + c));
+    }
+  }
+  bits |= (BigInt(melodyIdx) << 32n);
+  return bits.toString(36).toUpperCase();
+};
+
+const decodePattern = (code) => {
+  try {
+    const bits = BigInt(parseInt(code, 36));
+    const grid = Array(4).fill(null).map(() => Array(8).fill(false));
+    for (let r = 0; r < 4; r++) {
+      for (let c = 0; c < 8; c++) {
+        if (bits & (1n << BigInt(r * 8 + c))) grid[r][c] = true;
+      }
+    }
+    const melodyIdx = Number((bits >> 32n) & 0xFFn);
+    return { grid, melodyIdx: Math.min(melodyIdx, MELODIES.length - 1) };
+  } catch (e) {
+    return null;
+  }
+};
+
+// Audio
+let audioCtx = null;
+const getAudioContext = () => {
+  if (!audioCtx || audioCtx.state === 'closed') {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+};
+
+const playSound = (type) => {
+  const ctx = getAudioContext();
+  const now = ctx.currentTime;
+  
+  if (type === 'kick') {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.exponentialRampToValueAtTime(30, now + 0.12);
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.7, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+    osc.start(now);
+    osc.stop(now + 0.15);
+  } else if (type === 'snare') {
+    const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < output.length; i++) output[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    const noiseGain = ctx.createGain();
+    const noiseFilter = ctx.createBiquadFilter();
+    noiseFilter.type = 'highpass';
+    noiseFilter.frequency.value = 1000;
+    noise.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    noiseGain.gain.setValueAtTime(0.35, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+    noise.start(now);
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 180;
+    osc.type = 'triangle';
+    gain.gain.setValueAtTime(0.35, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+    osc.start(now);
+    osc.stop(now + 0.08);
+  } else if (type === 'hihat') {
+    const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < output.length; i++) output[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.value = 7000;
+    const gain = ctx.createGain();
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+    noise.start(now);
+  } else if (type === 'bass') {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 55;
+    osc.type = 'sawtooth';
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+    osc.start(now);
+    osc.stop(now + 0.2);
+  }
+};
+
+const playLock = () => {
+  const ctx = getAudioContext();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.frequency.value = 880;
+  osc.type = 'sine';
+  gain.gain.setValueAtTime(0.15, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 0.1);
+};
+
+const playWrong = () => {
+  const ctx = getAudioContext();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.frequency.value = 150;
+  osc.type = 'square';
+  gain.gain.setValueAtTime(0.1, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 0.15);
+};
+
+const playChord = (freqs) => {
+  if (!freqs || freqs.length === 0) return;
+  const ctx = getAudioContext();
+  const now = ctx.currentTime;
+  freqs.forEach(freq => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    osc.type = 'sawtooth';
+    gain.gain.setValueAtTime(0.06, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+    osc.start(now);
+    osc.stop(now + 0.5);
+  });
+};
+
+const playMelodyNote = (freq) => {
+  if (!freq) return;
+  const ctx = getAudioContext();
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.frequency.value = freq;
+  osc.type = 'triangle';
+  gain.gain.setValueAtTime(0.15, now);
+  gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+  osc.start(now);
+  osc.stop(now + 0.2);
+};
+
+// Mode Select Screen
+function ModeSelect({ onSelect }) {
+  const [codeInput, setCodeInput] = useState('');
+  const [codeError, setCodeError] = useState(false);
+  
+  const handleCodeSubmit = () => {
+    const decoded = decodePattern(codeInput.trim());
+    if (decoded) {
+      onSelect('challenge', decoded);
+    } else {
+      setCodeError(true);
+      setTimeout(() => setCodeError(false), 1000);
+    }
+  };
+  
+  return (
+    <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-4">
+      <h1 className="text-3xl font-black text-white mb-2">
+        GROOVE <span className="text-purple-400">MIND</span>
+      </h1>
+      <p className="text-gray-500 text-sm mb-8">Find the beat. Feel the groove.</p>
+      
+      <div className="flex flex-col gap-3 w-full max-w-xs">
+        <button onClick={() => onSelect('challenge')} className="px-6 py-4 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold text-lg transition-all hover:scale-105">
+          🎯 Challenge
+          <span className="block text-sm font-normal opacity-70">Find hidden grooves</span>
+        </button>
+        
+        <button onClick={() => onSelect('freestyle')} className="px-6 py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold text-lg transition-all hover:scale-105">
+          🎹 Freestyle
+          <span className="block text-sm font-normal opacity-70">Create & share your own</span>
+        </button>
+        
+        <button onClick={() => onSelect('lightshow')} className="px-6 py-4 bg-pink-600 hover:bg-pink-500 text-white rounded-xl font-bold text-lg transition-all hover:scale-105">
+          💡 Light Show
+          <span className="block text-sm font-normal opacity-70">Visual beat experience</span>
+        </button>
+        
+        <div className="mt-4 p-4 bg-gray-900 rounded-xl">
+          <div className="text-gray-400 text-sm mb-2">Have a code?</div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={codeInput}
+              onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
+              placeholder="Enter code..."
+              className={`flex-1 px-3 py-2 bg-gray-800 text-white rounded-lg font-mono text-sm outline-none focus:ring-2 focus:ring-purple-500 ${codeError ? 'ring-2 ring-red-500' : ''}`}
+            />
+            <button onClick={handleCodeSubmit} className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold">Go</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Light Show Mode
+function LightShowMode({ onBack }) {
+  const [grid, setGrid] = useState(() => INSTRUMENTS.map(() => Array(STEPS).fill(false)));
+  const [melodyIdx, setMelodyIdx] = useState(1);
+  const [currentStep, setCurrentStep] = useState(-1);
+  const [melodyStep, setMelodyStep] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [bpm, setBpm] = useState(DEFAULT_BPM);
+  const [flashColor, setFlashColor] = useState(null);
+  const [pulseIntensity, setPulseIntensity] = useState(0);
+  
+  const loopRef = useRef(null);
+  const gridRef = useRef(grid);
+  const bpmRef = useRef(bpm);
+  const melodyRef = useRef(melodyIdx);
+  const melodyStepRef = useRef(0);
+  
+  useEffect(() => { gridRef.current = grid; }, [grid]);
+  useEffect(() => { bpmRef.current = bpm; }, [bpm]);
+  useEffect(() => { melodyRef.current = melodyIdx; }, [melodyIdx]);
+  
+  const toggleCell = (row, col) => {
+    setGrid(prev => {
+      const newGrid = prev.map(r => [...r]);
+      newGrid[row][col] = !newGrid[row][col];
+      return newGrid;
+    });
+  };
+  
+  const startLoop = useCallback(() => {
+    getAudioContext();
+    setIsPlaying(true);
+    let step = 0;
+    melodyStepRef.current = 0;
+    
+    const tick = () => {
+      setCurrentStep(step);
+      setMelodyStep(melodyStepRef.current);
+      
+      let hitCount = 0;
+      INSTRUMENTS.forEach((inst, idx) => {
+        if (gridRef.current[idx][step]) {
+          playSound(inst.type);
+          hitCount++;
+          // Flash color based on instrument
+          setFlashColor(inst.color);
+          setTimeout(() => setFlashColor(null), 100);
+        }
+      });
+      
+      // Pulse intensity based on hits
+      setPulseIntensity(hitCount / 4);
+      setTimeout(() => setPulseIntensity(0), 150);
+      
+      const melody = MELODIES[melodyRef.current];
+      
+      // Chord on beat 1 of each bar
+      if (step === 0) {
+        playChord(melody.chords);
+      }
+      
+      // Melody note
+      const melodyNote = melody.melody[melodyStepRef.current];
+      if (melodyNote) {
+        playMelodyNote(melodyNote);
+      }
+      
+      step = (step + 1) % STEPS;
+      melodyStepRef.current = (melodyStepRef.current + 1) % 32;
+      
+      const stepMs = (60 / bpmRef.current) * 1000 / 2;
+      loopRef.current = setTimeout(tick, stepMs);
+    };
+    tick();
+  }, []);
+  
+  const stopLoop = useCallback(() => {
+    setIsPlaying(false);
+    clearTimeout(loopRef.current);
+    setCurrentStep(-1);
+    setFlashColor(null);
+    setPulseIntensity(0);
+  }, []);
+  
+  useEffect(() => () => clearTimeout(loopRef.current), []);
+  
+  const loadPreset = (preset) => {
+    setGrid(preset.pattern.map(row => row.map(Boolean)));
+    setMelodyIdx(preset.melodyIdx);
+  };
+  
+  const currentMelody = MELODIES[melodyIdx];
+  const bgColor1 = currentMelody.colors[0];
+  const bgColor2 = currentMelody.colors[1];
+  
+  return (
+    <div 
+      className="min-h-screen flex flex-col items-center justify-center p-3 select-none transition-all duration-150"
+      style={{
+        background: flashColor 
+          ? flashColor 
+          : `linear-gradient(135deg, ${bgColor1}${Math.floor(pulseIntensity * 80 + 20).toString(16).padStart(2,'0')} 0%, ${bgColor2}${Math.floor(pulseIntensity * 80 + 20).toString(16).padStart(2,'0')} 100%)`,
+      }}
+    >
+      {/* Overlay flash */}
+      {flashColor && (
+        <div 
+          className="fixed inset-0 pointer-events-none transition-opacity duration-100"
+          style={{ backgroundColor: flashColor, opacity: 0.3 }}
+        />
+      )}
+      
+      <div className="flex items-center gap-4 mb-3 relative z-10">
+        <button onClick={onBack} className="text-white/70 hover:text-white">← Back</button>
+        <h1 className="text-xl font-black text-white drop-shadow-lg">
+          LIGHT <span className="text-pink-300">SHOW</span>
+        </h1>
+      </div>
+      
+      {/* Melody progress bar */}
+      <div className="w-64 h-2 bg-black/30 rounded-full mb-4 overflow-hidden">
+        <div 
+          className="h-full bg-white/70 transition-all duration-100"
+          style={{ width: `${(melodyStep / 32) * 100}%` }}
+        />
+      </div>
+      
+      {/* Grid */}
+      <div className="bg-black/40 backdrop-blur rounded-2xl p-3 mb-4">
+        <div className="flex mb-1 ml-14">
+          {Array(STEPS).fill(0).map((_, step) => (
+            <div key={step} className={`w-9 h-2 mx-0.5 rounded-full transition-all ${
+              currentStep === step && isPlaying ? 'bg-white' : 'bg-white/20'
+            }`} />
+          ))}
+        </div>
+        
+        {INSTRUMENTS.map((inst, rowIdx) => (
+          <div key={inst.name} className="flex items-center mb-1">
+            <div className="w-14 text-xs font-bold text-right pr-2 text-white/80">
+              {inst.name}
+            </div>
+            {Array(STEPS).fill(0).map((_, colIdx) => {
+              const isActive = grid[rowIdx][colIdx];
+              const isPlayingNow = currentStep === colIdx && isPlaying && isActive;
+              return (
+                <button
+                  key={colIdx}
+                  onClick={() => toggleCell(rowIdx, colIdx)}
+                  className={`w-9 h-9 mx-0.5 rounded-lg transition-all duration-75 cursor-pointer active:scale-95
+                    ${isActive ? '' : 'bg-white/10 hover:bg-white/20'}
+                    ${isPlayingNow ? 'scale-125 shadow-2xl' : ''}`}
+                  style={{
+                    backgroundColor: isActive ? inst.color : undefined,
+                    boxShadow: isPlayingNow ? `0 0 30px ${inst.color}, 0 0 60px ${inst.color}` : 'none'
+                  }}
+                />
+              );
+            })}
+          </div>
+        ))}
+        
+        {/* Melody indicator */}
+        <div className="flex items-center mt-2 pt-2 border-t border-white/10">
+          <div className="w-14 text-xs text-purple-300 text-right pr-2">Melody</div>
+          {Array(STEPS).fill(0).map((_, step) => {
+            const melodyStepInBar = melodyStep % 8;
+            const hasNote = MELODIES[melodyIdx].melody[melodyStep - melodyStepInBar + step] > 0;
+            const isCurrent = step === melodyStepInBar && isPlaying;
+            return (
+              <div key={step} className={`w-9 h-4 mx-0.5 rounded transition-all ${
+                hasNote ? 'bg-purple-500' : 'bg-white/10'
+              } ${isCurrent && hasNote ? 'scale-110 brightness-150' : ''}`} />
+            );
+          })}
+        </div>
+      </div>
+      
+      {/* Melody selector */}
+      <div className="flex gap-1 mb-4 flex-wrap justify-center max-w-md">
+        {MELODIES.map((m, idx) => (
+          <button
+            key={m.name}
+            onClick={() => setMelodyIdx(idx)}
+            className={`px-2 py-1 rounded text-xs font-bold transition-all ${
+              melodyIdx === idx ? 'bg-white text-gray-900' : 'bg-white/20 text-white hover:bg-white/30'
+            }`}
+          >
+            {m.name}
+          </button>
+        ))}
+      </div>
+      
+      {/* Controls */}
+      <div className="flex gap-2 mb-3">
+        {!isPlaying ? (
+          <button onClick={startLoop} className="px-6 py-2 bg-white/90 hover:bg-white text-gray-900 rounded-xl font-bold transition-all hover:scale-105">
+            ▶ Play
+          </button>
+        ) : (
+          <button onClick={stopLoop} className="px-6 py-2 bg-white/30 hover:bg-white/40 text-white rounded-xl font-bold">
+            ■ Stop
+          </button>
+        )}
+        <button onClick={() => setGrid(INSTRUMENTS.map(() => Array(STEPS).fill(false)))} className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl font-bold">
+          Clear
+        </button>
+      </div>
+      
+      {/* BPM */}
+      <div className="flex items-center gap-3 mb-4">
+        <span className="text-white/70 text-sm">BPM</span>
+        <input type="range" min="80" max="160" value={bpm} onChange={(e) => setBpm(Number(e.target.value))} className="w-24 accent-pink-500" />
+        <span className="text-white font-mono text-sm w-8">{bpm}</span>
+      </div>
+      
+      {/* Presets */}
+      <div className="flex gap-1 flex-wrap justify-center max-w-sm">
+        {PRESET_GROOVES.map((p) => (
+          <button key={p.name} onClick={() => loadPreset(p)} className="px-2 py-1 bg-white/10 hover:bg-white/20 text-white/80 rounded text-xs">
+            {p.name}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Freestyle Mode
+function FreestyleMode({ onBack }) {
+  const [grid, setGrid] = useState(() => INSTRUMENTS.map(() => Array(STEPS).fill(false)));
+  const [melodyIdx, setMelodyIdx] = useState(1);
+  const [currentStep, setCurrentStep] = useState(-1);
+  const [melodyStep, setMelodyStep] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [bpm, setBpm] = useState(DEFAULT_BPM);
+  const [showCode, setShowCode] = useState(false);
+  const [copied, setCopied] = useState(false);
+  
+  const loopRef = useRef(null);
+  const gridRef = useRef(grid);
+  const bpmRef = useRef(bpm);
+  const melodyRef = useRef(melodyIdx);
+  const melodyStepRef = useRef(0);
+  
+  useEffect(() => { gridRef.current = grid; }, [grid]);
+  useEffect(() => { bpmRef.current = bpm; }, [bpm]);
+  useEffect(() => { melodyRef.current = melodyIdx; }, [melodyIdx]);
+  
+  const toggleCell = (row, col) => {
+    setGrid(prev => {
+      const newGrid = prev.map(r => [...r]);
+      newGrid[row][col] = !newGrid[row][col];
+      return newGrid;
+    });
+  };
+  
+  const startLoop = useCallback(() => {
+    getAudioContext();
+    setIsPlaying(true);
+    let step = 0;
+    melodyStepRef.current = 0;
+    
+    const tick = () => {
+      setCurrentStep(step);
+      setMelodyStep(melodyStepRef.current);
+      
+      INSTRUMENTS.forEach((inst, idx) => {
+        if (gridRef.current[idx][step]) playSound(inst.type);
+      });
+      
+      const melody = MELODIES[melodyRef.current];
+      if (step === 0) playChord(melody.chords);
+      if (melody.melody[melodyStepRef.current]) playMelodyNote(melody.melody[melodyStepRef.current]);
+      
+      step = (step + 1) % STEPS;
+      melodyStepRef.current = (melodyStepRef.current + 1) % 32;
+      
+      const stepMs = (60 / bpmRef.current) * 1000 / 2;
+      loopRef.current = setTimeout(tick, stepMs);
+    };
+    tick();
+  }, []);
+  
+  const stopLoop = useCallback(() => {
+    setIsPlaying(false);
+    clearTimeout(loopRef.current);
+    setCurrentStep(-1);
+  }, []);
+  
+  useEffect(() => () => clearTimeout(loopRef.current), []);
+  
+  const code = encodePattern(grid, melodyIdx);
+  const copyCode = () => { navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+  const loadPreset = (preset) => { setGrid(preset.pattern.map(row => row.map(Boolean))); setMelodyIdx(preset.melodyIdx); };
+  const clearGrid = () => setGrid(INSTRUMENTS.map(() => Array(STEPS).fill(false)));
+  
+  return (
+    <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-3 select-none">
+      <div className="flex items-center gap-4 mb-3">
+        <button onClick={onBack} className="text-gray-400 hover:text-white">← Back</button>
+        <h1 className="text-xl font-black text-white">FREESTYLE <span className="text-green-400">MODE</span></h1>
+      </div>
+      
+      {/* Melody progress */}
+      <div className="w-48 h-1.5 bg-gray-800 rounded-full mb-3 overflow-hidden">
+        <div className="h-full bg-purple-500 transition-all" style={{ width: `${(melodyStep / 32) * 100}%` }} />
+      </div>
+      
+      <div className="bg-gray-900 rounded-2xl p-3 mb-4">
+        <div className="flex mb-1 ml-14">
+          {Array(STEPS).fill(0).map((_, step) => (
+            <div key={step} className={`w-9 h-1.5 mx-0.5 rounded-full transition-all ${currentStep === step && isPlaying ? 'bg-green-500' : 'bg-gray-700'}`} />
+          ))}
+        </div>
+        
+        {INSTRUMENTS.map((inst, rowIdx) => (
+          <div key={inst.name} className="flex items-center mb-1">
+            <div className="w-14 text-xs font-bold text-right pr-2" style={{ color: inst.color }}>{inst.name}</div>
+            {Array(STEPS).fill(0).map((_, colIdx) => {
+              const isActive = grid[rowIdx][colIdx];
+              const isPlayingNow = currentStep === colIdx && isPlaying && isActive;
+              return (
+                <button key={colIdx} onClick={() => toggleCell(rowIdx, colIdx)}
+                  className={`w-9 h-9 mx-0.5 rounded-lg transition-all duration-75 cursor-pointer active:scale-95
+                    ${isActive ? '' : 'bg-gray-800 hover:bg-gray-700'} ${isPlayingNow ? 'brightness-150 scale-105' : ''}`}
+                  style={{ backgroundColor: isActive ? inst.color : undefined, boxShadow: isPlayingNow ? `0 0 15px ${inst.color}` : 'none' }}
+                />
+              );
+            })}
+          </div>
+        ))}
+        
+        <div className="flex items-center mt-2 pt-2 border-t border-gray-800">
+          <div className="w-14 text-xs text-purple-400 text-right pr-2">Melody</div>
+          {Array(STEPS).fill(0).map((_, step) => {
+            const melodyStepInBar = melodyStep % 8;
+            const hasNote = MELODIES[melodyIdx].melody[melodyStep - melodyStepInBar + step] > 0;
+            return <div key={step} className={`w-9 h-4 mx-0.5 rounded transition-all ${hasNote ? 'bg-purple-600' : 'bg-gray-800'} ${step === melodyStepInBar && isPlaying && hasNote ? 'brightness-150' : ''}`} />;
+          })}
+        </div>
+      </div>
+      
+      <div className="flex gap-1 mb-4 flex-wrap justify-center max-w-md">
+        {MELODIES.map((m, idx) => (
+          <button key={m.name} onClick={() => setMelodyIdx(idx)}
+            className={`px-2 py-1 rounded text-xs font-bold transition-all ${melodyIdx === idx ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
+            {m.name}
+          </button>
+        ))}
+      </div>
+      
+      <div className="flex gap-2 mb-3 flex-wrap justify-center">
+        {!isPlaying ? (
+          <button onClick={startLoop} className="px-5 py-2 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold">▶ Play</button>
+        ) : (
+          <button onClick={stopLoop} className="px-5 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-bold">■ Stop</button>
+        )}
+        <button onClick={clearGrid} className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl font-bold">Clear</button>
+        <button onClick={() => setShowCode(!showCode)} className="px-4 py-2 bg-purple-700 hover:bg-purple-600 text-white rounded-xl font-bold">
+          {showCode ? 'Hide Code' : 'Share'}
+        </button>
+      </div>
+      
+      {showCode && (
+        <div className="bg-gray-900 p-3 rounded-xl mb-3 text-center">
+          <div className="text-gray-400 text-xs mb-1">Challenge Code</div>
+          <div className="flex items-center gap-2">
+            <code className="bg-gray-800 px-3 py-2 rounded text-purple-400 font-mono text-lg">{code}</code>
+            <button onClick={copyCode} className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded font-bold text-sm">{copied ? '✓' : 'Copy'}</button>
+          </div>
+        </div>
+      )}
+      
+      <div className="flex items-center gap-3 mb-4">
+        <span className="text-gray-500 text-sm">BPM</span>
+        <input type="range" min="80" max="160" value={bpm} onChange={(e) => setBpm(Number(e.target.value))} className="w-24 accent-green-500" />
+        <span className="text-white font-mono text-sm w-8">{bpm}</span>
+      </div>
+      
+      <div className="text-gray-500 text-xs mb-2">Presets</div>
+      <div className="flex gap-1 flex-wrap justify-center max-w-sm">
+        {PRESET_GROOVES.map((p) => (
+          <button key={p.name} onClick={() => loadPreset(p)} className="px-2 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-xs">{p.name}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Challenge Mode
+function ChallengeMode({ onBack, initialPattern }) {
+  const [targetPattern, setTargetPattern] = useState(null);
+  const [targetMelodyIdx, setTargetMelodyIdx] = useState(1);
+  const [locked, setLocked] = useState(() => INSTRUMENTS.map(() => Array(STEPS).fill(false)));
+  const [wrongFlash, setWrongFlash] = useState(null);
+  const [currentStep, setCurrentStep] = useState(-1);
+  const [melodyStep, setMelodyStep] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [bpm, setBpm] = useState(DEFAULT_BPM);
+  const [solved, setSolved] = useState(false);
+  const [attempts, setAttempts] = useState(0);
+  const [totalSolved, setTotalSolved] = useState(0);
+  const [showHint, setShowHint] = useState(false);
+  const [isCustom, setIsCustom] = useState(false);
+  
+  const loopRef = useRef(null);
+  const lockedRef = useRef(locked);
+  const bpmRef = useRef(bpm);
+  const solvedRef = useRef(false);
+  const targetMelodyRef = useRef(1);
+  const melodyStepRef = useRef(0);
+  
+  useEffect(() => { lockedRef.current = locked; }, [locked]);
+  useEffect(() => { bpmRef.current = bpm; }, [bpm]);
+  useEffect(() => { solvedRef.current = solved; }, [solved]);
+  useEffect(() => { targetMelodyRef.current = targetMelodyIdx; }, [targetMelodyIdx]);
+
+  const countLocked = () => locked.flat().filter(Boolean).length;
+  const totalCells = () => targetPattern ? targetPattern.flat().filter(Boolean).length : 0;
+
+  const startNewRound = useCallback((custom = null) => {
+    if (custom) {
+      setTargetPattern(custom.grid);
+      setTargetMelodyIdx(custom.melodyIdx);
+      setIsCustom(true);
+    } else {
+      const groove = PRESET_GROOVES[Math.floor(Math.random() * PRESET_GROOVES.length)];
+      setTargetPattern(groove.pattern.map(row => row.map(Boolean)));
+      setTargetMelodyIdx(groove.melodyIdx);
+      setIsCustom(false);
+    }
+    setLocked(INSTRUMENTS.map(() => Array(STEPS).fill(false)));
+    setSolved(false);
+    setAttempts(0);
+    setShowHint(false);
+  }, []);
+
+  useEffect(() => { startNewRound(initialPattern); }, [initialPattern]);
+
+  const handleCellTap = (row, col) => {
+    if (solved || locked[row][col] || !targetPattern) return;
+    setAttempts(a => a + 1);
+    if (targetPattern[row][col]) {
+      playLock();
+      setLocked(prev => { const n = prev.map(r => [...r]); n[row][col] = true; return n; });
+    } else {
+      playWrong();
+      setWrongFlash({ row, col });
+      setTimeout(() => setWrongFlash(null), 300);
+    }
+  };
+
+  useEffect(() => {
+    if (!targetPattern || solved) return;
+    const allFound = targetPattern.every((row, i) => row.every((cell, j) => !cell || locked[i][j]));
+    if (allFound) { setSolved(true); setTotalSolved(t => t + 1); }
+  }, [locked, targetPattern, solved]);
+
+  const startLoop = useCallback(() => {
+    getAudioContext();
+    setIsPlaying(true);
+    let step = 0;
+    melodyStepRef.current = 0;
+    
+    const tick = () => {
+      setCurrentStep(step);
+      setMelodyStep(melodyStepRef.current);
+      
+      INSTRUMENTS.forEach((inst, idx) => { if (lockedRef.current[idx][step]) playSound(inst.type); });
+      
+      if (solvedRef.current) {
+        const melody = MELODIES[targetMelodyRef.current];
+        if (step === 0) playChord(melody.chords);
+        if (melody.melody[melodyStepRef.current]) playMelodyNote(melody.melody[melodyStepRef.current]);
+      }
+      
+      step = (step + 1) % STEPS;
+      melodyStepRef.current = (melodyStepRef.current + 1) % 32;
+      const stepMs = (60 / bpmRef.current) * 1000 / 2;
+      loopRef.current = setTimeout(tick, stepMs);
+    };
+    tick();
+  }, []);
+
+  const stopLoop = useCallback(() => { setIsPlaying(false); clearTimeout(loopRef.current); setCurrentStep(-1); }, []);
+  useEffect(() => () => clearTimeout(loopRef.current), []);
+
+  const getRowHint = (rowIndex) => {
+    if (!targetPattern) return { total: 0, found: 0 };
+    return { total: targetPattern[rowIndex].filter(Boolean).length, found: locked[rowIndex].filter(Boolean).length };
+  };
+  const getColHint = (colIndex) => {
+    if (!targetPattern) return { total: 0, found: 0 };
+    return { total: targetPattern.reduce((s, r) => s + (r[colIndex] ? 1 : 0), 0), found: locked.reduce((s, r) => s + (r[colIndex] ? 1 : 0), 0) };
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-3 select-none">
+      <div className="flex items-center gap-4 mb-3">
+        <button onClick={onBack} className="text-gray-400 hover:text-white">← Back</button>
+        <h1 className="text-xl font-black text-white">{isCustom ? 'FRIEND ' : ''}CHALLENGE <span className="text-purple-400">MODE</span></h1>
+      </div>
+      
+      <div className="flex gap-4 justify-center text-sm mb-2">
+        <span className="text-gray-400">Solved: <span className="text-yellow-400 font-mono">{totalSolved}</span></span>
+        <span className="text-gray-400">Taps: <span className="text-gray-300 font-mono">{attempts}</span></span>
+      </div>
+
+      {targetPattern && (
+        <div className={`mb-3 px-4 py-2 rounded-lg text-center ${solved ? 'bg-green-900/50 border border-green-500' : 'bg-gray-800'}`}>
+          {solved ? (
+            <>
+              <div className="text-green-400 font-bold text-lg">🎉 Groove Found!</div>
+              <div className="text-green-300 text-sm">Hit play for the full track with {MELODIES[targetMelodyIdx].name}</div>
+              <button onClick={() => startNewRound()} className="mt-2 px-4 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-sm font-bold">Next →</button>
+            </>
+          ) : (
+            <>
+              <div className="text-gray-400 text-xs">Find the beats</div>
+              <div className="text-white font-bold">{countLocked()} / {totalCells()}</div>
+              {showHint && <div className="text-purple-400 text-xs mt-1">Melody: {MELODIES[targetMelodyIdx].name}</div>}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Melody progress when solved */}
+      {solved && (
+        <div className="w-48 h-1.5 bg-gray-800 rounded-full mb-3 overflow-hidden">
+          <div className="h-full bg-purple-500 transition-all" style={{ width: `${(melodyStep / 32) * 100}%` }} />
+        </div>
+      )}
+
+      <div className="bg-gray-900 rounded-2xl p-3 mb-4">
+        <div className="flex mb-1 ml-14">
+          {Array(STEPS).fill(0).map((_, step) => {
+            const hint = getColHint(step);
+            const done = hint.found === hint.total;
+            return <div key={step} className={`w-9 h-5 mx-0.5 flex items-center justify-center text-xs font-bold rounded ${done ? 'text-green-400 bg-green-900/30' : 'text-gray-400'}`}>{hint.found}/{hint.total}</div>;
+          })}
+        </div>
+
+        <div className="flex mb-1 ml-14">
+          {Array(STEPS).fill(0).map((_, step) => (
+            <div key={step} className={`w-9 h-1.5 mx-0.5 rounded-full transition-all ${currentStep === step && isPlaying ? 'bg-purple-500' : 'bg-gray-700'}`} />
+          ))}
+        </div>
+        
+        {INSTRUMENTS.map((inst, rowIdx) => {
+          const hint = getRowHint(rowIdx);
+          const done = hint.found === hint.total;
+          return (
+            <div key={inst.name} className="flex items-center mb-1">
+              <div className="w-9 text-xs font-bold text-right pr-1 truncate" style={{ color: inst.color }}>{inst.name}</div>
+              <div className={`w-10 text-xs font-bold text-center rounded mx-0.5 ${done ? 'text-green-400 bg-green-900/30' : 'text-gray-400'}`}>{hint.found}/{hint.total}</div>
+              {Array(STEPS).fill(0).map((_, colIdx) => {
+                const isLocked = locked[rowIdx][colIdx];
+                const isWrong = wrongFlash?.row === rowIdx && wrongFlash?.col === colIdx;
+                const isPlayingNow = currentStep === colIdx && isPlaying && isLocked;
+                return (
+                  <button key={colIdx} onClick={() => handleCellTap(rowIdx, colIdx)} disabled={solved && !isLocked}
+                    className={`w-9 h-9 mx-0.5 rounded-lg transition-all duration-100 
+                      ${isLocked ? 'cursor-default' : 'bg-gray-800 hover:bg-gray-700 cursor-pointer active:scale-95'}
+                      ${isPlayingNow ? 'brightness-150 scale-105' : ''} ${isWrong ? 'bg-red-600 animate-pulse' : ''}`}
+                    style={{ backgroundColor: isLocked ? inst.color : isWrong ? '#dc2626' : undefined, boxShadow: isPlayingNow ? `0 0 15px ${inst.color}` : 'none' }}>
+                    {isLocked && <span className="text-white/80 text-xs">●</span>}
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex gap-2 mb-3 flex-wrap justify-center">
+        {!isPlaying ? (
+          <button onClick={startLoop} className="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold">▶ Play</button>
+        ) : (
+          <button onClick={stopLoop} className="px-5 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-bold">■ Stop</button>
+        )}
+        {!solved && <button onClick={() => setShowHint(true)} disabled={showHint} className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl font-bold disabled:opacity-50">Hint</button>}
+        <button onClick={() => startNewRound()} className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl font-bold">Skip</button>
+      </div>
+
+      <div className="flex items-center gap-3 mb-4">
+        <span className="text-gray-500 text-sm">BPM</span>
+        <input type="range" min="80" max="160" value={bpm} onChange={(e) => setBpm(Number(e.target.value))} className="w-24 accent-purple-500" />
+        <span className="text-white font-mono text-sm w-8">{bpm}</span>
+      </div>
+
+      <div className="text-gray-500 text-xs text-center max-w-xs">Tap to find beats. Complete the groove to unlock the melody!</div>
+    </div>
+  );
+}
+
+// Main App
+export default function GrooveMind() {
+  const [mode, setMode] = useState('select');
+  const [initialPattern, setInitialPattern] = useState(null);
+  
+  const handleModeSelect = (newMode, pattern = null) => { setInitialPattern(pattern); setMode(newMode); };
+  
+  if (mode === 'select') return <ModeSelect onSelect={handleModeSelect} />;
+  if (mode === 'freestyle') return <FreestyleMode onBack={() => setMode('select')} />;
+  if (mode === 'lightshow') return <LightShowMode onBack={() => setMode('select')} />;
+  return <ChallengeMode onBack={() => setMode('select')} initialPattern={initialPattern} />;
+}
