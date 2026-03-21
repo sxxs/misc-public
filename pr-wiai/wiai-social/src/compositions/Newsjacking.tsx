@@ -1,11 +1,11 @@
 import React from "react";
-import { Sequence, useCurrentFrame, interpolate } from "remotion";
+import { Sequence, useCurrentFrame, interpolate, Img, staticFile } from "remotion";
 import { Post } from "../types";
 import { WIAI_YELLOW } from "../styles/colors";
 import { spaceGroteskFamily, spaceMonoFamily } from "../styles/fonts";
+import { halftonePatternUri, scanlineGradient } from "../styles/textures";
 import { SlideFrame } from "../components/SlideFrame";
 import { GlitchText } from "../components/GlitchText";
-import { HalftoneImage } from "../components/HalftoneImage";
 import { DirtyCutout } from "../components/DirtyCutout";
 import { TypewriterText } from "../components/TypewriterText";
 import { CtaSlide } from "../components/CtaSlide";
@@ -18,22 +18,77 @@ const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote =
   const frame = useCurrentFrame();
   const accent = post.accentColor ?? WIAI_YELLOW;
 
-  const tagOpacity = interpolate(frame, [5, 10], [0, 1], { extrapolateRight: "clamp" });
-  const imgTranslateY = interpolate(frame, [10, 18], [60, 0], { extrapolateRight: "clamp" });
-  const imgOpacity = interpolate(frame, [10, 18], [0, 1], { extrapolateRight: "clamp" });
-  const smallOpacity = interpolate(frame, [15, 22], [0, 1], { extrapolateRight: "clamp" });
-  const bigOpacity = interpolate(frame, [35, 45], [0, 1], { extrapolateRight: "clamp" });
+  const imgOpacity = interpolate(frame, [0, 12], [0, 1], { extrapolateRight: "clamp" });
+  const tagOpacity = interpolate(frame, [8, 16], [0, 1], { extrapolateRight: "clamp" });
+  const smallOpacity = interpolate(frame, [18, 26], [0, 1], { extrapolateRight: "clamp" });
+  const bigOpacity = interpolate(frame, [32, 42], [0, 1], { extrapolateRight: "clamp" });
 
   return (
     <SlideFrame accentColor={accent} currentSlide={1}>
+      {/* Full-bleed screenshot background */}
+      {!showQuote && post.slide1.image && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 1,
+            opacity: imgOpacity,
+          }}
+        >
+          <Img
+            src={staticFile(resolveAssetPath(post.slide1.image))}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center top",
+              filter: "contrast(1.05) brightness(0.65) saturate(0.8)",
+            }}
+          />
+          {/* Heavy halftone overlay for pop-art treatment */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage: halftonePatternUri("white", 0.18, 5),
+              backgroundSize: "5px 5px",
+              mixBlendMode: "overlay",
+              pointerEvents: "none",
+            }}
+          />
+          {/* Scanlines */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: scanlineGradient(0.18),
+              pointerEvents: "none",
+            }}
+          />
+          {/* Gradient: transparent top → solid black bottom — text readability */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(to bottom, rgba(10,10,10,0.15) 0%, rgba(10,10,10,0.5) 50%, rgba(10,10,10,0.92) 75%, #0A0A0A 100%)",
+              pointerEvents: "none",
+            }}
+          />
+        </div>
+      )}
+
+      {/* Text content — sits over the background */}
       <div
         style={{
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
-          padding: "0 60px",
-          gap: 60,
+          justifyContent: "flex-end",
+          padding: "0 60px 60px",
+          position: "relative",
+          zIndex: 5,
+          gap: 36,
         }}
       >
         {/* Category tag */}
@@ -48,49 +103,35 @@ const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote =
               fontFamily: spaceMonoFamily,
             }}
           >
-            {post.category}
+            ■ {post.category}
           </div>
         )}
 
-        {/* Screenshot image — newsjacking only */}
-        {!showQuote && post.slide1.image && (
+        {/* Contrarian: big quoted opinion */}
+        {showQuote && post.slide1.smallText && (
           <div
             style={{
-              opacity: imgOpacity,
-              transform: `translateY(${imgTranslateY}px)`,
-              maxHeight: 480,
-              overflow: "hidden",
-              borderRadius: 6,
-              border: "1px solid rgba(255,255,255,0.08)",
-            }}
-          >
-            <HalftoneImage src={resolveAssetPath(post.slide1.image)} />
-          </div>
-        )}
-
-        {/* Contrarian: big quoted text instead of image */}
-        {showQuote && post.slide1.image && (
-          <div
-            style={{
-              opacity: imgOpacity,
+              opacity: smallOpacity,
               color: "rgba(255,255,255,0.55)",
               fontSize: 60,
               fontWeight: 700,
               fontFamily: spaceGroteskFamily,
               lineHeight: 1.2,
               whiteSpace: "pre-line",
+              borderLeft: `6px solid ${accent}`,
+              paddingLeft: 36,
             }}
           >
-            {`"${post.slide1.image}"`}
+            {`"${post.slide1.smallText}"`}
           </div>
         )}
 
-        {/* smallText context line */}
-        {post.slide1.smallText && (
+        {/* Context line (newsjacking) */}
+        {!showQuote && post.slide1.smallText && (
           <div
             style={{
               opacity: smallOpacity,
-              color: "rgba(255,255,255,0.6)",
+              color: "rgba(255,255,255,0.7)",
               fontSize: 45,
               fontFamily: spaceGroteskFamily,
               lineHeight: 1.3,
@@ -100,7 +141,7 @@ const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote =
           </div>
         )}
 
-        {/* bigText with glitch */}
+        {/* bigText reaction with glitch */}
         <div style={{ opacity: bigOpacity }}>
           <GlitchText
             text={post.slide1.bigText}
