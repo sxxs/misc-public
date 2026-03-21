@@ -58,12 +58,13 @@ const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote =
             style={{
               opacity: imgOpacity,
               transform: `translateY(${imgTranslateY}px)`,
+              maxHeight: 480,
+              overflow: "hidden",
+              borderRadius: 6,
+              border: "1px solid rgba(255,255,255,0.08)",
             }}
           >
-            <HalftoneImage
-              src={resolveAssetPath(post.slide1.image)}
-              style={{ borderRadius: 6, border: "1px solid rgba(255,255,255,0.08)" }}
-            />
+            <HalftoneImage src={resolveAssetPath(post.slide1.image)} />
           </div>
         )}
 
