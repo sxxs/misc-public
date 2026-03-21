@@ -1,0 +1,14 @@
+{
+  "id": "test-witz",
+  "type": "witz",
+  "slide1": {
+    "bigText": "WER IST CLEVER\nUND SITZT NICHT\nIM HÖRSAAL?"
+  },
+  "slide2": {
+    "text": "Tim.\n\nTim studiert an der WIAI.\nDa geht das oft auch\nvon zu Hause aus."
+  },
+  "slide3": {
+    "url": "studium.wiai.uni-bamberg.de",
+    "subtext": "Flexibel studieren. Wie Tim."
+  }
+}

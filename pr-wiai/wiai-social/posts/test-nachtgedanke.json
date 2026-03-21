@@ -1,0 +1,15 @@
+{
+  "id": "test-nachtgedanke",
+  "type": "nachtgedanke",
+  "slide1": {
+    "time": "23:47",
+    "bigText": ""
+  },
+  "slide2": {
+    "text": "Du musst nicht wissen\nwas du mit deinem Leben\nmachen willst.\n\nDu musst nur wissen\nwas du nächstes Semester\nausprobieren willst.\n\nDer Rest ergibt sich.\nOder auch nicht.\nBeides ist okay."
+  },
+  "slide3": {
+    "url": "studium.wiai.uni-bamberg.de",
+    "subtext": "Alle Bachelorstudiengänge sind zulassungsfrei."
+  }
+}

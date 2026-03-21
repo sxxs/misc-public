@@ -1,0 +1,18 @@
+{
+  "id": "2026-03-21-ki-jobs",
+  "type": "newsjacking",
+  "category": "KI",
+  "accentColor": "#00E5FF",
+  "slide1": {
+    "image": "./assets/screenshots/some-news-on-ki.png",
+    "bigText": "Falsche\nAngst.",
+    "smallText": "KI übernimmt Jobs. Stimmt. Wessen Jobs?"
+  },
+  "slide2": {
+    "text": "Wer versteht wie KI\nfunktioniert, verliert\nkeinen Job daran.\n\nDer, der sie baut,\nnicht der, der Angst\nvor ihr hat."
+  },
+  "slide3": {
+    "url": "studium.wiai.uni-bamberg.de",
+    "subtext": "KI & Informatik studieren.\nIn Bamberg. Zulassungsfrei."
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "test-newsjacking",
+  "type": "newsjacking",
+  "category": "SECURITY",
+  "accentColor": "#FF2D2D",
+  "slide1": {
+    "image": "./assets/screenshots/some-news-on-ki.png",
+    "bigText": "Überraschend\nist das nicht.",
+    "smallText": "Schon wieder Millionen Datensätze geleakt."
+  },
+  "slide2": {
+    "text": "Bei uns lernst du,\nwarum sowas passiert.\nUnd warum es weiter\npassieren wird."
+  },
+  "slide3": {
+    "url": "studium.wiai.uni-bamberg.de",
+    "subtext": "IT-Sicherheit & Datenschutz studieren.\nIn Bamberg. Nicht im Silicon Valley."
+  }
+}

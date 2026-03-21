@@ -1,0 +1,22 @@
+{
+  "name": "wiai-social",
+  "version": "1.0.0",
+  "description": "WIAI social video generator",
+  "scripts": {
+    "preview": "remotion preview src/index.ts",
+    "render": "remotion render src/index.ts"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.438",
+    "@remotion/google-fonts": "4.0.438",
+    "remotion": "4.0.438",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.18",
+    "@types/react-dom": "18.3.5",
+    "sharp": "0.33.5",
+    "typescript": "5.4.5"
+  }
+}
