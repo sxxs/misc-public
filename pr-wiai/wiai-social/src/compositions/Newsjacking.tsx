@@ -293,7 +293,7 @@ const Act3: React.FC<{ post: Post }> = ({ post }) => {
   const accent = post.accentColor ?? WIAI_YELLOW;
   return (
     <SlideFrame accentColor={accent} currentSlide={3}>
-      <CtaSlide accentColor={accent} url={post.slide3.url} subtext={post.slide3.subtext} />
+      <CtaSlide accentColor={accent} url={post.slide3.url} subtext={post.slide3.subtext} minimal />
     </SlideFrame>
   );
 };

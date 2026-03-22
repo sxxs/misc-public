@@ -2,7 +2,7 @@
   "id": "2026-03-21-ki-jobs",
   "type": "newsjacking",
   "category": "KI",
-  "accentColor": "#00E5FF",
+  "accentColor": "#FACC15",
   "slide1": {
     "image": "./assets/screenshots/some-news-on-ki.png",
     "bigText": "Tja.",
@@ -13,6 +13,6 @@
   },
   "slide3": {
     "url": "studium.wiai.uni-bamberg.de",
-    "subtext": "KI studieren. In Bamberg.\nZulassungsfrei. Kein Drama."
+    "subtext": "Wer KI versteht,\nbaut sie.\n\nInformatik · Bamberg · kein NC"
   }
 }

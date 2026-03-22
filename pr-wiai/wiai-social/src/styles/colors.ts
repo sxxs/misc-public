@@ -1,4 +1,4 @@
-export const WIAI_YELLOW = "#FFE500";
+export const WIAI_YELLOW = "#FACC15"; // rgb(250,204,21)
 export const BLACK = "#0A0A0A";
 export const CREAM = "#F0EDE8";
 export const WHITE = "#FFFFFF";
