@@ -47,6 +47,7 @@ const contrarianoerhaengePost: Post = {
   },
   slide3: {
     text: "Merkste selber, oder?",
+    button: "Folgt für mehr davon.",
   },
 };
 
