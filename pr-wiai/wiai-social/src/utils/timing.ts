@@ -27,6 +27,21 @@ export function getVisibleLineCount(
   return lines.length;
 }
 
+// Compute how many frames Act2 needs for a given text at given speed + reading buffer.
+export function computeAct2Duration(
+  text: string,
+  startFrame = 10,
+  framesPerLine = 3,
+  readingBuffer = 80
+): number {
+  const lines = parseTypewriterLines(text);
+  const typewriterFrames = lines.reduce(
+    (sum, line) => sum + (line.isBlank ? framesPerLine * 2 : framesPerLine),
+    0
+  );
+  return Math.max(90, startFrame + typewriterFrames + readingBuffer);
+}
+
 export const STILL_FRAMES = {
   slide1: 60,
   slide2: 200,

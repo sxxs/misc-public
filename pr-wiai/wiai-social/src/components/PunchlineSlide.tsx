@@ -14,7 +14,8 @@ export const PunchlineSlide: React.FC<Props> = ({ accentColor, text, button }) =
   const frame = useCurrentFrame();
 
   const containerOpacity = interpolate(frame, [0, 8], [0, 1], { extrapolateRight: "clamp" });
-  const buttonOpacity = interpolate(frame, [45, 58], [0, 1], { extrapolateRight: "clamp" });
+  // Subtext appears after main punchline has landed, stays for rest of slide
+  const subtextOpacity = interpolate(frame, [52, 68], [0, 1], { extrapolateRight: "clamp" });
 
   return (
     <div style={{ position: "absolute", inset: 0 }}>
@@ -29,31 +30,31 @@ export const PunchlineSlide: React.FC<Props> = ({ accentColor, text, button }) =
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          padding: "0 240px 380px 84px",
-          gap: 48,
+          padding: "0 240px 400px 84px",
+          gap: 44,
           zIndex: 5,
           opacity: containerOpacity,
         }}
       >
-        {/* S3 punchline text */}
+        {/* S3 punchline */}
         <TypewriterText
           text={text}
-          fontSize={78}
+          fontSize={84}
           startFrame={5}
-          framesPerLine={3}
+          framesPerLine={4}
           color="#ffffff"
         />
 
-        {/* Optional button — dimmed follow-up beat */}
+        {/* Optional follow-up subtext — same font, smaller, dimmed, not a button */}
         {button && (
           <div
             style={{
-              opacity: buttonOpacity,
-              color: "rgba(255,255,255,0.45)",
-              fontSize: 42,
-              fontFamily: spaceMonoFamily,
-              fontWeight: 400,
-              lineHeight: 1.4,
+              opacity: subtextOpacity,
+              color: "rgba(255,255,255,0.50)",
+              fontSize: 48,
+              fontFamily: spaceGroteskFamily,
+              fontWeight: 700,
+              lineHeight: 1.35,
               whiteSpace: "pre-line",
             }}
           >
@@ -62,13 +63,12 @@ export const PunchlineSlide: React.FC<Props> = ({ accentColor, text, button }) =
         )}
       </div>
 
-      {/* Absender — bottom-left, readable but not dominant */}
+      {/* Absender — bottom-left, legible against LED wall */}
       <div
         style={{
           position: "absolute",
-          bottom: 390,
+          bottom: 400,
           left: 84,
-          right: 240,
           zIndex: 6,
           pointerEvents: "none",
         }}
@@ -76,10 +76,10 @@ export const PunchlineSlide: React.FC<Props> = ({ accentColor, text, button }) =
         <div
           style={{
             display: "inline-block",
-            background: "rgba(10,10,10,0.55)",
-            padding: "8px 16px",
-            color: "rgba(255,255,255,0.60)",
-            fontSize: 32,
+            background: "rgba(10,10,10,0.60)",
+            padding: "8px 18px",
+            color: "rgba(255,255,255,0.65)",
+            fontSize: 30,
             fontFamily: spaceMonoFamily,
             fontWeight: 400,
             letterSpacing: "0.06em",

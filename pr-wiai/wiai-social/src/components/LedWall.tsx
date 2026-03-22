@@ -25,15 +25,15 @@ export const LedWall: React.FC<Props> = ({ accentColor }) => {
 
       let opacity: number;
       if (hash < 0.65) {
-        // ~65% off — barely visible glow
-        opacity = 0.015;
+        // ~65% off — dim but just visible
+        opacity = 0.03;
       } else if (hash < 0.80) {
-        // ~15% blinking — per-LED phase, slow oscillation
+        // ~15% blinking — clear oscillation, per-LED phase offset
         const blinkPhase = (Math.sin(row * 7.11 + col * 3.17) * 43758.5) % (Math.PI * 2);
-        opacity = ((Math.sin(frame * 0.06 + blinkPhase) + 1) / 2) * 0.22 + 0.02;
+        opacity = ((Math.sin(frame * 0.08 + blinkPhase) + 1) / 2) * 0.48 + 0.04;
       } else {
-        // ~20% on — solid but restrained
-        opacity = 0.32;
+        // ~20% on — clearly visible
+        opacity = 0.55;
       }
 
       const x = col * CELL_W + (CELL_W - LED_W) / 2;
