@@ -159,7 +159,7 @@ const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote =
   const frame = useCurrentFrame();
   const accent = post.accentColor ?? WIAI_YELLOW;
 
-  const imgOpacity = interpolate(frame, [0, 8], [0, 1], { extrapolateRight: "clamp" });
+  const imgOpacity = 1;
   const smallOpacity = interpolate(frame, [14, 22], [0, 1], { extrapolateRight: "clamp" });
   const bigOpacity = interpolate(frame, [26, 36], [0, 1], { extrapolateRight: "clamp" });
 
