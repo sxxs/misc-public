@@ -62,22 +62,31 @@ export const PunchlineSlide: React.FC<Props> = ({ accentColor, text, button }) =
         )}
       </div>
 
-      {/* Absender — subtle, bottom-left, inside safe zone */}
+      {/* Absender — bottom-left, readable but not dominant */}
       <div
         style={{
           position: "absolute",
           bottom: 390,
           left: 84,
+          right: 240,
           zIndex: 6,
-          color: "rgba(255,255,255,0.28)",
-          fontSize: 28,
-          fontFamily: spaceMonoFamily,
-          fontWeight: 400,
-          letterSpacing: "0.06em",
           pointerEvents: "none",
         }}
       >
-        WIAI · Uni Bamberg · @herdom.bamberg
+        <div
+          style={{
+            display: "inline-block",
+            background: "rgba(10,10,10,0.55)",
+            padding: "8px 16px",
+            color: "rgba(255,255,255,0.60)",
+            fontSize: 32,
+            fontFamily: spaceMonoFamily,
+            fontWeight: 400,
+            letterSpacing: "0.06em",
+          }}
+        >
+          WIAI · Uni Bamberg · @herdom.bamberg
+        </div>
       </div>
     </div>
   );

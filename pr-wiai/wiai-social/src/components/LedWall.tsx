@@ -19,20 +19,21 @@ export const LedWall: React.FC<Props> = ({ accentColor }) => {
 
   for (let row = 0; row < ROWS; row++) {
     for (let col = 0; col < COLS; col++) {
-      // Deterministic hash per LED — no Math.random()
-      const hash = (Math.sin(row * 13.7 + col * 17.3) + 1) / 2; // 0–1
+      // Fractional part of large-multiplier sin — looks random, no visible wave pattern
+      const n = Math.sin(row * 127.1 + col * 311.7) * 43758.5453;
+      const hash = n - Math.floor(n); // 0–1, noise-like distribution
 
       let opacity: number;
       if (hash < 0.65) {
-        // ~65% off — dim glow only
-        opacity = 0.04;
+        // ~65% off — barely visible glow
+        opacity = 0.015;
       } else if (hash < 0.80) {
-        // ~15% blinking — phase offset per LED, slow oscillation
-        const blinkPhase = Math.sin(row * 7.11 + col * 3.17) * Math.PI;
-        opacity = ((Math.sin(frame * 0.07 + blinkPhase) + 1) / 2) * 0.51 + 0.04;
+        // ~15% blinking — per-LED phase, slow oscillation
+        const blinkPhase = (Math.sin(row * 7.11 + col * 3.17) * 43758.5) % (Math.PI * 2);
+        opacity = ((Math.sin(frame * 0.06 + blinkPhase) + 1) / 2) * 0.22 + 0.02;
       } else {
-        // ~20% on — solid
-        opacity = 0.72;
+        // ~20% on — solid but restrained
+        opacity = 0.32;
       }
 
       const x = col * CELL_W + (CELL_W - LED_W) / 2;
@@ -61,7 +62,7 @@ export const LedWall: React.FC<Props> = ({ accentColor }) => {
       >
         <defs>
           <filter id="led-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feGaussianBlur stdDeviation="5" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -71,12 +72,13 @@ export const LedWall: React.FC<Props> = ({ accentColor }) => {
         <g filter="url(#led-glow)">{leds}</g>
       </svg>
 
-      {/* Dark overlay so foreground text stays readable */}
+      {/* Heavy dark overlay — especially dense in text zone (middle-bottom) */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background: "linear-gradient(to bottom, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.45) 100%)",
+          background:
+            "linear-gradient(to bottom, rgba(10,10,10,0.72) 0%, rgba(10,10,10,0.62) 30%, rgba(10,10,10,0.78) 60%, rgba(10,10,10,0.88) 85%)",
           pointerEvents: "none",
         }}
       />

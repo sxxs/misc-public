@@ -10,13 +10,13 @@ import { TypewriterText } from "../components/TypewriterText";
 import { LedWall } from "../components/LedWall";
 import { PunchlineSlide } from "../components/PunchlineSlide";
 
-// Slide1: shows a quoted opinion/claim — LED wall as backdrop
+// Slide1: big reaction + setup quote below, LED wall backdrop
 const Act1: React.FC<{ post: Post }> = ({ post }) => {
   const frame = useCurrentFrame();
   const accent = post.accentColor ?? WIAI_YELLOW;
 
-  const quoteOpacity = interpolate(frame, [5, 15], [0, 1], { extrapolateRight: "clamp" });
-  const bigOpacity = interpolate(frame, [35, 45], [0, 1], { extrapolateRight: "clamp" });
+  const bigOpacity = interpolate(frame, [0, 10], [0, 1], { extrapolateRight: "clamp" });
+  const quoteOpacity = interpolate(frame, [18, 30], [0, 1], { extrapolateRight: "clamp" });
 
   return (
     <SlideFrame accentColor={accent}>
@@ -26,37 +26,35 @@ const Act1: React.FC<{ post: Post }> = ({ post }) => {
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
-          padding: "0 240px 400px 60px",
-          gap: 72,
+          justifyContent: "flex-end",
+          padding: "0 240px 420px 60px",
+          gap: 40,
           position: "relative",
           zIndex: 5,
         }}
       >
-        {/* The common opinion being challenged */}
+        {/* Setup quote — plain, no decorative bar */}
         {post.slide1.smallText && (
           <div
             style={{
               opacity: quoteOpacity,
-              color: "rgba(255,255,255,0.45)",
-              fontSize: 54,
+              color: "rgba(255,255,255,0.55)",
+              fontSize: 60,
               fontWeight: 700,
               fontFamily: spaceGroteskFamily,
-              lineHeight: 1.25,
+              lineHeight: 1.2,
               whiteSpace: "pre-line",
-              borderLeft: `6px solid ${accent}`,
-              paddingLeft: 36,
             }}
           >
-            {`"${post.slide1.smallText}"`}
+            {`„${post.slide1.smallText}"`}
           </div>
         )}
 
-        {/* Contrarian reaction with glitch */}
+        {/* Contrarian reaction — big */}
         <div style={{ opacity: bigOpacity }}>
           <GlitchText
             text={post.slide1.bigText}
-            fontSize={168}
+            fontSize={210}
             glitchStartFrame={40}
             glitchEndFrame={52}
           />
