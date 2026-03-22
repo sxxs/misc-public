@@ -19,24 +19,23 @@ function resolveAssetPath(raw: string): string {
 const GlitchBackground: React.FC<{ src: string }> = ({ src }) => {
   const frame = useCurrentFrame();
 
-  // Chromatic aberration — slow organic drift + occasional spike
-  const spikeActive = Math.sin(frame * 11.3) > 0.88;
-  const spike = spikeActive ? 18 : 0;
-  const redDx = Math.round(Math.sin(frame * 0.37) * 9 + Math.sin(frame * 2.1) * 2 + spike);
-  const blueDx = Math.round(-Math.sin(frame * 0.31) * 9 - Math.sin(frame * 1.9) * 2 - spike);
+  // Chromatic aberration — subtle organic drift, small spikes
+  const spikeActive = Math.sin(frame * 11.3) > 0.94;
+  const spike = spikeActive ? 6 : 0;
+  const redDx = Math.round(Math.sin(frame * 0.37) * 4 + Math.sin(frame * 2.1) * 1 + spike);
+  const blueDx = Math.round(-Math.sin(frame * 0.31) * 4 - Math.sin(frame * 1.9) * 1 - spike);
 
   // Film grain seed — changes every frame for animated noise
   const grainSeed = frame % 64;
 
-  // Glitch band — occasional colored horizontal strip
-  const bandActive = Math.sin(frame * 17.3) > 0.84;
+  // Glitch band — rare, subtle
+  const bandActive = Math.sin(frame * 17.3) > 0.94;
   const bandY = Math.abs(Math.sin(frame * 3.3 + 1.2)) * 1400 + 100;
-  const bandH = Math.abs(Math.sin(frame * 7.1)) * 90 + 20;
-  const bandX = Math.sin(frame * 11.1) * 50;
-  const bandIsRed = Math.sin(frame * 2.3) > 0;
+  const bandH = Math.abs(Math.sin(frame * 7.1)) * 40 + 10;
+  const bandX = Math.sin(frame * 11.1) * 20;
 
-  // Scanline jitter — shift scanlines slightly on glitch frames
-  const scanJitter = spikeActive ? Math.sin(frame * 31.7) * 3 : 0;
+  // Scanlines don't jitter — they only shift on true glitch frames
+  const scanJitter = spikeActive ? 1 : 0;
 
   const filterId = `chroma-${frame}`;
   const grainId = `grain-${frame}`;
@@ -94,7 +93,7 @@ const GlitchBackground: React.FC<{ src: string }> = ({ src }) => {
           height: "100%",
           objectFit: "cover",
           objectPosition: "center top",
-          filter: `url(#${filterId}) brightness(0.38) contrast(1.2) saturate(0.7)`,
+          filter: `url(#${filterId}) brightness(0.40) contrast(1.15) saturate(0.25)`,
         }}
       />
 
@@ -111,18 +110,19 @@ const GlitchBackground: React.FC<{ src: string }> = ({ src }) => {
         }}
       />
 
-      {/* Animated scanlines — with jitter on glitch frames */}
+      {/* Scanlines — luminosity only, no color contamination */}
       <div
         style={{
           position: "absolute",
           inset: 0,
           background: scanlineGradient(0.22),
+          mixBlendMode: "luminosity",
           transform: `translateY(${scanJitter}px)`,
           pointerEvents: "none",
         }}
       />
 
-      {/* Glitch band — random colored horizontal strip */}
+      {/* Glitch band — rare, monochrome, subtle */}
       {bandActive && (
         <div
           style={{
@@ -131,10 +131,8 @@ const GlitchBackground: React.FC<{ src: string }> = ({ src }) => {
             right: 0,
             top: bandY,
             height: bandH,
-            background: bandIsRed
-              ? "rgba(255, 40, 40, 0.35)"
-              : "rgba(0, 225, 255, 0.3)",
-            mixBlendMode: "screen",
+            background: "rgba(255,255,255,0.12)",
+            mixBlendMode: "luminosity",
             transform: `translateX(${bandX}px)`,
             pointerEvents: "none",
           }}
@@ -161,10 +159,10 @@ const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote =
   const frame = useCurrentFrame();
   const accent = post.accentColor ?? WIAI_YELLOW;
 
-  const imgOpacity = interpolate(frame, [0, 10], [0, 1], { extrapolateRight: "clamp" });
-  const tagOpacity = interpolate(frame, [8, 16], [0, 1], { extrapolateRight: "clamp" });
-  const smallOpacity = interpolate(frame, [18, 26], [0, 1], { extrapolateRight: "clamp" });
-  const bigOpacity = interpolate(frame, [32, 42], [0, 1], { extrapolateRight: "clamp" });
+  const imgOpacity = interpolate(frame, [0, 8], [0, 1], { extrapolateRight: "clamp" });
+  const tagOpacity = interpolate(frame, [6, 12], [0, 1], { extrapolateRight: "clamp" });
+  const smallOpacity = interpolate(frame, [14, 22], [0, 1], { extrapolateRight: "clamp" });
+  const bigOpacity = interpolate(frame, [26, 36], [0, 1], { extrapolateRight: "clamp" });
 
   return (
     <SlideFrame accentColor={accent} currentSlide={1}>
