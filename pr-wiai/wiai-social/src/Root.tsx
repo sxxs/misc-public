@@ -7,18 +7,18 @@ const kiPost: Post = {
   id: "2026-03-21-ki-jobs",
   type: "newsjacking",
   category: "KI",
-  accentColor: "#00E5FF",
+  accentColor: "#FACC15",
   slide1: {
     image: "./assets/screenshots/some-news-on-ki.png",
-    bigText: "Falsche\nAngst.",
-    smallText: "KI übernimmt Jobs. Stimmt. Wessen Jobs?",
+    bigText: "Tja.",
+    smallText: "Alle paar Monate erklärt jemand die Informatik für tot.",
   },
   slide2: {
-    text: "Wer versteht wie KI\nfunktioniert, verliert\nkeinen Job daran.\n\nDer, der sie baut,\nnicht der, der Angst\nvor ihr hat.",
+    text: "Panik ist das\nGeschäftsmodell\nmancher Leute.\n\nFür uns ist das\nein Studienfach.",
   },
   slide3: {
     url: "studium.wiai.uni-bamberg.de",
-    subtext: "KI & Informatik studieren.\nIn Bamberg. Zulassungsfrei.",
+    subtext: "Wer KI versteht,\nbaut sie.\n\nInformatik · Bamberg · kein NC",
   },
 };
 
