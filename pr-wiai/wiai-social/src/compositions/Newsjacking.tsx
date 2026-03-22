@@ -2,7 +2,7 @@ import React from "react";
 import { Sequence, useCurrentFrame, interpolate, Img, staticFile } from "remotion";
 import { Post } from "../types";
 import { WIAI_YELLOW } from "../styles/colors";
-import { spaceGroteskFamily, spaceMonoFamily } from "../styles/fonts";
+import { spaceGroteskFamily } from "../styles/fonts";
 import { scanlineGradient } from "../styles/textures";
 import { SlideFrame } from "../components/SlideFrame";
 import { GlitchText } from "../components/GlitchText";
@@ -160,7 +160,6 @@ const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote =
   const accent = post.accentColor ?? WIAI_YELLOW;
 
   const imgOpacity = interpolate(frame, [0, 8], [0, 1], { extrapolateRight: "clamp" });
-  const tagOpacity = interpolate(frame, [6, 12], [0, 1], { extrapolateRight: "clamp" });
   const smallOpacity = interpolate(frame, [14, 22], [0, 1], { extrapolateRight: "clamp" });
   const bigOpacity = interpolate(frame, [26, 36], [0, 1], { extrapolateRight: "clamp" });
 
@@ -188,22 +187,6 @@ const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote =
           gap: 30,
         }}
       >
-        {/* Category */}
-        {post.category && (
-          <div
-            style={{
-              opacity: tagOpacity,
-              color: accent,
-              fontSize: 33,
-              fontWeight: 700,
-              letterSpacing: "0.15em",
-              fontFamily: spaceMonoFamily,
-            }}
-          >
-            ■ {post.category}
-          </div>
-        )}
-
         {/* Context line */}
         {post.slide1.smallText && (
           <div
