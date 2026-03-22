@@ -7,6 +7,7 @@ interface Props {
   text: string;
   fontSize?: number;
   startFrame?: number;
+  framesPerLine?: number;
   color?: string;
 }
 
@@ -14,11 +15,12 @@ export const TypewriterText: React.FC<Props> = ({
   text,
   fontSize = 78,
   startFrame = 10,
+  framesPerLine = 3,
   color = "#0A0A0A",
 }) => {
   const frame = useCurrentFrame();
   const lines = parseTypewriterLines(text);
-  const visibleCount = getVisibleLineCount(lines, frame, startFrame);
+  const visibleCount = getVisibleLineCount(lines, frame, startFrame, framesPerLine);
 
   return (
     <div

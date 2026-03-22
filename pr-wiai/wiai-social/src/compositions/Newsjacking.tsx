@@ -3,7 +3,7 @@ import { Sequence, useCurrentFrame, interpolate, Img, staticFile } from "remotio
 import { Post } from "../types";
 import { WIAI_YELLOW } from "../styles/colors";
 import { spaceGroteskFamily, spaceMonoFamily } from "../styles/fonts";
-import { halftonePatternUri, scanlineGradient } from "../styles/textures";
+import { scanlineGradient } from "../styles/textures";
 import { SlideFrame } from "../components/SlideFrame";
 import { GlitchText } from "../components/GlitchText";
 import { DirtyCutout } from "../components/DirtyCutout";
@@ -14,90 +14,189 @@ function resolveAssetPath(raw: string): string {
   return raw.replace(/^\.\/assets\//, "");
 }
 
+// ─── Animated background with chromatic aberration, grain, glitch bands ────
+
+const GlitchBackground: React.FC<{ src: string }> = ({ src }) => {
+  const frame = useCurrentFrame();
+
+  // Chromatic aberration — slow organic drift + occasional spike
+  const spikeActive = Math.sin(frame * 11.3) > 0.88;
+  const spike = spikeActive ? 18 : 0;
+  const redDx = Math.round(Math.sin(frame * 0.37) * 9 + Math.sin(frame * 2.1) * 2 + spike);
+  const blueDx = Math.round(-Math.sin(frame * 0.31) * 9 - Math.sin(frame * 1.9) * 2 - spike);
+
+  // Film grain seed — changes every frame for animated noise
+  const grainSeed = frame % 64;
+
+  // Glitch band — occasional colored horizontal strip
+  const bandActive = Math.sin(frame * 17.3) > 0.84;
+  const bandY = Math.abs(Math.sin(frame * 3.3 + 1.2)) * 1400 + 100;
+  const bandH = Math.abs(Math.sin(frame * 7.1)) * 90 + 20;
+  const bandX = Math.sin(frame * 11.1) * 50;
+  const bandIsRed = Math.sin(frame * 2.3) > 0;
+
+  // Scanline jitter — shift scanlines slightly on glitch frames
+  const scanJitter = spikeActive ? Math.sin(frame * 31.7) * 3 : 0;
+
+  const filterId = `chroma-${frame}`;
+  const grainId = `grain-${frame}`;
+
+  return (
+    <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
+      {/* SVG filter definitions */}
+      <svg style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}>
+        <defs>
+          {/* RGB channel split — red left, blue right */}
+          <filter id={filterId} x="-8%" width="116%" colorInterpolationFilters="sRGB">
+            <feColorMatrix
+              in="SourceGraphic"
+              type="matrix"
+              values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"
+              result="r"
+            />
+            <feOffset in="r" dx={redDx} dy={0} result="r2" />
+            <feColorMatrix
+              in="SourceGraphic"
+              type="matrix"
+              values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0"
+              result="g"
+            />
+            <feColorMatrix
+              in="SourceGraphic"
+              type="matrix"
+              values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0"
+              result="b"
+            />
+            <feOffset in="b" dx={blueDx} dy={0} result="b2" />
+            <feBlend in="r2" in2="g" mode="screen" result="rg" />
+            <feBlend in="rg" in2="b2" mode="screen" />
+          </filter>
+
+          {/* Animated film grain */}
+          <filter id={grainId}>
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.8"
+              numOctaves="4"
+              seed={grainSeed}
+              stitchTiles="stitch"
+            />
+            <feColorMatrix type="saturate" values="0" />
+          </filter>
+        </defs>
+      </svg>
+
+      {/* Background image with chromatic aberration filter */}
+      <Img
+        src={staticFile(src)}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: "center top",
+          filter: `url(#${filterId}) brightness(0.38) contrast(1.2) saturate(0.7)`,
+        }}
+      />
+
+      {/* Film grain overlay */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          filter: `url(#${grainId})`,
+          opacity: 0.22,
+          mixBlendMode: "overlay",
+          background: "#808080",
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Animated scanlines — with jitter on glitch frames */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: scanlineGradient(0.22),
+          transform: `translateY(${scanJitter}px)`,
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Glitch band — random colored horizontal strip */}
+      {bandActive && (
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: bandY,
+            height: bandH,
+            background: bandIsRed
+              ? "rgba(255, 40, 40, 0.35)"
+              : "rgba(0, 225, 255, 0.3)",
+            mixBlendMode: "screen",
+            transform: `translateX(${bandX}px)`,
+            pointerEvents: "none",
+          }}
+        />
+      )}
+
+      {/* Gradient — top transparent → bottom solid black for text readability */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(to bottom, rgba(10,10,10,0.1) 0%, rgba(10,10,10,0.3) 40%, rgba(10,10,10,0.88) 68%, #0A0A0A 88%)",
+          pointerEvents: "none",
+        }}
+      />
+    </div>
+  );
+};
+
+// ─── Act 1: Hook ─────────────────────────────────────────────────────────────
+
 const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote = false }) => {
   const frame = useCurrentFrame();
   const accent = post.accentColor ?? WIAI_YELLOW;
 
-  const imgOpacity = interpolate(frame, [0, 12], [0, 1], { extrapolateRight: "clamp" });
+  const imgOpacity = interpolate(frame, [0, 10], [0, 1], { extrapolateRight: "clamp" });
   const tagOpacity = interpolate(frame, [8, 16], [0, 1], { extrapolateRight: "clamp" });
   const smallOpacity = interpolate(frame, [18, 26], [0, 1], { extrapolateRight: "clamp" });
   const bigOpacity = interpolate(frame, [32, 42], [0, 1], { extrapolateRight: "clamp" });
 
   return (
     <SlideFrame accentColor={accent} currentSlide={1}>
-      {/* Full-bleed screenshot background */}
+      {/* Full-bleed background */}
       {!showQuote && post.slide1.image && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            zIndex: 1,
-            opacity: imgOpacity,
-          }}
-        >
-          <Img
-            src={staticFile(resolveAssetPath(post.slide1.image))}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              objectPosition: "center top",
-              filter: "contrast(1.05) brightness(0.65) saturate(0.8)",
-            }}
-          />
-          {/* Heavy halftone overlay for pop-art treatment */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              backgroundImage: halftonePatternUri("white", 0.18, 5),
-              backgroundSize: "5px 5px",
-              mixBlendMode: "overlay",
-              pointerEvents: "none",
-            }}
-          />
-          {/* Scanlines */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: scanlineGradient(0.18),
-              pointerEvents: "none",
-            }}
-          />
-          {/* Gradient: transparent top → solid black bottom — text readability */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(to bottom, rgba(10,10,10,0.15) 0%, rgba(10,10,10,0.5) 50%, rgba(10,10,10,0.92) 75%, #0A0A0A 100%)",
-              pointerEvents: "none",
-            }}
-          />
+        <div style={{ opacity: imgOpacity }}>
+          <GlitchBackground src={resolveAssetPath(post.slide1.image)} />
         </div>
       )}
 
-      {/* Text content — sits over the background */}
+      {/* Text overlay — bottom of frame, safe zone padding right+bottom */}
       <div
         style={{
           flex: 1,
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",
-          padding: "0 60px 60px",
+          // Bottom 380px = TikTok safe zone (caption + audio strip)
+          // Right 180px = action buttons
+          padding: "0 240px 400px 60px",
           position: "relative",
           zIndex: 5,
-          gap: 36,
+          gap: 30,
         }}
       >
-        {/* Category tag */}
+        {/* Category */}
         {post.category && (
           <div
             style={{
               opacity: tagOpacity,
               color: accent,
-              fontSize: 36,
+              fontSize: 33,
               fontWeight: 700,
               letterSpacing: "0.15em",
               fontFamily: spaceMonoFamily,
@@ -107,61 +206,82 @@ const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote =
           </div>
         )}
 
-        {/* Contrarian: big quoted opinion */}
-        {showQuote && post.slide1.smallText && (
+        {/* Context line */}
+        {post.slide1.smallText && (
           <div
             style={{
               opacity: smallOpacity,
-              color: "rgba(255,255,255,0.55)",
-              fontSize: 60,
-              fontWeight: 700,
-              fontFamily: spaceGroteskFamily,
-              lineHeight: 1.2,
-              whiteSpace: "pre-line",
-              borderLeft: `6px solid ${accent}`,
-              paddingLeft: 36,
-            }}
-          >
-            {`"${post.slide1.smallText}"`}
-          </div>
-        )}
-
-        {/* Context line (newsjacking) */}
-        {!showQuote && post.slide1.smallText && (
-          <div
-            style={{
-              opacity: smallOpacity,
-              color: "rgba(255,255,255,0.7)",
-              fontSize: 45,
+              color: "rgba(255,255,255,0.75)",
+              fontSize: 42,
               fontFamily: spaceGroteskFamily,
               lineHeight: 1.3,
+              whiteSpace: "pre-line",
             }}
           >
             {post.slide1.smallText}
           </div>
         )}
 
-        {/* bigText reaction with glitch */}
+        {/* Reaction — big glitch text */}
         <div style={{ opacity: bigOpacity }}>
           <GlitchText
             text={post.slide1.bigText}
             fontSize={168}
-            glitchStartFrame={40}
+            glitchStartFrame={38}
             glitchEndFrame={52}
           />
         </div>
       </div>
+
+      {/* Contrarian: quoted opinion overlay */}
+      {showQuote && post.slide1.smallText && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: 420,
+            left: 60,
+            right: 240,
+            zIndex: 5,
+            opacity: smallOpacity,
+            color: "rgba(255,255,255,0.55)",
+            fontSize: 60,
+            fontWeight: 700,
+            fontFamily: spaceGroteskFamily,
+            lineHeight: 1.2,
+            borderLeft: `6px solid ${accent}`,
+            paddingLeft: 36,
+          }}
+        >
+          {`"${post.slide1.smallText}"`}
+        </div>
+      )}
     </SlideFrame>
   );
 };
 
+// ─── Act 2: Punchline ─────────────────────────────────────────────────────────
+
 const Act2: React.FC<{ post: Post }> = ({ post }) => {
   const frame = useCurrentFrame();
   const accent = post.accentColor ?? WIAI_YELLOW;
+
   const enterProgress = interpolate(frame, [2, 10], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
+
+  // Two glitch moments after text has been sitting a while
+  // Glitch 1: frames 110–116
+  const g1Active = frame >= 110 && frame < 117;
+  const g1t = frame - 110;
+  const glitch1X = g1Active ? (g1t < 4 ? 18 : -(g1t - 4) * 6) : 0;
+
+  // Glitch 2: frames 145–150 (shorter, smaller)
+  const g2Active = frame >= 145 && frame < 151;
+  const g2t = frame - 145;
+  const glitch2X = g2Active ? (g2t < 3 ? -12 : (g2t - 3) * 4) : 0;
+
+  const glitchX = glitch1X + glitch2X;
 
   return (
     <SlideFrame accentColor={accent} currentSlide={2}>
@@ -170,16 +290,23 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
           flex: 1,
           display: "flex",
           alignItems: "center",
-          padding: "0 60px",
+          // Keep content out of TikTok bottom/right zones
+          padding: "200px 240px 200px 60px",
         }}
       >
-        <DirtyCutout accentColor={accent} enterProgress={enterProgress}>
-          <TypewriterText text={post.slide2.text} startFrame={10} />
+        <DirtyCutout accentColor={accent} enterProgress={enterProgress} glitchX={glitchX}>
+          <TypewriterText
+            text={post.slide2.text}
+            startFrame={10}
+            framesPerLine={3}
+          />
         </DirtyCutout>
       </div>
     </SlideFrame>
   );
 };
+
+// ─── Act 3: CTA ──────────────────────────────────────────────────────────────
 
 const Act3: React.FC<{ post: Post }> = ({ post }) => {
   const accent = post.accentColor ?? WIAI_YELLOW;
@@ -189,6 +316,8 @@ const Act3: React.FC<{ post: Post }> = ({ post }) => {
     </SlideFrame>
   );
 };
+
+// ─── Root composition ────────────────────────────────────────────────────────
 
 export const Newsjacking: React.FC<{ post: Post }> = ({ post }) => (
   <>

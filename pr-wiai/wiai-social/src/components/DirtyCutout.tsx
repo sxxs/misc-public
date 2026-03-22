@@ -4,12 +4,18 @@ import { spaceGroteskFamily } from "../styles/fonts";
 interface Props {
   accentColor: string;
   enterProgress: number; // 0→1 drives entrance animation
+  glitchX?: number;      // lateral glitch offset in px
   children: React.ReactNode;
 }
 
-export const DirtyCutout: React.FC<Props> = ({ accentColor, enterProgress, children }) => {
-  const translateX = (1 - enterProgress) * 120;
-  const rotation = 0.8 - enterProgress * 0.4; // 0.8deg → 0.4deg
+export const DirtyCutout: React.FC<Props> = ({
+  accentColor,
+  enterProgress,
+  glitchX = 0,
+  children,
+}) => {
+  const translateX = (1 - enterProgress) * 120 + glitchX;
+  const rotation = 0.8 - enterProgress * 0.4;
 
   return (
     <div
@@ -19,18 +25,18 @@ export const DirtyCutout: React.FC<Props> = ({ accentColor, enterProgress, child
         width: "100%",
       }}
     >
-      {/* Accent color offset shadow */}
+      {/* Accent shadow */}
       <div
         style={{
           position: "absolute",
           inset: 0,
           background: accentColor,
-          transform: "translate(21px, 21px) rotate(0.6deg)",
+          transform: `translate(${21 + glitchX * 0.4}px, 21px) rotate(0.6deg)`,
           clipPath:
             "polygon(1% 2%, 98.5% 0%, 100% 3.5%, 98% 96.5%, 99.5% 99%, 2.5% 100%, 0% 97%, 0.5% 3%)",
         }}
       />
-      {/* Cream cutout block */}
+      {/* Cream cutout */}
       <div
         style={{
           position: "relative",

@@ -10,23 +10,23 @@ export function parseTypewriterLines(text: string): TypewriterLine[] {
   }));
 }
 
-// Returns how many lines are visible at localFrame.
-// Normal line: 6 frames each. Blank line (paragraph break): 12 frames.
+// framesPerLine: frames to wait before revealing the next line.
+// Blank lines (paragraph breaks) get 2× the delay.
 export function getVisibleLineCount(
   lines: TypewriterLine[],
   localFrame: number,
-  startFrame = 10
+  startFrame = 10,
+  framesPerLine = 3
 ): number {
   let cursor = startFrame;
   for (let i = 0; i < lines.length; i++) {
-    const delay = lines[i].isBlank ? 12 : 6;
+    const delay = lines[i].isBlank ? framesPerLine * 2 : framesPerLine;
     if (localFrame < cursor) return i;
     cursor += delay;
   }
   return lines.length;
 }
 
-// Still frames for render.sh — middle of each act where content is fully visible
 export const STILL_FRAMES = {
   slide1: 60,
   slide2: 200,
