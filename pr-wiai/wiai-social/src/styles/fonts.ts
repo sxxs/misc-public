@@ -1,12 +1,13 @@
-import { loadFont as loadSpaceGrotesk } from "@remotion/google-fonts/SpaceGrotesk";
-import { loadFont as loadSpaceMono } from "@remotion/google-fonts/SpaceMono";
+import { loadFont as loadRubik } from "@remotion/google-fonts/Rubik";
+import { loadFont as loadIBMPlexMono } from "@remotion/google-fonts/IBMPlexMono";
 
-export const { fontFamily: spaceGroteskFamily } = loadSpaceGrotesk("normal", {
+// Font comparison branch: Rubik (body/headlines) + IBM Plex Mono (mono elements)
+export const { fontFamily: spaceGroteskFamily } = loadRubik("normal", {
   weights: ["700"],
   subsets: ["latin"],
 });
 
-export const { fontFamily: spaceMonoFamily } = loadSpaceMono("normal", {
+export const { fontFamily: spaceMonoFamily } = loadIBMPlexMono("normal", {
   weights: ["400", "700"],
   subsets: ["latin"],
 });
