@@ -5,7 +5,7 @@ import { WIAI_YELLOW } from "../styles/colors";
 import { spaceMonoFamily, spaceGroteskFamily } from "../styles/fonts";
 import { SlideFrame } from "../components/SlideFrame";
 import { TypewriterText } from "../components/TypewriterText";
-import { CtaSlide } from "../components/CtaSlide";
+import { PunchlineSlide } from "../components/PunchlineSlide";
 
 // Minimal: just the time, no image, no glitch
 const Act1: React.FC<{ post: Post }> = ({ post }) => {
@@ -14,7 +14,7 @@ const Act1: React.FC<{ post: Post }> = ({ post }) => {
   const timeOpacity = interpolate(frame, [0, 30], [0, 1], { extrapolateRight: "clamp" });
 
   return (
-    <SlideFrame accentColor={accent} currentSlide={1}>
+    <SlideFrame accentColor={accent}>
       <div
         style={{
           flex: 1,
@@ -48,7 +48,7 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
   const containerOpacity = interpolate(frame, [0, 8], [0, 1], { extrapolateRight: "clamp" });
 
   return (
-    <SlideFrame accentColor={accent} currentSlide={2}>
+    <SlideFrame accentColor={accent}>
       <div
         style={{
           flex: 1,
@@ -72,8 +72,8 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
 const Act3: React.FC<{ post: Post }> = ({ post }) => {
   const accent = post.accentColor ?? WIAI_YELLOW;
   return (
-    <SlideFrame accentColor={accent} currentSlide={3}>
-      <CtaSlide accentColor={accent} url={post.slide3.url} subtext={post.slide3.subtext} minimal />
+    <SlideFrame accentColor={accent}>
+      <PunchlineSlide accentColor={accent} text={post.slide3.text} button={post.slide3.button} />
     </SlideFrame>
   );
 };

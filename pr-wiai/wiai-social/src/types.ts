@@ -22,7 +22,8 @@ export interface Post {
     text: string;
   };
   slide3: {
-    url: string;
-    subtext?: string;
+    text: string;      // S3 punchline/closing beat
+    button?: string;   // optional dimmed follow-up (comedian's tag)
+    url?: string;      // optional, not displayed by default
   };
 }

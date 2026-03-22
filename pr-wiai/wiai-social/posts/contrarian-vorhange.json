@@ -1,0 +1,15 @@
+{
+  "id": "contrarian-vorhange",
+  "type": "contrarian",
+  "accentColor": "#FACC15",
+  "slide1": {
+    "bigText": "Aha.",
+    "smallText": "Ich hab nichts zu verbergen."
+  },
+  "slide2": {
+    "text": "Du hast Vorhänge\nan deinen Fenstern."
+  },
+  "slide3": {
+    "text": "Merkste selber, oder?"
+  }
+}

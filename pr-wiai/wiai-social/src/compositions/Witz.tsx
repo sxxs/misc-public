@@ -4,7 +4,7 @@ import { Post } from "../types";
 import { WIAI_YELLOW } from "../styles/colors";
 import { spaceGroteskFamily } from "../styles/fonts";
 import { SlideFrame } from "../components/SlideFrame";
-import { CtaSlide } from "../components/CtaSlide";
+import { PunchlineSlide } from "../components/PunchlineSlide";
 
 // Slide 1: question in yellow
 const Act1: React.FC<{ post: Post }> = ({ post }) => {
@@ -13,7 +13,7 @@ const Act1: React.FC<{ post: Post }> = ({ post }) => {
   const opacity = interpolate(frame, [0, 8], [0, 1], { extrapolateRight: "clamp" });
 
   return (
-    <SlideFrame accentColor={accent} currentSlide={1}>
+    <SlideFrame accentColor={accent}>
       <div
         style={{
           flex: 1,
@@ -47,7 +47,7 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
   const opacity = interpolate(frame, [0, 3], [0, 1], { extrapolateRight: "clamp" });
 
   return (
-    <SlideFrame accentColor={accent} currentSlide={2}>
+    <SlideFrame accentColor={accent}>
       <div
         style={{
           flex: 1,
@@ -77,8 +77,8 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
 const Act3: React.FC<{ post: Post }> = ({ post }) => {
   const accent = post.accentColor ?? WIAI_YELLOW;
   return (
-    <SlideFrame accentColor={accent} currentSlide={3}>
-      <CtaSlide accentColor={accent} url={post.slide3.url} subtext={post.slide3.subtext} />
+    <SlideFrame accentColor={accent}>
+      <PunchlineSlide accentColor={accent} text={post.slide3.text} button={post.slide3.button} />
     </SlideFrame>
   );
 };

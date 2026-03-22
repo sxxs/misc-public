@@ -7,9 +7,10 @@ import { SlideFrame } from "../components/SlideFrame";
 import { GlitchText } from "../components/GlitchText";
 import { DirtyCutout } from "../components/DirtyCutout";
 import { TypewriterText } from "../components/TypewriterText";
-import { CtaSlide } from "../components/CtaSlide";
+import { LedWall } from "../components/LedWall";
+import { PunchlineSlide } from "../components/PunchlineSlide";
 
-// Slide1: shows a quoted opinion/claim instead of a screenshot
+// Slide1: shows a quoted opinion/claim — LED wall as backdrop
 const Act1: React.FC<{ post: Post }> = ({ post }) => {
   const frame = useCurrentFrame();
   const accent = post.accentColor ?? WIAI_YELLOW;
@@ -18,15 +19,18 @@ const Act1: React.FC<{ post: Post }> = ({ post }) => {
   const bigOpacity = interpolate(frame, [35, 45], [0, 1], { extrapolateRight: "clamp" });
 
   return (
-    <SlideFrame accentColor={accent} currentSlide={1}>
+    <SlideFrame accentColor={accent}>
+      <LedWall accentColor={accent} />
       <div
         style={{
           flex: 1,
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          padding: "0 60px",
+          padding: "0 240px 400px 60px",
           gap: 72,
+          position: "relative",
+          zIndex: 5,
         }}
       >
         {/* The common opinion being challenged */}
@@ -71,7 +75,7 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
   });
 
   return (
-    <SlideFrame accentColor={accent} currentSlide={2}>
+    <SlideFrame accentColor={accent}>
       <div style={{ flex: 1, display: "flex", alignItems: "center", padding: "0 60px" }}>
         <DirtyCutout accentColor={accent} enterProgress={enterProgress}>
           <TypewriterText text={post.slide2.text} startFrame={10} />
@@ -84,8 +88,8 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
 const Act3: React.FC<{ post: Post }> = ({ post }) => {
   const accent = post.accentColor ?? WIAI_YELLOW;
   return (
-    <SlideFrame accentColor={accent} currentSlide={3}>
-      <CtaSlide accentColor={accent} url={post.slide3.url} subtext={post.slide3.subtext} />
+    <SlideFrame accentColor={accent}>
+      <PunchlineSlide accentColor={accent} text={post.slide3.text} button={post.slide3.button} />
     </SlideFrame>
   );
 };

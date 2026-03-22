@@ -5,7 +5,7 @@ import { WIAI_YELLOW } from "../styles/colors";
 import { spaceMonoFamily } from "../styles/fonts";
 import { SlideFrame } from "../components/SlideFrame";
 import { TypewriterText } from "../components/TypewriterText";
-import { CtaSlide } from "../components/CtaSlide";
+import { PunchlineSlide } from "../components/PunchlineSlide";
 
 // Like Nachtgedanke but with optional label instead of time
 const Act1: React.FC<{ post: Post }> = ({ post }) => {
@@ -14,7 +14,7 @@ const Act1: React.FC<{ post: Post }> = ({ post }) => {
   const labelOpacity = interpolate(frame, [5, 15], [0, 1], { extrapolateRight: "clamp" });
 
   return (
-    <SlideFrame accentColor={accent} currentSlide={1}>
+    <SlideFrame accentColor={accent}>
       <div style={{ flex: 1, display: "flex", alignItems: "flex-start", padding: "90px 84px 0" }}>
         {post.slide1.label && (
           <div
@@ -42,7 +42,7 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
   const containerOpacity = interpolate(frame, [0, 8], [0, 1], { extrapolateRight: "clamp" });
 
   return (
-    <SlideFrame accentColor={accent} currentSlide={2}>
+    <SlideFrame accentColor={accent}>
       <div
         style={{
           flex: 1,
@@ -61,8 +61,8 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
 const Act3: React.FC<{ post: Post }> = ({ post }) => {
   const accent = post.accentColor ?? WIAI_YELLOW;
   return (
-    <SlideFrame accentColor={accent} currentSlide={3}>
-      <CtaSlide accentColor={accent} url={post.slide3.url} subtext={post.slide3.subtext} minimal />
+    <SlideFrame accentColor={accent}>
+      <PunchlineSlide accentColor={accent} text={post.slide3.text} button={post.slide3.button} />
     </SlideFrame>
   );
 };

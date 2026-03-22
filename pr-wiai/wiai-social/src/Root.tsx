@@ -17,8 +17,8 @@ const kiPost: Post = {
     text: "Panik ist das\nGeschäftsmodell\nmancher Leute.\n\nFür uns ist das\nein Studienfach.",
   },
   slide3: {
-    url: "studium.wiai.uni-bamberg.de",
-    subtext: "Wer KI versteht,\nbaut sie.\n\nInformatik · Bamberg · kein NC",
+    text: "Wer KI versteht,\nbaut sie.",
+    button: "Informatik in Bamberg. Kein NC.",
   },
 };
 
@@ -30,8 +30,23 @@ const nachtgedankePost: Post = {
     text: "Du musst nicht wissen\nwas du mit deinem Leben\nmachen willst.\n\nDu musst nur wissen\nwas du nächstes Semester\nausprobieren willst.\n\nDer Rest ergibt sich.\nOder auch nicht.\nBeides ist okay.",
   },
   slide3: {
-    url: "studium.wiai.uni-bamberg.de",
-    subtext: "Alle Bachelorstudiengänge sind zulassungsfrei.",
+    text: "Geht vorbei. Meistens.",
+  },
+};
+
+const contrarianoerhaengePost: Post = {
+  id: "contrarian-vorhange",
+  type: "contrarian",
+  accentColor: "#FACC15",
+  slide1: {
+    bigText: "Aha.",
+    smallText: "Ich hab nichts zu verbergen.",
+  },
+  slide2: {
+    text: "Du hast Vorhänge\nan deinen Fenstern.",
+  },
+  slide3: {
+    text: "Merkste selber, oder?",
   },
 };
 
@@ -43,8 +58,7 @@ const witzPost: Post = {
     text: "Tim.\n\nTim studiert an der WIAI.\nDa geht das oft auch\nvon zu Hause aus.",
   },
   slide3: {
-    url: "studium.wiai.uni-bamberg.de",
-    subtext: "Flexibel studieren. Wie Tim.",
+    text: "Flexibel studieren.\nWie Tim.",
   },
 };
 
@@ -76,6 +90,15 @@ export const Root: React.FC = () => (
       width={1080}
       height={1920}
       defaultProps={witzPost}
+    />
+    <Composition
+      id="WiaiPost-contrarian"
+      component={WiaiPost as unknown as React.ComponentType<Record<string, unknown>>}
+      durationInFrames={450}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={contrarianoerhaengePost}
     />
   </>
 );

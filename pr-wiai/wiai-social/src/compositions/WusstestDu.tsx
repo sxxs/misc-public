@@ -7,7 +7,7 @@ import { GlitchText } from "../components/GlitchText";
 import { HalftoneImage } from "../components/HalftoneImage";
 import { DirtyCutout } from "../components/DirtyCutout";
 import { TypewriterText } from "../components/TypewriterText";
-import { CtaSlide } from "../components/CtaSlide";
+import { PunchlineSlide } from "../components/PunchlineSlide";
 
 function resolveAssetPath(raw: string): string {
   return raw.replace(/^\.\/assets\//, "");
@@ -20,7 +20,7 @@ const Act1: React.FC<{ post: Post }> = ({ post }) => {
   const bigOpacity = interpolate(frame, [5, 15], [0, 1], { extrapolateRight: "clamp" });
 
   return (
-    <SlideFrame accentColor={accent} currentSlide={1}>
+    <SlideFrame accentColor={accent}>
       {/* Optional background image at low opacity */}
       {post.slide1.image && (
         <div style={{ position: "absolute", inset: 0, opacity: 0.15, zIndex: 1 }}>
@@ -72,7 +72,7 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
   });
 
   return (
-    <SlideFrame accentColor={accent} currentSlide={2}>
+    <SlideFrame accentColor={accent}>
       <div style={{ flex: 1, display: "flex", alignItems: "center", padding: "0 60px" }}>
         <DirtyCutout accentColor={accent} enterProgress={enterProgress}>
           <TypewriterText text={post.slide2.text} startFrame={10} />
@@ -85,8 +85,8 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
 const Act3: React.FC<{ post: Post }> = ({ post }) => {
   const accent = post.accentColor ?? WIAI_YELLOW;
   return (
-    <SlideFrame accentColor={accent} currentSlide={3}>
-      <CtaSlide accentColor={accent} url={post.slide3.url} subtext={post.slide3.subtext} />
+    <SlideFrame accentColor={accent}>
+      <PunchlineSlide accentColor={accent} text={post.slide3.text} button={post.slide3.button} />
     </SlideFrame>
   );
 };

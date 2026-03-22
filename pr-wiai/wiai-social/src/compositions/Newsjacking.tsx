@@ -8,7 +8,8 @@ import { SlideFrame } from "../components/SlideFrame";
 import { GlitchText } from "../components/GlitchText";
 import { DirtyCutout } from "../components/DirtyCutout";
 import { TypewriterText } from "../components/TypewriterText";
-import { CtaSlide } from "../components/CtaSlide";
+import { LedWall } from "../components/LedWall";
+import { PunchlineSlide } from "../components/PunchlineSlide";
 
 function resolveAssetPath(raw: string): string {
   return raw.replace(/^\.\/assets\//, "");
@@ -165,11 +166,11 @@ const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote =
 
   return (
     <SlideFrame accentColor={accent} currentSlide={1}>
-      {/* Full-bleed background */}
-      {!showQuote && post.slide1.image && (
-        <div style={{ opacity: imgOpacity }}>
-          <GlitchBackground src={resolveAssetPath(post.slide1.image)} />
-        </div>
+      {/* Full-bleed background — image or LED wall fallback */}
+      {!showQuote && (
+        post.slide1.image
+          ? <GlitchBackground src={resolveAssetPath(post.slide1.image)} />
+          : <LedWall accentColor={accent} />
       )}
 
       {/* Text overlay — bottom of frame, safe zone padding right+bottom */}
@@ -287,13 +288,13 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
   );
 };
 
-// ─── Act 3: CTA ──────────────────────────────────────────────────────────────
+// ─── Act 3: Punchline ────────────────────────────────────────────────────────
 
 const Act3: React.FC<{ post: Post }> = ({ post }) => {
   const accent = post.accentColor ?? WIAI_YELLOW;
   return (
-    <SlideFrame accentColor={accent} currentSlide={3}>
-      <CtaSlide accentColor={accent} url={post.slide3.url} subtext={post.slide3.subtext} minimal />
+    <SlideFrame accentColor={accent}>
+      <PunchlineSlide accentColor={accent} text={post.slide3.text} button={post.slide3.button} />
     </SlideFrame>
   );
 };
