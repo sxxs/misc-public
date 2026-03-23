@@ -193,7 +193,7 @@ Deine Anmerkung: "leichter Rewrite nötig"
 
 > **S1:** "Durchschnittsalter der Person die dieses Video gemacht hat: 43."
 > **S2:** "Durchschnittsalter der Leute die es sehen sollen: 18."
-> **S3:** "Wenn das kein Kommunikationsproblem ist, weiß ich auch nicht. Aber Kommunikationsprobleme lösen ist was ich mache."
+> **S3:** "Wenn das kein Kommunikationsproblem ist, weiß ich auch nicht. Aber Probleme lösen ist was ich mache."
 > **Button:** *(gedimmt)* Auch dieses hier. Irgendwie.
 
 ---
