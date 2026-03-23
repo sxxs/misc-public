@@ -3,7 +3,10 @@
   "type": "contrarian",
   "accentColor": "#FACC15",
   "isAd": false,
-  "timing": { "variant": "through", "act1Duration": 100, "subtextStartFrame": 50, "absenderStartFrame": 120 },
+  "timing": {
+    "variant": "through",
+    "act1Duration": 100
+  },
   "slide1": {
     "bigText": "Haben\nandere\nUnis.",
     "smallText": "Redaktionsplan, Agentur, Content-Strategie."

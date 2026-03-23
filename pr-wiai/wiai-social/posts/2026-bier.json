@@ -3,7 +3,9 @@
   "type": "contrarian",
   "accentColor": "#F97316",
   "isAd": false,
-  "timing": { "variant": "through", "subtextStartFrame": 55, "absenderStartFrame": 125 },
+  "timing": {
+    "variant": "through"
+  },
   "slide1": {
     "bigText": "Bamberg.",
     "smallText": "Informatik + Bier ="

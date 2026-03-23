@@ -3,7 +3,10 @@
   "type": "contrarian",
   "accentColor": "#EF4444",
   "isAd": false,
-  "timing": { "variant": "through", "act1Duration": 100, "subtextStartFrame": 45, "absenderStartFrame": 115 },
+  "timing": {
+    "variant": "through",
+    "act1Duration": 100
+  },
   "slide1": {
     "smallText": "ChatGPT besteht\nunsere alte Klausur.\nLocker."
   },

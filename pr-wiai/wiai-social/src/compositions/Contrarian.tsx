@@ -36,14 +36,6 @@ const MusicVinyl: React.FC = () => (
   <Audio src={staticFile("music/vinyl-rewind.mp3")} volume={0.85} />
 );
 
-const MusicRiser: React.FC<{ fadeOutStart: number; fadeOutEnd: number }> = ({ fadeOutStart, fadeOutEnd }) => {
-  const frame = useCurrentFrame();
-  const vol = interpolate(frame, [fadeOutStart, fadeOutEnd], [0.70, 0], {
-    extrapolateLeft: "clamp", extrapolateRight: "clamp",
-  });
-  return <Audio src={staticFile("music/riser.mp3")} volume={vol} />;
-};
-
 // Alt Act3 music — plays chosen track from position 0; video ends on drum roll so no real fadeout needed
 const MusicAct3AltTrack: React.FC<{ trackFile: string; frames: number }> = ({ trackFile, frames }) => {
   const frame = useCurrentFrame();
@@ -253,32 +245,40 @@ const ACT3_DURATION = 295; // default: punchline + mic-drop, beat-sync with trac
 
 export const Contrarian: React.FC<{ post: Post }> = ({ post }) => {
   const { durationInFrames } = useVideoConfig();
-  const act1Duration = post.timing?.act1Duration ?? 150;
-  const variant      = post.timing?.variant      ?? "scratch";
-  const altTrackKey  = post.timing?.act3Track;
-  const altTrack     = altTrackKey ? ACT3_ALT_TRACKS[altTrackKey] : null;
-  const musicDelay   = post.timing?.act3MusicDelay ?? 0;
+  const t = post.timing;
+
+  // ── Smart defaults ──────────────────────────────────────────────────────
+  const act1Duration = t?.act1Duration ?? (post.slide1.bigText ? 150 : 100);
+  const variant      = t?.variant      ?? "scratch";
+  const altTrack     = t?.act3Track ? ACT3_ALT_TRACKS[t.act3Track] : null;
+  const musicDelay   = t?.act3MusicDelay ?? 0;
+
   const act2Duration = computeAct2Duration(post.slide2.text);
   const act3Start    = act1Duration + act2Duration;
   const act3Duration = variant === "through"
     ? durationInFrames - act3Start
     : altTrack ? altTrack.dur + musicDelay : ACT3_DURATION;
   const totalDuration = act3Start + act3Duration;
+
+  // Act3 text timing — auto-adjusts for shorter Act3 (e.g. "through" variant)
+  const subtextStart  = t?.subtextStartFrame  ?? (act3Duration < 250 ? 50 : 80);
+  const absenderStart = t?.absenderStartFrame ?? (act3Duration < 250 ? Math.min(120, act3Duration - 70) : 155);
+
   return (
     <>
       {variant === "through"
         ? <ContrarianMusicThrough totalDuration={totalDuration} />
         : variant === "through-scratch"
           ? <ContrarianMusicThroughScratch act1Duration={act1Duration} act2Duration={act2Duration} act3Duration={act3Duration}
-              altTrack={altTrack} scratchOffset={post.timing?.scratchOffset} musicDelay={musicDelay} />
+              altTrack={altTrack} scratchOffset={t?.scratchOffset} musicDelay={musicDelay} />
           : <ContrarianMusicScratch act1Duration={act1Duration} act2Duration={act2Duration} act3Duration={act3Duration} />
       }
       <Sequence from={0}            durationInFrames={act1Duration}><Act1 post={post} act1Duration={act1Duration} /></Sequence>
       <Sequence from={act1Duration}  durationInFrames={act2Duration}><Act2 post={post} /></Sequence>
       <Sequence from={act3Start}    durationInFrames={act3Duration}>
         <Act3 post={post} dur={act3Duration}
-          subtextStart={post.timing?.subtextStartFrame}
-          absenderStart={post.timing?.absenderStartFrame} />
+          subtextStart={subtextStart}
+          absenderStart={absenderStart} />
       </Sequence>
     </>
   );
