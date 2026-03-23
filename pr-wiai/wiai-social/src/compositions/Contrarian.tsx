@@ -157,7 +157,7 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
           flexDirection: "column",
           justifyContent: "center",
           // Shift content slightly above vertical center by adding more bottom padding
-          padding: "180px 240px 500px 60px",
+          padding: "180px 240px 500px 108px",
           gap: 44,
           position: "relative",
           zIndex: 5,
@@ -179,7 +179,7 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
                   fontFamily: spaceGroteskFamily,
                   lineHeight: 1.2,
                   width: "fit-content",
-                  maxWidth: 756,
+                  maxWidth: 700,
                   whiteSpace: "pre-wrap",
                 }}
               >
@@ -214,7 +214,7 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
   return (
     <SlideFrame accentColor={accent}>
       <LedWall accentColor={accent} mode="s2" />
-      <div style={{ flex: 1, display: "flex", alignItems: "center", padding: "0 60px", position: "relative", zIndex: 5 }}>
+      <div style={{ flex: 1, display: "flex", alignItems: "center", padding: "0 108px", position: "relative", zIndex: 5 }}>
         <DirtyCutout accentColor={accent} enterProgress={enterProgress}>
           <TypewriterText text={post.slide2.text} startFrame={10} blinkLastPeriod />
         </DirtyCutout>

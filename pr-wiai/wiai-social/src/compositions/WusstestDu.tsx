@@ -33,7 +33,7 @@ const Act1: React.FC<{ post: Post }> = ({ post }) => {
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          padding: "0 60px",
+          padding: "0 108px",
           gap: 54,
           position: "relative",
           zIndex: 5,
@@ -73,7 +73,7 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
 
   return (
     <SlideFrame accentColor={accent}>
-      <div style={{ flex: 1, display: "flex", alignItems: "center", padding: "0 60px" }}>
+      <div style={{ flex: 1, display: "flex", alignItems: "center", padding: "0 108px" }}>
         <DirtyCutout accentColor={accent} enterProgress={enterProgress}>
           <TypewriterText text={post.slide2.text} startFrame={10} />
         </DirtyCutout>

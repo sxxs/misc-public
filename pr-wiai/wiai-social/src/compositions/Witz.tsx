@@ -19,7 +19,7 @@ const Act1: React.FC<{ post: Post }> = ({ post }) => {
           flex: 1,
           display: "flex",
           alignItems: "center",
-          padding: "0 84px",
+          padding: "0 108px",
           opacity,
         }}
       >
@@ -53,7 +53,7 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
           flex: 1,
           display: "flex",
           alignItems: "center",
-          padding: "0 84px",
+          padding: "0 108px",
           opacity,
         }}
       >

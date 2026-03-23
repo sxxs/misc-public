@@ -8,7 +8,7 @@ interface Props {
 }
 
 export const BrandingFooter: React.FC<Props> = ({ accentColor, currentSlide }) => (
-  <div style={{ padding: "0 60px 48px" }}>
+  <div style={{ padding: "0 108px 48px" }}>
     <div style={{ display: "flex", gap: 15, marginBottom: 30 }}>
       {([1, 2, 3] as const).map((n) => (
         <div

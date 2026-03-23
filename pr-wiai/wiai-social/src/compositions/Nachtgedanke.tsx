@@ -20,7 +20,7 @@ const Act1: React.FC<{ post: Post }> = ({ post }) => {
           flex: 1,
           display: "flex",
           alignItems: "flex-start",
-          padding: "90px 84px 0",
+          padding: "100px 108px 0",
         }}
       >
         {post.slide1.time && (
@@ -54,7 +54,7 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
           flex: 1,
           display: "flex",
           alignItems: "center",
-          padding: "0 84px",
+          padding: "0 108px",
           opacity: containerOpacity,
         }}
       >

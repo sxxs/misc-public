@@ -182,7 +182,7 @@ const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote =
           justifyContent: "flex-end",
           // Bottom 380px = TikTok safe zone (caption + audio strip)
           // Right 180px = action buttons
-          padding: "0 240px 400px 60px",
+          padding: "0 240px 400px 108px",
           position: "relative",
           zIndex: 5,
           gap: 30,
@@ -273,7 +273,7 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
           display: "flex",
           alignItems: "center",
           // Keep content out of TikTok bottom/right zones
-          padding: "200px 240px 200px 60px",
+          padding: "200px 240px 200px 108px",
         }}
       >
         <DirtyCutout accentColor={accent} enterProgress={enterProgress} glitchX={glitchX}>

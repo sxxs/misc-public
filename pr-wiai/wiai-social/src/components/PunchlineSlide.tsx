@@ -67,7 +67,7 @@ export const PunchlineSlide: React.FC<Props> = ({
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
-            padding: "0 240px 400px 84px",
+            padding: "0 240px 400px 108px",
             gap: 120,
             zIndex: 5,
             opacity: containerOpacity,
@@ -97,7 +97,7 @@ export const PunchlineSlide: React.FC<Props> = ({
                   fontWeight: 700,
                   lineHeight: 1.35,
                   width: "fit-content",
-                  maxWidth: 756,
+                  maxWidth: 700,
                   whiteSpace: "pre-wrap",
                 }}>
                   {line}
@@ -128,7 +128,7 @@ export const PunchlineSlide: React.FC<Props> = ({
                       fontWeight: 700,
                       lineHeight: 1.35,
                       width: "fit-content",
-                      maxWidth: 756,
+                      maxWidth: 700,
                       whiteSpace: "pre-wrap",
                     }}>
                       {line}
@@ -160,7 +160,7 @@ export const PunchlineSlide: React.FC<Props> = ({
           <div style={{
             position: "absolute",
             bottom: 400,
-            left: 84,
+            left: 108,
             zIndex: 6,
             pointerEvents: "none",
             opacity: absenderOpacity,

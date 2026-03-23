@@ -24,7 +24,7 @@ export const CtaSlide: React.FC<Props> = ({ accentColor, url, subtext, minimal =
         flexDirection: "column",
         justifyContent: "center",
         // Safe zone: right 180px (action buttons), bottom 350px (caption)
-        padding: "0 240px 360px 84px",
+        padding: "0 240px 360px 108px",
         gap: 60,
       }}
     >

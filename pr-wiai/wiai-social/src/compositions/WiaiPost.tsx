@@ -7,6 +7,7 @@ import { WusstestDu } from "./WusstestDu";
 import { Contrarian } from "./Contrarian";
 import { Selbstironie } from "./Selbstironie";
 import { Witz } from "./Witz";
+import { SafeZoneOverlay } from "../components/SafeZoneOverlay";
 
 const BackgroundMusic: React.FC = () => {
   const frame = useCurrentFrame();
@@ -24,22 +25,25 @@ const BackgroundMusic: React.FC = () => {
 };
 
 export const WiaiPost: React.FC<Post> = (post) => {
-  switch (post.type) {
-    case "newsjacking":
-      return <><BackgroundMusic /><Newsjacking post={post} /></>;
-    case "nachtgedanke":
-      return <><BackgroundMusic /><Nachtgedanke post={post} /></>;
-    case "wusstest-du":
-      return <><BackgroundMusic /><WusstestDu post={post} /></>;
-    case "contrarian":
-      return <Contrarian post={post} />; // music handled internally with beat-sync
-    case "selbstironie":
-      return <><BackgroundMusic /><Selbstironie post={post} /></>;
-    case "witz":
-      return <><BackgroundMusic /><Witz post={post} /></>;
-    default: {
-      const _exhaustive: never = post.type;
-      return null;
+  const content = (() => {
+    switch (post.type) {
+      case "newsjacking":
+        return <><BackgroundMusic /><Newsjacking post={post} /></>;
+      case "nachtgedanke":
+        return <><BackgroundMusic /><Nachtgedanke post={post} /></>;
+      case "wusstest-du":
+        return <><BackgroundMusic /><WusstestDu post={post} /></>;
+      case "contrarian":
+        return <Contrarian post={post} />;
+      case "selbstironie":
+        return <><BackgroundMusic /><Selbstironie post={post} /></>;
+      case "witz":
+        return <><BackgroundMusic /><Witz post={post} /></>;
+      default: {
+        const _exhaustive: never = post.type;
+        return null;
+      }
     }
-  }
+  })();
+  return <>{content}<SafeZoneOverlay /></>;
 };
