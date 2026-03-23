@@ -57,6 +57,17 @@ export function computeAct3Duration(
   return Math.max(150, 150 + pWords * 4 + bWords * 3);
 }
 
+// Alt Act3 tracks — dur ends on drum roll (~1.5s / 45f before track end)
+// Add new entries here; Contrarian.tsx + Root.tsx both import this
+export const ACT3_ALT_TRACKS: Record<string, { file: string; dur: number }> = {
+  a: { file: "music/track-act3-a.mp3", dur: 411 }, // 15.19s → 456f - 45
+  b: { file: "music/track-act3-b.mp3", dur: 430 }, // 15.82s → 475f - 45
+  c: { file: "music/track-act3-c.mp3", dur: 448 }, // 16.44s → 493f - 45
+  d: { file: "music/track-act3-d.mp3", dur: 448 }, // 16.44s → 493f - 45
+  e: { file: "music/track-act3-e.mp3", dur: 448 }, // 16.44s → 493f - 45
+  f: { file: "music/track-act3-f.mp3", dur: 241 }, //  9.50s → 286f - 45
+};
+
 export const STILL_FRAMES = {
   slide1: 60,
   slide2: 200,

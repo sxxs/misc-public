@@ -2,7 +2,7 @@ import React from "react";
 import { Composition } from "remotion";
 import { WiaiPost } from "./compositions/WiaiPost";
 import { Post, ContrarianTiming } from "./types";
-import { computeAct2Duration } from "./utils/timing";
+import { computeAct2Duration, ACT3_ALT_TRACKS } from "./utils/timing";
 
 // ── Post data — single source of truth: edit the JSON files in posts/ ─────────
 import contrarianoerhaengePost from "../posts/contrarian-vorhange.json";
@@ -19,14 +19,15 @@ import akinatorPost             from "../posts/2026-akinator.json";
 import gottesbeweiPost          from "../posts/2026-gottesbeweis.json";
 import kiBaldPost               from "../posts/2026-ki-bald.json";
 
-// track.mp3 is ~17.3s; 520f = where audio ends at 30fps
-const TRACK_DURATION = 520;
+const TRACK_DURATION = 520; // track.mp3 ~17.3s at 30fps
 
 const contrarianDuration = (post: Post) => {
   const act1Duration = post.timing?.act1Duration ?? 150;
-  // "through": video length = track length so Act3 fills exactly to music end
   if (post.timing?.variant === "through") return TRACK_DURATION;
-  return act1Duration + computeAct2Duration(post.slide2.text) + 295;
+  const altTrack = post.timing?.act3Track ? ACT3_ALT_TRACKS[post.timing.act3Track] : null;
+  const delay = post.timing?.act3MusicDelay ?? 0;
+  const act3 = altTrack ? altTrack.dur + delay : 295;
+  return act1Duration + computeAct2Duration(post.slide2.text) + act3;
 };
 
 // Helpers — keep composition declarations concise
@@ -84,6 +85,18 @@ export const Root: React.FC = () => (
     {/* akinator  : through         — educational hook, green */}
     {/* gottesbeweis: through-scratch + act1=225 — 3-line quote needs room, purple */}
     {/* ki-bald   : through-scratch — KI series, yellow */}
+    {/* ── Alt Act3 track experiments (through-scratch, act1=225, drum-roll ending) ── */}
+    {cv("WiaiPost-bambirds-alt-a", bambirdsPost as unknown as Post, { variant: "through-scratch", act1Duration: 225, act3Track: "a" })}
+    {cv("WiaiPost-bambirds-alt-b", bambirdsPost as unknown as Post, { variant: "through-scratch", act1Duration: 225, act3Track: "b" })}
+    {cv("WiaiPost-bambirds-alt-c", bambirdsPost as unknown as Post, { variant: "through-scratch", act1Duration: 225, act3Track: "c" })}
+    {cv("WiaiPost-bambirds-alt-d", bambirdsPost as unknown as Post, { variant: "through-scratch", act1Duration: 225, act3Track: "d" })}
+    {cv("WiaiPost-bambirds-alt-e", bambirdsPost as unknown as Post, { variant: "through-scratch", act1Duration: 225, act3Track: "e" })}
+    {/* f: short Act3 (~8.5s), scratch at act3Start, music delayed 18f, later subtext/absender */}
+    {cv("WiaiPost-bambirds-alt-f", bambirdsPost as unknown as Post, {
+      variant: "through-scratch", act1Duration: 225, act3Track: "f",
+      scratchOffset: 0, act3MusicDelay: 18, subtextStartFrame: 110, absenderStartFrame: 185,
+    })}
+
     {cp("WiaiPost-handfest",     handfestPost    as unknown as Post)}
     {cp("WiaiPost-akinator",     akinatorPost    as unknown as Post)}
     {cp("WiaiPost-gottesbeweis", gottesbeweiPost as unknown as Post)}

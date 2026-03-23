@@ -10,6 +10,11 @@ export type PostType =
 export interface ContrarianTiming {
   variant?: "scratch" | "through" | "through-scratch"; // scratch: fade+vinyl+beat-sync (default); through: straight; through-scratch: full volume then vinyl+beat-sync
   act1Duration?: number;           // frames for Act1 slide (default: 150)
+  act3Track?: string;              // through-scratch only: key into ACT3_ALT_TRACKS, omit for default track.mp3
+  scratchOffset?: number;          // frames before act3Start where scratch starts (default: 15; 0 = at act3Start)
+  act3MusicDelay?: number;         // delay Act3 music start by N frames after act3Start (default: 0)
+  subtextStartFrame?: number;      // Act3 button/übrigens appear frame (default: 80)
+  absenderStartFrame?: number;     // Act3 absender appear frame (default: 155)
 }
 
 export interface Post {
