@@ -1,5 +1,5 @@
 import React from "react";
-import { Audio, Sequence, staticFile, useCurrentFrame, interpolate } from "remotion";
+import { Audio, Sequence, staticFile, useCurrentFrame, useVideoConfig, interpolate } from "remotion";
 import { Post } from "../types";
 import { WIAI_YELLOW } from "../styles/colors";
 import { spaceGroteskFamily } from "../styles/fonts";
@@ -44,9 +44,10 @@ const MusicRiser: React.FC<{ fadeOutStart: number; fadeOutEnd: number }> = ({ fa
   return <Audio src={staticFile("music/riser.mp3")} volume={vol} />;
 };
 
-const MusicAct3: React.FC<{ frames: number }> = ({ frames }) => {
+// startFrom defaults to TRACK_RESUME_FROM for beat-sync; pass TRACK_ACT3_BEAT to skip pre-roll
+const MusicAct3: React.FC<{ frames: number; startFrom?: number }> = ({ frames, startFrom = TRACK_RESUME_FROM }) => {
   const frame = useCurrentFrame();
-  // Concave (t²) ease-in: slow start, ramps up quickly toward beat
+  // Concave (t²) ease-in: slow start, ramps up quickly
   const fadeLinear = interpolate(frame, [0, 45], [0, 1], { extrapolateRight: "clamp" });
   const fadeIn  = fadeLinear * fadeLinear;
   const fadeOut = interpolate(frame, [frames - 3, frames], [1, 0], {
@@ -55,16 +56,17 @@ const MusicAct3: React.FC<{ frames: number }> = ({ frames }) => {
   return (
     <Audio
       src={staticFile("music/track.mp3")}
-      startFrom={TRACK_RESUME_FROM}
+      startFrom={startFrom}
       volume={fadeIn * fadeOut * 0.65}
     />
   );
 };
 
-const ContrarianMusic: React.FC<{ act2Duration: number; act3Duration: number }> = ({
-  act2Duration, act3Duration,
+// variant="scratch": vinyl rewind masks the seam; beat-sync always lands at act3Start
+const ContrarianMusicScratch: React.FC<{ act1Duration: number; act2Duration: number; act3Duration: number }> = ({
+  act1Duration, act2Duration, act3Duration,
 }) => {
-  const act3Start = 150 + act2Duration;
+  const act3Start = act1Duration + act2Duration;
   const resumeAt  = act3Start - RESUME_EARLY;
   const act3Seg   = act3Duration + RESUME_EARLY;
   return (
@@ -75,30 +77,59 @@ const ContrarianMusic: React.FC<{ act2Duration: number; act3Duration: number }> 
       </Sequence>
       {/* Vinyl rewind: masks the seam where music rewinds and restarts at resumeAt */}
       <Sequence from={resumeAt - 15} durationInFrames={37}><MusicVinyl /></Sequence>
-      {/* Riser disabled — <Sequence from={60} durationInFrames={resumeAt + 45 - 30}>
-        <MusicRiser fadeOutStart={resumeAt - 30} fadeOutEnd={resumeAt + 45 - 30} />
-      </Sequence> */}
       {/* Act 3: track resumes RESUME_EARLY frames early; beat lands on act3Start */}
       <Sequence from={resumeAt} durationInFrames={act3Seg}><MusicAct3 frames={act3Seg} /></Sequence>
     </>
   );
 };
 
+// variant="through": music plays straight from start, no beat-sync complexity
+// Act3 duration is set externally (durationInFrames) so video ends exactly with music
+const ContrarianMusicThrough: React.FC<{ totalDuration: number }> = ({ totalDuration }) => {
+  const frame = useCurrentFrame();
+  const vol = interpolate(frame, [totalDuration - 3, totalDuration], [1, 0], {
+    extrapolateLeft: "clamp", extrapolateRight: "clamp",
+  });
+  return <Audio src={staticFile("music/track.mp3")} volume={vol * 0.65} />;
+};
+
+// variant="through-scratch": full volume Act1+Act2, scratch at Act2 end, Act3 music starts at beat directly
+// No RESUME_EARLY pre-roll — scratch bridges the gap, concave fade-in hides the hard start
+const ContrarianMusicThroughScratch: React.FC<{ act1Duration: number; act2Duration: number; act3Duration: number }> = ({
+  act1Duration, act2Duration, act3Duration,
+}) => {
+  const act3Start = act1Duration + act2Duration;
+  return (
+    <>
+      {/* Full volume through Act1+Act2, hard stop just before scratch */}
+      <Sequence from={0} durationInFrames={act3Start - 5}>
+        <Audio src={staticFile("music/track.mp3")} volume={0.65} />
+      </Sequence>
+      {/* Scratch straddles Act2/Act3 boundary (-15f to +22f) */}
+      <Sequence from={act3Start - 15} durationInFrames={37}><MusicVinyl /></Sequence>
+      {/* Act3: start directly at beat position, no pre-roll */}
+      <Sequence from={act3Start} durationInFrames={act3Duration}>
+        <MusicAct3 frames={act3Duration} startFrom={TRACK_ACT3_BEAT} />
+      </Sequence>
+    </>
+  );
+};
+
 // Slide1: quote fades in immediately (eye-catcher), Aha. time-offset below
-const Act1: React.FC<{ post: Post }> = ({ post }) => {
+const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Duration }) => {
   const frame = useCurrentFrame();
   const accent = post.accentColor ?? WIAI_YELLOW;
 
   // Quote appears right away — this is what draws the eye
   const quoteOpacity = interpolate(frame, [0, 12], [0, 1], { extrapolateRight: "clamp" });
-  // Aha. enters at local frame 75 (= global 75), punchline moment
+  // Aha. enters at local frame 75, punchline moment
   const bigOpacity = interpolate(frame, [75, 90], [0, 1], { extrapolateRight: "clamp" });
-  // Text fade-out at transition to Act2 (last 11f of 150f sequence)
-  const textFadeOut = interpolate(frame, [139, 149], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  // Text fade-out: last 11 frames of Act1 (dynamic, works for any act1Duration)
+  const textFadeOut = interpolate(frame, [act1Duration - 11, act1Duration - 1], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
   return (
     <SlideFrame accentColor={accent}>
-      <LedWall accentColor={accent} exitAtFrame={130} />
+      <LedWall accentColor={accent} exitAtFrame={act1Duration - 20} />
       <div
         style={{
           flex: 1,
@@ -194,14 +225,25 @@ const Act3: React.FC<{ post: Post; dur: number }> = ({ post, dur }) => {
 const ACT3_DURATION = 295; // constant — enough for punchline + mic-drop
 
 export const Contrarian: React.FC<{ post: Post }> = ({ post }) => {
+  const { durationInFrames } = useVideoConfig();
+  const act1Duration = post.timing?.act1Duration ?? 150;
+  const variant      = post.timing?.variant      ?? "scratch";
   const act2Duration = computeAct2Duration(post.slide2.text);
-  const act3Start    = 150 + act2Duration;
+  const act3Start    = act1Duration + act2Duration;
+  // "through": fill remaining frames so video ends exactly when music ends
+  const act3Duration = variant === "through" ? durationInFrames - act3Start : ACT3_DURATION;
+  const totalDuration = act3Start + act3Duration;
   return (
     <>
-      <ContrarianMusic act2Duration={act2Duration} act3Duration={ACT3_DURATION} />
-      <Sequence from={0}         durationInFrames={150}><Act1 post={post} /></Sequence>
-      <Sequence from={150}       durationInFrames={act2Duration}><Act2 post={post} /></Sequence>
-      <Sequence from={act3Start} durationInFrames={ACT3_DURATION}><Act3 post={post} dur={ACT3_DURATION} /></Sequence>
+      {variant === "through"
+        ? <ContrarianMusicThrough totalDuration={totalDuration} />
+        : variant === "through-scratch"
+          ? <ContrarianMusicThroughScratch act1Duration={act1Duration} act2Duration={act2Duration} act3Duration={act3Duration} />
+          : <ContrarianMusicScratch act1Duration={act1Duration} act2Duration={act2Duration} act3Duration={act3Duration} />
+      }
+      <Sequence from={0}            durationInFrames={act1Duration}><Act1 post={post} act1Duration={act1Duration} /></Sequence>
+      <Sequence from={act1Duration}  durationInFrames={act2Duration}><Act2 post={post} /></Sequence>
+      <Sequence from={act3Start}    durationInFrames={act3Duration}><Act3 post={post} dur={act3Duration} /></Sequence>
     </>
   );
 };

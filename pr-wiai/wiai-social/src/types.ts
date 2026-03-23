@@ -6,12 +6,19 @@ export type PostType =
   | "selbstironie"
   | "witz";
 
+// Contrarian timing config — all fields optional, sensible defaults apply
+export interface ContrarianTiming {
+  variant?: "scratch" | "through" | "through-scratch"; // scratch: fade+vinyl+beat-sync (default); through: straight; through-scratch: full volume then vinyl+beat-sync
+  act1Duration?: number;           // frames for Act1 slide (default: 150)
+}
+
 export interface Post {
   id: string;
   type: PostType;
   category?: string;
   accentColor?: string;
   isAd?: boolean;        // opt-in: shows absender/footer on S3 (default: hidden)
+  timing?: ContrarianTiming; // contrarian-only
   slide1: {
     image?: string;
     time?: string;
