@@ -4,14 +4,13 @@
   "accentColor": "#EF4444",
   "isAd": false,
   "slide1": {
-    "bigText": "Na und?",
-    "smallText": "Informatik passt nicht zu dir wenn:"
+    "smallText": "Informatik passt nicht zu dir wenn …"
   },
   "slide2": {
-    "text": "...du immer sofort die\nrichtige Antwort willst.\n\nInformatik ist:\n90% läuft nicht.\n1% läuft. Der Rest ist Lernen."
+    "text": "… du immer sofort die\nrichtige Antwort willst.\n\nInformatik ist:\n90% läuft nicht.\n1% läuft. Der Rest ist Lernen."
   },
   "slide3": {
-    "text": "Dieses eine Prozent\nist es wert.",
+    "text": "Dieses eine Prozent ist es wert.",
     "button": "Die anderen 99% auch.\nMan lernt am meisten\nwenn es nicht funktioniert."
   }
 }

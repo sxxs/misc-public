@@ -5,13 +5,14 @@
   "isAd": false,
   "timing": { "variant": "through-scratch", "act1Duration": 120 },
   "slide1": {
-    "smallText": "Es wird ja immer\ngesagt, Informatiker\nverdienen gut aber\nleben schlecht."
+    "bigText": "Kommt drauf an\nwo du studierst.",
+    "smallText": "Es wird ja immer\ngesagt, Infor-\nmatiker:innen\nverdienen gut,\naber leben\nschlecht."
   },
   "slide2": {
-    "text": "Kommt drauf an\nwo du studierst.\n\nGroßstadt: verdienst\ngut, zahlst alles\nfür Miete.\n\nBamberg: verdienst\ngenauso gut, zahlst\ndie Hälfte, wohnst\nim UNESCO-Welterbe."
+    "text": "Großstadt: verdienst gut, zahlst alles für Miete.\n\nBamberg: verdienst auch gut, zahlst die Hälfte, wohnst im UNESCO-Welterbe."
   },
   "slide3": {
-    "text": "Work-Life-Balance\nfängt beim\nStudienort an.",
-    "button": "Und beim Rauchbier.\nAber das ist eine\npersönliche Meinung."
+    "text": "Work-Life-Balance:\nFängt beim Studienort an.",
+    "button": "Und beim Rauchbier.\nAber das ist eine persönliche Meinung."
   }
 }

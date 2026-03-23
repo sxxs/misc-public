@@ -4,15 +4,15 @@
   "accentColor": "#3B82F6",
   "isAd": true,
   "slide1": {
-    "bigText": "Reicht.",
-    "smallText": "Wenn du in Mathe eine 3 hast:"
+    "bigText": "Geht.",
+    "smallText": "Informatik mit einer 3 in Mathe?"
   },
   "slide2": {
-    "text": "Informatik-Mathe ist\nnicht Schul-Mathe.\n\nDurchbeißen zählt\nmehr als Talent."
+    "text": "Informatik-Mathe ist nicht Schul-Mathe.\n\nDurchbeißen zählt mehr als Talent."
   },
   "slide3": {
     "text": "Durchbeißen > Talent.\nJeden Tag.",
-    "button": "Alle Bachelor an der WIAI\nsind zulassungsfrei.\nDein Schnitt ist egal. Wirklich.",
-    "url": "wiai25.de"
+    "button": "Alle Bachelor an der WIAI sind zulassungsfrei. Dein Schnitt ist egal. Wirklich.",
+    "url": "studium.wiai.uni-bamberg.de"
   }
 }

@@ -5,12 +5,14 @@
   "isAd": false,
   "timing": { "variant": "through", "act1Duration": 100, "subtextStartFrame": 50, "absenderStartFrame": 120 },
   "slide1": {
-    "smallText": "Andere Fakultäten:\nRedaktionsplan,\nAgentur,\nContent-Strategie."
+    "bigText": "Haben\nandere\nUnis.",
+    "smallText": "Redaktionsplan, Agentur, Content-Strategie."
   },
   "slide2": {
-    "text": "Wir: Ein Dekan\nmit Handy und dem\nGefühl dass diese\nFakultät zu gut ist\nfür Pressemittei-\nlungen."
+    "text": "Was wir haben:\nEinen Dekan mit Handy und dem Gefühl, dass diese Fakultät mehr Sichtbarkeit verdient."
   },
   "slide3": {
-    "text": "Homemade seit 2026.\nFolgt auf\neigene Gefahr."
+    "text": "Made in Bamberg.\nSince … äh, heute.",
+    "button": "Folgt uns.\n\nFür Takes, die niemand bestellt hat."
   }
 }

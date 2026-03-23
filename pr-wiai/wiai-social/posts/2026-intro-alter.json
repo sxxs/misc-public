@@ -5,13 +5,14 @@
   "isAd": false,
   "timing": { "variant": "through-scratch", "act1Duration": 150 },
   "slide1": {
-    "smallText": "Durchschnittsalter\nder Person, die dieses Video\n gemacht hat:\n43."
+    "bigText": "43.",
+    "smallText": "Durchschnittsalter der Person, die dieses Video gemacht hat."
   },
   "slide2": {
-    "text": "Durchschnittsalter\nder Leute die es\nsehen sollen: 18."
+    "text": "Durchschnittsalter der Leute, die es sehen werden:\n\n18."
   },
   "slide3": {
-    "text": "Wenn das kein\nKommunikations-\nproblem ist, weiß\nich auch nicht.\nAber Probleme lösen ist, was ich mache.",
+    "text": "Wenn das kein Kommunikationsproblem ist, weiß ich auch nicht.\n\nAber Probleme lösen ist, was ich mache.",
     "button": "Auch dieses hier.\nIrgendwie."
   }
 }

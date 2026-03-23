@@ -167,7 +167,7 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
         {/* Setup quote — per-line bounding boxes, content-width */}
         {post.slide1.smallText && (
           <div style={{ opacity: quoteOpacity, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 0 }}>
-            {`\u201C${post.slide1.smallText}\u201D`.split("\n").map((line, i) => (
+            {post.slide1.smallText.split("\n").map((line, i) => (
               <div
                 key={i}
                 style={{
@@ -190,16 +190,20 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
         )}
 
         {/* Contrarian reaction — auto-scaled to fit available width (732px) */}
-        {post.slide1.bigText && (
-          <div style={{ opacity: bigOpacity }}>
-            <GlitchText
-              text={post.slide1.bigText}
-              fontSize={Math.min(240, Math.floor(700 / (post.slide1.bigText.length * 0.52)))}
-              glitchStartFrame={46}
-              glitchEndFrame={58}
-            />
-          </div>
-        )}
+        {post.slide1.bigText && (() => {
+          const maxLineLen = Math.max(...post.slide1.bigText.split("\n").map(l => l.length), 1);
+          const bigFontSize = Math.min(240, Math.floor(700 / (maxLineLen * 0.52)));
+          return (
+            <div style={{ opacity: bigOpacity }}>
+              <GlitchText
+                text={post.slide1.bigText}
+                fontSize={bigFontSize}
+                glitchStartFrame={46}
+                glitchEndFrame={58}
+              />
+            </div>
+          );
+        })()}
       </div>
     </SlideFrame>
   );

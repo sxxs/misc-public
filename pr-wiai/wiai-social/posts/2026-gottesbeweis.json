@@ -5,14 +5,14 @@
   "isAd": false,
   "timing": { "variant": "through-scratch", "act1Duration": 225 },
   "slide1": {
-    "bigText": "Korrekt.",
-    "smallText": "1931: Gödel schreibt\neinen logischen\nBeweis für die\nExistenz Gottes."
+    "bigText": "OK.",
+    "smallText": "1931:\nGödel schreibt einen logischen Beweis.\n\nFür die Existenz Gottes."
   },
   "slide2": {
-    "text": "2013: Ein Computer\nin Bamberg überprüft\nden Beweis.\nKein Fehler.\n\nDazwischen:\n82 Jahre und die\nFrage ob Maschinen\ndenken können."
+    "text": "2013:\nEin Bamberger Prof. überprüft den Beweis mit einem Programm. Kein Fehler.\n\nDazwischen:\n82 Jahre und\ndie Frage ob Maschinen\ndenken können."
   },
   "slide3": {
-    "text": "An der WIAI\nerforscht man\nsolche Fragen.\nMit Computern.\nUnd mit Kaffee.",
-    "button": "Ob Gott existiert\nwissen wir immer\nnoch nicht.\nAber die Logik stimmt."
+    "text": "An der WIAI erforscht man solche Fragen. Mit Computern. Und Kaffee.",
+    "button": "Ob Gott existiert, wissen wir immer noch nicht. Aber die Logik stimmt."
   }
 }
