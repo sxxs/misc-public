@@ -1,0 +1,18 @@
+{
+  "id": "2026-akinator",
+  "type": "contrarian",
+  "accentColor": "#22C55E",
+  "isAd": false,
+  "timing": { "variant": "through" },
+  "slide1": {
+    "bigText": "Logik.",
+    "smallText": "Warum errät Akinator\nimmer welche Person du meinst?"
+  },
+  "slide2": {
+    "text": "Weil jede Frage die Hälfte\nder Möglichkeiten eliminiert.\n\n20 Ja/Nein-Fragen reichen\nfür über eine Million Personen.\nDas Prinzip heißt Entscheidungsbaum."
+  },
+  "slide3": {
+    "text": "Informatik ist nicht Magie.\nEs ist Logik die sich\nwie Magie anfühlt.",
+    "button": "Das lernst du in Woche 3\ndes Informatikstudiums.\nAb Woche 4 wird es noch besser."
+  }
+}

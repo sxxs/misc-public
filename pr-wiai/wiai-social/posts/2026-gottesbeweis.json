@@ -1,0 +1,18 @@
+{
+  "id": "2026-gottesbeweis",
+  "type": "contrarian",
+  "accentColor": "#8B5CF6",
+  "isAd": false,
+  "timing": { "variant": "through-scratch", "act1Duration": 225 },
+  "slide1": {
+    "bigText": "Korrekt.",
+    "smallText": "1931: Gödel schreibt einen\nlogischen Beweis für die\nExistenz Gottes."
+  },
+  "slide2": {
+    "text": "2013: Ein Computer in Bamberg\nüberprüft den Beweis.\nKein Fehler.\n\nDazwischen: 82 Jahre\nund die Frage ob Maschinen\ndenken können."
+  },
+  "slide3": {
+    "text": "An der WIAI erforscht\nman solche Fragen.\nMit Computern.\nUnd mit Kaffee.",
+    "button": "Ob Gott existiert wissen\nwir immer noch nicht.\nAber die Logik stimmt."
+  }
+}

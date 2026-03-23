@@ -18,7 +18,7 @@ interface Props {
 }
 
 export const PunchlineSlide: React.FC<Props> = ({
-  accentColor, text, button, übrigensText, url, showAbsender = false, totalDuration,
+  accentColor, text, button, übrigensText, url, showAbsender = true, totalDuration,
   subtextStartFrame = 52, absenderStartFrame = 82,
 }) => {
   const frame = useCurrentFrame();

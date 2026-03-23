@@ -1,0 +1,18 @@
+{
+  "id": "2026-ki-bald",
+  "type": "contrarian",
+  "accentColor": "#FACC15",
+  "isAd": false,
+  "timing": { "variant": "through-scratch" },
+  "slide1": {
+    "bigText": "Und?",
+    "smallText": "Es wird ja immer gesagt:\nDas kann doch bald jeder mit KI."
+  },
+  "slide2": {
+    "text": "Stimmt. Jeder kann mit KI\nein Bild generieren und\neine App zusammenklicken.\n\nGenauso wie jeder ein\nFertighaus bestellen kann.\nTrotzdem gibt es Architekten."
+  },
+  "slide3": {
+    "text": "Der Unterschied zwischen\nbenutzen und verstehen bleibt.\nEgal wie gut das Tool wird.",
+    "button": "Folgt für mehr\n\"Es wird ja immer gesagt\"."
+  }
+}

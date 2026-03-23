@@ -1,0 +1,18 @@
+{
+  "id": "2026-handfest",
+  "type": "contrarian",
+  "accentColor": "#F97316",
+  "isAd": false,
+  "timing": { "variant": "through-scratch" },
+  "slide1": {
+    "bigText": "Stimmt.",
+    "smallText": "Es wird ja immer gesagt:\nLern lieber was Handfestes."
+  },
+  "slide2": {
+    "text": "Dein Schreiner benutzt CAD-Software.\nDein Bäcker hat ein Warenwirtschaftssystem.\nDein Friseur braucht ein Buchungstool.\n\nRate mal wer das alles baut."
+  },
+  "slide3": {
+    "text": "Informatik ist nicht das\nGegenteil von handfest.\nInformatik macht\nHandfestes möglich.",
+    "button": "Außerdem: Holz anfassen\nkönnen wir auch.\nWir sind in Franken."
+  }
+}

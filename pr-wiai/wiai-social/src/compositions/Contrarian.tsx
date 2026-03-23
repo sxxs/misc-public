@@ -213,7 +213,6 @@ const Act3: React.FC<{ post: Post; dur: number }> = ({ post, dur }) => {
         button={post.slide3.button}
         übrigensText={post.slide3.übrigensText}
         url={post.slide3.url}
-        showAbsender={post.isAd}
         totalDuration={dur}
         subtextStartFrame={80}
         absenderStartFrame={155}
