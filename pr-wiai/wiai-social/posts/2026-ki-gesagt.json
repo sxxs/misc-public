@@ -1,0 +1,17 @@
+{
+  "id": "2026-ki-gesagt",
+  "type": "contrarian",
+  "accentColor": "#FACC15",
+  "isAd": false,
+  "slide1": {
+    "bigText": "Naja.",
+    "smallText": "Es wird ja immer gesagt:\nKI nimmt uns die Jobs weg."
+  },
+  "slide2": {
+    "text": "Richtig ist:\nKI verändert Jobs.\n\nDie Frage ist:\nBist du die Person, die etwas verändert\noder die, die verändert wird?"
+  },
+  "slide3": {
+    "text": "Der Unterschied:\nVerstehst du\nwas passiert\noder nicht?",
+    "button": "Folgt für mehr\n“Es wird ja immer gesagt”."
+  }
+}

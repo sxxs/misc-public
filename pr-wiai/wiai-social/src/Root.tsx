@@ -2,66 +2,20 @@ import React from "react";
 import { Composition } from "remotion";
 import { WiaiPost } from "./compositions/WiaiPost";
 import { Post } from "./types";
+import { computeAct2Duration } from "./utils/timing";
 
-const kiPost: Post = {
-  id: "2026-03-21-ki-jobs",
-  type: "newsjacking",
-  category: "KI",
-  accentColor: "#FACC15",
-  slide1: {
-    image: "./assets/screenshots/some-news-on-ki.png",
-    bigText: "Tja.",
-    smallText: "Alle paar Monate erklärt jemand die Informatik für tot.",
-  },
-  slide2: {
-    text: "Panik ist das\nGeschäftsmodell\nmancher Leute.\n\nFür uns ist das\nein Studienfach.",
-  },
-  slide3: {
-    text: "Wer KI versteht,\nbaut sie.",
-    button: "Informatik in Bamberg. Kein NC.",
-  },
-};
+// ── Post data — single source of truth: edit the JSON files in posts/ ─────────
+import contrarianoerhaengePost from "../posts/contrarian-vorhange.json";
+import mathe3Post               from "../posts/2026-mathe3.json";
+import kiGesagtPost             from "../posts/2026-ki-gesagt.json";
+import passtNichtPost           from "../posts/2026-passt-nicht.json";
+import bambirdsPost             from "../posts/2026-bambirds.json";
+import kiFailsPost              from "../posts/2026-ki-fails.json";
+import kiJobsPost               from "../posts/2026-03-21-ki-jobs.json";
+import nachtgedankePost         from "../posts/test-nachtgedanke.json";
+import witzPost                 from "../posts/test-witz.json";
 
-const nachtgedankePost: Post = {
-  id: "test-nachtgedanke",
-  type: "nachtgedanke",
-  slide1: { time: "23:47", bigText: "" },
-  slide2: {
-    text: "Du musst nicht wissen\nwas du mit deinem Leben\nmachen willst.\n\nDu musst nur wissen\nwas du nächstes Semester\nausprobieren willst.\n\nDer Rest ergibt sich.\nOder auch nicht.\nBeides ist okay.",
-  },
-  slide3: {
-    text: "Geht vorbei. Meistens.",
-  },
-};
-
-const contrarianoerhaengePost: Post = {
-  id: "contrarian-vorhange",
-  type: "contrarian",
-  accentColor: "#FACC15",
-  slide1: {
-    bigText: "Aha.",
-    smallText: "Ich hab nichts zu verbergen.",
-  },
-  slide2: {
-    text: "Du hast Vorhänge\nan deinen Fenstern.",
-  },
-  slide3: {
-    text: "Merkste selber, oder?",
-    button: "Folgt für mehr davon.",
-  },
-};
-
-const witzPost: Post = {
-  id: "test-witz",
-  type: "witz",
-  slide1: { bigText: "WER IST CLEVER\nUND SITZT NICHT\nIM HÖRSAAL?" },
-  slide2: {
-    text: "Tim.\n\nTim studiert an der WIAI.\nDa geht das oft auch\nvon zu Hause aus.",
-  },
-  slide3: {
-    text: "Flexibel studieren.\nWie Tim.",
-  },
-};
+const contrarianDuration = (post: Post) => 150 + computeAct2Duration(post.slide2.text) + 295;
 
 export const Root: React.FC = () => (
   <>
@@ -72,7 +26,7 @@ export const Root: React.FC = () => (
       fps={30}
       width={1080}
       height={1920}
-      defaultProps={kiPost}
+      defaultProps={kiJobsPost as unknown as Post}
     />
     <Composition
       id="WiaiPost-nachtgedanke"
@@ -81,7 +35,7 @@ export const Root: React.FC = () => (
       fps={30}
       width={1080}
       height={1920}
-      defaultProps={nachtgedankePost}
+      defaultProps={nachtgedankePost as unknown as Post}
     />
     <Composition
       id="WiaiPost-witz"
@@ -90,16 +44,61 @@ export const Root: React.FC = () => (
       fps={30}
       width={1080}
       height={1920}
-      defaultProps={witzPost}
+      defaultProps={witzPost as unknown as Post}
     />
     <Composition
       id="WiaiPost-contrarian"
       component={WiaiPost as unknown as React.ComponentType<Record<string, unknown>>}
-      durationInFrames={450}
+      durationInFrames={contrarianDuration(contrarianoerhaengePost as unknown as Post)}
       fps={30}
       width={1080}
       height={1920}
-      defaultProps={contrarianoerhaengePost}
+      defaultProps={contrarianoerhaengePost as unknown as Post}
+    />
+    <Composition
+      id="WiaiPost-mathe3"
+      component={WiaiPost as unknown as React.ComponentType<Record<string, unknown>>}
+      durationInFrames={contrarianDuration(mathe3Post as unknown as Post)}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={mathe3Post as unknown as Post}
+    />
+    <Composition
+      id="WiaiPost-ki-gesagt"
+      component={WiaiPost as unknown as React.ComponentType<Record<string, unknown>>}
+      durationInFrames={contrarianDuration(kiGesagtPost as unknown as Post)}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={kiGesagtPost as unknown as Post}
+    />
+    <Composition
+      id="WiaiPost-passt-nicht"
+      component={WiaiPost as unknown as React.ComponentType<Record<string, unknown>>}
+      durationInFrames={contrarianDuration(passtNichtPost as unknown as Post)}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={passtNichtPost as unknown as Post}
+    />
+    <Composition
+      id="WiaiPost-bambirds"
+      component={WiaiPost as unknown as React.ComponentType<Record<string, unknown>>}
+      durationInFrames={contrarianDuration(bambirdsPost as unknown as Post)}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={bambirdsPost as unknown as Post}
+    />
+    <Composition
+      id="WiaiPost-ki-fails"
+      component={WiaiPost as unknown as React.ComponentType<Record<string, unknown>>}
+      durationInFrames={contrarianDuration(kiFailsPost as unknown as Post)}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={kiFailsPost as unknown as Post}
     />
   </>
 );

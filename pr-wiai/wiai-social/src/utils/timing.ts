@@ -32,7 +32,7 @@ export function computeAct2Duration(
   text: string,
   startFrame = 10,
   framesPerLine = 3,
-  readingBuffer = 80
+  readingBuffer = 130
 ): number {
   const lines = parseTypewriterLines(text);
   const typewriterFrames = lines.reduce(
@@ -40,6 +40,21 @@ export function computeAct2Duration(
     0
   );
   return Math.max(90, startFrame + typewriterFrames + readingBuffer);
+}
+
+// Compute how many frames Act3 needs based on text length.
+// Formula: max(150, 150 + 4f/punchline-word + 3f/button-word)
+// → "Merkste selber, oder?" (3w) + 13-word button ≈ 201f
+// → 5-word punchline + 4-word button ≈ 182f
+// → 3-word punchline, no button ≈ 162f
+export function computeAct3Duration(
+  punchlineText: string,
+  buttonText?: string,
+  übrigensText?: string
+): number {
+  const pWords = punchlineText.trim().split(/\s+/).filter(Boolean).length;
+  const bWords = (buttonText ?? übrigensText ?? "").trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(150, 150 + pWords * 4 + bWords * 3);
 }
 
 export const STILL_FRAMES = {

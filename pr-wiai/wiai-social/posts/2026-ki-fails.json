@@ -1,0 +1,17 @@
+{
+  "id": "2026-ki-fails",
+  "type": "contrarian",
+  "accentColor": "#F0EDE8",
+  "isAd": false,
+  "slide1": {
+    "bigText": "Jaja.",
+    "smallText": "KI übernimmt die Weltherrschaft."
+  },
+  "slide2": {
+    "text": "Aktueller Stand:\nRoomba fällt die Treppe runter.\nTesla bremst vor Schatten.\nChatGPT erfindet Gerichtsurteile."
+  },
+  "slide3": {
+    "text": "Bis zur Weltherrschaft\ndauert es wohl noch\nein bisschen.",
+    "button": "Trotzdem: Verstehen wie es funktioniert\nist keine schlechte Idee.\nUnd immer freundlich zu ChatGPT.\nSicher ist sicher."
+  }
+}

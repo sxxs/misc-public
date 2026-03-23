@@ -1,0 +1,17 @@
+{
+  "id": "2026-bambirds",
+  "type": "contrarian",
+  "accentColor": "#FACC15",
+  "isAd": false,
+  "slide1": {
+    "bigText": "Dreimal.",
+    "smallText": "Angry Birds. KI. Weltmeister."
+  },
+  "slide2": {
+    "text": "Bamberger Studierende haben\neine KI gebaut die Angry Birds spielt.\n\nDreimal Weltmeister\nbei der wichtigsten KI-Konferenz."
+  },
+  "slide3": {
+    "text": "Gestartet als\nSpaßprojekt.\nJetzt nützlich für\nRobotik-Forschung.",
+    "button": "Studierende. Kein Budget. Drei Titel.\nKomische Sachen passieren\nan der WIAI in Bamberg."
+  }
+}

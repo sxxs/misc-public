@@ -11,6 +11,7 @@ export interface Post {
   type: PostType;
   category?: string;
   accentColor?: string;
+  isAd?: boolean;        // opt-in: shows absender/footer on S3 (default: hidden)
   slide1: {
     image?: string;
     time?: string;
@@ -22,8 +23,9 @@ export interface Post {
     text: string;
   };
   slide3: {
-    text: string;      // S3 punchline/closing beat
-    button?: string;   // optional dimmed follow-up (comedian's tag)
-    url?: string;      // optional, not displayed by default
+    text: string;          // S3 punchline/closing beat
+    button?: string;       // optional: comedian's follow-up tag (no label, inline)
+    übrigensText?: string; // optional: aside with "ÜBRIGENS…" label — alternative to button
+    url?: string;          // optional: small CTA URL below button/übrigensText
   };
 }

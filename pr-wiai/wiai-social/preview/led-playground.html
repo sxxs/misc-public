@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LED Wall Playground · WIAI Social</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #111;
+      color: #ddd;
+      font-family: 'Space Mono', 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 24px 32px;
+      gap: 20px;
+    }
+
+    header { display: flex; align-items: baseline; gap: 20px; }
+    header h1 { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #FACC15; }
+    header span { font-size: 10px; color: #555; letter-spacing: 0.05em; }
+
+    .workspace { display: flex; gap: 28px; align-items: flex-start; }
+
+    .controls { flex-shrink: 0; width: 260px; display: flex; flex-direction: column; gap: 18px; }
+
+    .ctrl-group { display: flex; flex-direction: column; gap: 6px; }
+    .ctrl-label { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: #666; }
+
+    .radio-row { display: flex; gap: 6px; }
+    .rbtn {
+      flex: 1; padding: 7px 4px;
+      background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 3px;
+      color: #888; font-size: 10px; font-family: inherit; cursor: pointer;
+      text-align: center; transition: all 0.1s; letter-spacing: 0.04em;
+    }
+    .rbtn:hover { border-color: #444; color: #ccc; }
+    .rbtn.active { background: #FACC15; border-color: #FACC15; color: #0a0a0a; font-weight: 700; }
+
+    .range-row { display: flex; align-items: center; gap: 10px; }
+    input[type=range] { flex: 1; height: 3px; accent-color: #FACC15; cursor: pointer; }
+    .range-val { font-size: 11px; color: #FACC15; min-width: 40px; text-align: right; }
+
+    .divider { border: none; border-top: 1px solid #222; }
+    .hint { font-size: 9px; color: #444; line-height: 1.6; letter-spacing: 0.03em; }
+
+    #preview-wrap {
+      position: relative; overflow: hidden;
+      border: 1px solid #2a2a2a; border-radius: 4px; background: #0a0a0a;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>LED Wall Playground</h1>
+  <span>WIAI Social · 1080×1920 @ 34%</span>
+</header>
+
+<div class="workspace">
+
+  <div class="controls">
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">Slide Mode</div>
+      <div class="radio-row">
+        <button class="rbtn active" data-group="mode" data-val="s1">S1 Mixed</button>
+        <button class="rbtn" data-group="mode" data-val="s2">S2 Dim</button>
+        <button class="rbtn" data-group="mode" data-val="s3">S3 Bright</button>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">Glitch auf LED Wall</div>
+      <div class="radio-row">
+        <button class="rbtn active" data-group="glitch" data-val="off">Off</button>
+        <button class="rbtn" data-group="glitch" data-val="subtle">Subtle</button>
+        <button class="rbtn" data-group="glitch" data-val="intense">Intense</button>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">Bounding Box Opacity</div>
+      <div class="range-row">
+        <input type="range" id="bbox-opacity" min="0" max="95" value="72">
+        <span class="range-val" id="bbox-val">72%</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">Bounding Box Style</div>
+      <div class="radio-row">
+        <button class="rbtn active" data-group="bboxstyle" data-val="per-line">Per Line</button>
+        <button class="rbtn" data-group="bboxstyle" data-val="block">Block</button>
+        <button class="rbtn" data-group="bboxstyle" data-val="none">None</button>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">Overlay Darkness</div>
+      <div class="range-row">
+        <input type="range" id="overlay-dark" min="30" max="95" value="75">
+        <span class="range-val" id="overlay-val">75%</span>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">Text Content</div>
+      <div class="radio-row">
+        <button class="rbtn active" data-group="content" data-val="contrarian">Contrarian</button>
+        <button class="rbtn" data-group="content" data-val="ki">KI Jobs</button>
+        <button class="rbtn" data-group="content" data-val="witz">Witz</button>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">Absender / Footer</div>
+      <div class="radio-row">
+        <button class="rbtn" data-group="footer" data-val="show">Show</button>
+        <button class="rbtn active" data-group="footer" data-val="hide">Hide</button>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">Accent Color</div>
+      <div class="radio-row">
+        <button class="rbtn active" data-group="accent" data-val="#FACC15">Yellow</button>
+        <button class="rbtn" data-group="accent" data-val="#3B82F6">Blue</button>
+        <button class="rbtn" data-group="accent" data-val="#EF4444">Red</button>
+        <button class="rbtn" data-group="accent" data-val="#ffffff">White</button>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <p class="hint">
+      S2 = alle LEDs dunkel (nur Glow)<br>
+      S3 = alle LEDs hell + Bounding Boxes<br>
+      Glitch = chromatische Aberration<br>
+      Per Line = eine Box pro Textzeile
+    </p>
+
+  </div>
+
+  <div id="preview-wrap"></div>
+
+</div>
+
+<script>
+// ── Constants ──────────────────────────────────────────────────
+const SVG_W = 1080, SVG_H = 1920, SCALE = 0.34;
+const COLS = 24, ROWS = 48, CELL_W = 45, CELL_H = 40, LED_W = 38, LED_H = 33;
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+const CONTENT = {
+  contrarian: { lines: ['Merkste selber, oder?'], subtext: 'Folgt für mehr davon.' },
+  ki:         { lines: ['Wer KI versteht,', 'baut sie.'], subtext: 'Informatik in Bamberg. Kein NC.' },
+  witz:       { lines: ['Flexibel studieren.', 'Wie Tim.'], subtext: null },
+};
+
+// ── State ──────────────────────────────────────────────────────
+const state = {
+  mode: 's1', glitch: 'off', bboxOpacity: 0.72, bboxstyle: 'per-line',
+  overlayDark: 0.75, content: 'contrarian', footer: 'hide', accent: '#FACC15',
+};
+
+// ── Pre-compute LED data ───────────────────────────────────────
+const N = ROWS * COLS;
+const hashes = new Float32Array(N);
+const blinkPhases = new Float32Array(N);
+for (let row = 0; row < ROWS; row++) {
+  for (let col = 0; col < COLS; col++) {
+    const i = row * COLS + col;
+    const n = Math.sin(row * 127.1 + col * 311.7) * 43758.5453;
+    hashes[i] = n - Math.floor(n);
+    blinkPhases[i] = (Math.sin(row * 7.11 + col * 3.17) * 43758.5) % (Math.PI * 2);
+  }
+}
+
+// ── Build DOM ─────────────────────────────────────────────────
+const wrap = document.getElementById('preview-wrap');
+wrap.style.width  = Math.round(SVG_W * SCALE) + 'px';
+wrap.style.height = Math.round(SVG_H * SCALE) + 'px';
+
+// SVG
+const svg = document.createElementNS(SVG_NS, 'svg');
+svg.setAttribute('width', SVG_W);
+svg.setAttribute('height', SVG_H);
+svg.style.cssText = `position:absolute;top:0;left:0;transform:scale(${SCALE});transform-origin:top left;`;
+
+// Defs + filters
+const defs = document.createElementNS(SVG_NS, 'defs');
+
+function makeFilter(id, matrix) {
+  const f = document.createElementNS(SVG_NS, 'filter');
+  f.id = id;
+  const cm = document.createElementNS(SVG_NS, 'feColorMatrix');
+  cm.setAttribute('type', 'matrix');
+  cm.setAttribute('values', matrix);
+  f.appendChild(cm);
+  return f;
+}
+
+const glowFilter = document.createElementNS(SVG_NS, 'filter');
+glowFilter.id = 'led-glow';
+glowFilter.setAttribute('x', '-20%'); glowFilter.setAttribute('y', '-20%');
+glowFilter.setAttribute('width', '140%'); glowFilter.setAttribute('height', '140%');
+const glowBlur = document.createElementNS(SVG_NS, 'feGaussianBlur');
+glowBlur.setAttribute('stdDeviation', '5'); glowBlur.setAttribute('result', 'blur');
+const glowMerge = document.createElementNS(SVG_NS, 'feMerge');
+['blur', 'SourceGraphic'].forEach(src => {
+  const mn = document.createElementNS(SVG_NS, 'feMergeNode');
+  mn.setAttribute('in', src);
+  glowMerge.appendChild(mn);
+});
+glowFilter.appendChild(glowBlur); glowFilter.appendChild(glowMerge);
+
+defs.appendChild(glowFilter);
+defs.appendChild(makeFilter('glitch-red',  '3 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0'));
+defs.appendChild(makeFilter('glitch-cyan', '0 0 0 0 0  0 3 0 0 0  0 0 3 0 0  0 0 0 1 0'));
+svg.appendChild(defs);
+
+// LED groups
+const ledGroup  = document.createElementNS(SVG_NS, 'g');
+ledGroup.setAttribute('filter', 'url(#led-glow)');
+
+const redGroup  = document.createElementNS(SVG_NS, 'g');
+redGroup.setAttribute('filter', 'url(#glitch-red)');
+redGroup.style.cssText = 'opacity:0;mix-blend-mode:screen;';
+
+const cyanGroup = document.createElementNS(SVG_NS, 'g');
+cyanGroup.setAttribute('filter', 'url(#glitch-cyan)');
+cyanGroup.style.cssText = 'opacity:0;mix-blend-mode:screen;';
+
+const rects = [], redRects = [], cyanRects = [];
+for (let row = 0; row < ROWS; row++) {
+  for (let col = 0; col < COLS; col++) {
+    const x = col * CELL_W + (CELL_W - LED_W) / 2;
+    const y = row * CELL_H + (CELL_H - LED_H) / 2;
+    [[ledGroup, rects], [redGroup, redRects], [cyanGroup, cyanRects]].forEach(([grp, arr]) => {
+      const r = document.createElementNS(SVG_NS, 'rect');
+      r.setAttribute('x', x); r.setAttribute('y', y);
+      r.setAttribute('width', LED_W); r.setAttribute('height', LED_H);
+      r.setAttribute('fill', state.accent); r.setAttribute('opacity', '0.03');
+      grp.appendChild(r); arr.push(r);
+    });
+  }
+}
+svg.appendChild(ledGroup); svg.appendChild(redGroup); svg.appendChild(cyanGroup);
+
+// Overlay div (dark gradient)
+const overlay = document.createElement('div');
+overlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:2;';
+
+// Text wrap (1080×1920 coordinate space, scaled)
+const textWrap = document.createElement('div');
+textWrap.style.cssText = [
+  'position:absolute', 'top:0', 'left:0', 'z-index:3',
+  `width:${SVG_W}px`, `height:${SVG_H}px`,
+  `transform:scale(${SCALE})`, 'transform-origin:top left',
+  'pointer-events:none',
+].join(';');
+
+wrap.appendChild(svg); wrap.appendChild(overlay); wrap.appendChild(textWrap);
+
+// ── Helpers ───────────────────────────────────────────────────
+function clearChildren(el) {
+  while (el.firstChild) el.removeChild(el.firstChild);
+}
+
+function el(tag, styles, text) {
+  const d = document.createElement(tag);
+  if (styles) Object.assign(d.style, styles);
+  if (text !== undefined) d.textContent = text;
+  return d;
+}
+
+// ── LED opacity ────────────────────────────────────────────────
+function getLedOpacity(hash, phase, mode, frame) {
+  if (mode === 's2') return 0.03;
+  if (mode === 's3') {
+    if (hash < 0.08) return ((Math.sin(frame * 0.1 + phase) + 1) / 2) * 0.30 + 0.62;
+    return 0.78;
+  }
+  // s1 default
+  if (hash < 0.65) return 0.03;
+  if (hash < 0.80) return ((Math.sin(frame * 0.08 + phase) + 1) / 2) * 0.48 + 0.04;
+  return 0.55;
+}
+
+// ── Dark overlay gradient ──────────────────────────────────────
+function updateOverlay() {
+  const d = state.overlayDark;
+  const c = v => Math.min(1, Math.max(0, v)).toFixed(2);
+  overlay.style.background = `linear-gradient(to bottom,
+    rgba(10,10,10,${c(d * 0.96)}) 0%,
+    rgba(10,10,10,${c(d * 0.83)}) 30%,
+    rgba(10,10,10,${c(d * 1.04)}) 60%,
+    rgba(10,10,10,${c(d * 1.17)}) 85%)`;
+}
+
+// ── Text overlay ───────────────────────────────────────────────
+const FONT_GROTESK = "'Space Grotesk',system-ui,sans-serif";
+const FONT_MONO    = "'Space Mono','Courier New',monospace";
+
+function renderText() {
+  clearChildren(textWrap);
+
+  const c     = CONTENT[state.content];
+  const bop   = state.bboxOpacity.toFixed(2);
+  const bstyle = state.bboxstyle;
+  const bboxBg = `rgba(10,10,10,${bop})`;
+
+  // Outer container — matches PunchlineSlide layout
+  const container = el('div', {
+    position: 'absolute', inset: '0',
+    display: 'flex', flexDirection: 'column', justifyContent: 'center',
+    padding: '0 240px 400px 84px', gap: '44px',
+  });
+
+  // Main punchline block
+  const mainBlock = el('div', { display: 'flex', flexDirection: 'column', gap: '6px', alignSelf: 'flex-start' });
+
+  c.lines.forEach(line => {
+    const lineStyles = {
+      color: '#fff',
+      fontSize: '84px', fontWeight: '700', fontFamily: FONT_GROTESK,
+      lineHeight: '1.18', whiteSpace: 'nowrap',
+    };
+    if (bstyle === 'per-line') {
+      Object.assign(lineStyles, {
+        display: 'inline-block',
+        background: bboxBg,
+        padding: '10px 24px 12px',
+      });
+    } else if (bstyle === 'block') {
+      // handled below as wrapper
+    }
+    mainBlock.appendChild(el('div', lineStyles, line));
+  });
+
+  if (bstyle === 'block') {
+    mainBlock.style.background = bboxBg;
+    mainBlock.style.padding    = '24px 32px';
+  }
+
+  container.appendChild(mainBlock);
+
+  // Subtext
+  if (c.subtext) {
+    const subBg = bstyle !== 'none' ? bboxBg : 'transparent';
+    const subInner = el('div', {
+      display: 'inline-block', background: subBg, padding: '6px 24px 8px',
+      color: 'rgba(255,255,255,0.50)', fontSize: '48px', fontWeight: '700',
+      fontFamily: FONT_GROTESK, lineHeight: '1.35', whiteSpace: 'nowrap',
+    }, c.subtext);
+    container.appendChild(subInner);
+  }
+
+  textWrap.appendChild(container);
+
+  // Absender
+  if (state.footer === 'show') {
+    const absInner = el('div', {
+      display: 'inline-block', background: 'rgba(10,10,10,0.60)',
+      padding: '8px 18px', color: 'rgba(255,255,255,0.65)',
+      fontSize: '30px', fontFamily: FONT_MONO, fontWeight: '400', letterSpacing: '0.06em',
+    }, 'WIAI · Uni Bamberg · @herdom.bamberg');
+    const absDiv = el('div', { position: 'absolute', bottom: '400px', left: '84px' });
+    absDiv.appendChild(absInner);
+    textWrap.appendChild(absDiv);
+  }
+}
+
+// ── Accent update ──────────────────────────────────────────────
+function updateAccent() {
+  [...rects, ...redRects, ...cyanRects].forEach(r => r.setAttribute('fill', state.accent));
+}
+
+// ── Animation ──────────────────────────────────────────────────
+let frame = 0, lastTs = 0;
+let glitchActive = false, glitchFramesLeft = 0, glitchCooldown = 0, glitchShiftX = 0;
+
+function tick(ts) {
+  requestAnimationFrame(tick);
+  if (ts - lastTs < 33) return;
+  lastTs = ts;
+  frame++;
+
+  const mode = state.mode;
+  for (let i = 0; i < N; i++) {
+    rects[i].setAttribute('opacity', getLedOpacity(hashes[i], blinkPhases[i], mode, frame).toFixed(3));
+    if (glitchActive) {
+      const gop = (getLedOpacity(hashes[i], blinkPhases[i], mode, frame) * 0.7).toFixed(3);
+      redRects[i].setAttribute('opacity', gop);
+      cyanRects[i].setAttribute('opacity', gop);
+    }
+  }
+
+  const gmode = state.glitch;
+  if (gmode === 'off') {
+    if (glitchActive) { glitchActive = false; redGroup.style.opacity = '0'; cyanGroup.style.opacity = '0'; }
+    return;
+  }
+
+  const cooldown  = gmode === 'subtle' ? 95  : 50;
+  const burst     = gmode === 'subtle' ? 7   : 14;
+  const maxShift  = gmode === 'subtle' ? 8   : 22;
+  const peakAlpha = gmode === 'subtle' ? 0.22 : 0.45;
+
+  if (!glitchActive) {
+    if (++glitchCooldown >= cooldown) {
+      glitchActive = true; glitchFramesLeft = burst; glitchCooldown = 0;
+      glitchShiftX = Math.sin(frame * 7.3) * maxShift;
+    }
+  }
+
+  if (glitchActive) {
+    const progress = glitchFramesLeft / burst;
+    const t = burst - glitchFramesLeft;
+    const sx = (Math.sin(t * 11.7) * glitchShiftX).toFixed(1);
+    const sy = (Math.sin(t * 5.1) * 3).toFixed(1);
+    redGroup.setAttribute('transform', `translate(${sx}, ${sy})`);
+    cyanGroup.setAttribute('transform', `translate(${-(sx * 0.75)}, ${-sy})`);
+    redGroup.style.opacity  = (peakAlpha * progress).toFixed(3);
+    cyanGroup.style.opacity = (peakAlpha * 0.85 * progress).toFixed(3);
+    if (--glitchFramesLeft <= 0) {
+      glitchActive = false; redGroup.style.opacity = '0'; cyanGroup.style.opacity = '0';
+    }
+  }
+}
+requestAnimationFrame(tick);
+
+// ── Initial render ─────────────────────────────────────────────
+renderText();
+updateOverlay();
+
+// ── Controls wiring ────────────────────────────────────────────
+document.querySelectorAll('.rbtn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const { group, val } = btn.dataset;
+    document.querySelectorAll(`.rbtn[data-group="${group}"]`).forEach(b => b.classList.toggle('active', b === btn));
+    state[group] = val;
+    if (group === 'accent') updateAccent();
+    if (['content', 'footer', 'bboxstyle'].includes(group)) renderText();
+    if (group === 'glitch' && val === 'off') { redGroup.style.opacity = '0'; cyanGroup.style.opacity = '0'; }
+  });
+});
+
+document.getElementById('bbox-opacity').addEventListener('input', e => {
+  state.bboxOpacity = Number(e.target.value) / 100;
+  document.getElementById('bbox-val').textContent = e.target.value + '%';
+  renderText();
+});
+
+document.getElementById('overlay-dark').addEventListener('input', e => {
+  state.overlayDark = Number(e.target.value) / 100;
+  document.getElementById('overlay-val').textContent = e.target.value + '%';
+  updateOverlay();
+});
+</script>
+
+</body>
+</html>
