@@ -1,0 +1,16 @@
+{
+  "id": "2026-hackathon-nacht",
+  "type": "contrarian",
+  "accentColor": "#F97316",
+  "timing": { "variant": "through-scratch" },
+  "slide1": {
+    "smallText": "Die beste Vorlesung die ich je gehalten habe war die in der ich nicht geredet habe."
+  },
+  "slide2": {
+    "text": "50 Leute haben an ihren Projekten gebaut, oder nur miteinander geredet, bis nach Mitternacht, freiwillig."
+  },
+  "slide3": {
+    "text": "Hackathon mit Pizza und gedimmtem Licht. Im ersten Semester. An der WIAI in Bamberg.",
+    "übrigensText": "53 Projekte bei der letzten Projektmesse. 50% mehr als im Vorjahr. Niemand hat sie dazu gezwungen."
+  }
+}

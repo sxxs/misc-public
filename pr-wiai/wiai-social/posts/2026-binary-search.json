@@ -1,0 +1,16 @@
+{
+  "id": "2026-binary-search",
+  "type": "contrarian",
+  "accentColor": "#FACC15",
+  "timing": { "variant": "through-scratch" },
+  "slide1": {
+    "smallText": "Lifehack den du schon kannst."
+  },
+  "slide2": {
+    "text": "WLAN geht nicht. Hälfte der Geräte ausschalten. Geht's? Andere Hälfte. Hälfte davon ausschalten. In 5 Schritten hast du das Problem."
+  },
+  "slide3": {
+    "text": "Das heißt Binary Search. Informatiker:innen nutzen das bei allem.",
+    "button": "Von der Fehlersuche im Code bis zur Frage welches Gewürz im Essen fehlt."
+  }
+}

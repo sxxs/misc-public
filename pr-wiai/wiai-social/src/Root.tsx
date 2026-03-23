@@ -37,6 +37,12 @@ import programmierikPost        from "../posts/2026-programmierik.json";
 import fakeStatistikPost        from "../posts/2026-fake-statistik.json";
 import ikeaPost                 from "../posts/2026-ikea.json";
 import metaManipulationPost     from "../posts/2026-meta-manipulation.json";
+import siliconValleyPost        from "../posts/2026-silicon-valley.json";
+import binarySearchPost         from "../posts/2026-binary-search.json";
+import informatikTrockenPost    from "../posts/2026-informatik-trocken.json";
+import hackathonNachtPost       from "../posts/2026-hackathon-nacht.json";
+import stoppHandyPost           from "../posts/2026-stopp-handy.json";
+import merksteSchulePost        from "../posts/2026-merkste-schule.json";
 
 // ── Duration helpers ──────────────────────────────────────────────────────────
 const TRACK_DURATION = 520; // track.mp3 ~17.3s at 30fps
@@ -118,6 +124,12 @@ export const Root: React.FC = () => (
     {cp("WiaiPost-fake-statistik",       fakeStatistikPost       as unknown as Post)}
     {cp("WiaiPost-ikea",                 ikeaPost                as unknown as Post)}
     {cp("WiaiPost-meta-manipulation",    metaManipulationPost    as unknown as Post)}
+    {cp("WiaiPost-silicon-valley",       siliconValleyPost      as unknown as Post)}
+    {cp("WiaiPost-binary-search",        binarySearchPost       as unknown as Post)}
+    {cp("WiaiPost-informatik-trocken",   informatikTrockenPost  as unknown as Post)}
+    {cp("WiaiPost-hackathon-nacht",      hackathonNachtPost     as unknown as Post)}
+    {cp("WiaiPost-stopp-handy",          stoppHandyPost         as unknown as Post)}
+    {cp("WiaiPost-merkste-schule",       merksteSchulePost      as unknown as Post)}
 
     {/* ── A/B experiments: timing overrides on existing posts ────────────── */}
     {/* These test different music variants without changing the post JSON.  */}
