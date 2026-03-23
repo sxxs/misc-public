@@ -28,7 +28,7 @@ export interface Post {
     image?: string;
     time?: string;
     label?: string;
-    bigText: string;
+    bigText?: string;
     smallText?: string;
   };
   slide2: {

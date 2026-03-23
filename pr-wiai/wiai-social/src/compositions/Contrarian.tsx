@@ -189,15 +189,17 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
           </div>
         )}
 
-        {/* Contrarian reaction — even bigger, time-offset */}
-        <div style={{ opacity: bigOpacity }}>
-          <GlitchText
-            text={post.slide1.bigText}
-            fontSize={240}
-            glitchStartFrame={46}
-            glitchEndFrame={58}
-          />
-        </div>
+        {/* Contrarian reaction — auto-scaled to fit available width (732px) */}
+        {post.slide1.bigText && (
+          <div style={{ opacity: bigOpacity }}>
+            <GlitchText
+              text={post.slide1.bigText}
+              fontSize={Math.min(240, Math.floor(700 / (post.slide1.bigText.length * 0.52)))}
+              glitchStartFrame={46}
+              glitchEndFrame={58}
+            />
+          </div>
+        )}
       </div>
     </SlideFrame>
   );
