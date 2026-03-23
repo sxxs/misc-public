@@ -1,0 +1,16 @@
+{
+  "id": "2026-ehrliche-apps",
+  "type": "contrarian",
+  "accentColor": "#F97316",
+  "timing": { "variant": "through-scratch" },
+  "slide1": {
+    "smallText": "Was wäre wenn jede App ehrlich wäre?"
+  },
+  "slide2": {
+    "text": "Instagram: 'Wir zeigen dir Dinge die dich süchtig machen.' TikTok: 'Wir wissen nach 3 Videos was du willst.' Google: 'Die ersten 3 Ergebnisse sind Werbung.'"
+  },
+  "slide3": {
+    "text": "Klingt dystopisch. Ist aber einfach nur der Status quo. Ohne das Marketing.",
+    "button": "Digital Literacy ist kein Schulfach. Sollte es sein."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "2026-maennerfach",
+  "type": "contrarian",
+  "accentColor": "#EC4899",
+  "timing": { "variant": "through-scratch" },
+  "slide1": {
+    "smallText": "Informatik ist ein Männerfach."
+  },
+  "slide2": {
+    "text": "In Malaysia: 50% Frauen. In Indien: 42%. In Deutschland: 22%. Das Problem ist nicht das Fach. Das Problem ist die Kultur drumherum."
+  },
+  "slide3": {
+    "text": "An der WIAI: 33%. Nicht perfekt. Aber Richtung stimmt."
+  }
+}

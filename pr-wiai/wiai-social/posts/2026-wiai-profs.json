@@ -1,0 +1,16 @@
+{
+  "id": "2026-wiai-profs",
+  "type": "contrarian",
+  "accentColor": "#3B82F6",
+  "timing": { "variant": "through" },
+  "slide1": {
+    "smallText": "Was WIAI-Profs vorher gemacht haben:"
+  },
+  "slide2": {
+    "text": "Twitter. Carnegie Mellon. Google. Microsoft Redmond. MIT. Mercedes-Benz. Bosch. New York, Boston, London, Zürich."
+  },
+  "slide3": {
+    "text": "Was sie jetzt machen: Bamberg. Und das ist kein Abstieg sondern eine Entscheidung.",
+    "button": "Die Entscheidung für Rauchbier fällt man nur einmal."
+  }
+}

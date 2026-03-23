@@ -25,6 +25,12 @@ import workLifePost             from "../posts/2026-work-life.json";
 import mietenRauchbierPost      from "../posts/2026-mieten-rauchbier.json";
 import chatgptKlausurPost       from "../posts/2026-chatgpt-klausur.json";
 import bulimieLernenPost        from "../posts/2026-bulimie-lernen.json";
+import taschenrechnerPost       from "../posts/2026-taschenrechner.json";
+import wiaiProfsPost            from "../posts/2026-wiai-profs.json";
+import maennerfachPost          from "../posts/2026-maennerfach.json";
+import tensorTournamentPost     from "../posts/2026-tensor-tournament.json";
+import ehrlicheAppsPost         from "../posts/2026-ehrliche-apps.json";
+import vorlesungNetflixPost     from "../posts/2026-vorlesung-netflix.json";
 
 // ── Duration helpers ──────────────────────────────────────────────────────────
 const TRACK_DURATION = 520; // track.mp3 ~17.3s at 30fps
@@ -94,6 +100,12 @@ export const Root: React.FC = () => (
     {cp("WiaiPost-mieten-rauchbier", mietenRauchbierPost    as unknown as Post)}
     {cp("WiaiPost-chatgpt-klausur", chatgptKlausurPost      as unknown as Post)}
     {cp("WiaiPost-bulimie-lernen",  bulimieLernenPost       as unknown as Post)}
+    {cp("WiaiPost-taschenrechner",  taschenrechnerPost     as unknown as Post)}
+    {cp("WiaiPost-wiai-profs",      wiaiProfsPost          as unknown as Post)}
+    {cp("WiaiPost-maennerfach",     maennerfachPost        as unknown as Post)}
+    {cp("WiaiPost-tensor-tournament", tensorTournamentPost as unknown as Post)}
+    {cp("WiaiPost-ehrliche-apps",   ehrlicheAppsPost       as unknown as Post)}
+    {cp("WiaiPost-vorlesung-netflix", vorlesungNetflixPost as unknown as Post)}
 
     {/* ── A/B experiments: timing overrides on existing posts ────────────── */}
     {/* These test different music variants without changing the post JSON.  */}

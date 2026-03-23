@@ -1,0 +1,16 @@
+{
+  "id": "2026-tensor-tournament",
+  "type": "contrarian",
+  "accentColor": "#EF4444",
+  "timing": { "variant": "through" },
+  "slide1": {
+    "bigText": "ML-HACKATHON."
+  },
+  "slide2": {
+    "text": "Tensor Tournament. Bamberg. FAU. TUM. Alle im Ring. Bamberg gewinnt."
+  },
+  "slide3": {
+    "text": "Der Algorithmus war besser. Das Bier auch.",
+    "button": "Rauchbier vs. Weißbier. 1:0."
+  }
+}

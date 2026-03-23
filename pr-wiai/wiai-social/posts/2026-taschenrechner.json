@@ -1,0 +1,16 @@
+{
+  "id": "2026-taschenrechner",
+  "type": "contrarian",
+  "accentColor": "#FACC15",
+  "timing": { "variant": "through", "act1Duration": 120 },
+  "slide1": {
+    "smallText": "Der Taschenrechner hat Mathematiker nicht überflüssig gemacht. Excel hat Buchhalter nicht überflüssig gemacht. Google hat Bibliothekare nicht überflüssig gemacht."
+  },
+  "slide2": {
+    "text": "Na gut, schlechtes Beispiel."
+  },
+  "slide3": {
+    "text": "KI ersetzt nicht Informatiker. KI ersetzt Informatiker die KI nicht verstehen.",
+    "button": "Bei uns versteht man KI seit 2006. Also bevor es auf TikTok war."
+  }
+}
