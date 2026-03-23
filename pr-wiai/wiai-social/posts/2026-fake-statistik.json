@@ -1,0 +1,15 @@
+{
+  "id": "2026-fake-statistik",
+  "type": "contrarian",
+  "accentColor": "#F97316",
+  "timing": { "variant": "through-scratch" },
+  "slide1": {
+    "smallText": "Studie: Bamberger Informatik-Absolvent:innen verdienen 23% mehr als der Bundesdurchschnitt."
+  },
+  "slide2": {
+    "text": "Schöne Zahl. Hast du sie geglaubt? Die Studie gibt es nicht. Ich hab sie gerade erfunden. Und du hast nicht mal nach der Quelle gefragt."
+  },
+  "slide3": {
+    "text": "Das passiert dir 20 Mal am Tag. Folgt für mehr davon."
+  }
+}

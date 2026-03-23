@@ -1,0 +1,15 @@
+{
+  "id": "2026-merkste-fahrpruefung",
+  "type": "contrarian",
+  "accentColor": "#F0EDE8",
+  "timing": { "variant": "through" },
+  "slide1": {
+    "smallText": "Du darfst in der Fahrprüfung ein Auto benutzen."
+  },
+  "slide2": {
+    "text": "Du darfst in der Informatik-Klausur keinen Computer benutzen."
+  },
+  "slide3": {
+    "text": "Merkste selber, oder?"
+  }
+}

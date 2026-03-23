@@ -1,0 +1,15 @@
+{
+  "id": "2026-merkste-netflix",
+  "type": "contrarian",
+  "accentColor": "#EF4444",
+  "timing": { "variant": "through" },
+  "slide1": {
+    "smallText": "Netflix fragt: 'Schaust du noch?'"
+  },
+  "slide2": {
+    "text": "TikTok fragt das nicht."
+  },
+  "slide3": {
+    "text": "Merkste selber, oder?"
+  }
+}

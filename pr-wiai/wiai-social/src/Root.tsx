@@ -31,6 +31,12 @@ import maennerfachPost          from "../posts/2026-maennerfach.json";
 import tensorTournamentPost     from "../posts/2026-tensor-tournament.json";
 import ehrlicheAppsPost         from "../posts/2026-ehrliche-apps.json";
 import vorlesungNetflixPost     from "../posts/2026-vorlesung-netflix.json";
+import merksteFahrpruefungPost  from "../posts/2026-merkste-fahrpruefung.json";
+import merksteNetflixPost       from "../posts/2026-merkste-netflix.json";
+import programmierikPost        from "../posts/2026-programmierik.json";
+import fakeStatistikPost        from "../posts/2026-fake-statistik.json";
+import ikeaPost                 from "../posts/2026-ikea.json";
+import metaManipulationPost     from "../posts/2026-meta-manipulation.json";
 
 // ── Duration helpers ──────────────────────────────────────────────────────────
 const TRACK_DURATION = 520; // track.mp3 ~17.3s at 30fps
@@ -106,6 +112,12 @@ export const Root: React.FC = () => (
     {cp("WiaiPost-tensor-tournament", tensorTournamentPost as unknown as Post)}
     {cp("WiaiPost-ehrliche-apps",   ehrlicheAppsPost       as unknown as Post)}
     {cp("WiaiPost-vorlesung-netflix", vorlesungNetflixPost as unknown as Post)}
+    {cp("WiaiPost-merkste-fahrpruefung", merksteFahrpruefungPost as unknown as Post)}
+    {cp("WiaiPost-merkste-netflix",      merksteNetflixPost      as unknown as Post)}
+    {cp("WiaiPost-programmierik",        programmierikPost        as unknown as Post)}
+    {cp("WiaiPost-fake-statistik",       fakeStatistikPost       as unknown as Post)}
+    {cp("WiaiPost-ikea",                 ikeaPost                as unknown as Post)}
+    {cp("WiaiPost-meta-manipulation",    metaManipulationPost    as unknown as Post)}
 
     {/* ── A/B experiments: timing overrides on existing posts ────────────── */}
     {/* These test different music variants without changing the post JSON.  */}

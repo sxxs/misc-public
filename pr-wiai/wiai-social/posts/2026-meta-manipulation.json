@@ -1,0 +1,15 @@
+{
+  "id": "2026-meta-manipulation",
+  "type": "contrarian",
+  "accentColor": "#22C55E",
+  "timing": { "variant": "through-scratch" },
+  "slide1": {
+    "smallText": "Dieser Post ist Manipulation."
+  },
+  "slide2": {
+    "text": "Die Schrift ist groß damit du stoppst. Der Satz ist kurz damit du weiterliest. Slide 2 hat einen offenen Loop damit du swipest. Das ist kein Content. Das ist Architektur."
+  },
+  "slide3": {
+    "text": "Und du hast mitgemacht. Nicht weil du dumm bist. Sondern weil es funktioniert."
+  }
+}
