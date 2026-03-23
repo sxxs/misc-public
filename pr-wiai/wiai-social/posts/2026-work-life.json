@@ -1,0 +1,18 @@
+{
+  "id": "2026-work-life",
+  "type": "contrarian",
+  "accentColor": "#22C55E",
+  "isAd": false,
+  "timing": { "variant": "through-scratch", "act1Duration": 225 },
+  "slide1": {
+    "bigText": "Stimmt.",
+    "smallText": "Es wird ja immer\ngesagt: Informatiker\nverdienen gut aber\nleben schlecht."
+  },
+  "slide2": {
+    "text": "Kommt drauf an\nwo du studierst.\n\nGroßstadt: verdienst\ngut, zahlst alles\nfür Miete.\n\nBamberg: verdienst\ngenauso gut, zahlst\ndie Hälfte, wohnst\nim UNESCO-Welterbe."
+  },
+  "slide3": {
+    "text": "Work-Life-Balance\nfängt beim\nStudienort an.",
+    "button": "Und beim Rauchbier.\nAber das ist eine\npersönliche Meinung."
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "2026-intro-alter",
+  "type": "contrarian",
+  "accentColor": "#F0EDE8",
+  "isAd": false,
+  "timing": { "variant": "through-scratch", "act1Duration": 225 },
+  "slide1": {
+    "bigText": "Problem?",
+    "smallText": "Durchschnittsalter\nder Person hinter\ndiesem Account: 43."
+  },
+  "slide2": {
+    "text": "Durchschnittsalter\nder Leute die es\nsehen sollen: 18.\n\nWenn das kein\nKommunikations-\nproblem ist weiß\nich auch nicht."
+  },
+  "slide3": {
+    "text": "Aber Kommunikations-\nprobleme lösen\nist was ich mache.",
+    "button": "Auch dieses hier.\nIrgendwie."
+  }
+}

@@ -18,6 +18,13 @@ import handfestPost             from "../posts/2026-handfest.json";
 import akinatorPost             from "../posts/2026-akinator.json";
 import gottesbeweiPost          from "../posts/2026-gottesbeweis.json";
 import kiBaldPost               from "../posts/2026-ki-bald.json";
+import introHomemadePost        from "../posts/2026-intro-homemade.json";
+import introAlterPost           from "../posts/2026-intro-alter.json";
+import bierPost                 from "../posts/2026-bier.json";
+import workLifePost             from "../posts/2026-work-life.json";
+import mietenRauchbierPost      from "../posts/2026-mieten-rauchbier.json";
+import chatgptKlausurPost       from "../posts/2026-chatgpt-klausur.json";
+import bulimieLernenPost        from "../posts/2026-bulimie-lernen.json";
 
 const TRACK_DURATION = 520; // track.mp3 ~17.3s at 30fps
 
@@ -71,9 +78,9 @@ export const Root: React.FC = () => (
 
     {/* ── Contrarian: variant upgrades ────────────────────────────────────── */}
     {/* through: music plays straight — best for short Act2 texts */}
-    {cv("WiaiPost-contrarian-through", contrarianoerhaengePost as unknown as Post, { variant: "through" })}
-    {cv("WiaiPost-mathe3-through",     mathe3Post              as unknown as Post, { variant: "through" })}
-    {cv("WiaiPost-ki-fails-through",   kiFailsPost             as unknown as Post, { variant: "through" })}
+    {cv("WiaiPost-contrarian-through", contrarianoerhaengePost as unknown as Post, { variant: "through", subtextStartFrame: 50, absenderStartFrame: 120 })}
+    {cv("WiaiPost-mathe3-through",     mathe3Post              as unknown as Post, { variant: "through", subtextStartFrame: 50, absenderStartFrame: 120 })}
+    {cv("WiaiPost-ki-fails-through",   kiFailsPost             as unknown as Post, { variant: "through", subtextStartFrame: 50, absenderStartFrame: 120 })}
     {/* through-scratch: full-volume Act1+Act2, scratch at end, beat-sync Act3 */}
     {/* act1=225 for posts with a longer/heavier S1 quote that needs breathing room */}
     {cv("WiaiPost-ki-gesagt-ts",      kiGesagtPost   as unknown as Post, { variant: "through-scratch", act1Duration: 225 })}
@@ -101,5 +108,18 @@ export const Root: React.FC = () => (
     {cp("WiaiPost-akinator",     akinatorPost    as unknown as Post)}
     {cp("WiaiPost-gottesbeweis", gottesbeweiPost as unknown as Post)}
     {cp("WiaiPost-ki-bald",      kiBaldPost      as unknown as Post)}
+
+    {/* ── Intros ──────────────────────────────────────────────────────────── */}
+    {cp("WiaiPost-intro-homemade",  introHomemadePost   as unknown as Post)}
+    {cp("WiaiPost-intro-alter",     introAlterPost      as unknown as Post)}
+    {cp("WiaiPost-bier",            bierPost            as unknown as Post)}
+
+    {/* ── Rauchbier / Bamberg life ────────────────────────────────────────── */}
+    {cp("WiaiPost-work-life",       workLifePost        as unknown as Post)}
+    {cp("WiaiPost-mieten-rauchbier", mietenRauchbierPost as unknown as Post)}
+
+    {/* ── Lehre ───────────────────────────────────────────────────────────── */}
+    {cp("WiaiPost-chatgpt-klausur", chatgptKlausurPost  as unknown as Post)}
+    {cp("WiaiPost-bulimie-lernen",  bulimieLernenPost   as unknown as Post)}
   </>
 );

@@ -1,0 +1,18 @@
+{
+  "id": "2026-chatgpt-klausur",
+  "type": "contrarian",
+  "accentColor": "#EF4444",
+  "isAd": false,
+  "timing": { "variant": "through", "subtextStartFrame": 45, "absenderStartFrame": 115 },
+  "slide1": {
+    "bigText": "Gut so.",
+    "smallText": "ChatGPT besteht\nunsere alte Klausur.\nLocker."
+  },
+  "slide2": {
+    "text": "Also haben wir eine\nneue geschrieben.\n\nDie prüft nicht\nWissen sondern\nKönnen. Und Können\nkann man nicht\nprompten."
+  },
+  "slide3": {
+    "text": "380 Laptops.\nVS Code. Debugger.\nDas besteht\nkein Chatbot.",
+    "button": "Noch nicht."
+  }
+}

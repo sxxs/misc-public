@@ -1,0 +1,17 @@
+{
+  "id": "2026-intro-homemade",
+  "type": "contrarian",
+  "accentColor": "#FACC15",
+  "isAd": false,
+  "timing": { "variant": "through", "subtextStartFrame": 50, "absenderStartFrame": 120 },
+  "slide1": {
+    "bigText": "Homemade.",
+    "smallText": "Andere Fakultäten:\nRedaktionsplan.\nAgentur.\nContent-Strategie."
+  },
+  "slide2": {
+    "text": "Wir: Ein Dekan\nmit Handy und dem\nGefühl dass diese\nFakultät zu gut ist\nfür Pressemittei-\nlungen."
+  },
+  "slide3": {
+    "text": "Homemade seit 2026.\nFolgt auf\neigene Gefahr."
+  }
+}

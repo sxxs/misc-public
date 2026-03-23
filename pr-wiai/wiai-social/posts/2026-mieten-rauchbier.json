@@ -1,0 +1,18 @@
+{
+  "id": "2026-mieten-rauchbier",
+  "type": "contrarian",
+  "accentColor": "#3B82F6",
+  "isAd": false,
+  "timing": { "variant": "through-scratch", "act1Duration": 225 },
+  "slide1": {
+    "bigText": "Richtig.",
+    "smallText": "Hot Take:\nDer beste Studienort\nist nicht der mit\ndem besten Ranking."
+  },
+  "slide2": {
+    "text": "Sondern der wo du\ndir leisten kannst\nneben dem Studium\nauch noch zu leben.\n\nFreunde treffen.\nAm Fluss sitzen.\nNicht jede Stunde\njobben müssen."
+  },
+  "slide3": {
+    "text": "Bamberg:\n390 Euro Miete.\nUNESCO-Welterbe.\nRauchbier nach\nder Vorlesung.",
+    "button": "Burnout ist kein\nLeistungsnachweis."
+  }
+}

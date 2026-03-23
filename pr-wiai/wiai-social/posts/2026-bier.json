@@ -1,0 +1,18 @@
+{
+  "id": "2026-bier",
+  "type": "contrarian",
+  "accentColor": "#F97316",
+  "isAd": false,
+  "timing": { "variant": "through", "subtextStartFrame": 55, "absenderStartFrame": 125 },
+  "slide1": {
+    "bigText": "Bamberg.",
+    "smallText": "Informatik + Bier ="
+  },
+  "slide2": {
+    "text": "Nächste Frage."
+  },
+  "slide3": {
+    "text": "12 Brauereien.\n5 Bachelor.\n6 Master.\nKein NC.",
+    "button": "Rauchbier inklusive.\nFreiwillig."
+  }
+}
