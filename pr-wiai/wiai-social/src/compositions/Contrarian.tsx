@@ -31,17 +31,15 @@ const MusicAct1: React.FC<{ act2FadeEnd: number }> = ({ act2FadeEnd }) => {
   return <Audio src={staticFile("music/track.mp3")} volume={vol} />;
 };
 
-// Vinyl rewind: 37f = 1.23s — centered on Act1→Act2 transition
+// Vinyl rewind: 18f = 0.6s — short scratch for snappy transition
 const MusicVinyl: React.FC = () => (
-  <Audio src={staticFile("music/vinyl-rewind.mp3")} volume={0.85} />
+  <Audio src={staticFile("music/vinyl-rewind.mp3")} volume={0.85} endAt={18} />
 );
 
-// Alt Act3 music — plays chosen track from position 0; video ends on drum roll so no real fadeout needed
+// Alt Act3 music — starts immediately at full volume, no fade-in
 const MusicAct3AltTrack: React.FC<{ trackFile: string; frames: number }> = ({ trackFile, frames }) => {
   const frame = useCurrentFrame();
-  const fadeLinear = interpolate(frame, [0, 45], [0, 1], { extrapolateRight: "clamp" });
-  const fadeIn  = fadeLinear * fadeLinear;
-  // 3-frame anti-click guard only — drum roll is the natural ending
+  const fadeIn  = interpolate(frame, [0, 3], [0, 1], { extrapolateRight: "clamp" }); // anti-click only
   const fadeOut = interpolate(frame, [frames - 3, frames], [1, 0], {
     extrapolateLeft: "clamp", extrapolateRight: "clamp",
   });
@@ -80,7 +78,7 @@ const ContrarianMusicScratch: React.FC<{ act1Duration: number; act2Duration: num
         <MusicAct1 act2FadeEnd={resumeAt - 15} />
       </Sequence>
       {/* Vinyl rewind: masks the seam where music rewinds and restarts at resumeAt */}
-      <Sequence from={resumeAt - 15} durationInFrames={37}><MusicVinyl /></Sequence>
+      <Sequence from={resumeAt - 15} durationInFrames={18}><MusicVinyl /></Sequence>
       {/* Act 3: track resumes RESUME_EARLY frames early; beat lands on act3Start */}
       <Sequence from={resumeAt} durationInFrames={act3Seg}><MusicAct3 frames={act3Seg} /></Sequence>
     </>
@@ -104,23 +102,23 @@ const ContrarianMusicThroughScratch: React.FC<{
   act1Duration: number; act2Duration: number; act3Duration: number;
   altTrack?: { file: string; dur: number } | null;
   scratchOffset?: number; musicDelay?: number;
-}> = ({ act1Duration, act2Duration, act3Duration, altTrack = null, scratchOffset = 15, musicDelay = 0 }) => {
-  const act3Start  = act1Duration + act2Duration;
-  const scratchFrom = act3Start - scratchOffset;
-  const musicFrom   = act3Start + musicDelay;
-  const musicFrames = act3Duration - musicDelay;
+}> = ({ act1Duration, act2Duration, act3Duration, altTrack = null, scratchOffset = 10, musicDelay = 0 }) => {
+  const act3Start    = act1Duration + act2Duration;
+  const scratchFrom  = act3Start - scratchOffset;
+  const act3MusicAt  = scratchFrom + 14 + musicDelay; // near end of scratch
+  const act3MusicLen = act3Duration - (act3MusicAt - act3Start);
   return (
     <>
-      {/* Full volume through Act1+Act2, overlaps first 10f of scratch for smooth transition */}
-      <Sequence from={0} durationInFrames={scratchFrom + 10}>
+      {/* Act1+Act2 music: overlaps 3f into scratch then cuts */}
+      <Sequence from={0} durationInFrames={scratchFrom + 3}>
         <Audio src={staticFile("music/track.mp3")} volume={0.65} />
       </Sequence>
-      <Sequence from={scratchFrom} durationInFrames={37}><MusicVinyl /></Sequence>
-      {/* Act3 music: alt track from 0, or default track from beat position */}
-      <Sequence from={musicFrom} durationInFrames={musicFrames}>
+      <Sequence from={scratchFrom} durationInFrames={18}><MusicVinyl /></Sequence>
+      {/* Act3 music: starts 4f before scratch ends */}
+      <Sequence from={act3MusicAt} durationInFrames={act3MusicLen}>
         {altTrack
-          ? <MusicAct3AltTrack trackFile={altTrack.file} frames={musicFrames} />
-          : <MusicAct3 frames={musicFrames} startFrom={TRACK_ACT3_BEAT} />
+          ? <MusicAct3AltTrack trackFile={altTrack.file} frames={act3MusicLen} />
+          : <MusicAct3 frames={act3MusicLen} startFrom={TRACK_ACT3_BEAT} />
         }
       </Sequence>
     </>
@@ -158,7 +156,7 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
       >
         {/* Setup quote — per-line bounding boxes, content-width */}
         {post.slide1.smallText && (
-          <div style={{ opacity: quoteOpacity, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 0 }}>
+          <div style={{ opacity: quoteOpacity, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 0, marginLeft: -26 }}>
             {post.slide1.smallText.split("\n").map((line, i) => (
               <div
                 key={i}
@@ -203,16 +201,32 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
 
 const Act2: React.FC<{ post: Post }> = ({ post }) => {
   const frame = useCurrentFrame();
+  const { durationInFrames: dur } = useVideoConfig();
   const accent = post.accentColor ?? WIAI_YELLOW;
   const enterProgress = interpolate(frame, [2, 10], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
+  // Exit: glitch out + fade shortly after scratch begins (scratch ~10f before end)
+  const exitStart = dur - 8;
+  const exitOpacity = interpolate(frame, [exitStart, exitStart + 5], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const exitGlitch = interpolate(frame, [exitStart, exitStart + 5], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const exitShiftX = Math.sin(frame * 13.7) * exitGlitch * 40;
+  const exitFilter = exitGlitch > 0.01
+    ? `drop-shadow(${(Math.sin(frame * 17.3) * exitGlitch * 15).toFixed(1)}px 0 0 rgba(255,30,30,${(exitGlitch * 0.7).toFixed(2)})) ` +
+      `drop-shadow(${(Math.sin(frame * 11.1) * exitGlitch * -10).toFixed(1)}px 0 0 rgba(30,255,255,${(exitGlitch * 0.6).toFixed(2)}))`
+    : "none";
+
   return (
     <SlideFrame accentColor={accent}>
       <LedWall accentColor={accent} mode="s2" />
-      <div style={{ flex: 1, display: "flex", alignItems: "center", padding: "0 108px", position: "relative", zIndex: 5 }}>
+      <div style={{
+        flex: 1, display: "flex", alignItems: "center", padding: "0 108px",
+        position: "relative", zIndex: 5,
+        opacity: exitOpacity,
+        ...(exitGlitch > 0.01 ? { filter: exitFilter, transform: `translateX(${exitShiftX.toFixed(1)}px)` } : {}),
+      }}>
         <DirtyCutout accentColor={accent} enterProgress={enterProgress}>
           <TypewriterText text={post.slide2.text} startFrame={10} blinkLastPeriod />
         </DirtyCutout>

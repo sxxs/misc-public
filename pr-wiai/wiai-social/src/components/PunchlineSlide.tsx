@@ -28,35 +28,38 @@ export const PunchlineSlide: React.FC<Props> = ({
   const flashStart  = dur - 12; // LEDs start ramping; text starts fading
   const glitchStart = dur - 16; // glitch begins 4f before flash
 
-  const containerOpacity = interpolate(frame, [0, 8], [0, 1], { extrapolateRight: "clamp" });
-  // Button + URL appear after main punchline has landed
+  // Snap in: container visible just before punchline text appears
+  const PUNCH_START = 2; // 1-2f after LEDs start (enterFrames=6) — must match TypewriterText startFrame below
+  const containerOpacity = interpolate(frame, [PUNCH_START - 1, PUNCH_START + 2], [0, 1], { extrapolateRight: "clamp" });
   const subtextOpacity = interpolate(frame, [subtextStartFrame, subtextStartFrame + 16], [0, 1], { extrapolateRight: "clamp" });
-  // Absender fades in last, slowly — doesn't compete with main content
   const absenderOpacity = interpolate(frame, [absenderStartFrame, absenderStartFrame + 30], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
   // Mic drop: text wrapper fades out over 6f as LEDs flash
   const endFadeOut = interpolate(frame, [flashStart, flashStart + 6], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  // Glitch-dissolve: chromatic smear + lateral shift; starts before fade so boxes break apart visibly
-  const glitchProgress = interpolate(frame, [glitchStart, flashStart + 6], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const gx = Math.sin(frame * 17.3) * glitchProgress * 90;
-  const gy = Math.sin(frame * 7.1)  * glitchProgress * 10;
-  const txShift = Math.sin(frame * 13.7) * glitchProgress * 22;
-  const textGlitchFilter = glitchProgress > 0.01
-    ? `drop-shadow(${gx.toFixed(1)}px ${gy.toFixed(1)}px 0 rgba(255,30,30,${(glitchProgress * 0.95).toFixed(2)})) ` +
-      `drop-shadow(${(-gx * 0.7).toFixed(1)}px ${(-gy).toFixed(1)}px 0 rgba(30,255,255,${(glitchProgress * 0.80).toFixed(2)}))`
+
+  // Glitch: entrance (settles) + exit (dissolves)
+  const enterGlitch = interpolate(frame, [PUNCH_START, PUNCH_START + 8], [0.7, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const exitGlitch  = interpolate(frame, [glitchStart, flashStart + 6], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const glitch = Math.max(enterGlitch, exitGlitch);
+  const gx = Math.sin(frame * 17.3) * glitch * 90;
+  const gy = Math.sin(frame * 7.1)  * glitch * 10;
+  const txShift = Math.sin(frame * 13.7) * glitch * 22;
+  const textGlitchFilter = glitch > 0.01
+    ? `drop-shadow(${gx.toFixed(1)}px ${gy.toFixed(1)}px 0 rgba(255,30,30,${(glitch * 0.95).toFixed(2)})) ` +
+      `drop-shadow(${(-gx * 0.7).toFixed(1)}px ${(-gy).toFixed(1)}px 0 rgba(30,255,255,${(glitch * 0.80).toFixed(2)}))`
     : "none";
 
   return (
     <div style={{ position: "absolute", inset: 0 }}>
       {/* LED wall backdrop — S3 mode: all bright, intense glitch, mic-drop flash at end */}
-      <LedWall accentColor={accentColor} mode="s3" endFlashAtFrame={flashStart} enterFrames={18} />
+      <LedWall accentColor={accentColor} mode="s3" endFlashAtFrame={flashStart} enterFrames={6} enterOverdrive />
 
       {/* Text wrapper — zIndex:10 keeps it above LedWall (z:1) even when filter creates a stacking context */}
       <div style={{
         position: "absolute", inset: 0,
         opacity: endFadeOut,
         zIndex: 10,
-        ...(glitchProgress > 0.01 ? { filter: textGlitchFilter, transform: `translateX(${txShift.toFixed(1)}px)` } : {}),
+        ...(glitch > 0.01 ? { filter: textGlitchFilter, transform: `translateX(${txShift.toFixed(1)}px)` } : {}),
       }}>
 
         {/* Main content — safe zone: right 240px, bottom 400px */}
@@ -77,7 +80,7 @@ export const PunchlineSlide: React.FC<Props> = ({
           <TypewriterText
             text={text}
             fontSize={84}
-            startFrame={5}
+            startFrame={2}
             framesPerLine={4}
             color="#ffffff"
             lineBackground="rgba(10,10,10,0.95)"

@@ -3,7 +3,7 @@
   "type": "contrarian",
   "accentColor": "#8B5CF6",
   "isAd": false,
-  "timing": { "variant": "through-scratch" },
+  "timing": { "variant": "through-scratch", "act3Track": "f"},
   "slide1": {
     "bigText": "Bescheuert.",
     "smallText": "Bulimie-Lernen."

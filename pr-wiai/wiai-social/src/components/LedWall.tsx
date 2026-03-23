@@ -6,6 +6,7 @@ interface Props {
   mode?: "s1" | "s2" | "s3";
   endFlashAtFrame?: number; // mic-drop: LEDs ramp to 1.0, overlay drops, over 6f
   enterFrames?: number;     // staggered LED power-up at scene start (each LED at hash-based offset)
+  enterOverdrive?: boolean; // brief brightness overshoot at entrance (1.0→1.5→1.0 over ~12f)
   exitAtFrame?: number;     // staggered LED power-down starting at this frame (18f total, hash-based)
 }
 
@@ -16,7 +17,7 @@ const CELL_H = 40;
 const LED_W = 38;
 const LED_H = 33;
 
-export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", endFlashAtFrame, enterFrames, exitAtFrame }) => {
+export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", endFlashAtFrame, enterFrames, enterOverdrive, exitAtFrame }) => {
   const frame = useCurrentFrame();
 
   // ── Mic-drop end flash ─────────────────────────────────────
@@ -63,8 +64,16 @@ export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", endFlashAtF
     ? (glitchFilter !== "none" ? `${glitchFilter} ` : "") + `brightness(${(1 + overpowerProgress * 3.5).toFixed(2)})`
     : glitchFilter;
 
+  // ── Entrance overdrive: LEDs briefly brighter than target, then settle ──
+  const overdriveBoost = enterOverdrive
+    ? interpolate(frame, [2, 5, 14], [1.0, 1.5, 1.0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+    : 1;
+  const overdriveOverlayDip = enterOverdrive
+    ? interpolate(frame, [2, 5, 14], [0, 0.25, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+    : 0;
+
   // ── Overlay darkness per mode (fades to 0 during end flash) ─
-  const overlayBase = (mode === "s3" ? 0.55 : mode === "s2" ? 0.75 : 0.60) * (1 - flashProgress);
+  const overlayBase = (mode === "s3" ? 0.55 : mode === "s2" ? 0.75 : 0.60) * (1 - flashProgress) * (1 - overdriveOverlayDip);
   const oc = (v: number) => Math.min(1, overlayBase * v).toFixed(2);
 
   // ── LED rects ─────────────────────────────────────────────
@@ -107,10 +116,10 @@ export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", endFlashAtF
         }
       }
 
-      // End flash / scene-in / scene-exit combined
-      const finalOpacity = (flashProgress > 0
+      // End flash / scene-in / scene-exit / overdrive combined
+      const finalOpacity = Math.min(1, (flashProgress > 0
         ? opacity + (1.0 - opacity) * flashProgress
-        : opacity) * sceneInFactor * exitFactor;
+        : opacity) * sceneInFactor * exitFactor * overdriveBoost);
 
       const x = col * CELL_W + (CELL_W - LED_W) / 2;
       const y = row * CELL_H + (CELL_H - LED_H) / 2;
