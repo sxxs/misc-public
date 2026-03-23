@@ -4,7 +4,7 @@
   "accentColor": "#FACC15",
   "slide1": {
     "bigText": "Aha.",
-    "smallText": "Ich hab nichts zu verbergen."
+    "smallText": "Ich hab nichts\nzu verbergen."
   },
   "slide2": {
     "text": "Du hast Vorhänge\nan deinen Fenstern."
@@ -12,6 +12,6 @@
   "isAd": true,
   "slide3": {
     "text": "Merkste selber, oder?",
-    "button": "Unsere Seminarräume haben keine Vorhänge.\nWas das jetzt heißt weiß ich auch nicht."
+    "button": "Unsere Seminarräume\nhaben keine Vorhänge.\nWas das jetzt heißt\nweiß ich auch nicht."
   }
 }

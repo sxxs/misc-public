@@ -6,13 +6,13 @@
   "timing": { "variant": "through-scratch" },
   "slide1": {
     "bigText": "Und?",
-    "smallText": "Es wird ja immer gesagt:\nDas kann doch bald jeder mit KI."
+    "smallText": "Es wird ja immer\ngesagt: Das kann doch\nbald jeder mit KI."
   },
   "slide2": {
-    "text": "Stimmt. Jeder kann mit KI\nein Bild generieren und\neine App zusammenklicken.\n\nGenauso wie jeder ein\nFertighaus bestellen kann.\nTrotzdem gibt es Architekten."
+    "text": "Stimmt. Jeder kann\nmit KI ein Bild\ngenerieren und eine\nApp zusammenklicken.\n\nGenauso wie jeder\nein Fertighaus\nbestellen kann.\nTrotzdem gibt es\nArchitekten."
   },
   "slide3": {
-    "text": "Der Unterschied zwischen\nbenutzen und verstehen bleibt.\nEgal wie gut das Tool wird.",
+    "text": "Der Unterschied\nzwischen benutzen\nund verstehen bleibt.\nEgal wie gut\ndas Tool wird.",
     "button": "Folgt für mehr\n\"Es wird ja immer gesagt\"."
   }
 }

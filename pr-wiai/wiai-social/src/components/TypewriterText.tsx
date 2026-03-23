@@ -47,6 +47,7 @@ export const TypewriterText: React.FC<Props> = ({
         lineHeight: 1.18,
         color,
         letterSpacing: "-0.01em",
+        overflowWrap: "break-word",
         ...(lineBackground
           ? { display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 0 }
           : { whiteSpace: "pre-wrap" }),
@@ -71,7 +72,8 @@ export const TypewriterText: React.FC<Props> = ({
               style={{
                 background: lineBackground,
                 padding: `${padV}px ${padH}px ${Math.round(padV * 1.1)}px`,
-                whiteSpace: "nowrap",
+                whiteSpace: "pre-wrap",
+                maxWidth: "100%",
               }}
             >
               {mainText}{dotSpan}
