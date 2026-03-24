@@ -7,9 +7,10 @@
     "smallText": "Unpopular Opinion:"
   },
   "slide2": {
-    "text": "Die meisten Informatiker:innen verbringen mehr Zeit damit Code zu lesen als Code zu schreiben. Und mehr Zeit damit nachzudenken als beides zusammen."
+    "text": "Die meisten Informatiker:innen verbringen mehr Zeit damit, Code zu lesen als Code zu schreiben. Und noch mehr Zeit damit, darüber nachzudenken."
   },
   "slide3": {
-    "text": "Deshalb heißt es Informatik und nicht Programmierik. Folgt für mehr Unpopular Opinions."
+    "text": "Deshalb heißt es Informatik und nicht Programmierik.",
+    "button": "Folgt für mehr Unpopular Opinions."
   }
 }

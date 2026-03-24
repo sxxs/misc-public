@@ -6,13 +6,13 @@
   "timing": { "variant": "through-scratch" },
   "slide1": {
     "bigText": "Stimmt.",
-    "smallText": "Es wird ja immer\ngesagt: Lern lieber\nwas Handfestes."
+    "smallText": "Es wird ja immer gesagt: Lern lieber was Handfestes. Handwerk!"
   },
   "slide2": {
-    "text": "Dein Schreiner\nbenutzt CAD-Software.\n\nDein Bäcker hat\nein Warenwirtschafts-\nsystem.\n\nDein Friseur braucht\nein Buchungstool.\n\nRate mal wer das\nalles baut."
+    "text": "Dein Schreiner benutzt CAD-Software. Dein Bäcker hat ein Warenwirtschaftssystem. Dein Friseur braucht ein Buchungstool. Rate mal wer das alles baut."
   },
   "slide3": {
-    "text": "Informatik ist\nnicht das Gegenteil\nvon handfest.\nInformatik macht\nHandfestes möglich.",
-    "button": "Außerdem:\nHolz anfassen können\nwir auch.\nWir sind in Franken."
+    "text": "Informatik ist nicht das Gegenteil von handfest. Informatik macht Handfestes möglich.",
+    "button": "Außerdem: Holz anfassen können wir auch. Wir sind in Franken."
   }
 }

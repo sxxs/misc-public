@@ -4,13 +4,12 @@
   "accentColor": "#10B981",
   "timing": { "variant": "through" },
   "slide1": {
-    "smallText": "Warum verlässt jemand das Silicon Valley für Bamberg?"
+    "smallText": "Warum verlässt jemand einen Konzern aus dem Silicon Valley für Bamberg?"
   },
   "slide2": {
-    "text": "Gegenfrage: Warum sollte man für gute Forschung 3.000 Dollar Miete zahlen wenn man die gleichen Paper aus Bamberg publiziert?"
+    "text": "Gegenfrage: Warum sollte man 3000 Dollar Miete zahlen wenn man die gleiche Forschung von Bamberg aus machen kann?"
   },
   "slide3": {
-    "text": "Christian Ledig, WIAI Bamberg. Weltklasse-Forschung, fränkische Miete.",
-    "button": "Top 2% meistzitierte Forscher weltweit. Rauchbier-Ranking: unbekannt."
+    "text": "Weltklasse-Forschung, fränkische Miete."
   }
 }

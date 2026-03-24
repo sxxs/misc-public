@@ -6,13 +6,13 @@
   "timing": { "variant": "through" },
   "slide1": {
     "bigText": "Logik.",
-    "smallText": "Warum errät Akinator\nimmer welche Person\ndu meinst?"
+    "smallText": "Warum errät Akinator immer welche Person du meinst?"
   },
   "slide2": {
-    "text": "Weil jede Frage\ndie Hälfte der\nMöglichkeiten\neliminiert.\n\n20 Ja/Nein-Fragen\nreichen für über\neine Million\nPersonen.\n\nDas Prinzip heißt\nEntscheidungsbaum."
+    "text": "Weil jede Frage die Hälfte der Möglichkeiten eliminiert. 20 Ja/Nein-Fragen reichen für über eine Million Personen. Das Prinzip heißt Entscheidungsbaum."
   },
   "slide3": {
-    "text": "Informatik ist\nnicht Magie.\nEs ist Logik die\nsich wie Magie\nanfühlt.",
-    "button": "Das lernst du\nin Woche 3 des\nInformatikstudiums.\nAb Woche 4 wird\nes noch besser."
+    "text": "Informatik ist nicht Magie. Es ist Logik, die sich wie Magie anfühlt.",
+    "button": "Das lernst du in Woche 3 des Informatikstudiums. Ab Woche 4 wird es noch besser."
   }
 }

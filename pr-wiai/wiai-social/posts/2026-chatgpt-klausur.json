@@ -8,13 +8,13 @@
     "act1Duration": 100
   },
   "slide1": {
-    "smallText": "ChatGPT besteht\nunsere alte Klausur.\nLocker."
+    "smallText": "ChatGPT besteht unsere alte Klausur.\n\nLocker."
   },
   "slide2": {
-    "text": "Also haben wir eine\nneue geschrieben.\n\nDie prüft nicht\nWissen sondern\nKönnen.\n\nUnd Können kann man\nnicht prompten."
+    "text": "Also haben wir eine neue geschrieben. Die prüft nicht Wissen sondern Können. Und Können kann man nicht prompten."
   },
   "slide3": {
-    "text": "380 Laptops.\nVS Code. Debugger.\nDas besteht\nkein Chatbot.",
+    "text": "380 Laptops. VS Code. Debugger. Das besteht kein Chatbot.",
     "button": "Noch nicht."
   }
 }

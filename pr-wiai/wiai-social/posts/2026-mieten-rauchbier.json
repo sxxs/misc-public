@@ -5,13 +5,13 @@
   "isAd": false,
   "timing": { "variant": "through-scratch", "act1Duration": 120 },
   "slide1": {
-    "smallText": "Hot Take:\nDer beste Studienort\nist nicht der mit\ndem besten Ranking."
+    "smallText": "Hot Take:\nDer beste Studienort ist nicht der mit dem besten Ranking."
   },
   "slide2": {
-    "text": "Sondern der wo du\ndir leisten kannst,\nneben dem Studium\nauch noch zu leben.\n\nFreunde treffen,\nam Fluss sitzen,\nnicht jede Stunde\njobben müssen."
+    "text": "Sondern der wo du\ndir leisten kannst, neben dem Studium auch noch zu leben.\n\nFreunde treffen, am Fluss sitzen, nicht jede Stunde jobben müssen."
   },
   "slide3": {
-    "text": "Bamberg:\n390 € Miete,\nUNESCO-Welterbe,\nund Rauchbier nach\nder Vorlesung.",
-    "button": "Burnout ist kein\nLeistungsnachweis."
+    "text": "Bamberg:\n390 € Miete, UNESCO-Welterbe, und Rauchbier nach der Vorlesung.",
+    "button": "Burnout ist kein Leistungsnachweis."
   }
 }
