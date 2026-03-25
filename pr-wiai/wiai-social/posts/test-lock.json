@@ -1,0 +1,9 @@
+{
+  "id": "test-lock",
+  "type": "contrarian",
+  "ledPattern": "lock",
+  "timing": { "variant": "through" },
+  "slide1": { "bigText": "Privatsphäre", "smallText": "\"Mein Passwort ist sicher genug.\"" },
+  "slide2": { "text": "Dein Passwort '123456'\nsteht in einer Liste mit\n10 Milliarden anderen.\n\nEin Rechner knackt es\nin 0.3 Sekunden." },
+  "slide3": { "text": "IT-Sicherheit ist kein\nOptional.", "button": "WIAI · IT-Sicherheit" }
+}

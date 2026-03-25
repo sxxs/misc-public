@@ -1,0 +1,10 @@
+{
+  "id": "test-heartbeat",
+  "type": "contrarian",
+  "ledPattern": "heartbeat",
+  "accentColor": "#EF4444",
+  "timing": { "variant": "through" },
+  "slide1": { "bigText": "Matchmaking", "smallText": "\"Tinder ist doch Zufall.\"" },
+  "slide2": { "text": "Tinder zeigt dir nicht\nzufällige Profile.\n\nEin Algorithmus berechnet\ndeinen 'Desirability Score'\nund matched dich\nentsprechend." },
+  "slide3": { "text": "Dein Liebesleben\nwird von einem\nAlgorithmus gesteuert.", "button": "WIAI · Recommender Systems" }
+}

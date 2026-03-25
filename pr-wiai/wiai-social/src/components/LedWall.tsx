@@ -27,6 +27,7 @@ export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", pattern, en
   const frame = useCurrentFrame();
 
   // ── Pattern frame selection (animated patterns cycle at pattern.fps) ──
+  const hasPattern = !!pattern;
   const patternFrame = pattern
     ? pattern.frames.length > 1
       ? Math.floor((frame / 30) * (pattern.fps ?? 4)) % pattern.frames.length
@@ -113,6 +114,9 @@ export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", pattern, en
       let opacity: number;
       if (isSpriteLed) {
         opacity = mode === "s2" ? 0.06 : mode === "s3" ? 0.92 : 0.45;
+      } else if (hasPattern) {
+        // Pattern active: background LEDs nearly off so sprite stands out
+        opacity = mode === "s3" ? 0.06 : 0.02;
       } else if (mode === "s2") {
         opacity = 0.03;
       } else if (mode === "s3") {
