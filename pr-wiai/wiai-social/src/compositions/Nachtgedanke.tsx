@@ -6,6 +6,7 @@ import { spaceMonoFamily, spaceGroteskFamily } from "../styles/fonts";
 import { SlideFrame } from "../components/SlideFrame";
 import { TypewriterText } from "../components/TypewriterText";
 import { PunchlineSlide } from "../components/PunchlineSlide";
+import { resolvePattern } from "../patterns";
 
 // Minimal: just the time, no image, no glitch
 const Act1: React.FC<{ post: Post }> = ({ post }) => {
@@ -73,7 +74,7 @@ const Act3: React.FC<{ post: Post }> = ({ post }) => {
   const accent = post.accentColor ?? WIAI_YELLOW;
   return (
     <SlideFrame accentColor={accent}>
-      <PunchlineSlide accentColor={accent} text={post.slide3.text} button={post.slide3.button} />
+      <PunchlineSlide accentColor={accent} text={post.slide3.text} button={post.slide3.button} pattern={resolvePattern(post.ledPattern)} />
     </SlideFrame>
   );
 };

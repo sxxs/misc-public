@@ -7,6 +7,8 @@ import { WusstestDu } from "./WusstestDu";
 import { Contrarian } from "./Contrarian";
 import { Selbstironie } from "./Selbstironie";
 import { Witz } from "./Witz";
+import { Terminal } from "./Terminal";
+import { Billboard } from "./Billboard";
 import { SafeZoneOverlay } from "../components/SafeZoneOverlay";
 
 const BackgroundMusic: React.FC = () => {
@@ -25,20 +27,27 @@ const BackgroundMusic: React.FC = () => {
 };
 
 export const WiaiPost: React.FC<Post> = (post) => {
+  const withMusic = (node: React.ReactNode) =>
+    post.music !== false ? <><BackgroundMusic />{node}</> : <>{node}</>;
+
   const content = (() => {
     switch (post.type) {
       case "newsjacking":
-        return <><BackgroundMusic /><Newsjacking post={post} /></>;
+        return withMusic(<Newsjacking post={post} />);
       case "nachtgedanke":
-        return <><BackgroundMusic /><Nachtgedanke post={post} /></>;
+        return withMusic(<Nachtgedanke post={post} />);
       case "wusstest-du":
-        return <><BackgroundMusic /><WusstestDu post={post} /></>;
+        return withMusic(<WusstestDu post={post} />);
       case "contrarian":
         return <Contrarian post={post} />;
       case "selbstironie":
-        return <><BackgroundMusic /><Selbstironie post={post} /></>;
+        return withMusic(<Selbstironie post={post} />);
       case "witz":
-        return <><BackgroundMusic /><Witz post={post} /></>;
+        return withMusic(<Witz post={post} />);
+      case "terminal":
+        return withMusic(<Terminal post={post} />);
+      case "billboard":
+        return withMusic(<Billboard post={post} />);
       default: {
         const _exhaustive: never = post.type;
         return null;

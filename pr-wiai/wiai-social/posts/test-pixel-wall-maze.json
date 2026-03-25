@@ -1,0 +1,19 @@
+{
+  "id": "test-pixel-wall-maze",
+  "type": "contrarian",
+  "ledPattern": "maze",
+  "timing": {
+    "variant": "through"
+  },
+  "slide1": {
+    "bigText": "Binary Search",
+    "smallText": "\"Ich google das mal schnell.\""
+  },
+  "slide2": {
+    "text": "Dein Prof hat einen\nAlgorithmus erfunden,\nder schneller sucht\nals du googeln kannst.\n\nDu benutzt ihn jeden Tag.\nOhne es zu wissen."
+  },
+  "slide3": {
+    "text": "Informatik ist überall.\nAuch in deiner\nGoogle-Suche.",
+    "button": "WIAI · Algorithmen"
+  }
+}

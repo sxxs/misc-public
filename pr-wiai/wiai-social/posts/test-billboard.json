@@ -1,0 +1,15 @@
+{
+  "id": "test-billboard",
+  "type": "billboard",
+  "music": false,
+  "slide1": {
+    "bigText": "'Ich hab nichts zu verbergen.'"
+  },
+  "slide2": {
+    "text": "Du hast Vorhänge an deinen Fenstern."
+  },
+  "slide3": {
+    "text": "Merkste selber, oder?",
+    "url": "studium.wiai.uni-bamberg.de"
+  }
+}

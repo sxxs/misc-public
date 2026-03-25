@@ -10,6 +10,7 @@ import { DirtyCutout } from "../components/DirtyCutout";
 import { TypewriterText } from "../components/TypewriterText";
 import { LedWall } from "../components/LedWall";
 import { PunchlineSlide } from "../components/PunchlineSlide";
+import { resolvePattern } from "../patterns";
 
 function resolveAssetPath(raw: string): string {
   return raw.replace(/^\.\/assets\//, "");
@@ -170,7 +171,7 @@ const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote =
       {!showQuote && (
         post.slide1.image
           ? <GlitchBackground src={resolveAssetPath(post.slide1.image)} />
-          : <LedWall accentColor={accent} />
+          : <LedWall accentColor={accent} pattern={resolvePattern(post.ledPattern)} />
       )}
 
       {/* Text overlay — bottom of frame, safe zone padding right+bottom */}
@@ -294,7 +295,7 @@ const Act3: React.FC<{ post: Post }> = ({ post }) => {
   const accent = post.accentColor ?? WIAI_YELLOW;
   return (
     <SlideFrame accentColor={accent}>
-      <PunchlineSlide accentColor={accent} text={post.slide3.text} button={post.slide3.button} />
+      <PunchlineSlide accentColor={accent} text={post.slide3.text} button={post.slide3.button} pattern={resolvePattern(post.ledPattern)} />
     </SlideFrame>
   );
 };

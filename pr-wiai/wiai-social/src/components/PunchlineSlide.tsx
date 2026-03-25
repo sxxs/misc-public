@@ -3,7 +3,7 @@ import { useCurrentFrame, interpolate } from "remotion";
 import { spaceGroteskFamily, spaceMonoFamily } from "../styles/fonts";
 import { computeAct3Duration } from "../utils/timing";
 import { TypewriterText } from "./TypewriterText";
-import { LedWall } from "./LedWall";
+import { LedWall, LedPattern } from "./LedWall";
 
 interface Props {
   accentColor: string;
@@ -15,11 +15,12 @@ interface Props {
   totalDuration?: number;    // Act3 sequence length; if omitted, computed from text
   subtextStartFrame?: number;  // local frame when button/übrigensText fades in (default 52)
   absenderStartFrame?: number; // local frame when absender fades in (default 82)
+  pattern?: LedPattern;      // sprite overlay for LedWall
 }
 
 export const PunchlineSlide: React.FC<Props> = ({
   accentColor, text, button, übrigensText, url, showAbsender = true, totalDuration,
-  subtextStartFrame = 52, absenderStartFrame = 82,
+  subtextStartFrame = 52, absenderStartFrame = 82, pattern,
 }) => {
   const frame = useCurrentFrame();
 
@@ -52,7 +53,7 @@ export const PunchlineSlide: React.FC<Props> = ({
   return (
     <div style={{ position: "absolute", inset: 0 }}>
       {/* LED wall backdrop — S3 mode: all bright, intense glitch, mic-drop flash at end */}
-      <LedWall accentColor={accentColor} mode="s3" endFlashAtFrame={flashStart} enterFrames={6} enterOverdrive />
+      <LedWall accentColor={accentColor} mode="s3" endFlashAtFrame={flashStart} enterFrames={6} enterOverdrive pattern={pattern} />
 
       {/* Text wrapper — zIndex:10 keeps it above LedWall (z:1) even when filter creates a stacking context */}
       <div style={{

@@ -1,0 +1,17 @@
+{
+  "id": "test-terminal-green",
+  "type": "terminal",
+  "music": false,
+  "terminal": {
+    "color": "green",
+    "prompt": "$ whois target"
+  },
+  "slide1": {},
+  "slide2": {
+    "text": "Der erfolgreichste Hacker\naller Zeiten hat nie eine\nZeile Code geschrieben.\n\nKevin Mitnick hat einfach\nMenschen angerufen und\ngefragt."
+  },
+  "slide3": {
+    "text": "Social Engineering.\nDas größte Sicherheitsrisiko\nsitzt vor dem Bildschirm.",
+    "button": "WIAI · IT-Sicherheit"
+  }
+}

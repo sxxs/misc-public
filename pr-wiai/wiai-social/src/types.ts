@@ -4,7 +4,9 @@ export type PostType =
   | "wusstest-du"
   | "contrarian"
   | "selbstironie"
-  | "witz";
+  | "witz"
+  | "terminal"
+  | "billboard";
 
 // Contrarian timing config — all fields optional, sensible defaults apply
 export interface ContrarianTiming {
@@ -17,13 +19,22 @@ export interface ContrarianTiming {
   absenderStartFrame?: number;     // Act3 absender appear frame (default: 155)
 }
 
+export interface TerminalConfig {
+  color?: "green" | "amber" | "white"; // default: "green"
+  prompt?: string;                      // shown in Act1 (e.g. "$ 23:31")
+}
+
 export interface Post {
   id: string;
   type: PostType;
+  design?: "pixel-wall" | "terminal" | "billboard"; // visual-layer override (future use)
   category?: string;
   accentColor?: string;
   isAd?: boolean;        // opt-in: shows absender/footer on S3 (default: hidden)
+  music?: false;         // opt-out of BackgroundMusic (undefined = music on)
   timing?: ContrarianTiming; // contrarian-only
+  terminal?: TerminalConfig; // terminal-only
+  ledPattern?: string;   // pattern name for LedWall sprite overlay (e.g. "maze")
   slide1: {
     image?: string;
     time?: string;

@@ -2,7 +2,7 @@ import React from "react";
 import { Composition } from "remotion";
 import { WiaiPost } from "./compositions/WiaiPost";
 import { Post, ContrarianTiming } from "./types";
-import { computeAct2Duration, ACT3_ALT_TRACKS } from "./utils/timing";
+import { computeAct2Duration, ACT3_ALT_TRACKS, computeBillboardDuration, computeTerminalDuration } from "./utils/timing";
 
 // ── Post imports (one per JSON file in posts/) ────────────────────────────────
 import contrarianoerhaengePost from "../posts/contrarian-vorhange.json";
@@ -43,6 +43,10 @@ import informatikTrockenPost    from "../posts/2026-informatik-trocken.json";
 import hackathonNachtPost       from "../posts/2026-hackathon-nacht.json";
 import stoppHandyPost           from "../posts/2026-stopp-handy.json";
 import merksteSchulePost        from "../posts/2026-merkste-schule.json";
+import testBillboardPost        from "../posts/test-billboard.json";
+import testTerminalGreenPost    from "../posts/test-terminal-green.json";
+import testTerminalAmberPost    from "../posts/test-terminal-amber.json";
+import testPixelWallMazePost    from "../posts/test-pixel-wall-maze.json";
 
 // ── Duration helpers ──────────────────────────────────────────────────────────
 const TRACK_DURATION = 520; // track.mp3 ~17.3s at 30fps
@@ -60,10 +64,17 @@ const contrarianDuration = (post: Post) => {
 const C = WiaiPost as unknown as React.ComponentType<Record<string, unknown>>;
 const S = { fps: 30, width: 1080, height: 1920 }; // screen spec
 
+// Duration dispatch by post type
+const selectDuration = (post: Post): number => {
+  if (post.type === "billboard") return computeBillboardDuration(post);
+  if (post.type === "terminal")  return computeTerminalDuration(post);
+  return contrarianDuration(post); // contrarian + all legacy types
+};
+
 // cp: register a post (timing comes from JSON)
 const cp = (id: string, post: Post) => (
   <Composition key={id} id={id} component={C}
-    durationInFrames={contrarianDuration(post)} {...S}
+    durationInFrames={selectDuration(post)} {...S}
     defaultProps={post as unknown as Record<string, unknown>} />
 );
 
@@ -130,6 +141,12 @@ export const Root: React.FC = () => (
     {cp("WiaiPost-hackathon-nacht",      hackathonNachtPost     as unknown as Post)}
     {cp("WiaiPost-stopp-handy",          stoppHandyPost         as unknown as Post)}
     {cp("WiaiPost-merkste-schule",       merksteSchulePost      as unknown as Post)}
+
+    {/* ── Design variants: Billboard, Terminal, Pixel Wall ─────────────── */}
+    {cp("WiaiPost-test-billboard",       testBillboardPost       as unknown as Post)}
+    {cp("WiaiPost-test-terminal-green",  testTerminalGreenPost   as unknown as Post)}
+    {cp("WiaiPost-test-terminal-amber",  testTerminalAmberPost   as unknown as Post)}
+    {cp("WiaiPost-test-pixel-wall-maze", testPixelWallMazePost   as unknown as Post)}
 
     {/* ── A/B experiments: timing overrides on existing posts ────────────── */}
     {/* These test different music variants without changing the post JSON.  */}

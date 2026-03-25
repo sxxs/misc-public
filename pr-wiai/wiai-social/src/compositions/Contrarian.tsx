@@ -10,6 +10,7 @@ import { DirtyCutout } from "../components/DirtyCutout";
 import { TypewriterText } from "../components/TypewriterText";
 import { LedWall } from "../components/LedWall";
 import { PunchlineSlide } from "../components/PunchlineSlide";
+import { resolvePattern } from "../patterns";
 
 // ── Music sync constants ──────────────────────────────────────────────────────
 // Beat in the track that originally fell at act3Start (frame 225 = 7.5s).
@@ -139,7 +140,7 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
 
   return (
     <SlideFrame accentColor={accent}>
-      <LedWall accentColor={accent} exitAtFrame={act1Duration - 20} />
+      <LedWall accentColor={accent} exitAtFrame={act1Duration - 20} pattern={resolvePattern(post.ledPattern)} />
       <div
         style={{
           flex: 1,
@@ -220,7 +221,7 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
 
   return (
     <SlideFrame accentColor={accent}>
-      <LedWall accentColor={accent} mode="s2" />
+      <LedWall accentColor={accent} mode="s2" pattern={resolvePattern(post.ledPattern)} />
       <div style={{
         flex: 1, display: "flex", alignItems: "center", padding: "0 108px",
         position: "relative", zIndex: 5,
@@ -250,6 +251,7 @@ const Act3: React.FC<{ post: Post; dur: number; subtextStart?: number; absenderS
         totalDuration={dur}
         subtextStartFrame={subtextStart}
         absenderStartFrame={absenderStart}
+        pattern={resolvePattern(post.ledPattern)}
       />
     </SlideFrame>
   );

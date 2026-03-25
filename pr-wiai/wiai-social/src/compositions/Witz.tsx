@@ -5,6 +5,7 @@ import { WIAI_YELLOW } from "../styles/colors";
 import { spaceGroteskFamily } from "../styles/fonts";
 import { SlideFrame } from "../components/SlideFrame";
 import { PunchlineSlide } from "../components/PunchlineSlide";
+import { resolvePattern } from "../patterns";
 
 // Slide 1: question in yellow
 const Act1: React.FC<{ post: Post }> = ({ post }) => {
@@ -78,7 +79,7 @@ const Act3: React.FC<{ post: Post }> = ({ post }) => {
   const accent = post.accentColor ?? WIAI_YELLOW;
   return (
     <SlideFrame accentColor={accent}>
-      <PunchlineSlide accentColor={accent} text={post.slide3.text} button={post.slide3.button} />
+      <PunchlineSlide accentColor={accent} text={post.slide3.text} button={post.slide3.button} pattern={resolvePattern(post.ledPattern)} />
     </SlideFrame>
   );
 };

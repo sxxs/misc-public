@@ -10,3 +10,6 @@ export const DIMMED_WHITE = "rgba(255,255,255,0.45)";
 
 export const GLITCH_RED = "#FF2D2D";
 export const GLITCH_CYAN = "#00E5FF";
+
+export const TERMINAL_GREEN = "#33FF33";
+export const TERMINAL_AMBER = "#FFB000";

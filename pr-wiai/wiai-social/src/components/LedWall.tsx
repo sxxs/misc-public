@@ -1,9 +1,15 @@
 import React from "react";
 import { useCurrentFrame, interpolate } from "remotion";
 
+export interface LedPattern {
+  frames: boolean[][][]; // [frameIndex][row][col]; static = single-element array
+  fps?: number;          // animated pattern framerate (default: 4)
+}
+
 interface Props {
   accentColor: string;
   mode?: "s1" | "s2" | "s3";
+  pattern?: LedPattern;    // sprite overlay; coexists with existing hash behavior
   endFlashAtFrame?: number; // mic-drop: LEDs ramp to 1.0, overlay drops, over 6f
   enterFrames?: number;     // staggered LED power-up at scene start (each LED at hash-based offset)
   enterOverdrive?: boolean; // brief brightness overshoot at entrance (1.0→1.5→1.0 over ~12f)
@@ -17,8 +23,15 @@ const CELL_H = 40;
 const LED_W = 38;
 const LED_H = 33;
 
-export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", endFlashAtFrame, enterFrames, enterOverdrive, exitAtFrame }) => {
+export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", pattern, endFlashAtFrame, enterFrames, enterOverdrive, exitAtFrame }) => {
   const frame = useCurrentFrame();
+
+  // ── Pattern frame selection (animated patterns cycle at pattern.fps) ──
+  const patternFrame = pattern
+    ? pattern.frames.length > 1
+      ? Math.floor((frame / 30) * (pattern.fps ?? 4)) % pattern.frames.length
+      : 0
+    : -1;
 
   // ── Mic-drop end flash ─────────────────────────────────────
   // Over 6 frames: all LEDs → opacity 1.0, overlay → 0
@@ -93,8 +106,14 @@ export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", endFlashAtF
         ? Math.min(1, Math.max(0, 1 - (frame - exitAtFrame - hash * 10.8) / 7.2))
         : 1;
 
+      // Pattern: sprite LEDs get fixed opacity by mode; background LEDs use hash logic
+      const isSpriteLed = patternFrame >= 0
+        && pattern!.frames[patternFrame][row]?.[col] === true;
+
       let opacity: number;
-      if (mode === "s2") {
+      if (isSpriteLed) {
+        opacity = mode === "s2" ? 0.06 : mode === "s3" ? 0.92 : 0.45;
+      } else if (mode === "s2") {
         opacity = 0.03;
       } else if (mode === "s3") {
         // ~92% on, ~8% blinking high

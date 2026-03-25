@@ -73,3 +73,44 @@ export const STILL_FRAMES = {
   slide2: 200,
   slide3: 390,
 } as const;
+
+// ── Billboard duration ──────────────────────────────────────────────────────
+export const BILLBOARD_ACT1_DURATION = 120;
+export const BILLBOARD_ACT3_DURATION = 160;
+
+export function computeBillboardDuration(post: {
+  slide2: { text: string };
+}): number {
+  return (
+    BILLBOARD_ACT1_DURATION +
+    computeAct2Duration(post.slide2.text) +
+    BILLBOARD_ACT3_DURATION
+  );
+}
+
+// ── Terminal duration ───────────────────────────────────────────────────────
+// Char-by-character at 0.5 chars/frame = 2f per char.
+// Accounts for startFrame delay and per-char extra frames (every 8th char).
+export function computeTerminalAct2Duration(
+  text: string,
+  charsPerFrame = 0.5,
+  startFrame = 6,
+  readingBuffer = 60
+): number {
+  const chars = text.replace(/\n/g, "").length;
+  const extraFrames = Math.floor(chars / 8); // matches TerminalText i%8===5 slowdown
+  return Math.max(90, startFrame + Math.ceil(chars / charsPerFrame) + extraFrames + readingBuffer);
+}
+
+export const TERMINAL_ACT1_DURATION = 75;
+export const TERMINAL_ACT3_DURATION = 150;
+
+export function computeTerminalDuration(post: {
+  slide2: { text: string };
+}): number {
+  return (
+    TERMINAL_ACT1_DURATION +
+    computeTerminalAct2Duration(post.slide2.text) +
+    TERMINAL_ACT3_DURATION
+  );
+}
