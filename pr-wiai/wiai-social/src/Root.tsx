@@ -47,6 +47,9 @@ import testBillboardPost        from "../posts/test-billboard.json";
 import testTerminalGreenPost    from "../posts/test-terminal-green.json";
 import testTerminalAmberPost    from "../posts/test-terminal-amber.json";
 import testPixelWallMazePost    from "../posts/test-pixel-wall-maze.json";
+import testSpaceInvaderPost     from "../posts/test-space-invader.json";
+import testEyePost              from "../posts/test-eye.json";
+import testBinaryRainPost       from "../posts/test-binary-rain.json";
 
 // ── Duration helpers ──────────────────────────────────────────────────────────
 const TRACK_DURATION = 520; // track.mp3 ~17.3s at 30fps
@@ -147,6 +150,9 @@ export const Root: React.FC = () => (
     {cp("WiaiPost-test-terminal-green",  testTerminalGreenPost   as unknown as Post)}
     {cp("WiaiPost-test-terminal-amber",  testTerminalAmberPost   as unknown as Post)}
     {cp("WiaiPost-test-pixel-wall-maze", testPixelWallMazePost   as unknown as Post)}
+    {cp("WiaiPost-test-space-invader",  testSpaceInvaderPost    as unknown as Post)}
+    {cp("WiaiPost-test-eye",            testEyePost             as unknown as Post)}
+    {cp("WiaiPost-test-binary-rain",    testBinaryRainPost      as unknown as Post)}
 
     {/* ── A/B experiments: timing overrides on existing posts ────────────── */}
     {/* These test different music variants without changing the post JSON.  */}

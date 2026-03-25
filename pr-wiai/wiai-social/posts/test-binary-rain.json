@@ -1,0 +1,10 @@
+{
+  "id": "test-binary-rain",
+  "type": "contrarian",
+  "ledPattern": "binary-rain",
+  "accentColor": "#3B82F6",
+  "timing": { "variant": "through" },
+  "slide1": { "bigText": "KI abschalten?", "smallText": "\"KI wird uns alle ersetzen.\"" },
+  "slide2": { "text": "ChatGPT verbraucht so viel\nStrom wie 33.000 Haushalte.\n\nPro Tag.\n\nUnd trotzdem kann es keine\nMatheklausur bestehen." },
+  "slide3": { "text": "KI ist ein Werkzeug.\nKein Ersatz.", "button": "WIAI · Künstliche Intelligenz" }
+}
