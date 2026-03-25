@@ -3,7 +3,7 @@
   "type": "contrarian",
   "ledPattern": "pacman",
   "timing": { "variant": "through" },
-  "slide1": { "bigText": "Lootboxen", "smallText": "\"Ist doch nur ein Spiel.\"" },
+  "slide1": { "bigText": "Lootboxen", "smallText": "\"Ist doch nur ein Spiel.\"", "textAlign": "bottom" },
   "slide2": { "text": "Lootboxen nutzen die\ngleichen Mechanismen\nwie Spielautomaten.\n\nDie Algorithmen dahinter?\nInformatik." },
   "slide3": { "text": "Wer die Mechaniken\nversteht, wird nicht\nmanipuliert.", "button": "WIAI · Games Engineering" }
 }

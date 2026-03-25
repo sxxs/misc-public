@@ -1,6 +1,6 @@
 import { LedPattern } from "../components/LedWall";
 
-// Padlock sprite — centered in 24×48 grid, 2x scale.
+// Padlock sprite — native size, positioned in upper third.
 // Static pattern for IT security / privacy topics.
 function generate(): boolean[][] {
   const rows = 48;
@@ -25,23 +25,18 @@ function generate(): boolean[][] {
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
   ];
 
-  const scale = 2;
-  const spriteH = sprite.length * scale;
-  const spriteW = sprite[0].length * scale;
-  const offsetR = Math.floor((rows - spriteH) / 2);
+  const spriteW = sprite[0].length;
+  // Upper third, horizontally centered
+  const offsetR = 6;
   const offsetC = Math.floor((cols - spriteW) / 2);
 
   for (let sr = 0; sr < sprite.length; sr++) {
-    for (let sc = 0; sc < sprite[0].length; sc++) {
+    for (let sc = 0; sc < spriteW; sc++) {
       if (sprite[sr][sc]) {
-        for (let dy = 0; dy < scale; dy++) {
-          for (let dx = 0; dx < scale; dx++) {
-            const r = offsetR + sr * scale + dy;
-            const c = offsetC + sc * scale + dx;
-            if (r >= 0 && r < rows && c >= 0 && c < cols) {
-              grid[r][c] = true;
-            }
-          }
+        const r = offsetR + sr;
+        const c = offsetC + sc;
+        if (r >= 0 && r < rows && c >= 0 && c < cols) {
+          grid[r][c] = true;
         }
       }
     }

@@ -1,7 +1,7 @@
 import { LedPattern } from "../components/LedWall";
 
 // Pac-Man with dots — 2 frames: mouth open / mouth closed.
-// Sprite centered in 24×48 grid, 2x scale.
+// Native size, positioned in upper third of 24×48 grid.
 function makeFrame(mouthOpen: boolean): boolean[][] {
   const rows = 48;
   const cols = 24;
@@ -43,28 +43,29 @@ function makeFrame(mouthOpen: boolean): boolean[][] {
   ];
 
   const sprite = mouthOpen ? open : closed;
+  const spriteW = sprite[0].length;
 
-  // Place Pac-Man in upper-left area (not dead center — leave room for dots)
-  const offsetR = 14;
+  // Position in upper area, shifted left to leave room for dots
+  const offsetR = 5;
   const offsetC = 1;
 
   for (let sr = 0; sr < sprite.length; sr++) {
-    for (let sc = 0; sc < sprite[0].length; sc++) {
+    for (let sc = 0; sc < spriteW; sc++) {
       if (sprite[sr][sc]) {
-        grid[offsetR + sr][offsetC + sc] = true;
+        const r = offsetR + sr;
+        const c = offsetC + sc;
+        if (r >= 0 && r < rows && c >= 0 && c < cols) {
+          grid[r][c] = true;
+        }
       }
     }
   }
 
-  // Dot trail — 3 dots to the right of Pac-Man
+  // Dot trail — 3 small dots to the right of Pac-Man
   const dotRow = offsetR + 6; // mouth level
-  const dotPositions = [16, 19, 22];
-  for (const dc of dotPositions) {
+  for (const dc of [16, 19, 22]) {
     if (dc < cols) {
       grid[dotRow][dc] = true;
-      grid[dotRow + 1][dc] = true;
-      grid[dotRow][dc + 1] = true;
-      grid[dotRow + 1][dc + 1] = true;
     }
   }
 
@@ -73,5 +74,5 @@ function makeFrame(mouthOpen: boolean): boolean[][] {
 
 export const pacmanPattern: LedPattern = {
   frames: [makeFrame(true), makeFrame(false)],
-  fps: 3, // chomp chomp
+  fps: 3,
 };
