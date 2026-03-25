@@ -41,6 +41,7 @@ export interface Post {
     label?: string;
     bigText?: string;
     smallText?: string;
+    textAlign?: "top" | "center" | "bottom"; // vertical text position in Act1 (default: "center")
   };
   slide2: {
     text: string;

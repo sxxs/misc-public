@@ -107,16 +107,16 @@ export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", pattern, en
         ? Math.min(1, Math.max(0, 1 - (frame - exitAtFrame - hash * 10.8) / 7.2))
         : 1;
 
-      // Pattern: sprite LEDs get fixed opacity by mode; background LEDs use hash logic
-      const isSpriteLed = patternFrame >= 0
+      // Pattern: sprite LEDs only visible in s1 mode (Act1 backdrop)
+      const isSpriteLed = mode === "s1" && patternFrame >= 0
         && pattern!.frames[patternFrame][row]?.[col] === true;
 
       let opacity: number;
       if (isSpriteLed) {
-        opacity = mode === "s2" ? 0.06 : mode === "s3" ? 0.92 : 0.45;
-      } else if (hasPattern) {
-        // Pattern active: background LEDs nearly off so sprite stands out
-        opacity = mode === "s3" ? 0.06 : 0.02;
+        opacity = 0.45;
+      } else if (hasPattern && mode === "s1") {
+        // Pattern active in s1: background LEDs nearly off so sprite stands out
+        opacity = 0.02;
       } else if (mode === "s2") {
         opacity = 0.03;
       } else if (mode === "s3") {

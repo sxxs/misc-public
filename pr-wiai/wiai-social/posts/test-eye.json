@@ -4,7 +4,7 @@
   "ledPattern": "eye",
   "accentColor": "#EF4444",
   "timing": { "variant": "through" },
-  "slide1": { "bigText": "Ertappt.", "smallText": "\"Ich hab nichts zu verbergen.\"" },
+  "slide1": { "bigText": "Ertappt.", "smallText": "\"Ich hab nichts zu verbergen.\"", "textAlign": "bottom" },
   "slide2": { "text": "Dein Handy trackt\n47 Datenpunkte pro Minute.\n\nStandort. Beschleunigung.\nBildschirmzeit. Apps.\n\nUnd du denkst du hast\nnichts zu verbergen." },
   "slide3": { "text": "Du hast Vorhänge.\nMerkste selber.", "button": "WIAI · Datenschutz" }
 }

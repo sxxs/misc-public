@@ -146,9 +146,11 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
-          // Shift content slightly above vertical center by adding more bottom padding
-          padding: "180px 240px 500px 108px",
+          justifyContent: post.slide1.textAlign === "top" ? "flex-start"
+            : post.slide1.textAlign === "bottom" ? "flex-end" : "center",
+          padding: post.slide1.textAlign === "bottom"
+            ? "180px 240px 420px 108px"  // push text down, above safe zone
+            : "180px 240px 500px 108px", // default: slightly above center
           gap: 44,
           position: "relative",
           zIndex: 5,

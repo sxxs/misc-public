@@ -2,6 +2,7 @@ import { LedPattern } from "../components/LedWall";
 
 // Eye sprite — blinks occasionally (3 frames: open, half-closed, closed).
 // For surveillance / tracking / "ich sehe dich" topics.
+// Positioned in upper third, no scaling — 12×10 native size.
 function makeFrame(state: "open" | "half" | "closed"): boolean[][] {
   const rows = 48;
   const cols = 24;
@@ -49,24 +50,19 @@ function makeFrame(state: "open" | "half" | "closed"): boolean[][] {
   ];
 
   const sprite = state === "open" ? open : state === "half" ? half : closed;
+  const spriteW = sprite[0].length;
 
-  const scale = 2;
-  const spriteH = sprite.length * scale;
-  const spriteW = sprite[0].length * scale;
-  const offsetR = Math.floor((rows - spriteH) / 2);
+  // Position in upper third, horizontally centered
+  const offsetR = 8;
   const offsetC = Math.floor((cols - spriteW) / 2);
 
   for (let sr = 0; sr < sprite.length; sr++) {
-    for (let sc = 0; sc < sprite[0].length; sc++) {
+    for (let sc = 0; sc < spriteW; sc++) {
       if (sprite[sr][sc]) {
-        for (let dy = 0; dy < scale; dy++) {
-          for (let dx = 0; dx < scale; dx++) {
-            const r = offsetR + sr * scale + dy;
-            const c = offsetC + sc * scale + dx;
-            if (r >= 0 && r < rows && c >= 0 && c < cols) {
-              grid[r][c] = true;
-            }
-          }
+        const r = offsetR + sr;
+        const c = offsetC + sc;
+        if (r >= 0 && r < rows && c >= 0 && c < cols) {
+          grid[r][c] = true;
         }
       }
     }
@@ -75,8 +71,8 @@ function makeFrame(state: "open" | "half" | "closed"): boolean[][] {
   return grid;
 }
 
-// Blink cycle: open × 12 frames, half × 1, closed × 1, half × 1, open × 12...
-// At fps=4: each frame = 0.25s, so 12 open = 3s, blink = 0.75s
+// Blink cycle: open × 12 frames, half × 1, closed × 1, half × 1
+// At fps=4: 12 open = 3s, blink = 0.75s
 export const eyePattern: LedPattern = {
   frames: [
     ...Array(12).fill(null).map(() => makeFrame("open")),
