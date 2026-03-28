@@ -37,6 +37,7 @@ let weekOffset = 0;
 let searchQuery = "";
 let columnTypes = loadColumnConfig();
 let selectedPostId = null;
+let weeksPerRow = 13;
 
 // ── API ──────────────────────────────────────────────────────────────────────
 
@@ -151,9 +152,10 @@ function render() {
 // ── Calendar ─────────────────────────────────────────────────────────────────
 
 function renderCalendar() {
-  const allWeeks = generateWeeks(26, weekOffset);
-  const row1 = allWeeks.slice(0, 13);
-  const row2 = allWeeks.slice(13);
+  const totalWeeks = weeksPerRow * 2;
+  const allWeeks = generateWeeks(totalWeeks, weekOffset);
+  const row1 = allWeeks.slice(0, weeksPerRow);
+  const row2 = allWeeks.slice(weeksPerRow);
   const currentWeek = getWeekStr(new Date());
 
   const postsByWeek = new Map();
@@ -171,7 +173,10 @@ function renderCalendar() {
   cal.replaceChildren();
 
   for (const row of [row1, row2]) {
-    const rowEl = el("div", { className: "cal-row" });
+    const rowEl = el("div", {
+      className: "cal-row",
+      style: { gridTemplateColumns: "repeat(" + weeksPerRow + ", minmax(0, 1fr))" },
+    });
     for (const wkObj of row) {
       const wk = wkObj.key;
       const posts = postsByWeek.get(wk) || [];
@@ -214,7 +219,7 @@ function renderCalendar() {
   }
 
   document.getElementById("navLabel").textContent =
-    weekLabel(row1[0].key) + " – " + weekLabel(row2[row2.length - 1].key);
+    weekLabel(row1[0].key) + " – " + weekLabel(row2[row2.length - 1].key) + "  (" + totalWeeks + " KW)";
 
   const searchCountEl = document.getElementById("searchCount");
   searchCountEl.textContent = searchQuery
@@ -845,6 +850,12 @@ const detailPanelEl = document.getElementById("detailPanel");
 document.getElementById("panelClose").addEventListener("click", closePanel);
 document.getElementById("timelineBtn").addEventListener("click", toggleTimeline);
 document.getElementById("timelineClose").addEventListener("click", toggleTimeline);
+document.getElementById("zoomIn").addEventListener("click", () => {
+  if (weeksPerRow > 3) { weeksPerRow -= 2; render(); }
+});
+document.getElementById("zoomOut").addEventListener("click", () => {
+  if (weeksPerRow < 13) { weeksPerRow += 2; render(); }
+});
 
 document.addEventListener("click", (e) => {
   if (!selectedPostId) return;
