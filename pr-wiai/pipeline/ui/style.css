@@ -389,7 +389,7 @@ header h1 .accent { color: var(--yellow); }
   display: none;
   position: fixed;
   width: 370px;
-  max-height: 55vh;
+  max-height: 75vh;
   overflow-y: auto;
   background: var(--surface);
   border: 1px solid var(--border2);
@@ -446,7 +446,22 @@ header h1 .accent { color: var(--yellow); }
   width: 100%;
 }
 .detail-panel input:focus, .detail-panel textarea:focus, .detail-panel select:focus { border-color: var(--yellow); outline: none; }
-.detail-panel textarea { min-height: 70px; resize: vertical; }
+.detail-panel textarea { min-height: 100px; resize: vertical; }
+
+/* Save indicator */
+.save-indicator {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  margin-left: 6px;
+  transition: opacity 0.3s;
+}
+.save-indicator.saving { color: var(--amber); }
+.save-indicator.saved { color: var(--green); }
+.save-indicator.error { color: var(--red); }
+.save-indicator.fade { opacity: 0; }
 
 /* Schedule-mode: highlight schedulable slots */
 body.schedule-mode .slot.empty-hint {

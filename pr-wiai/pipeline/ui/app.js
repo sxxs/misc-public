@@ -55,7 +55,9 @@ async function updatePost(id, field, value) {
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     console.error("updatePost failed:", id, field, err.error || res.status);
+    return false;
   }
+  return true;
 }
 
 // ── Column Config (localStorage) ─────────────────────────────────────────────
@@ -612,8 +614,25 @@ async function schedulePost(postId, week, slotIndex) {
 async function setField(id, field, value) {
   const post = plan.posts.find((p) => p.id === id);
   if (post) post[field] = value;
-  await updatePost(id, field, value);
+  showSaveStatus("saving");
+  const ok = await updatePost(id, field, value);
+  showSaveStatus(ok ? "saved" : "error");
   render();
+}
+
+function showSaveStatus(state) {
+  let indicator = detailPanelEl.querySelector(".save-indicator");
+  if (!indicator) {
+    indicator = el("span", { className: "save-indicator" });
+    const h2 = detailPanelEl.querySelector("h2");
+    if (h2) h2.parentNode.insertBefore(indicator, h2.nextSibling);
+    else detailPanelEl.prepend(indicator);
+  }
+  indicator.className = "save-indicator " + state;
+  indicator.textContent = state === "saving" ? "Speichern..." : state === "saved" ? "Gespeichert \u2713" : "Fehler!";
+  if (state === "saved") {
+    setTimeout(() => { indicator.classList.add("fade"); }, 1500);
+  }
 }
 
 // ── Event Listeners ──────────────────────────────────────────────────────────
