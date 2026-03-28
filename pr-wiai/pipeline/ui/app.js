@@ -518,11 +518,18 @@ function openPanel(id, event) {
   // Title
   content.appendChild(el("h2", {}, post.id));
 
-  // Schedule hint
+  // Schedule hint + unschedule button
   if (!post.targetWeek) {
     content.appendChild(el("div", { className: "schedule-hint" }, "\u2191 Klicke einen leeren Slot im Kalender um einzuplanen"));
   } else {
-    content.appendChild(el("div", { className: "schedule-hint" }, "Eingeplant: " + post.targetWeek + " — klicke anderen Slot zum Verschieben"));
+    const hintRow = el("div", { className: "schedule-hint" }, [
+      el("span", {}, "Eingeplant: " + post.targetWeek + " "),
+      el("span", {
+        className: "unschedule-btn",
+        onClick: (e) => { e.stopPropagation(); unschedulePost(post.id); },
+      }, "Zurueck ins Backlog"),
+    ]);
+    content.appendChild(hintRow);
   }
 
   // Status dropdown
@@ -668,6 +675,16 @@ async function schedulePost(postId, week, slotIndex) {
   await Promise.all(updates);
 }
 
+async function unschedulePost(postId) {
+  const post = plan.posts.find((p) => p.id === postId);
+  if (!post) return;
+  const updates = applySlotAssignment(post, null, null);
+  render();
+  openPanel(postId);
+  detailPanelEl.classList.add("open");
+  await Promise.all(updates);
+}
+
 async function setField(id, field, value) {
   const post = plan.posts.find((p) => p.id === id);
   if (post) post[field] = value;
@@ -715,10 +732,24 @@ document.addEventListener("click", (e) => {
 document.getElementById("navPrev").addEventListener("click", () => { weekOffset -= 13; render(); });
 document.getElementById("navNext").addEventListener("click", () => { weekOffset += 13; render(); });
 
+const searchInput = document.getElementById("searchInput");
+const searchBox = searchInput.closest(".search-box");
+
 let searchTimer = null;
-document.getElementById("searchInput").addEventListener("input", (e) => {
+searchInput.addEventListener("input", (e) => {
   clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => { searchQuery = e.target.value.trim(); render(); }, 150);
+  searchTimer = setTimeout(() => {
+    searchQuery = e.target.value.trim();
+    searchBox.classList.toggle("has-query", !!searchQuery);
+    render();
+  }, 150);
+});
+
+document.getElementById("searchClear").addEventListener("click", () => {
+  searchQuery = "";
+  searchInput.value = "";
+  searchBox.classList.remove("has-query");
+  render();
 });
 
 document.addEventListener("keydown", (e) => {
@@ -728,13 +759,15 @@ document.addEventListener("keydown", (e) => {
     if (hadPanel) closePanel();
     if (hadSearch) {
       searchQuery = "";
-      document.getElementById("searchInput").value = "";
+      searchInput.value = "";
+      searchBox.classList.remove("has-query");
     }
     if (hadSearch) render(); // single render, not double
   }
-  if ((e.metaKey || e.ctrlKey) && e.key === "f") {
+  if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "f")) {
     e.preventDefault();
-    document.getElementById("searchInput").focus();
+    searchInput.focus();
+    searchInput.select();
   }
 });
 

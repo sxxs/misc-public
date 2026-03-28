@@ -94,6 +94,15 @@ header h1 .accent { color: var(--yellow); }
   font-size: 9px;
   color: var(--dim);
 }
+.search-clear {
+  color: var(--dim);
+  font-size: 14px;
+  cursor: pointer;
+  display: none;
+  line-height: 1;
+}
+.search-clear:hover { color: var(--text); }
+.search-box.has-query .search-clear { display: block; }
 
 /* ── Calendar Nav ────────────────────────────────────────── */
 
@@ -421,6 +430,13 @@ header h1 .accent { color: var(--yellow); }
   font-size: 9px; color: var(--yellow); opacity: 0.7;
   padding: 4px 0 6px; letter-spacing: 0.03em;
 }
+.unschedule-btn {
+  color: var(--dim);
+  cursor: pointer;
+  border-bottom: 1px solid var(--dim2);
+  margin-left: 6px;
+}
+.unschedule-btn:hover { color: var(--text); border-color: var(--text); }
 
 .detail-panel label {
   display: block;
