@@ -130,7 +130,7 @@ function matchesSearch(post) {
   if (!searchQuery) return true;
   const q = searchQuery.toLowerCase();
   const hay = [
-    post.id, post.type,
+    post.id, post.type, post.tag ? "#" + post.tag : null, post.design, post.status,
     post.slides?.bigText, post.slides?.smallText, post.slides?.s2, post.slides?.s3, post.slides?.button, post.slides?.uebrigens,
     post.text?.slide1, post.text?.slide2, post.text?.slide3, post.text?.button, post.text?.uebrigens,
     post.notes,
