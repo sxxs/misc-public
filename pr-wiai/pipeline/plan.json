@@ -1,16 +1,53 @@
 {
   "posts": [
     {
-      "id": "2026-03-21-ki-jobs",
-      "type": "newsjacking",
-      "design": "pixel-wall",
-      "status": "ready",
-      "json": "wiai-social/posts/2026-03-21-ki-jobs.json",
-      "source": null,
+      "id": "test-algorithmus-willkuer",
+      "type": "billboard",
+      "design": "billboard",
+      "status": "idea",
+      "json": null,
+      "source": "pipeline/ideen/neue-postideen.md",
+      "targetWeek": "2026-KW15",
+      "publishedDate": null,
+      "platforms": {},
+      "notes": "Aphorismus: Ein Algorithmus entscheidet..."
+    },
+    {
+      "id": "test-passwort-zu-lang",
+      "type": "terminal",
+      "design": "terminal",
+      "status": "draft",
+      "json": null,
+      "source": "pipeline/ideen/neue-postideen.md",
+      "targetWeek": "2026-KW16",
+      "publishedDate": null,
+      "platforms": {},
+      "notes": "Naehkaestchen: Ich habe Fragen."
+    },
+    {
+      "id": "test-02-47-nachtgedanke",
+      "type": "nachtgedanke",
+      "design": "terminal",
+      "status": "draft",
+      "json": null,
+      "source": "pipeline/entwuerfe/gehalt-karriere.md",
       "targetWeek": null,
       "publishedDate": null,
       "platforms": {},
-      "notes": ""
+      "notes": "Post 56B: Alle deine Freunde wissen was sie werden wollen."
+    },
+    {
+      "id": "2026-03-21-ki-jobs",
+      "type": "newsjacking",
+      "design": "pixel-wall",
+      "status": "scheduled",
+      "json": "wiai-social/posts/2026-03-21-ki-jobs.json",
+      "source": null,
+      "targetWeek": "2026-KW27",
+      "publishedDate": null,
+      "platforms": {},
+      "notes": "",
+      "slotIndex": 0
     },
     {
       "id": "2026-akinator",
@@ -28,10 +65,10 @@
       "id": "2026-bambirds",
       "type": "contrarian",
       "design": "pixel-wall",
-      "status": "ready",
+      "status": "scheduled",
       "json": "wiai-social/posts/2026-bambirds.json",
       "source": null,
-      "targetWeek": null,
+      "targetWeek": "2026-KW13",
       "publishedDate": null,
       "platforms": {},
       "notes": ""
@@ -40,10 +77,10 @@
       "id": "2026-bier",
       "type": "contrarian",
       "design": "pixel-wall",
-      "status": "ready",
+      "status": "scheduled",
       "json": "wiai-social/posts/2026-bier.json",
       "source": null,
-      "targetWeek": null,
+      "targetWeek": "2026-KW28",
       "publishedDate": null,
       "platforms": {},
       "notes": ""
@@ -52,13 +89,14 @@
       "id": "2026-binary-search",
       "type": "contrarian",
       "design": "pixel-wall",
-      "status": "ready",
+      "status": "scheduled",
       "json": "wiai-social/posts/2026-binary-search.json",
       "source": null,
-      "targetWeek": null,
+      "targetWeek": "2026-KW27",
       "publishedDate": null,
       "platforms": {},
-      "notes": ""
+      "notes": "",
+      "slotIndex": 2
     },
     {
       "id": "2026-bulimie-lernen",
