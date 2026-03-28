@@ -4,232 +4,43 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>@herdom.bamberg — Pipeline</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap');
-
-:root {
-  --bg: #0a0a0a;
-  --surface: #161616;
-  --surface2: #1e1e1e;
-  --border: #2a2a2a;
-  --text: #e0e0e0;
-  --dim: #666;
-  --yellow: #facc15;
-  --red: #ef4444;
-  --blue: #3b82f6;
-  --green: #22c55e;
-  --amber: #f59e0b;
-  --cyan: #06b6d4;
-}
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-}
-
-/* ── Header ──────────────────────────────────────────────── */
-
-header {
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: baseline;
-  gap: 16px;
-}
-header h1 { font-size: 16px; font-weight: 700; color: var(--yellow); letter-spacing: 0.05em; }
-header .stats { font-size: 12px; color: var(--dim); font-family: 'Space Mono', monospace; }
-header .warn { color: var(--amber); }
-
-/* ── Calendar ────────────────────────────────────────────── */
-
-#calendar { padding: 16px 24px 8px; }
-
-.cal-row {
-  display: grid;
-  grid-template-columns: repeat(13, 1fr);
-  gap: 4px;
-  margin-bottom: 8px;
-}
-
-.week {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  min-height: 110px;
-  padding: 0;
-  overflow: hidden;
-}
-.week.current { border-color: var(--yellow); }
-.week.drag-over { border-color: var(--yellow); background: #1a1a2e; }
-
-.week-header {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--dim);
-  text-align: center;
-  padding: 5px 4px 3px;
-  border-bottom: 1px solid var(--border);
-  font-family: 'Space Mono', monospace;
-}
-.week.current .week-header { color: var(--yellow); }
-
-.week-slots { padding: 4px; display: flex; flex-direction: column; gap: 3px; }
-
-.empty-slot {
-  height: 6px;
-  border-radius: 3px;
-  background: var(--border);
-  opacity: 0.3;
-}
-
-/* ── Cards (in calendar) ─────────────────────────────────── */
-
-.card {
-  background: var(--surface2);
-  border-radius: 4px;
-  padding: 5px 7px;
-  cursor: grab;
-  border-left: 3px solid var(--dim);
-  transition: transform 0.1s, box-shadow 0.1s;
-}
-.card:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.4); }
-.card:active { cursor: grabbing; }
-.card.dragging { opacity: 0.3; }
-
-.card-title {
-  font-size: 10px;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.card-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 2px;
-}
-
-.card-type {
-  font-size: 8px;
-  font-family: 'Space Mono', monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.card-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-/* ── Backlog ─────────────────────────────────────────────── */
-
-#backlog {
-  padding: 0 24px 24px;
-  border-top: 1px solid var(--border);
-  margin-top: 8px;
-}
-
-.backlog-header {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  padding: 12px 0 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--dim);
-}
-
-.backlog-count {
-  font-size: 11px;
-  font-family: 'Space Mono', monospace;
-  color: var(--dim);
-}
-
-.backlog-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.backlog-group { }
-
-.backlog-type-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  color: var(--dim);
-  margin-bottom: 4px;
-  font-family: 'Space Mono', monospace;
-}
-
-.type-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.type-count { color: var(--dim); opacity: 0.6; }
-
-.backlog-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.backlog-cards .card {
-  width: 150px;
-  flex-shrink: 0;
-}
-
-/* ── Legend ───────────────────────────────────────────────── */
-
-.legend {
-  padding: 8px 24px;
-  display: flex;
-  gap: 16px;
-  font-size: 10px;
-  color: var(--dim);
-  border-top: 1px solid var(--border);
-}
-.legend .item { display: flex; align-items: center; gap: 4px; }
-.legend .swatch { width: 12px; height: 3px; border-radius: 1px; }
-
-/* ── Detail Panel ────────────────────────────────────────── */
-
-.panel-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; }
-.panel-overlay.open { display: flex; justify-content: flex-end; }
-.panel { width: 420px; max-width: 90vw; background: var(--surface); border-left: 1px solid var(--border); padding: 24px; overflow-y: auto; height: 100vh; position: relative; }
-.panel h2 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--yellow); word-break: break-all; }
-.panel .close-btn { position: absolute; top: 12px; right: 16px; background: none; border: none; color: var(--dim); font-size: 20px; cursor: pointer; }
-.panel label { display: block; font-size: 9px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; margin: 10px 0 3px; }
-.panel .slide-text { background: var(--bg); padding: 8px 10px; border-radius: 4px; font-size: 12px; line-height: 1.5; white-space: pre-wrap; border: 1px solid var(--border); }
-.panel select, .panel input, .panel textarea { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 5px 7px; font-size: 12px; width: 100%; }
-.panel textarea { min-height: 50px; resize: vertical; }
-.panel .status-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
-</style>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>
-  <h1>@herdom.bamberg</h1>
-  <div class="stats" id="stats"></div>
+<!-- ── Header ──────────────────────────────────────────────── -->
+<header id="header">
+  <div class="header-left">
+    <h1>HERDOM<span class="accent">.BAMBERG</span></h1>
+    <div class="stats" id="stats"></div>
+  </div>
+  <div class="header-right">
+    <div class="search-box">
+      <span class="search-icon">&#9906;</span>
+      <input type="text" id="searchInput" placeholder="Suche..." spellcheck="false">
+      <span class="search-count" id="searchCount"></span>
+    </div>
+  </div>
 </header>
 
-<div id="calendar"></div>
-
-<div id="backlog"></div>
-
-<div class="legend">
-  <div class="item"><div class="swatch" style="background:var(--dim)"></div> Idee</div>
-  <div class="item"><div class="swatch" style="background:var(--amber)"></div> Entwurf</div>
-  <div class="item"><div class="swatch" style="background:var(--green)"></div> Ready</div>
-  <div class="item"><div class="swatch" style="background:var(--blue)"></div> Eingeplant</div>
-  <div class="item"><div class="swatch" style="background:var(--cyan)"></div> Veroeffentlicht</div>
+<!-- ── Calendar Navigation ─────────────────────────────────── -->
+<div class="cal-nav" id="calNav">
+  <button class="nav-btn" id="navPrev">&larr; FRUEHER</button>
+  <span class="nav-label" id="navLabel"></span>
+  <button class="nav-btn" id="navNext">SPAETER &rarr;</button>
 </div>
 
+<!-- ── Calendar Grid ───────────────────────────────────────── -->
+<div id="calendar"></div>
+
+<!-- ── Backlog ─────────────────────────────────────────────── -->
+<div id="backlog"></div>
+
+<!-- ── Legend ───────────────────────────────────────────────── -->
+<div class="legend" id="legend"></div>
+
+<!-- ── Detail Panel ────────────────────────────────────────── -->
 <div class="panel-overlay" id="panelOverlay">
   <div class="panel" id="panel">
     <button class="close-btn" id="closeBtn">&times;</button>
