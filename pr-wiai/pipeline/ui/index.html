@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>@herdom.bamberg — Pipeline</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap');
+
 :root {
   --bg: #0a0a0a;
   --surface: #161616;
@@ -23,128 +25,190 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
-  overflow-x: auto;
 }
 
+/* ── Header ──────────────────────────────────────────────── */
+
 header {
-  padding: 20px 24px 16px;
+  padding: 16px 24px;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: baseline;
   gap: 16px;
-  position: sticky;
-  top: 0;
-  background: var(--bg);
-  z-index: 100;
 }
-
 header h1 { font-size: 16px; font-weight: 700; color: var(--yellow); letter-spacing: 0.05em; }
 header .stats { font-size: 12px; color: var(--dim); font-family: 'Space Mono', monospace; }
-header .stats .warn { color: var(--amber); }
+header .warn { color: var(--amber); }
 
-.grid-container { padding: 16px 24px; overflow-x: auto; }
+/* ── Calendar ────────────────────────────────────────────── */
 
-.grid {
+#calendar { padding: 16px 24px 8px; }
+
+.cal-row {
   display: grid;
-  gap: 1px;
-  background: var(--border);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  overflow: hidden;
-  min-width: max-content;
-}
-
-.col-header {
-  background: var(--surface);
-  padding: 10px 12px;
-  font-size: 11px;
-  font-weight: 600;
-  text-align: center;
-  color: var(--dim);
-  min-width: 140px;
-  position: sticky;
-  top: 60px;
-  z-index: 50;
-}
-.col-header.current { color: var(--yellow); border-bottom: 2px solid var(--yellow); }
-.col-header.backlog { color: var(--dim); font-style: italic; min-width: 180px; }
-
-.row-header {
-  background: var(--surface);
-  padding: 10px 12px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--dim);
-  min-width: 130px;
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  position: sticky;
-  left: 0;
-  z-index: 40;
-}
-.row-header .dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 2px; flex-shrink: 0; }
-
-.cell {
-  background: var(--bg);
-  min-height: 70px;
-  padding: 6px;
-  display: flex;
-  flex-direction: column;
+  grid-template-columns: repeat(13, 1fr);
   gap: 4px;
+  margin-bottom: 8px;
 }
-.cell.drag-over { background: #1a1a2e; outline: 1px dashed var(--yellow); outline-offset: -2px; }
+
+.week {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  min-height: 110px;
+  padding: 0;
+  overflow: hidden;
+}
+.week.current { border-color: var(--yellow); }
+.week.drag-over { border-color: var(--yellow); background: #1a1a2e; }
+
+.week-header {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--dim);
+  text-align: center;
+  padding: 5px 4px 3px;
+  border-bottom: 1px solid var(--border);
+  font-family: 'Space Mono', monospace;
+}
+.week.current .week-header { color: var(--yellow); }
+
+.week-slots { padding: 4px; display: flex; flex-direction: column; gap: 3px; }
+
+.empty-slot {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  opacity: 0.3;
+}
+
+/* ── Cards (in calendar) ─────────────────────────────────── */
 
 .card {
   background: var(--surface2);
-  border-radius: 6px;
-  padding: 8px 10px;
-  font-size: 11px;
+  border-radius: 4px;
+  padding: 5px 7px;
   cursor: grab;
   border-left: 3px solid var(--dim);
   transition: transform 0.1s, box-shadow 0.1s;
 }
-.card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+.card:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.4); }
 .card:active { cursor: grabbing; }
-.card.dragging { opacity: 0.4; }
-.card .title { font-weight: 600; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
-.card .meta { font-size: 9px; color: var(--dim); font-family: 'Space Mono', monospace; }
+.card.dragging { opacity: 0.3; }
 
-.card[data-status="idea"]      { border-left-color: var(--dim); }
-.card[data-status="draft"]     { border-left-color: var(--amber); }
-.card[data-status="ready"]     { border-left-color: var(--green); }
-.card[data-status="scheduled"] { border-left-color: var(--blue); }
-.card[data-status="published"] { border-left-color: var(--cyan); }
+.card-title {
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-.panel-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; }
-.panel-overlay.open { display: flex; justify-content: flex-end; }
-.panel { width: 420px; max-width: 90vw; background: var(--surface); border-left: 1px solid var(--border); padding: 24px; overflow-y: auto; height: 100vh; position: relative; }
-.panel h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--yellow); }
-.panel .close-btn { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--dim); font-size: 20px; cursor: pointer; }
-.panel label { display: block; font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; margin: 12px 0 4px; }
-.panel .slide-text { background: var(--bg); padding: 10px 12px; border-radius: 4px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; border: 1px solid var(--border); }
-.panel select, .panel input, .panel textarea { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 6px 8px; font-size: 12px; width: 100%; }
-.panel textarea { min-height: 60px; resize: vertical; }
-.panel .status-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+.card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+
+.card-type {
+  font-size: 8px;
+  font-family: 'Space Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.card-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Backlog ─────────────────────────────────────────────── */
+
+#backlog {
+  padding: 0 24px 24px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+
+.backlog-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dim);
+}
+
+.backlog-count {
+  font-size: 11px;
+  font-family: 'Space Mono', monospace;
+  color: var(--dim);
+}
+
+.backlog-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.backlog-group { }
+
+.backlog-type-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--dim);
+  margin-bottom: 4px;
+  font-family: 'Space Mono', monospace;
+}
+
+.type-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.type-count { color: var(--dim); opacity: 0.6; }
+
+.backlog-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.backlog-cards .card {
+  width: 150px;
+  flex-shrink: 0;
+}
+
+/* ── Legend ───────────────────────────────────────────────── */
 
 .legend {
-  padding: 12px 24px;
+  padding: 8px 24px;
   display: flex;
   gap: 16px;
   font-size: 10px;
   color: var(--dim);
   border-top: 1px solid var(--border);
-  position: sticky;
-  bottom: 0;
-  background: var(--bg);
 }
 .legend .item { display: flex; align-items: center; gap: 4px; }
 .legend .swatch { width: 12px; height: 3px; border-radius: 1px; }
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap');
+/* ── Detail Panel ────────────────────────────────────────── */
+
+.panel-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; }
+.panel-overlay.open { display: flex; justify-content: flex-end; }
+.panel { width: 420px; max-width: 90vw; background: var(--surface); border-left: 1px solid var(--border); padding: 24px; overflow-y: auto; height: 100vh; position: relative; }
+.panel h2 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--yellow); word-break: break-all; }
+.panel .close-btn { position: absolute; top: 12px; right: 16px; background: none; border: none; color: var(--dim); font-size: 20px; cursor: pointer; }
+.panel label { display: block; font-size: 9px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; margin: 10px 0 3px; }
+.panel .slide-text { background: var(--bg); padding: 8px 10px; border-radius: 4px; font-size: 12px; line-height: 1.5; white-space: pre-wrap; border: 1px solid var(--border); }
+.panel select, .panel input, .panel textarea { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 5px 7px; font-size: 12px; width: 100%; }
+.panel textarea { min-height: 50px; resize: vertical; }
+.panel .status-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -154,14 +218,14 @@ header .stats .warn { color: var(--amber); }
   <div class="stats" id="stats"></div>
 </header>
 
-<div class="grid-container">
-  <div class="grid" id="grid"></div>
-</div>
+<div id="calendar"></div>
+
+<div id="backlog"></div>
 
 <div class="legend">
   <div class="item"><div class="swatch" style="background:var(--dim)"></div> Idee</div>
   <div class="item"><div class="swatch" style="background:var(--amber)"></div> Entwurf</div>
-  <div class="item"><div class="swatch" style="background:var(--green)"></div> Ready (JSON)</div>
+  <div class="item"><div class="swatch" style="background:var(--green)"></div> Ready</div>
   <div class="item"><div class="swatch" style="background:var(--blue)"></div> Eingeplant</div>
   <div class="item"><div class="swatch" style="background:var(--cyan)"></div> Veroeffentlicht</div>
 </div>

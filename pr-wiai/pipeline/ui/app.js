@@ -1,33 +1,20 @@
-// @herdom.bamberg — Swimlane Calendar UI
-// All DOM manipulation uses safe methods (textContent, createElement) — no innerHTML.
+// @herdom.bamberg — Pipeline Calendar UI (v2)
+// Two rows of 13 weeks + backlog below. Color = post type.
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const TYPE_ORDER = [
-  "contrarian", "newsjacking", "wusstest-du",
-  "billboard", "terminal", "nachtgedanke",
-  "selbstironie", "witz", "parodie", "overselling", "other",
-];
-
 const TYPE_LABELS = {
-  contrarian: "Contrarian / LED-Wall",
-  newsjacking: "Newsjacking",
-  "wusstest-du": "Wusstest du schon",
-  billboard: "Billboard / Aphorismus",
-  terminal: "Terminal",
-  nachtgedanke: "Nachtgedanke",
-  selbstironie: "Selbstironie / Meta",
-  witz: "Witz",
-  parodie: "Clickbait-Parodie",
-  overselling: "Overselling",
-  other: "Sonstige",
+  contrarian: "Contrarian", newsjacking: "Newsjacking", "wusstest-du": "Wusstest du",
+  billboard: "Billboard", terminal: "Terminal", nachtgedanke: "Nachtgedanke",
+  selbstironie: "Selbstironie", witz: "Witz", parodie: "Parodie",
+  overselling: "Overselling", stitch: "Stitch", other: "Sonstige",
 };
 
 const TYPE_COLORS = {
   contrarian: "#facc15", newsjacking: "#ef4444", "wusstest-du": "#f59e0b",
   billboard: "#ffffff", terminal: "#33ff33", nachtgedanke: "#ffb000",
   selbstironie: "#888", witz: "#facc15", parodie: "#06b6d4",
-  overselling: "#f59e0b", other: "#666",
+  overselling: "#f59e0b", stitch: "#a78bfa", other: "#666",
 };
 
 const STATUS_COLORS = {
@@ -104,103 +91,154 @@ function el(tag, attrs, children) {
   return node;
 }
 
-// ── Render ────────────────────────────────────────────────────────────────────
-
-function render() {
-  const weeks = generateWeeks(12);
-  const currentWeek = getWeekStr(new Date());
-
-  const activeTypes = [...new Set(plan.posts.map((p) =>
-    TYPE_ORDER.includes(p.type) ? p.type : "other"
-  ))].sort((a, b) => TYPE_ORDER.indexOf(a) - TYPE_ORDER.indexOf(b));
-
-  const grid = document.getElementById("grid");
-  grid.style.gridTemplateColumns = "130px repeat(" + weeks.length + ", 140px) 180px";
-  grid.replaceChildren(); // clear safely
-
-  // Corner cell
-  grid.appendChild(el("div", { className: "col-header" }));
-
-  // Week headers
-  for (const wk of weeks) {
-    const cls = "col-header" + (wk === currentWeek ? " current" : "");
-    grid.appendChild(el("div", { className: cls }, weekLabel(wk)));
-  }
-  grid.appendChild(el("div", { className: "col-header backlog" }, "Backlog"));
-
-  // Build lookup map: (type, week) → posts[] — avoids O(N*W) filter scans
-  const postsByCell = new Map();
-  for (const p of plan.posts) {
-    const t = mapType(p.type);
-    const w = p.targetWeek || "";
-    const key = t + "|" + w;
-    if (!postsByCell.has(key)) postsByCell.set(key, []);
-    postsByCell.get(key).push(p);
-  }
-
-  // Rows
-  for (const type of activeTypes) {
-    const color = TYPE_COLORS[type] || "#666";
-    const dot = el("div", { className: "dot", style: { background: color } });
-    const rowHeader = el("div", { className: "row-header" }, [dot, el("span", {}, TYPE_LABELS[type] || type)]);
-    grid.appendChild(rowHeader);
-
-    for (const wk of weeks) {
-      const cell = createCell(wk, type, postsByCell.get(type + "|" + wk) || []);
-      grid.appendChild(cell);
-    }
-
-    const cell = createCell("", type, postsByCell.get(type + "|") || []);
-    grid.appendChild(cell);
-  }
-
-  // Stats
-  const statsEl = document.getElementById("stats");
-  statsEl.replaceChildren();
-  const total = plan.posts.length;
-  const ready = plan.posts.filter((p) => p.status === "ready").length;
-  const scheduled = plan.posts.filter((p) => p.targetWeek).length;
-  const contrPct = Math.round(plan.posts.filter((p) => p.type === "contrarian").length / total * 100);
-
-  statsEl.appendChild(document.createTextNode(total + " Posts | " + ready + " ready | " + scheduled + " eingeplant"));
-  if (contrPct > 60) {
-    const warn = el("span", { className: "warn" }, " | Contrarian-Skew " + contrPct + "%");
-    statsEl.appendChild(warn);
-  }
-}
-
-function mapType(type) {
-  return TYPE_ORDER.includes(type) ? type : "other";
-}
-
-function createCell(week, type, posts) {
-  const cell = el("div", {
-    className: "cell",
-    "data-week": week,
-    "data-type": type,
+function dropTarget(attrs) {
+  return {
+    ...attrs,
     onDragover: (e) => { e.preventDefault(); e.currentTarget.classList.add("drag-over"); },
     onDragleave: (e) => { e.currentTarget.classList.remove("drag-over"); },
     onDrop: (e) => onDrop(e),
-  });
-  for (const p of posts) {
-    cell.appendChild(createCard(p));
-  }
-  return cell;
+  };
 }
 
+// ── Render ────────────────────────────────────────────────────────────────────
+
+function render() {
+  const weeks = generateWeeks(26);
+  const row1 = weeks.slice(0, 13);
+  const row2 = weeks.slice(13);
+  const currentWeek = getWeekStr(new Date());
+
+  // Build lookup: week → posts[]
+  const postsByWeek = new Map();
+  const backlog = [];
+  for (const p of plan.posts) {
+    if (p.targetWeek) {
+      if (!postsByWeek.has(p.targetWeek)) postsByWeek.set(p.targetWeek, []);
+      postsByWeek.get(p.targetWeek).push(p);
+    } else {
+      backlog.push(p);
+    }
+  }
+
+  // ── Calendar section ──
+  const cal = document.getElementById("calendar");
+  cal.replaceChildren();
+
+  for (const row of [row1, row2]) {
+    const rowEl = el("div", { className: "cal-row" });
+    for (const wk of row) {
+      const isCurrent = wk === currentWeek;
+      const posts = postsByWeek.get(wk) || [];
+      const weekEl = el("div", dropTarget({
+        className: "week" + (isCurrent ? " current" : ""),
+        "data-week": wk,
+      }));
+
+      const header = el("div", { className: "week-header" }, weekLabel(wk));
+      weekEl.appendChild(header);
+
+      const slots = el("div", { className: "week-slots" });
+      for (const p of posts) {
+        slots.appendChild(createCard(p));
+      }
+      // Empty slot indicators (show capacity)
+      const remaining = 3 - posts.length;
+      for (let i = 0; i < remaining && i < 3; i++) {
+        slots.appendChild(el("div", { className: "empty-slot" }));
+      }
+      weekEl.appendChild(slots);
+      rowEl.appendChild(weekEl);
+    }
+    cal.appendChild(rowEl);
+  }
+
+  // ── Backlog section ──
+  const backlogEl = document.getElementById("backlog");
+  backlogEl.replaceChildren();
+
+  const backlogHeader = el("div", { className: "backlog-header" }, [
+    el("span", {}, "Backlog"),
+    el("span", { className: "backlog-count" }, backlog.length + " Posts"),
+  ]);
+  backlogEl.appendChild(backlogHeader);
+
+  const backlogGrid = el("div", dropTarget({
+    className: "backlog-grid",
+    "data-week": "",
+  }));
+
+  // Group by type for visual clarity
+  const byType = new Map();
+  for (const p of backlog) {
+    const t = p.type || "other";
+    if (!byType.has(t)) byType.set(t, []);
+    byType.get(t).push(p);
+  }
+
+  for (const [type, posts] of byType) {
+    const group = el("div", { className: "backlog-group" });
+    const groupLabel = el("div", { className: "backlog-type-label" }, [
+      el("span", { className: "type-dot", style: { background: TYPE_COLORS[type] || "#666" } }),
+      el("span", {}, TYPE_LABELS[type] || type),
+      el("span", { className: "type-count" }, "(" + posts.length + ")"),
+    ]);
+    group.appendChild(groupLabel);
+
+    const groupCards = el("div", { className: "backlog-cards" });
+    for (const p of posts) {
+      groupCards.appendChild(createCard(p));
+    }
+    group.appendChild(groupCards);
+    backlogGrid.appendChild(group);
+  }
+
+  backlogEl.appendChild(backlogGrid);
+
+  // ── Stats ──
+  const statsEl = document.getElementById("stats");
+  statsEl.replaceChildren();
+  const total = plan.posts.length;
+  const readyCount = plan.posts.filter((p) => p.status === "ready").length;
+  const scheduledCount = plan.posts.filter((p) => p.targetWeek).length;
+
+  const typeDist = {};
+  plan.posts.forEach((p) => { typeDist[p.type] = (typeDist[p.type] || 0) + 1; });
+  const topType = Object.entries(typeDist).sort((a, b) => b[1] - a[1])[0];
+  const skew = topType ? Math.round(topType[1] / total * 100) : 0;
+
+  statsEl.appendChild(document.createTextNode(
+    total + " Posts | " + readyCount + " ready | " + scheduledCount + " eingeplant"
+  ));
+  if (skew > 60) {
+    statsEl.appendChild(el("span", { className: "warn" },
+      " | " + (TYPE_LABELS[topType[0]] || topType[0]) + "-Skew " + skew + "%"
+    ));
+  }
+}
+
+// ── Cards ────────────────────────────────────────────────────────────────────
+
 function createCard(post) {
-  const displayTitle = (post.text?.slide1 || post.text?.slide2?.substring(0, 30) || post.id).substring(0, 25);
-  const titleEl = el("div", { className: "title" }, displayTitle);
-  const metaEl = el("div", { className: "meta" }, post.id);
+  const typeColor = TYPE_COLORS[post.type] || "#666";
+  const statusColor = STATUS_COLORS[post.status] || "#666";
+  const displayTitle = (post.text?.slide1 || post.text?.slide2?.substring(0, 30) || post.id).substring(0, 22);
+
   const card = el("div", {
     className: "card",
+    style: { borderLeftColor: typeColor },
     "data-status": post.status,
     "data-id": post.id,
     draggable: "true",
     onDragstart: (e) => onDragStart(e),
     onDragend: (e) => onDragEnd(e),
     onClick: () => openPanel(post.id),
-  }, [titleEl, metaEl]);
+  }, [
+    el("div", { className: "card-title" }, displayTitle),
+    el("div", { className: "card-meta" }, [
+      el("span", { className: "card-type", style: { color: typeColor } }, TYPE_LABELS[post.type] || post.type),
+      el("span", { className: "card-dot", style: { background: statusColor } }),
+    ]),
+  ]);
   return card;
 }
 
@@ -222,20 +260,14 @@ async function onDrop(e) {
   e.currentTarget.classList.remove("drag-over");
   if (!draggedId) return;
 
-  const week = e.currentTarget.dataset.week || null;
-  const type = e.currentTarget.dataset.type;
+  const week = e.currentTarget.dataset.week || e.currentTarget.closest("[data-week]")?.dataset.week || null;
   const post = plan.posts.find((p) => p.id === draggedId);
   if (!post) return;
 
-  // Collect all changes, then batch-update
   const updates = [];
   post.targetWeek = week;
   updates.push(updatePost(post.id, "targetWeek", week));
 
-  if (type !== post.type && TYPE_ORDER.includes(type)) {
-    post.type = type;
-    updates.push(updatePost(post.id, "type", type));
-  }
   if (week && post.status === "ready") {
     post.status = "scheduled";
     updates.push(updatePost(post.id, "status", "scheduled"));
@@ -259,23 +291,20 @@ function openPanel(id) {
   const content = document.getElementById("panelContent");
   content.replaceChildren();
 
-  // Title
   content.appendChild(el("h2", {}, post.id));
 
-  // Status badge
   const badgeColor = STATUS_COLORS[post.status] || "#666";
   content.appendChild(el("span", {
     className: "status-badge",
     style: { background: badgeColor + "20", color: badgeColor },
   }, post.status));
 
-  // Type + Design
+  const typeColor = TYPE_COLORS[post.type] || "#666";
   content.appendChild(el("label", {}, "Typ"));
-  content.appendChild(el("div", { style: { fontSize: "13px" } }, TYPE_LABELS[post.type] || post.type));
+  content.appendChild(el("div", { style: { fontSize: "13px", color: typeColor } }, TYPE_LABELS[post.type] || post.type));
   content.appendChild(el("label", {}, "Design"));
-  content.appendChild(el("div", { style: { fontSize: "13px" } }, post.design));
+  content.appendChild(el("div", { style: { fontSize: "13px" } }, post.design || "—"));
 
-  // JSON path
   if (post.json) {
     content.appendChild(el("label", {}, "JSON"));
     content.appendChild(el("div", {
@@ -283,7 +312,6 @@ function openPanel(id) {
     }, post.json));
   }
 
-  // Slide texts
   if (post.text) {
     for (const [key, label] of [["slide1", "Slide 1"], ["slide2", "Slide 2"], ["slide3", "Slide 3"], ["button", "Button"], ["uebrigens", "Uebrigens"]]) {
       if (post.text[key]) {
@@ -293,17 +321,11 @@ function openPanel(id) {
     }
   }
 
-  // Target week input
   content.appendChild(el("label", {}, "Zielwoche"));
-  const weekInput = el("input", {
-    type: "text",
-    value: post.targetWeek || "",
-    placeholder: "z.B. 2026-KW15",
-  });
+  const weekInput = el("input", { type: "text", value: post.targetWeek || "", placeholder: "z.B. 2026-KW15" });
   weekInput.addEventListener("change", () => setField(post.id, "targetWeek", weekInput.value || null));
   content.appendChild(weekInput);
 
-  // Notes textarea
   content.appendChild(el("label", {}, "Notizen"));
   const notesArea = el("textarea", {}, post.notes || "");
   notesArea.addEventListener("change", () => setField(post.id, "notes", notesArea.value));
