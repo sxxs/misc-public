@@ -156,8 +156,10 @@ header h1 .accent { color: var(--yellow); }
   letter-spacing: 0.03em;
   flex-shrink: 0;
 }
-.week-kw { font-weight: 800; }
-.week-date { font-weight: 400; font-size: 9px; color: var(--dim2); }
+.week-kw { font-weight: 800; letter-spacing: 0.08em; }
+.week-kw-prefix { color: var(--dim); }
+.week-kw-num { color: var(--text); }
+.week-date { font-weight: 400; font-size: 9px; color: var(--dim); }
 .week.current .week-header { color: var(--yellow); background: rgba(250,204,21,0.04); }
 .week.current .week-date { color: var(--yellow); opacity: 0.5; }
 .week.past .week-header { color: var(--dim2); }

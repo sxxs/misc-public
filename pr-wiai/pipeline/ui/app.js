@@ -163,8 +163,13 @@ function render() {
       const cls = "week" + (isCurrent ? " current" : "") + (isPast ? " past" : "");
       const weekEl = el("div", { className: cls });
 
+      const kwText = weekLabel(wk);
+      const kwNum = kwText.replace("KW", "");
       const header = el("div", { className: "week-header" }, [
-        el("span", { className: "week-kw" }, weekLabel(wk)),
+        el("span", { className: "week-kw" }, [
+          el("span", { className: "week-kw-prefix" }, "KW"),
+          el("span", { className: "week-kw-num" }, kwNum),
+        ]),
         el("span", { className: "week-date" }, formatMonday(wkObj.monday)),
       ]);
       weekEl.appendChild(header);
