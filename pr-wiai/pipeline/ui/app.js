@@ -737,17 +737,34 @@ function openPanel(id, event) {
   formatSelect.addEventListener("change", () => setField(post.id, "format", formatSelect.value));
   content.appendChild(formatSelect);
 
-  // Description (for TikTok/YouTube/Instagram caption)
-  content.appendChild(el("label", {}, "Description / Caption"));
-  const descArea = el("textarea", { style: { minHeight: "50px" } }, post.description || "");
-  descArea.addEventListener("input", () => debouncedSave(post.id, "description", descArea.value));
-  content.appendChild(descArea);
+  // Platform-specific captions & hashtags
+  const social = post.social || {};
+  function socialField(platform, field, label, isTextarea, placeholder) {
+    const key = platform + "." + field;
+    const val = social[platform]?.[field] || "";
+    content.appendChild(el("label", {}, label));
+    const input = isTextarea
+      ? el("textarea", { style: { minHeight: "36px" }, placeholder: placeholder || "" }, val)
+      : el("input", { type: "text", value: val, placeholder: placeholder || "" });
+    input.addEventListener("input", () => {
+      if (!post.social) post.social = {};
+      if (!post.social[platform]) post.social[platform] = {};
+      post.social[platform][field] = input.value;
+      debouncedSave(post.id, "social", post.social);
+    });
+    content.appendChild(input);
+  }
 
-  // Hashtags
-  content.appendChild(el("label", {}, "Hashtags"));
-  const hashInput = el("input", { type: "text", value: post.hashtags || "", placeholder: "#informatik #bamberg #wiai" });
-  hashInput.addEventListener("input", () => debouncedSave(post.id, "hashtags", hashInput.value));
-  content.appendChild(hashInput);
+  // TikTok
+  socialField("tiktok", "caption", "TikTok Caption", true, "Hook + Keywords...");
+  socialField("tiktok", "hashtags", "TikTok Hashtags", false, "#informatik #unileben");
+  // YouTube
+  socialField("youtube", "title", "YouTube Titel", false, "Klarer Titel (max 70 Zeichen)");
+  socialField("youtube", "description", "YouTube Description", true, "SEO-Beschreibung...");
+  socialField("youtube", "hashtags", "YouTube Hashtags", false, "#Shorts #Informatik");
+  // Instagram
+  socialField("instagram", "caption", "Instagram Caption", true, "Hook + thematische Keywords...");
+  socialField("instagram", "hashtags", "Instagram Hashtags", false, "#informatik #studium");
 
   // Notes (freeform comments, separate from slide content)
   content.appendChild(el("label", {}, "Notizen"));
