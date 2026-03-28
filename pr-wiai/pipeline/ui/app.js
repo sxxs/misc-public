@@ -309,14 +309,26 @@ function renderLegend() {
 
 function createCard(post) {
   const typeColor = TYPE_COLORS[post.type] || "#555";
-  const statusColor = STATUS_COLORS[post.status] || "#555";
   const title = post.text?.slide1 || post.text?.slide2?.substring(0, 35) || post.id;
   const displayTitle = title.substring(0, 28);
   const isMatch = searchQuery && matchesSearch(post);
   const isDimmed = searchQuery && !isMatch;
+  const needsWork = post.status === "idea" || post.status === "draft";
+
+  const classes = ["card"];
+  if (isMatch) classes.push("search-match");
+  if (isDimmed) classes.push("search-dim");
+  if (needsWork) classes.push("needs-work");
+
+  const metaChildren = [
+    el("span", { className: "card-type", style: { color: typeColor } }, TYPE_LABELS[post.type] || "?"),
+  ];
+  if (needsWork) {
+    metaChildren.push(el("span", { className: "card-warn" }, post.status));
+  }
 
   const card = el("div", {
-    className: "card" + (isMatch ? " search-match" : "") + (isDimmed ? " search-dim" : ""),
+    className: classes.join(" "),
     style: { borderLeftColor: typeColor },
     "data-id": post.id,
     draggable: "true",
@@ -325,10 +337,7 @@ function createCard(post) {
     onClick: () => openPanel(post.id),
   }, [
     el("div", { className: "card-title" }, displayTitle),
-    el("div", { className: "card-meta" }, [
-      el("span", { className: "card-type", style: { color: typeColor } }, TYPE_LABELS[post.type] || "?"),
-      el("span", { className: "card-status", style: { color: statusColor } }, post.status),
-    ]),
+    el("div", { className: "card-meta" }, metaChildren),
   ]);
   return card;
 }
@@ -377,6 +386,8 @@ async function onDrop(e) {
   updates.push(updatePost(post.id, "targetWeek", week));
   updates.push(updatePost(post.id, "slotIndex", slotIndex));
 
+  // Only auto-transition ready↔scheduled. Draft/idea cards keep their status
+  // (they need work even if placed in the calendar).
   if (week && post.status === "ready") {
     post.status = "scheduled";
     updates.push(updatePost(post.id, "status", "scheduled"));

@@ -127,7 +127,7 @@ header h1 .accent { color: var(--yellow); }
 
 .cal-row {
   display: grid;
-  grid-template-columns: repeat(13, 1fr);
+  grid-template-columns: repeat(13, minmax(0, 1fr));
   gap: 3px;
   margin-bottom: 6px;
 }
@@ -227,16 +227,27 @@ header h1 .accent { color: var(--yellow); }
   letter-spacing: 0.08em;
 }
 
-.card-status {
+/* Cards that need work: dashed border + warning label */
+.card.needs-work {
+  border-left-style: dashed;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--surface2),
+    var(--surface2) 6px,
+    rgba(255,255,255,0.02) 6px,
+    rgba(255,255,255,0.02) 12px
+  );
+}
+.card-warn {
   font-family: 'JetBrains Mono', monospace;
   font-size: 8px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 1px 5px;
-  border: 1px solid currentColor;
-  opacity: 0.7;
+  color: var(--amber);
+  opacity: 0.8;
 }
+.card-warn::before { content: "! "; }
 
 /* ── Backlog ─────────────────────────────────────────────── */
 
