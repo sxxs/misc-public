@@ -2,52 +2,83 @@
 
 ## Wann
 
-Einmal pro Woche, idealerweise Montag morgens.
+Einmal pro Woche, idealerweise Montag oder Freitag -- fester Termin im Kalender.
+
+## Voraussetzungen
+
+- [ ] Zugang zu TikTok, YouTube, Instagram (Kommentare lesen)
+- [ ] `pipeline/plan.json` aktuell
 
 ## Schritte
 
-1. **Digest laufen lassen**
-   ```bash
-   node digest.mjs
-   ```
-   Pruefen: Sind fuer diese Woche Posts eingeplant? Haben alle ein JSON?
+### 1. plan.json pruefen
 
-2. **Swimlane-Kalender oeffnen**
-   ```bash
-   node pipeline/server.mjs
-   ```
-   Visuell pruefen: Variable Reward Schedule eingehalten? Luecken?
+- `pipeline/plan.json` oeffnen
+- Alle Posts mit `status: "ready"` durchgehen: Ist ein Veroeffentlichungstermin (`targetWeek`) eingetragen?
+- Alle Posts mit `status: "published"` pruefen: Sind Links und Datum vollstaendig?
+- Gibt es Posts mit `status: "draft"` die seit mehr als 2 Wochen rumliegen? Entweder fertigmachen oder streichen.
 
-3. **Scheduled Posts pruefen** — Fuer jeden Post mit Zieldatum diese Woche:
-   - [ ] JSON existiert
-   - [ ] Remotion-Preview sieht gut aus
-   - [ ] Wenn nein: Rendern oder Post verschieben
+### 2. Pipeline-Fuellstand pruefen
 
-4. **FYP scannen** — 10 Minuten TikTok scrollen:
-   - Hat ein Creator mit Reichweite ueber IT/KI/Datenschutz/Karriere gesprochen?
-   - Lohnt sich ein Stitch? (→ `sops/creator-reaktion.md`)
+- Wie viele Posts mit `status: "ready"` sind vorhanden?
+- **Ziel**: Mindestens 4 fertige Posts im Puffer (2 Wochen bei 2 Posts/Woche)
+- Falls unter 4: Neue Posts aus dem Entwuerfe-Pool nachziehen (SOP: Neuer Post)
 
-5. **News scannen** — Spiegel, Tagesschau, Heise kurz checken:
-   - Datenskandal, KI-Regulierung, IT-Sicherheitsvorfall?
-   - Wenn ja und relevant: → `sops/newsjacking.md`
+### 3. Geplante Posts kontrollieren
 
-6. **Kommentare lesen** — Auf allen 3 Plattformen:
-   - Substanzielle Kommentare kurz beantworten
-   - Trolle ignorieren
-   - Nichts erzwingen
+- Haben alle Posts fuer die naechsten 2 Wochen eine JSON-Datei in `wiai-social/posts/`?
+- Sind sie in `src/Root.tsx` registriert (Import + `cp()`)?
+- Wurde die Studio-Preview gemacht (`./studio.sh`)?
 
-7. **Ideen-Backlog pflegen** — Neue #stark-Ideen aus den Stoffsammlungen oder spontane Einfaelle:
-   - In `pipeline/ideen/` notieren oder direkt in passende `pipeline/entwuerfe/`-Datei schreiben
+### 4. FYP scannen (Stitch-Chancen)
 
-8. **Naechste 2 Wochen planen** — In der Swimlane-UI:
-   - Posts aus dem Backlog in Kalenderwochen ziehen
-   - Mischung pruefen (nie 2x gleicher Typ hintereinander)
+10 Minuten auf TikTok FYP scrollen. Dabei achten auf:
+- Videos die nach einem Stitch/Duett schreien (siehe SOP: Creator-Reaktion)
+- Trends die sich fuer ein Newsjacking eignen (siehe SOP: Newsjacking)
+- Formate die gut funktionieren und adaptierbar sind
+
+### 5. News scannen (Newsjacking)
+
+Kurzer Check der ueblichen Quellen:
+- Heise, Golem, t3n (Tech)
+- Spiegel, Zeit (Bildung/Hochschule)
+- TikTok-Trends / Twitter-Trends
+- Gibt es eine aktuelle Nachricht, auf die herdom reagieren sollte? Falls ja: SOP Newsjacking starten.
+
+### 6. Kommentare beantworten
+
+- TikTok: Alle neuen Kommentare durchgehen, antworten
+- YouTube: Kommentare pruefen
+- Instagram: Kommentare + DMs
+- Besonders gute Kommentare notieren (koennten Basis fuer neue Posts sein)
+
+### 7. Ideen vorwaerts bewegen
+
+- `pipeline/ideen/` und `pipeline/entwuerfe/` durchgehen
+- Ideen mit **#stark** oder **#ok** die noch kein JSON haben: als naechste umsetzen
+- Neue Ideen aus der Woche ergaenzen (Kommentar-Inspiration, FYP-Trends, Gespraeche)
+
+### 8. Kalender aktualisieren
+
+- `targetWeek` fuer die naechsten 2 Wochen in `plan.json` setzen
+- Mischung aus Post-Typen planen (nicht 3x contrarian hintereinander)
+- Saisonale Anlaesse beruecksichtigen (Semesterstart, Bewerbungsfristen, Feiertage)
 
 ## Checkliste
 
-- [ ] Digest ausgefuehrt
-- [ ] Diese Woche: alle Posts ready
-- [ ] FYP gescannt (Stitch-Chancen?)
-- [ ] News gescannt (Newsjacking?)
-- [ ] Kommentare gelesen
-- [ ] Naechste 2 Wochen geplant
+- [ ] plan.json geprueft (status, links, targetWeek)
+- [ ] Mindestens 4 Posts im "ready"-Puffer
+- [ ] Naechste 2 Wochen geplant und mit JSON hinterlegt
+- [ ] FYP gescannt (10 min)
+- [ ] News gecheckt
+- [ ] Kommentare beantwortet
+- [ ] Neue Ideen notiert
+- [ ] Kalender fuer naechste 2 Wochen steht
+
+## Haeufige Fehler
+
+- **Review ausfallen lassen**: Eine Woche ohne Review und der Puffer ist leer. Den Termin ernst nehmen.
+- **Nur produzieren, nicht reagieren**: Kommentare beantworten ist genauso wichtig wie neue Posts. Engagement fuettert den Algorithmus.
+- **Immer der gleiche Post-Typ**: Abwechslung planen. Contrarian, Newsjacking, Nachtgedanke, Witz mischen.
+- **Newsjacking zu spaet**: Wenn eine Nachricht aelter als 48h ist, lohnt sich Newsjacking meistens nicht mehr.
+- **Ideen nicht festhalten**: Gute Ideen kommen beim Scrollen. Sofort in `pipeline/ideen/` notieren, nicht "merken".

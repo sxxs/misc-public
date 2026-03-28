@@ -2,59 +2,96 @@
 
 ## Wann
 
-Ein TikTok-Creator mit Reichweite hat ueber ein WIAI-relevantes Thema gesprochen. Reaktion muss innerhalb von 24-48 Stunden kommen.
+Wenn ein relevantes Creator-Video auf TikTok auftaucht, auf das herdom mit einem Stitch oder Duett reagieren kann.
 
 ## Voraussetzungen
 
-- [ ] Original-Video ist maximal 48h alt
-- [ ] Thema passt zum Kanal (IT-Sicherheit, Datenschutz, KI, Studium, Karriere)
-- [ ] Du hast einen echten Kommentar, nicht nur "stimmt"
-
-## Monitoring-Kategorien
-
-| Kategorie | Beispiele | Trigger-Themen |
-|-----------|-----------|----------------|
-| Tech-Erklaer | Breaking Lab, Simplicissimus, MrWissen2go | KI, Datenschutz, Tech-Fails |
-| Karriere/Bildung | StudySmarter, Finanzfluss | Gehalt, Studium vs. Ausbildung |
-| News-nativ | tagesschau (TikTok), ZDF heute, funk | Datenskandale, KI-Regulierung |
-| Gaming | Grosse Gaming-Creator | Anti-Cheat, Lootboxen, Algorithmus |
-| Meta/Social Media | Creator ueber TikTok-Algorithmus | Tracking, Suchtmechanismen |
+- [ ] TikTok-App mit @herdom.bamberg eingeloggt
+- [ ] Originalvideo erlaubt Stitch/Duett (Einstellung des Creators)
+- [ ] Video ist nicht aelter als 48 Stunden (Timing-Fenster)
 
 ## Schritte
 
-1. **Relevanz pruefen** — Passt das zum herdom-Ton? Kann ich etwas sagen das nur jemand in meiner Position sagen kann?
+### 1. Video identifizieren
 
-2. **Reaktion planen** — Max. 15 Sekunden, ein Punkt:
-   - Fachliche Einordnung ("Das ist uebrigens...")
-   - Gegenposition ("Stimmt, aber...")
-   - Selbstzerstoerung ("Ich bin Prof dafuer und...")
-   - NICHT: Vorlesung halten, belehren, korrigieren
+Beim FYP-Scan oder gezielter Suche nach relevanten Videos schauen. Kategorien:
 
-3. **In TikTok-App aufnehmen** — Stitch oder Duett, nicht ueber Remotion:
-   - Stitch: Original-Clip + deine Reaktion
-   - Duett: Side-by-side (selten, nur wenn visuell sinnvoll)
+| Kategorie | Beispiel | Reaktions-Ansatz |
+|-----------|----------|-----------------|
+| Tech-Erklaer | Breaking Lab, Simplicissimus, MrWissen2go | Ergaenzen, korrigieren, Praxis-Beispiel |
+| Karriere/Bildung | StudySmarter, Finanzfluss | Gegenperspektive, eigene Erfahrung |
+| News-nativ | tagesschau (TikTok), ZDF heute, funk | Einordnung aus Forschungssicht |
+| Gaming | Grosse Gaming-Creator | Informatik-Bruecke schlagen (Anti-Cheat, Lootboxen, Algorithmus) |
+| Meta/Social Media | Creator ueber TikTok-Algorithmus | Bestaetigen mit Fachwissen (Tracking, Suchtmechanismen) |
 
-4. **Posten** — Bamberg-Location taggen, relevante Hashtags
+### 2. Timing pruefen
 
-5. **In plan.json loggen** — Als neuen Post-Eintrag:
-   ```json
-   {
-     "id": "stitch-2026-03-28-thema",
-     "type": "stitch",
-     "design": "app-native",
-     "status": "published",
-     "json": null,
-     "source": null,
-     "targetWeek": null,
-     "publishedDate": "2026-03-28",
-     "platforms": { "tiktok": "https://..." },
-     "notes": "Stitch auf @creator - Thema XY"
-   }
-   ```
+- **Ideal**: Innerhalb von 24 Stunden nach Upload des Originals
+- **Noch ok**: Bis 48 Stunden
+- **Zu spaet**: Ueber 48 Stunden -- dann lieber eigenen Post machen
+
+### 3. Reaktion planen
+
+**Wichtig**: Stitch/Duett ist Gespraech, keine Vorlesung.
+
+- Was ist der herdom-Winkel? (Dekan, Forscher, Mensch -- nicht Professor-erklaert-die-Welt)
+- Maximal 1 Punkt machen, nicht 3
+- Eigene Meinung > Fakten-Aufzaehlung
+- Moegliche Ansaetze:
+  - Fachliche Einordnung ("Das ist uebrigens...")
+  - Gegenposition ("Stimmt, aber...")
+  - Selbstzerstoerung ("Ich bin Prof dafuer und...")
+- Ton: locker, direkt, ggf. selbstironisch
+- Laenge: 15-30 Sekunden eigener Teil (insgesamt mit Stitch unter 60s)
+
+### 4. In TikTok aufnehmen
+
+**Stitch/Duett wird direkt in der TikTok-App aufgenommen, NICHT ueber Remotion.**
+
+1. Video oeffnen > **Teilen** > **Stitch** (oder **Duett**)
+2. Relevanten Ausschnitt waehlen (bei Stitch: max 5 Sekunden)
+3. Eigenen Teil aufnehmen
+4. Kein Skript ablesen -- frei sprechen
+5. Caption + Hashtags ergaenzen
+6. Standort: Bamberg
+7. Veroeffentlichen
+
+### 5. In plan.json loggen
+
+Neuen Eintrag in `pipeline/plan.json` erstellen:
+
+```json
+{
+  "id": "2026-03-27-stitch-creator-xy",
+  "type": "stitch",
+  "design": null,
+  "status": "published",
+  "json": null,
+  "source": "https://www.tiktok.com/@creator/video/...",
+  "targetWeek": null,
+  "publishedDate": "2026-03-27",
+  "platforms": {
+    "tiktok": "https://www.tiktok.com/@herdom.bamberg/video/..."
+  },
+  "notes": "Stitch auf @creator zum Thema XY"
+}
+```
+
+## Checkliste
+
+- [ ] Video ist relevant fuer herdom-Perspektive
+- [ ] Stitch/Duett ist erlaubt
+- [ ] Timing-Fenster passt (unter 48h)
+- [ ] Reaktion geplant: 1 Punkt, eigener Winkel, kein Dozenten-Ton
+- [ ] In TikTok-App aufgenommen und veroeffentlicht
+- [ ] Bamberg als Standort getaggt
+- [ ] In `plan.json` geloggt mit Quell-Link
 
 ## Haeufige Fehler
 
-- Zu spaet reagiert (>48h) — Relevanzfenster verpasst
-- Zu lang (>15s) — Zuschauer scrollen weiter
-- Belehrend statt kommentierend — "Ich als Prof erklaere euch mal..." ist der falsche Ton
-- Ohne echten Punkt — Nur reagieren um zu reagieren bringt nichts
+- **Dozenten-Modus**: "Also, das ist fachlich so..." -- Stitch ist kein Hoersaal. Sprich wie ein Mensch, nicht wie ein Lehrbuch.
+- **Zu viel wollen**: Ein Stitch, ein Punkt. Nicht drei Argumente in 20 Sekunden quetschen.
+- **Zu lang**: Ueber 30 Sekunden eigener Teil und die Zuschauer scrollen weiter.
+- **Timing verpasst**: Ein Stitch auf ein 5 Tage altes Video bringt nichts. Dann lieber eigenen Post.
+- **Nur reagieren, nie initiieren**: Stitches sind Ergaenzung zum regulaeren Content, kein Ersatz. Verhaeltnis: max 1 Stitch auf 3 eigene Posts.
+- **Original nicht verlinken**: In plan.json immer den `source`-Link zum Originalvideo speichern.
