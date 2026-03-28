@@ -169,22 +169,18 @@ header h1 .accent { color: var(--yellow); }
 .slot {
   flex: 1;
   min-height: 38px;
-  border-bottom: 1px solid var(--border);
+  margin: 2px 4px;
   display: flex;
   align-items: stretch;
-  transition: background 0.1s;
+  transition: background 0.15s, border-color 0.15s;
 }
-.slot:last-child { border-bottom: none; }
-.slot.drag-over { background: rgba(250,204,21,0.06); }
-.slot.empty-hint::after {
-  content: '';
-  display: block;
-  width: 100%;
-  height: 2px;
-  background: var(--dim2);
-  align-self: center;
-  margin: 0 8px;
-  opacity: 0.4;
+.slot.empty-hint {
+  background: rgba(255,255,255,0.015);
+  border: 1px dashed var(--dim2);
+}
+.slot.drag-over {
+  background: rgba(250,204,21,0.08);
+  border: 1px dashed var(--yellow);
 }
 
 /* ── Cards ────────────────────────────────────────────────── */
