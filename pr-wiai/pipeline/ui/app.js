@@ -25,7 +25,7 @@ const STATUS_COLORS = {
   scheduled: "#3b82f6", published: "#06b6d4",
 };
 
-const SLOTS_PER_WEEK = 3;
+const SLOTS_PER_WEEK = 7;
 
 const DEFAULT_COLUMNS = ["contrarian", "billboard", "terminal", "_rest"];
 
