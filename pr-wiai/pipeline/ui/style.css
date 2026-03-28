@@ -340,6 +340,7 @@ header h1 .accent { color: var(--yellow); }
 .bl-item:active { cursor: grabbing; }
 .bl-item.dragging { opacity: 0.25; }
 .bl-item.scheduled-dim { opacity: 0.25; pointer-events: none; }
+.bl-item.hidden-post { opacity: 0.2; border-left-color: var(--dim2) !important; }
 .bl-item.search-match { background: rgba(250,204,21,0.06); }
 .bl-item.search-dim { display: none; }
 
@@ -515,8 +516,8 @@ header h1 .accent { color: var(--yellow); }
   max-height: 85vh;
   overflow-y: auto;
   background: var(--surface);
-  border: 1px solid var(--border2);
-  border-left: 3px solid var(--yellow);
+  border: 1px solid #444;
+  border-left: 3px solid #bbb;
   padding: 16px 20px;
   z-index: 150;
   box-shadow: 0 8px 40px rgba(0,0,0,0.6);

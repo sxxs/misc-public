@@ -277,7 +277,8 @@ function renderBacklog() {
   const area = document.getElementById("backlogArea");
   area.replaceChildren();
 
-  const allBacklog = plan.posts.filter((p) => !p.targetWeek);
+  const allBacklog = plan.posts.filter((p) => !p.targetWeek && !p.hidden);
+  const hiddenPosts = plan.posts.filter((p) => p.hidden && !p.targetWeek);
   const scheduledDimmed = plan.posts.filter((p) => p.targetWeek && p.status === "scheduled");
   const backlog = [...allBacklog, ...scheduledDimmed];
   const assignedTypes = new Set(columnTypes.filter((t) => t !== "_rest" && t !== "_all"));
@@ -288,7 +289,9 @@ function renderBacklog() {
 
     // Filter posts for this column
     let colPosts;
-    if (colType === "_all") {
+    if (colType === "_hidden") {
+      colPosts = hiddenPosts;
+    } else if (colType === "_all") {
       colPosts = backlog;
     } else if (colType === "_rest") {
       colPosts = backlog.filter((p) => !assignedTypes.has(p.type));
@@ -311,6 +314,7 @@ function renderBacklog() {
     const options = [
       { value: "_all", label: "Alle (" + allBacklog.length + ")" },
       { value: "_rest", label: "Uebrige (" + restCount + ")" },
+      { value: "_hidden", label: "Ausgeblendet (" + hiddenPosts.length + ")" },
       ...Object.entries(TYPES).filter(([k]) => k !== "other").map(([k, v]) => ({
         value: k, label: v.full + " (" + allBacklog.filter((p) => p.type === k).length + ")",
       })),
@@ -363,6 +367,7 @@ function createBlItem(post) {
     + (post.pinned ? " pinned" : "")
     + (needsWork ? " needs-work" : "")
     + (isScheduled ? " scheduled-dim" : "")
+    + (post.hidden ? " hidden-post" : "")
     + (isMatch ? " search-match" : "")
     + (isDimmed ? " search-dim" : "");
 
@@ -560,6 +565,37 @@ function openPanel(id, event) {
   // Title
   content.appendChild(el("h2", {}, post.id));
 
+  // Action buttons row
+  const actions = el("div", { style: { display: "flex", gap: "8px", marginBottom: "8px" } });
+
+  // Hide/show toggle
+  const hideBtn = el("span", {
+    className: "unschedule-btn",
+    onClick: (e) => { e.stopPropagation(); setField(post.id, "hidden", !post.hidden); openPanel(post.id); detailPanelEl.classList.add("open"); },
+  }, post.hidden ? "Einblenden" : "Ausblenden");
+  actions.appendChild(hideBtn);
+
+  // Duplicate button
+  const dupeBtn = el("span", {
+    className: "unschedule-btn",
+    onClick: (e) => { e.stopPropagation(); duplicatePost(post.id); },
+  }, "Duplizieren");
+  actions.appendChild(dupeBtn);
+
+  // Show "duplicated from" info
+  if (post.duplicatedFrom) {
+    const srcPost = plan.posts.find((p) => p.id === post.duplicatedFrom);
+    let srcInfo = "Kopie von " + post.duplicatedFrom;
+    if (srcPost?.targetWeek) {
+      srcInfo += " (eingeplant: " + srcPost.targetWeek + ")";
+    } else {
+      srcInfo += " (nicht eingeplant)";
+    }
+    actions.appendChild(el("span", { style: { fontSize: "9px", color: "var(--dim)", fontFamily: "'JetBrains Mono', monospace", marginLeft: "4px" } }, srcInfo));
+  }
+
+  content.appendChild(actions);
+
   // Schedule hint + unschedule button
   if (!post.targetWeek) {
     content.appendChild(el("div", { className: "schedule-hint" }, "\u2191 Klicke einen leeren Slot im Kalender um einzuplanen"));
@@ -630,10 +666,10 @@ function openPanel(id, event) {
     const group = el("div", { className: "slide-group" });
     group.appendChild(el("label", {}, label));
     const area = el("textarea", { className: cssClass || "" }, val);
-    area.addEventListener("change", () => {
+    area.addEventListener("input", () => {
       if (!post.slides) post.slides = {};
       post.slides[key] = area.value;
-      setSlides(post.id, post.slides);
+      debouncedSave(post.id, "slides", post.slides);
     });
     group.appendChild(area);
     return group;
@@ -704,19 +740,19 @@ function openPanel(id, event) {
   // Description (for TikTok/YouTube/Instagram caption)
   content.appendChild(el("label", {}, "Description / Caption"));
   const descArea = el("textarea", { style: { minHeight: "50px" } }, post.description || "");
-  descArea.addEventListener("change", () => setField(post.id, "description", descArea.value));
+  descArea.addEventListener("input", () => debouncedSave(post.id, "description", descArea.value));
   content.appendChild(descArea);
 
   // Hashtags
   content.appendChild(el("label", {}, "Hashtags"));
   const hashInput = el("input", { type: "text", value: post.hashtags || "", placeholder: "#informatik #bamberg #wiai" });
-  hashInput.addEventListener("change", () => setField(post.id, "hashtags", hashInput.value));
+  hashInput.addEventListener("input", () => debouncedSave(post.id, "hashtags", hashInput.value));
   content.appendChild(hashInput);
 
   // Notes (freeform comments, separate from slide content)
   content.appendChild(el("label", {}, "Notizen"));
   const notesArea = el("textarea", {}, post.notes || "");
-  notesArea.addEventListener("change", () => setField(post.id, "notes", notesArea.value));
+  notesArea.addEventListener("input", () => debouncedSave(post.id, "notes", notesArea.value));
   content.appendChild(notesArea);
 
   if (post.source) {
@@ -756,6 +792,32 @@ async function schedulePost(postId, week, slotIndex) {
   renderBacklog();
   renderStats();
   await Promise.all(updates);
+}
+
+async function duplicatePost(srcId) {
+  const src = plan.posts.find((p) => p.id === srcId);
+  if (!src) return;
+  const newId = src.id + "-copy-" + Date.now().toString(36).slice(-4);
+  const copy = JSON.parse(JSON.stringify(src));
+  copy.id = newId;
+  copy.targetWeek = null;
+  copy.slotIndex = null;
+  copy.status = src.status === "published" ? "draft" : src.status;
+  copy.json = null;
+  copy.publishedDate = null;
+  copy.platforms = {};
+  copy.duplicatedFrom = srcId;
+  plan.posts.push(copy);
+  showSaveStatus("saving");
+  const res = await fetch("/api/plan", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(plan),
+  });
+  showSaveStatus(res.ok ? "saved" : "error");
+  render();
+  openPanel(newId);
+  detailPanelEl.classList.add("open");
 }
 
 async function unschedulePost(postId) {
@@ -956,6 +1018,44 @@ document.addEventListener("keydown", (e) => {
     searchInput.select();
   }
 });
+
+// ── Auto-poll for external plan.json changes ─────────────────────────────────
+
+let lastPlanHash = "";
+
+async function pollPlan() {
+  try {
+    const res = await fetch("/api/plan");
+    const data = await res.json();
+    const hash = JSON.stringify(data.posts.map((p) => p.id + p.status + (p.targetWeek || "") + (p.hidden || ""))).substring(0, 2000);
+    if (lastPlanHash && hash !== lastPlanHash) {
+      plan = data;
+      render();
+    }
+    lastPlanHash = hash;
+  } catch {}
+}
+
+setInterval(pollPlan, 4000);
+
+// ── Auto-save idle textareas ─────────────────────────────────────────────────
+
+let pendingSaves = new Map(); // field → { id, field, value, timer }
+
+function debouncedSave(id, field, value) {
+  const key = id + ":" + field;
+  const existing = pendingSaves.get(key);
+  if (existing) clearTimeout(existing.timer);
+  const timer = setTimeout(async () => {
+    pendingSaves.delete(key);
+    const post = plan.posts.find((p) => p.id === id);
+    if (post) post[field] = value;
+    showSaveStatus("saving");
+    const ok = await updatePost(id, field, value);
+    showSaveStatus(ok ? "saved" : "error");
+  }, 2000);
+  pendingSaves.set(key, { id, field, value, timer });
+}
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 
