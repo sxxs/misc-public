@@ -426,6 +426,34 @@ function onDragEnd(e) {
   document.querySelectorAll(".drag-over").forEach((x) => x.classList.remove("drag-over"));
 }
 
+// Shared: assign a post to a week/slot (or null to unschedule)
+function applySlotAssignment(post, week, slotIndex) {
+  const updates = [];
+  if (week) {
+    const weekPosts = plan.posts.filter((p) => p.targetWeek === week && p.id !== post.id);
+    weekPosts.splice(slotIndex, 0, post);
+    weekPosts.forEach((p, i) => {
+      if (p.slotIndex !== i) {
+        p.slotIndex = i;
+        updates.push(updatePost(p.id, "slotIndex", i));
+      }
+    });
+  }
+  post.targetWeek = week;
+  post.slotIndex = week ? slotIndex : null;
+  updates.push(updatePost(post.id, "targetWeek", week));
+  if (week) updates.push(updatePost(post.id, "slotIndex", slotIndex));
+  if (week && post.status === "ready") {
+    post.status = "scheduled";
+    updates.push(updatePost(post.id, "status", "scheduled"));
+  }
+  if (!week && post.status === "scheduled") {
+    post.status = "ready";
+    updates.push(updatePost(post.id, "status", "ready"));
+  }
+  return updates;
+}
+
 async function onDrop(e) {
   e.preventDefault();
   e.currentTarget.classList.remove("drag-over");
@@ -437,33 +465,7 @@ async function onDrop(e) {
   const post = plan.posts.find((p) => p.id === draggedId);
   if (!post) return;
 
-  const updates = [];
-
-  if (week) {
-    const weekPosts = plan.posts.filter((p) => p.targetWeek === week && p.id !== post.id);
-    weekPosts.splice(slotIndex, 0, post);
-    weekPosts.forEach((p, i) => {
-      if (p.slotIndex !== i) {
-        p.slotIndex = i;
-        updates.push(updatePost(p.id, "slotIndex", i));
-      }
-    });
-  }
-
-  post.targetWeek = week;
-  post.slotIndex = week ? slotIndex : null;
-  updates.push(updatePost(post.id, "targetWeek", week));
-  if (week) updates.push(updatePost(post.id, "slotIndex", slotIndex));
-
-  if (week && post.status === "ready") {
-    post.status = "scheduled";
-    updates.push(updatePost(post.id, "status", "scheduled"));
-  }
-  if (!week && post.status === "scheduled") {
-    post.status = "ready";
-    updates.push(updatePost(post.id, "status", "ready"));
-  }
-
+  const updates = applySlotAssignment(post, week, slotIndex);
   draggedId = null;
   render();
   await Promise.all(updates);
@@ -478,7 +480,7 @@ function openPanel(id, event) {
   selectedPostId = id;
   document.body.classList.add("schedule-mode");
 
-  const panel = document.getElementById("detailPanel");
+  const panel = detailPanelEl;
   const content = document.getElementById("panelContent");
   content.replaceChildren();
 
@@ -575,48 +577,35 @@ function openPanel(id, event) {
 
   panel.classList.add("open");
 
-  // Re-render to show selected state on cards
-  renderCalendar();
-  renderBacklog();
+  // Toggle selected class without full re-render
+  document.querySelectorAll(".selected").forEach((x) => x.classList.remove("selected"));
+  document.querySelectorAll("[data-id=\"" + id + "\"]").forEach((x) => x.classList.add("selected"));
 }
 
 function closePanel() {
   selectedPostId = null;
   document.body.classList.remove("schedule-mode");
-  document.getElementById("detailPanel").classList.remove("open");
-  renderCalendar();
-  renderBacklog();
+  detailPanelEl.classList.remove("open");
+  document.querySelectorAll(".selected").forEach((x) => x.classList.remove("selected"));
 }
 
 async function schedulePost(postId, week, slotIndex) {
   const post = plan.posts.find((p) => p.id === postId);
   if (!post) return;
 
-  const updates = [];
+  const updates = applySlotAssignment(post, week, slotIndex);
 
-  if (week) {
-    const weekPosts = plan.posts.filter((p) => p.targetWeek === week && p.id !== post.id);
-    weekPosts.splice(slotIndex, 0, post);
-    weekPosts.forEach((p, i) => {
-      if (p.slotIndex !== i) {
-        p.slotIndex = i;
-        updates.push(updatePost(p.id, "slotIndex", i));
-      }
-    });
+  // Patch schedule hint in-place instead of rebuilding the whole panel
+  const hint = detailPanelEl.querySelector(".schedule-hint");
+  if (hint) {
+    hint.textContent = week
+      ? "Eingeplant: " + week + " — klicke anderen Slot zum Verschieben"
+      : "\u2191 Klicke einen leeren Slot im Kalender um einzuplanen";
   }
 
-  post.targetWeek = week;
-  post.slotIndex = week ? slotIndex : null;
-  updates.push(updatePost(post.id, "targetWeek", week));
-  if (week) updates.push(updatePost(post.id, "slotIndex", slotIndex));
-
-  if (week && post.status === "ready") {
-    post.status = "scheduled";
-    updates.push(updatePost(post.id, "status", "scheduled"));
-  }
-
-  // Re-open panel to update schedule hint
-  openPanel(postId);
+  // Only re-render calendar (slot assignment changed) + stats
+  renderCalendar();
+  renderStats();
   await Promise.all(updates);
 }
 
@@ -629,13 +618,13 @@ async function setField(id, field, value) {
 
 // ── Event Listeners ──────────────────────────────────────────────────────────
 
+const detailPanelEl = document.getElementById("detailPanel");
+
 document.getElementById("panelClose").addEventListener("click", closePanel);
 
-// Click outside panel closes it (but not on calendar slots or other posts)
 document.addEventListener("click", (e) => {
   if (!selectedPostId) return;
-  const panel = document.getElementById("detailPanel");
-  if (panel.contains(e.target)) return;
+  if (detailPanelEl.contains(e.target)) return;
   if (e.target.closest("[data-id]")) return;
   if (e.target.closest(".slot")) return;
   closePanel();
@@ -652,12 +641,14 @@ document.getElementById("searchInput").addEventListener("input", (e) => {
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
-    closePanel();
-    if (searchQuery) {
+    const hadPanel = !!selectedPostId;
+    const hadSearch = !!searchQuery;
+    if (hadPanel) closePanel();
+    if (hadSearch) {
       searchQuery = "";
       document.getElementById("searchInput").value = "";
-      render();
     }
+    if (hadSearch) render(); // single render, not double
   }
   if ((e.metaKey || e.ctrlKey) && e.key === "f") {
     e.preventDefault();
