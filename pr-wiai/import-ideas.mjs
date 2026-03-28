@@ -220,8 +220,8 @@ function importIdeas() {
 
 function importStructuredIdeas(text, source, slug) {
   let imported = 0;
-  // Split by ### headers
-  const sections = text.split(/\n(?=### )/);
+  // Split by ### headers, but also stop at ## headers (section boundaries)
+  const sections = text.split(/\n(?=###? )/).filter((s) => s.startsWith("### "));
   for (const section of sections) {
     const headerMatch = section.match(/^### .*?: (.+)/);
     if (!headerMatch) continue;
@@ -231,8 +231,11 @@ function importStructuredIdeas(text, source, slug) {
     const s2 = extractField(section, "S2");
     const s3 = extractField(section, "S3");
 
-    // If no S1/S2, treat as single-text idea
-    const mainText = s1 || s2 || section.split("\n").slice(1).join(" ").replace(/\*[^*]+\*/g, "").trim().substring(0, 500);
+    // If no S1/S2, treat as single-text idea (stop at section boundaries)
+    const bodyLines = section.split("\n").slice(1);
+    const bodyEnd = bodyLines.findIndex((l) => l.startsWith("## "));
+    const body = (bodyEnd >= 0 ? bodyLines.slice(0, bodyEnd) : bodyLines).join(" ").replace(/\*[^*]+\*/g, "").trim();
+    const mainText = s1 || s2 || body.substring(0, 500);
 
     if (!mainText || remotionTexts.has(normalize(mainText))) continue;
 
