@@ -585,28 +585,32 @@ function openPanel(id, event) {
   const hasButton = "button" in slides || fromJson.button;
   const hasUebrigens = "uebrigens" in slides || fromJson.uebrigens;
 
-  if (hasButton || hasUebrigens) {
-    if (hasButton || !hasUebrigens) {
-      content.appendChild(slideField("button", "S3 — Button (gedimmt, optional)", "button", "", ""));
-    }
-    if (hasUebrigens) {
-      content.appendChild(slideField("uebrigens", "S3 — Uebrigens (optional)", "uebrigens", "", ""));
-    }
-  } else {
-    const addLink = el("div", {
-      style: { fontSize: "10px", color: "var(--dim)", cursor: "pointer", fontFamily: "'JetBrains Mono', monospace", padding: "4px 0" },
+  if (hasButton) {
+    content.appendChild(slideField("button", "S3 — Button (gedimmt, optional)", "button", "", ""));
+  }
+  if (hasUebrigens) {
+    content.appendChild(slideField("uebrigens", "S3 — Uebrigens (optional)", "uebrigens", "", ""));
+  }
+
+  function addFieldLink(label, key) {
+    return el("span", {
+      style: { fontSize: "10px", color: "var(--dim)", cursor: "pointer", fontFamily: "'JetBrains Mono', monospace", marginRight: "12px" },
       onClick: (e) => {
         e.stopPropagation();
         if (!post.slides) post.slides = {};
-        post.slides.button = "";
+        post.slides[key] = "";
         setSlides(post.id, post.slides);
-        // Rebuild panel content in-place
         openPanel(post.id);
-        // Re-position to same spot
         detailPanelEl.classList.add("open");
       },
-    }, "+ Button / Uebrigens hinzufuegen");
-    content.appendChild(addLink);
+    }, label);
+  }
+
+  if (!hasButton || !hasUebrigens) {
+    const links = el("div", { style: { padding: "4px 0" } });
+    if (!hasButton) links.appendChild(addFieldLink("+ Button", "button"));
+    if (!hasUebrigens) links.appendChild(addFieldLink("+ Uebrigens", "uebrigens"));
+    content.appendChild(links);
   }
 
   if (post.json) {
