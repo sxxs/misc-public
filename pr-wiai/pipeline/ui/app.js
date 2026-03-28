@@ -253,8 +253,10 @@ function renderBacklog() {
   const area = document.getElementById("backlogArea");
   area.replaceChildren();
 
-  const backlog = plan.posts.filter((p) => !p.targetWeek || p.status === "scheduled");
-  const assignedTypes = new Set(columnTypes.filter((t) => t !== "_rest"));
+  const allBacklog = plan.posts.filter((p) => !p.targetWeek);
+  const scheduledDimmed = plan.posts.filter((p) => p.targetWeek && p.status === "scheduled");
+  const backlog = [...allBacklog, ...scheduledDimmed];
+  const assignedTypes = new Set(columnTypes.filter((t) => t !== "_rest" && t !== "_all"));
 
   for (let colIdx = 0; colIdx < 4; colIdx++) {
     const colType = columnTypes[colIdx] || "_rest";
@@ -281,12 +283,12 @@ function renderBacklog() {
     // Header with type selector
     const headerBar = el("div", { className: "col-header-bar" });
     const select = el("select");
-    const restCount = backlog.filter((p) => !assignedTypes.has(p.type)).length;
+    const restCount = allBacklog.filter((p) => !assignedTypes.has(p.type)).length;
     const options = [
-      { value: "_all", label: "Alle (" + backlog.length + ")" },
+      { value: "_all", label: "Alle (" + allBacklog.length + ")" },
       { value: "_rest", label: "Uebrige (" + restCount + ")" },
       ...Object.entries(TYPES).filter(([k]) => k !== "other").map(([k, v]) => ({
-        value: k, label: v.full + " (" + backlog.filter((p) => p.type === k).length + ")",
+        value: k, label: v.full + " (" + allBacklog.filter((p) => p.type === k).length + ")",
       })),
     ];
     for (const opt of options) {
