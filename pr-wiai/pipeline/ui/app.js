@@ -130,8 +130,10 @@ function matchesSearch(post) {
   if (!searchQuery) return true;
   const q = searchQuery.toLowerCase();
   const hay = [
-    post.id, post.type, post.text?.slide1, post.text?.slide2, post.text?.slide3,
-    post.text?.button, post.text?.uebrigens, post.notes,
+    post.id, post.type,
+    post.slides?.s1, post.slides?.s2, post.slides?.s3, post.slides?.button, post.slides?.uebrigens,
+    post.text?.slide1, post.text?.slide2, post.text?.slide3, post.text?.button, post.text?.uebrigens,
+    post.notes,
   ].filter(Boolean).join(" ").toLowerCase();
   return hay.includes(q);
 }
@@ -222,7 +224,7 @@ function renderCalendar() {
 
 function createCalCard(post) {
   const t = typeOf(post.type);
-  const title = post.text?.slide1 || post.text?.slide2?.substring(0, 30) || post.notes || post.id;
+  const title = post.slides?.s1 || post.text?.slide1 || post.slides?.s2 || post.text?.slide2?.substring(0, 30) || post.notes || post.id;
   const needsWork = post.status === "idea" || post.status === "draft";
   const isMatch = searchQuery && matchesSearch(post);
   const isDimmed = searchQuery && !isMatch;
@@ -317,9 +319,12 @@ function renderBacklog() {
 
 function createBlItem(post) {
   const t = typeOf(post.type);
-  const text = post.text?.slide1
-    ? [post.text.slide1, post.text.slide2, post.text.slide3].filter(Boolean).join(" — ")
-    : (post.notes || post.id);
+  const s = post.slides;
+  const text = s?.s1
+    ? [s.s1, s.s2, s.s3].filter(Boolean).join(" — ")
+    : post.text?.slide1
+      ? [post.text.slide1, post.text.slide2, post.text.slide3].filter(Boolean).join(" — ")
+      : (post.notes || post.id);
   const needsWork = post.status === "idea" || post.status === "draft";
   const isMatch = searchQuery && matchesSearch(post);
   const isDimmed = searchQuery && !isMatch;
@@ -546,14 +551,47 @@ function openPanel(id, event) {
   designSelect.addEventListener("change", () => setField(post.id, "design", designSelect.value || null));
   content.appendChild(designSelect);
 
-  // Slide texts
-  if (post.text) {
-    for (const [key, label] of [["slide1", "Slide 1"], ["slide2", "Slide 2"], ["slide3", "Slide 3"], ["button", "Button"], ["uebrigens", "Uebrigens"]]) {
-      if (post.text[key]) {
-        content.appendChild(el("label", {}, label));
-        content.appendChild(el("div", { className: "slide-text" }, post.text[key]));
-      }
-    }
+  // Editable Slides
+  // Priority: slides (plan.json working copy) > text (from JSON) > notes (raw idea)
+  const slides = post.slides || {};
+  const fromJson = post.text || {};
+  const slideFields = [
+    { key: "s1", label: "S1 — Hook", jsonKey: "slide1" },
+    { key: "s2", label: "S2 — Argument", jsonKey: "slide2" },
+    { key: "s3", label: "S3 — Punch", jsonKey: "slide3" },
+    { key: "button", label: "Button (optional)", jsonKey: "button" },
+    { key: "uebrigens", label: "Uebrigens (optional)", jsonKey: "uebrigens" },
+  ];
+
+  // Pre-fill S2 from notes if no slides exist yet (idea → draft transition)
+  const hasAnySlide = slides.s1 || slides.s2 || slides.s3 || fromJson.slide1 || fromJson.slide2;
+  const notesFallback = !hasAnySlide ? (post.notes || "") : "";
+
+  for (const sf of slideFields) {
+    const val = slides[sf.key] ?? fromJson[sf.jsonKey] ?? (sf.key === "s2" ? notesFallback : "") ?? "";
+    if (!val && (sf.key === "button" || sf.key === "uebrigens")) continue;
+
+    content.appendChild(el("label", {}, sf.label));
+    const area = el("textarea", { style: { minHeight: sf.key === "s2" ? "80px" : "40px" } }, val);
+    area.addEventListener("change", () => {
+      if (!post.slides) post.slides = {};
+      post.slides[sf.key] = area.value;
+      setSlides(post.id, post.slides);
+    });
+    content.appendChild(area);
+  }
+
+  // Add button/uebrigens fields link
+  if (!slides.button && !fromJson.button) {
+    const addBtn = el("span", {
+      style: { fontSize: "10px", color: "var(--dim)", cursor: "pointer", fontFamily: "'JetBrains Mono', monospace" },
+      onClick: () => {
+        if (!post.slides) post.slides = {};
+        post.slides.button = "";
+        openPanel(post.id);
+      },
+    }, "+ Button / Uebrigens hinzufuegen");
+    content.appendChild(addBtn);
   }
 
   if (post.json) {
@@ -566,7 +604,7 @@ function openPanel(id, event) {
     content.appendChild(el("div", { className: "info-value" }, "#" + post.tag + (post.tagComment ? " — " + post.tagComment : "")));
   }
 
-  // Notes
+  // Notes (freeform comments, separate from slide content)
   content.appendChild(el("label", {}, "Notizen"));
   const notesArea = el("textarea", {}, post.notes || "");
   notesArea.addEventListener("change", () => setField(post.id, "notes", notesArea.value));
@@ -618,6 +656,12 @@ async function setField(id, field, value) {
   const ok = await updatePost(id, field, value);
   showSaveStatus(ok ? "saved" : "error");
   render();
+}
+
+async function setSlides(id, slides) {
+  showSaveStatus("saving");
+  const ok = await updatePost(id, "slides", slides);
+  showSaveStatus(ok ? "saved" : "error");
 }
 
 function showSaveStatus(state) {
