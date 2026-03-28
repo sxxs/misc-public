@@ -374,8 +374,8 @@ header h1 .accent { color: var(--yellow); }
 
 /* Item text body */
 .bl-item-text {
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.55;
   color: var(--text);
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -433,9 +433,9 @@ header h1 .accent { color: var(--yellow); }
 }
 .panel input, .panel textarea, .panel select {
   background: var(--bg); color: var(--text);
-  border: 1px solid var(--border); padding: 5px 7px;
-  font-size: 12px; font-family: 'JetBrains Mono', monospace;
+  border: 1px solid var(--border); padding: 8px 10px;
+  font-size: 13px; font-family: 'JetBrains Mono', monospace;
   width: 100%;
 }
 .panel input:focus, .panel textarea:focus, .panel select:focus { border-color: var(--yellow); outline: none; }
-.panel textarea { min-height: 60px; resize: vertical; }
+.panel textarea { min-height: 100px; resize: vertical; }
