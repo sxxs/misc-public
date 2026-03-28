@@ -582,8 +582,8 @@ function openPanel(id, event) {
   // S3: punchline + optional button + optional uebrigens
   content.appendChild(slideField("s3", "S3 — Text (Punch / Closer)", "slide3", "", ""));
 
-  const hasButton = slides.button || fromJson.button;
-  const hasUebrigens = slides.uebrigens || fromJson.uebrigens;
+  const hasButton = "button" in slides || fromJson.button;
+  const hasUebrigens = "uebrigens" in slides || fromJson.uebrigens;
 
   if (hasButton || hasUebrigens) {
     if (hasButton || !hasUebrigens) {
