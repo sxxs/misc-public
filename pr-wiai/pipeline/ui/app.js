@@ -324,7 +324,7 @@ function renderLegend() {
 
 function createCard(post) {
   const typeColor = typeOf(post.type).color;
-  const title = post.text?.slide1 || post.text?.slide2?.substring(0, 35) || post.id;
+  const title = post.text?.slide1 || post.text?.slide2?.substring(0, 35) || post.notes || post.id;
   const displayTitle = title.substring(0, 28);
   const isMatch = searchQuery && matchesSearch(post);
   const isDimmed = searchQuery && !isMatch;
@@ -335,9 +335,20 @@ function createCard(post) {
   if (isDimmed) classes.push("search-dim");
   if (needsWork) classes.push("needs-work");
 
+  const DESIGN_SHORT = { "pixel-wall": "LED", "terminal": "TRM", "billboard": "BIL", "newsjacking": "NJ" };
   const metaChildren = [
     el("span", { className: "card-type", style: { color: typeColor } }, typeOf(post.type).short),
   ];
+  if (post.design) {
+    metaChildren.push(el("span", { className: "card-design" }, DESIGN_SHORT[post.design] || post.design));
+  }
+  if (post.tag === "ad") {
+    metaChildren.push(el("span", { className: "card-tag card-tag-ad" }, "#ad"));
+  } else if (post.tag === "geht") {
+    metaChildren.push(el("span", { className: "card-tag card-tag-geht" }, "#geht"));
+  } else if (post.tag === "stark") {
+    metaChildren.push(el("span", { className: "card-tag card-tag-stark" }, "#stark"));
+  }
   if (needsWork) {
     metaChildren.push(el("span", { className: "card-warn" }, post.status));
   }
@@ -436,7 +447,14 @@ function openPanel(id) {
   content.appendChild(el("div", { className: "info-value", style: { color: typeColor } }, typeOf(post.type).full));
 
   content.appendChild(el("label", {}, "Design"));
-  content.appendChild(el("div", { className: "info-value" }, post.design || "—"));
+  const designSelect = el("select");
+  for (const d of [null, "pixel-wall", "terminal", "billboard", "newsjacking"]) {
+    const opt = el("option", { value: d || "" }, d || "— nicht gesetzt —");
+    if ((post.design || null) === d) opt.selected = true;
+    designSelect.appendChild(opt);
+  }
+  designSelect.addEventListener("change", () => setField(post.id, "design", designSelect.value || null));
+  content.appendChild(designSelect);
 
   if (post.json) {
     content.appendChild(el("label", {}, "JSON"));

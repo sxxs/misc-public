@@ -257,6 +257,26 @@ header h1 .accent { color: var(--yellow); }
 }
 .card-warn::before { content: "! "; }
 
+.card-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0px 4px;
+  border: 1px solid currentColor;
+}
+.card-design {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px;
+  font-weight: 600;
+  color: var(--dim);
+  letter-spacing: 0.03em;
+}
+.card-tag-ad { color: var(--cyan); }
+.card-tag-stark { color: var(--green); }
+.card-tag-geht { color: var(--dim); }
+
 /* ── Backlog ─────────────────────────────────────────────── */
 
 #backlog {
