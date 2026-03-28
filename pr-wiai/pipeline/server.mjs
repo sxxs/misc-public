@@ -4,7 +4,7 @@
 // Opens at http://localhost:3847
 
 import { createServer } from "http";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, statSync } from "fs";
 import { join, extname } from "path";
 
 const ROOT = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
@@ -16,15 +16,36 @@ const PORT = 3847;
 
 let cachedPlan = null;
 let cachedEnriched = null;
+let cachedMtime = 0;
+
+function planChanged() {
+  try {
+    const mtime = statSync(PLAN).mtimeMs;
+    if (mtime !== cachedMtime) {
+      cachedMtime = mtime;
+      cachedPlan = null;
+      cachedEnriched = null;
+      return true;
+    }
+    return false;
+  } catch {
+    return true;
+  }
+}
 
 function getPlan() {
-  return JSON.parse(readFileSync(PLAN, "utf8"));
+  planChanged();
+  if (cachedPlan) return cachedPlan;
+  cachedPlan = JSON.parse(readFileSync(PLAN, "utf8"));
+  cachedMtime = statSync(PLAN).mtimeMs;
+  return cachedPlan;
 }
 
 function savePlan(data) {
   writeFileSync(PLAN, JSON.stringify(data, null, 2) + "\n");
   cachedPlan = data;
   cachedEnriched = null;
+  cachedMtime = statSync(PLAN).mtimeMs;
 }
 
 function getPostText(jsonPath) {
@@ -44,9 +65,9 @@ function getPostText(jsonPath) {
 }
 
 function getEnrichedPlan() {
+  planChanged();
   if (cachedEnriched) return cachedEnriched;
-  const plan = cachedPlan || getPlan();
-  cachedPlan = plan;
+  const plan = getPlan();
   const enriched = {
     ...plan,
     posts: plan.posts.map((p) => ({
