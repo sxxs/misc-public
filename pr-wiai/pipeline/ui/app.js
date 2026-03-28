@@ -751,11 +751,100 @@ function showSaveStatus(state) {
   }
 }
 
+// ── Timeline Modal ───────────────────────────────────────────────────────────
+
+let timelineOpen = false;
+
+function toggleTimeline() {
+  timelineOpen = !timelineOpen;
+  const modal = document.getElementById("timelineModal");
+  if (timelineOpen) {
+    renderTimeline();
+    modal.classList.add("open");
+  } else {
+    modal.classList.remove("open");
+  }
+}
+
+function renderTimeline() {
+  const allWeeks = generateWeeks(26, weekOffset);
+  const body = document.getElementById("timelineBody");
+  body.replaceChildren();
+
+  document.getElementById("timelineRange").textContent =
+    weekLabel(allWeeks[0].key) + " – " + weekLabel(allWeeks[allWeeks.length - 1].key);
+
+  const postsByWeek = new Map();
+  for (const p of plan.posts) {
+    if (p.targetWeek) {
+      if (!postsByWeek.has(p.targetWeek)) postsByWeek.set(p.targetWeek, []);
+      postsByWeek.get(p.targetWeek).push(p);
+    }
+  }
+  for (const [, posts] of postsByWeek) {
+    posts.sort((a, b) => (a.slotIndex ?? 99) - (b.slotIndex ?? 99));
+  }
+
+  for (const wkObj of allWeeks) {
+    const wk = wkObj.key;
+    const posts = postsByWeek.get(wk) || [];
+    const weekDiv = el("div", { className: "tl-week" });
+
+    const kwNum = weekLabel(wk).replace("KW", "");
+    weekDiv.appendChild(el("div", { className: "tl-kw" }, [
+      el("span", {}, "KW"),
+      el("span", { className: "tl-kw-num" }, kwNum),
+      el("span", { className: "tl-kw-date" }, formatMonday(wkObj.monday)),
+    ]));
+
+    if (posts.length === 0) {
+      weekDiv.appendChild(el("div", { className: "tl-empty" }, "(leer)"));
+    } else {
+      for (const post of posts) {
+        const t = typeOf(post.type);
+        const s = post.slides || {};
+        const fromJson = post.text || {};
+
+        // Build text parts: all non-empty fields joined with /
+        const parts = [
+          s.bigText || fromJson.slide1,
+          s.smallText,
+          s.s2 || fromJson.slide2,
+          s.s3 || fromJson.slide3,
+          s.button || fromJson.button ? "Button: " + (s.button || fromJson.button) : null,
+          s.uebrigens || fromJson.uebrigens ? "Uebrigens: " + (s.uebrigens || fromJson.uebrigens) : null,
+        ].filter(Boolean).map((p) => p.replace(/\n/g, " "));
+
+        const lineChildren = [
+          el("span", { className: "tl-type", style: { color: t.color } }, t.short),
+        ];
+        if (post.tag) {
+          lineChildren.push(el("span", { className: "tl-type", style: { color: "#888" } }, "#" + post.tag + " "));
+        }
+
+        parts.forEach((part, i) => {
+          if (i > 0) lineChildren.push(el("span", { className: "tl-sep" }, " / "));
+          lineChildren.push(document.createTextNode(part));
+        });
+
+        weekDiv.appendChild(el("div", {
+          className: "tl-post",
+          style: { borderLeftColor: t.color },
+        }, lineChildren));
+      }
+    }
+
+    body.appendChild(weekDiv);
+  }
+}
+
 // ── Event Listeners ──────────────────────────────────────────────────────────
 
 const detailPanelEl = document.getElementById("detailPanel");
 
 document.getElementById("panelClose").addEventListener("click", closePanel);
+document.getElementById("timelineBtn").addEventListener("click", toggleTimeline);
+document.getElementById("timelineClose").addEventListener("click", toggleTimeline);
 
 document.addEventListener("click", (e) => {
   if (!selectedPostId) return;
@@ -790,6 +879,7 @@ document.getElementById("searchClear").addEventListener("click", () => {
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
+    if (timelineOpen) { toggleTimeline(); return; }
     const hadPanel = !!selectedPostId;
     const hadSearch = !!searchQuery;
     if (hadPanel) closePanel();
@@ -798,7 +888,14 @@ document.addEventListener("keydown", (e) => {
       searchInput.value = "";
       searchBox.classList.remove("has-query");
     }
-    if (hadSearch) render(); // single render, not double
+    if (hadSearch) render();
+  }
+  if ((e.metaKey || e.ctrlKey) && e.key === "l") {
+    e.preventDefault();
+    toggleTimeline();
+  }
+  if (e.key === "t" && !e.metaKey && !e.ctrlKey && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA" && document.activeElement.tagName !== "SELECT") {
+    toggleTimeline();
   }
   if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "f")) {
     e.preventDefault();

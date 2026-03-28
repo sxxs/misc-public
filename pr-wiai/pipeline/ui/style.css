@@ -393,6 +393,101 @@ header h1 .accent { color: var(--yellow); }
   overflow: hidden;
 }
 
+/* ── Timeline Modal ───────────────────────────────────────── */
+
+.timeline-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 300;
+  overflow-y: auto;
+  padding: 0;
+}
+.timeline-modal.open { display: flex; flex-direction: column; }
+
+.timeline-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  border-bottom: 2px solid var(--yellow);
+  flex-shrink: 0;
+}
+.timeline-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  color: var(--yellow);
+}
+.timeline-range {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--dim);
+}
+.timeline-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--dim);
+  font-size: 22px;
+  cursor: pointer;
+}
+.timeline-close:hover { color: var(--text); }
+
+.timeline-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px 40px;
+}
+
+.tl-week {
+  margin-bottom: 20px;
+}
+
+.tl-kw {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--dim);
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.tl-kw .tl-kw-num { color: var(--text); }
+.tl-kw .tl-kw-date {
+  font-weight: 400;
+  font-size: 10px;
+  color: var(--dim);
+  margin-left: 8px;
+}
+
+.tl-post {
+  padding: 6px 0 6px 20px;
+  border-left: 3px solid var(--dim);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+  margin-bottom: 4px;
+}
+.tl-post .tl-type {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: 8px;
+}
+.tl-post .tl-sep { color: var(--dim); }
+
+.tl-empty {
+  padding: 4px 0 4px 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--dim2);
+  font-style: italic;
+}
+
 /* ── Floating Detail Panel ────────────────────────────────── */
 
 .detail-panel {

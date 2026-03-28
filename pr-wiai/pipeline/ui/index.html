@@ -30,6 +30,7 @@
     <button class="nav-btn" id="navPrev">&larr; FRUEHER</button>
     <span class="nav-label" id="navLabel"></span>
     <button class="nav-btn" id="navNext">SPAETER &rarr;</button>
+    <button class="nav-btn" id="timelineBtn">TIMELINE</button>
   </div>
 
   <div id="calendar"></div>
@@ -37,6 +38,16 @@
 
 <!-- ── Bottom: 4-Column Backlog ───────────────────────────── -->
 <div class="backlog-area" id="backlogArea"></div>
+
+<!-- ── Timeline Modal ──────────────────────────────────────── -->
+<div class="timeline-modal" id="timelineModal">
+  <div class="timeline-header">
+    <span class="timeline-title">TIMELINE</span>
+    <span class="timeline-range" id="timelineRange"></span>
+    <button class="timeline-close" id="timelineClose">&times;</button>
+  </div>
+  <div class="timeline-body" id="timelineBody"></div>
+</div>
 
 <!-- ── Floating Detail Panel (no overlay, no backdrop) ────── -->
 <div class="detail-panel" id="detailPanel">
