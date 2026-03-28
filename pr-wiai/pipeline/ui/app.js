@@ -229,14 +229,33 @@ function renderCalendar() {
 
 function createCalCard(post) {
   const t = typeOf(post.type);
-  const title = post.slides?.bigText || post.text?.slide1 || post.slides?.s2 || post.text?.slide2?.substring(0, 30) || post.notes || post.id;
+  const s = post.slides || {};
+  const fromJson = post.text || {};
+
+  // Adapt content to zoom level
+  let titleText;
+  if (weeksPerRow <= 4) {
+    // Zoomed in: show all slides joined
+    const parts = [s.bigText || fromJson.slide1, s.s2 || fromJson.slide2, s.s3 || fromJson.slide3].filter(Boolean);
+    titleText = parts.join(" / ") || post.notes || post.id;
+  } else if (weeksPerRow <= 7) {
+    // Medium: show S1 + start of S2
+    const s1 = s.bigText || fromJson.slide1 || "";
+    const s2 = s.s2 || fromJson.slide2 || "";
+    titleText = s1 + (s2 ? " / " + s2 : "") || post.notes || post.id;
+  } else {
+    // Zoomed out: short title
+    titleText = (s.bigText || fromJson.slide1 || s.s2 || fromJson.slide2?.substring(0, 30) || post.notes || post.id);
+  }
+
   const needsWork = post.status === "idea" || post.status === "draft";
   const isMatch = searchQuery && matchesSearch(post);
   const isDimmed = searchQuery && !isMatch;
+  const isZoomed = weeksPerRow <= 7;
 
-  const cls = "cal-card" + (needsWork ? " needs-work" : "") + (isMatch ? " search-match" : "") + (isDimmed ? " search-dim" : "");
+  const cls = "cal-card" + (needsWork ? " needs-work" : "") + (isMatch ? " search-match" : "") + (isDimmed ? " search-dim" : "") + (isZoomed ? " cal-card-zoomed" : "");
   const children = [
-    el("span", { className: "cal-card-title" }, title.substring(0, 25)),
+    el("span", { className: "cal-card-title" }, titleText),
     el("span", { className: "cal-card-type", style: { color: t.color } }, t.short),
   ];
   if (needsWork) children.push(el("span", { className: "cal-card-warn" }, "!" + post.status));
@@ -851,7 +870,7 @@ document.getElementById("panelClose").addEventListener("click", closePanel);
 document.getElementById("timelineBtn").addEventListener("click", toggleTimeline);
 document.getElementById("timelineClose").addEventListener("click", toggleTimeline);
 document.getElementById("zoomIn").addEventListener("click", () => {
-  if (weeksPerRow > 3) { weeksPerRow -= 2; render(); }
+  if (weeksPerRow > 2) { weeksPerRow = Math.max(2, weeksPerRow - 2); render(); }
 });
 document.getElementById("zoomOut").addEventListener("click", () => {
   if (weeksPerRow < 13) { weeksPerRow += 2; render(); }
