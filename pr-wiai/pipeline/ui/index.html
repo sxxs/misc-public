@@ -9,36 +9,33 @@
 </head>
 <body>
 
-<!-- ── Header ──────────────────────────────────────────────── -->
-<header id="header">
-  <div class="header-left">
-    <h1>HERDOM<span class="accent">.BAMBERG</span></h1>
-    <div class="stats" id="stats"></div>
-  </div>
-  <div class="header-right">
-    <div class="search-box">
-      <span class="search-icon">&#9906;</span>
-      <input type="text" id="searchInput" placeholder="Suche..." spellcheck="false">
-      <span class="search-count" id="searchCount"></span>
+<!-- ── Top fixed: Header + Calendar ───────────────────────── -->
+<div class="top-fixed">
+  <header id="header">
+    <div class="header-left">
+      <h1>HERDOM<span class="accent">.BAMBERG</span></h1>
+      <div class="stats" id="stats"></div>
     </div>
-  </div>
-</header>
+    <div class="header-right">
+      <div class="search-box">
+        <span class="search-icon">&#9906;</span>
+        <input type="text" id="searchInput" placeholder="Suche..." spellcheck="false">
+        <span class="search-count" id="searchCount"></span>
+      </div>
+    </div>
+  </header>
 
-<!-- ── Calendar Navigation ─────────────────────────────────── -->
-<div class="cal-nav" id="calNav">
-  <button class="nav-btn" id="navPrev">&larr; FRUEHER</button>
-  <span class="nav-label" id="navLabel"></span>
-  <button class="nav-btn" id="navNext">SPAETER &rarr;</button>
+  <div class="cal-nav">
+    <button class="nav-btn" id="navPrev">&larr; FRUEHER</button>
+    <span class="nav-label" id="navLabel"></span>
+    <button class="nav-btn" id="navNext">SPAETER &rarr;</button>
+  </div>
+
+  <div id="calendar"></div>
 </div>
 
-<!-- ── Calendar Grid ───────────────────────────────────────── -->
-<div id="calendar"></div>
-
-<!-- ── Backlog ─────────────────────────────────────────────── -->
-<div id="backlog"></div>
-
-<!-- ── Legend ───────────────────────────────────────────────── -->
-<div class="legend" id="legend"></div>
+<!-- ── Bottom: 4-Column Backlog ───────────────────────────── -->
+<div class="backlog-area" id="backlogArea"></div>
 
 <!-- ── Detail Panel ────────────────────────────────────────── -->
 <div class="panel-overlay" id="panelOverlay">

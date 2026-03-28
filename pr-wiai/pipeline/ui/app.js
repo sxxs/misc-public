@@ -1,7 +1,7 @@
-// @herdom.bamberg — Pipeline Calendar UI v3
-// Brutalist industrial dashboard. No rounded corners. Big type. Explicit slots.
+// @herdom.bamberg — Pipeline UI v4
+// Split-pane: fixed calendar top, 4-column filterable backlog bottom.
 
-// ── Constants ────────────────────────────────────────────────────────────────
+// ── Types ────────────────────────────────────────────────────────────────────
 
 const TYPES = {
   contrarian:   { short: "CTR",   full: "Contrarian",    color: "#facc15" },
@@ -27,12 +27,15 @@ const STATUS_COLORS = {
 
 const SLOTS_PER_WEEK = 3;
 
+const DEFAULT_COLUMNS = ["contrarian", "billboard", "terminal", "_rest"];
+
 // ── State ────────────────────────────────────────────────────────────────────
 
 let plan = { posts: [] };
 let draggedId = null;
-let weekOffset = 0; // 0 = starts at current week
+let weekOffset = 0;
 let searchQuery = "";
+let columnTypes = loadColumnConfig();
 
 // ── API ──────────────────────────────────────────────────────────────────────
 
@@ -54,6 +57,20 @@ async function updatePost(id, field, value) {
   }
 }
 
+// ── Column Config (localStorage) ─────────────────────────────────────────────
+
+function loadColumnConfig() {
+  try {
+    const saved = localStorage.getItem("herdom-columns");
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return [...DEFAULT_COLUMNS];
+}
+
+function saveColumnConfig() {
+  localStorage.setItem("herdom-columns", JSON.stringify(columnTypes));
+}
+
 // ── Week helpers ─────────────────────────────────────────────────────────────
 
 function getWeekStr(date) {
@@ -64,9 +81,7 @@ function getWeekStr(date) {
   return d.getFullYear() + "-KW" + String(wk).padStart(2, "0");
 }
 
-function weekLabel(wk) {
-  return wk.replace(/^\d{4}-/, "");
-}
+function weekLabel(wk) { return wk.replace(/^\d{4}-/, ""); }
 
 function generateWeeks(count, offset) {
   const weeks = [];
@@ -118,37 +133,35 @@ function matchesSearch(post) {
   return hay.includes(q);
 }
 
-// ── Render ────────────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════════════════════════════
 
 function render() {
+  renderCalendar();
+  renderBacklog();
+  renderStats();
+}
+
+// ── Calendar ─────────────────────────────────────────────────────────────────
+
+function renderCalendar() {
   const allWeeks = generateWeeks(26, weekOffset);
   const row1 = allWeeks.slice(0, 13);
   const row2 = allWeeks.slice(13);
   const currentWeek = getWeekStr(new Date());
 
-  // Build lookup: week → ordered posts (by slot index)
   const postsByWeek = new Map();
-  const backlog = [];
   for (const p of plan.posts) {
     if (p.targetWeek) {
       if (!postsByWeek.has(p.targetWeek)) postsByWeek.set(p.targetWeek, []);
       postsByWeek.get(p.targetWeek).push(p);
-    } else {
-      backlog.push(p);
     }
   }
-
-  // Sort within each week by slotIndex (if present)
   for (const [, posts] of postsByWeek) {
     posts.sort((a, b) => (a.slotIndex ?? 99) - (b.slotIndex ?? 99));
   }
 
-  // Search match count
-  const matchCount = searchQuery ? plan.posts.filter(matchesSearch).length : 0;
-  const searchCountEl = document.getElementById("searchCount");
-  searchCountEl.textContent = searchQuery ? matchCount + " treffer" : "";
-
-  // ── Calendar ──
   const cal = document.getElementById("calendar");
   cal.replaceChildren();
 
@@ -156,26 +169,20 @@ function render() {
     const rowEl = el("div", { className: "cal-row" });
     for (const wkObj of row) {
       const wk = wkObj.key;
-      const isCurrent = wk === currentWeek;
-      const isPast = wk < currentWeek;
       const posts = postsByWeek.get(wk) || [];
-
-      const cls = "week" + (isCurrent ? " current" : "") + (isPast ? " past" : "");
+      const cls = "week" + (wk === currentWeek ? " current" : "") + (wk < currentWeek ? " past" : "");
       const weekEl = el("div", { className: cls });
 
-      const kwText = weekLabel(wk);
-      const kwNum = kwText.replace("KW", "");
-      const header = el("div", { className: "week-header" }, [
+      const kwNum = weekLabel(wk).replace("KW", "");
+      weekEl.appendChild(el("div", { className: "week-header" }, [
         el("span", { className: "week-kw" }, [
           el("span", { className: "week-kw-prefix" }, "KW"),
           el("span", { className: "week-kw-num" }, kwNum),
         ]),
         el("span", { className: "week-date" }, formatMonday(wkObj.monday)),
-      ]);
-      weekEl.appendChild(header);
+      ]));
 
       const slotsEl = el("div", { className: "week-slots" });
-
       for (let i = 0; i < SLOTS_PER_WEEK; i++) {
         const post = posts[i];
         const slotEl = el("div", {
@@ -186,70 +193,184 @@ function render() {
           onDragleave: (e) => { e.currentTarget.classList.remove("drag-over"); },
           onDrop: (e) => onDrop(e),
         });
-        if (post) {
-          slotEl.appendChild(createCard(post));
-        }
+        if (post) slotEl.appendChild(createCalCard(post));
         slotsEl.appendChild(slotEl);
       }
-
       weekEl.appendChild(slotsEl);
       rowEl.appendChild(weekEl);
     }
     cal.appendChild(rowEl);
   }
 
-  // ── Navigation label ──
   document.getElementById("navLabel").textContent =
     weekLabel(row1[0].key) + " – " + weekLabel(row2[row2.length - 1].key);
 
-  // ── Backlog ──
-  const backlogEl = document.getElementById("backlog");
-  backlogEl.replaceChildren();
-
-  const backlogHeader = el("div", { className: "backlog-header" }, [
-    el("span", { className: "label" }, "Backlog"),
-    el("span", { className: "count" }, backlog.length + " posts"),
-  ]);
-  backlogEl.appendChild(backlogHeader);
-
-  const backlogGrid = el("div", {
-    className: "backlog-grid",
-    "data-week": "",
-    "data-slot": "0",
-    onDragover: (e) => { e.preventDefault(); },
-    onDrop: (e) => onDrop(e),
-  });
-
-  const byType = new Map();
-  for (const p of backlog) {
-    const t = p.type || "other";
-    if (!byType.has(t)) byType.set(t, []);
-    byType.get(t).push(p);
-  }
-
-  for (const [type, posts] of byType) {
-    const group = el("div", { className: "backlog-group" });
-    group.appendChild(el("div", { className: "backlog-type-label" }, [
-      el("span", { className: "type-dot", style: { background: typeOf(type).color } }),
-      el("span", {}, typeOf(type).full),
-      el("span", { className: "type-count" }, "(" + posts.length + ")"),
-    ]));
-
-    const cardsEl = el("div", { className: "backlog-cards" });
-    for (const p of posts) {
-      cardsEl.appendChild(createCard(p));
-    }
-    group.appendChild(cardsEl);
-    backlogGrid.appendChild(group);
-  }
-  backlogEl.appendChild(backlogGrid);
-
-  // ── Stats ──
-  renderStats();
-
-  // ── Legend ──
-  renderLegend();
+  const searchCountEl = document.getElementById("searchCount");
+  searchCountEl.textContent = searchQuery
+    ? plan.posts.filter(matchesSearch).length + " treffer"
+    : "";
 }
+
+function createCalCard(post) {
+  const t = typeOf(post.type);
+  const title = post.text?.slide1 || post.text?.slide2?.substring(0, 30) || post.notes || post.id;
+  const needsWork = post.status === "idea" || post.status === "draft";
+  const isMatch = searchQuery && matchesSearch(post);
+  const isDimmed = searchQuery && !isMatch;
+
+  const cls = "cal-card" + (needsWork ? " needs-work" : "") + (isMatch ? " search-match" : "") + (isDimmed ? " search-dim" : "");
+  const children = [
+    el("span", { className: "cal-card-title" }, title.substring(0, 25)),
+    el("span", { className: "cal-card-type", style: { color: t.color } }, t.short),
+  ];
+  if (needsWork) children.push(el("span", { className: "cal-card-warn" }, "!" + post.status));
+
+  return el("div", {
+    className: cls,
+    style: { borderLeftColor: t.color },
+    "data-id": post.id,
+    draggable: "true",
+    onDragstart: (e) => onDragStart(e),
+    onDragend: (e) => onDragEnd(e),
+    onClick: () => openPanel(post.id),
+  }, children);
+}
+
+// ── Backlog (4 columns) ──────────────────────────────────────────────────────
+
+function renderBacklog() {
+  const area = document.getElementById("backlogArea");
+  area.replaceChildren();
+
+  const backlog = plan.posts.filter((p) => !p.targetWeek);
+  const assignedTypes = new Set(columnTypes.filter((t) => t !== "_rest"));
+
+  for (let colIdx = 0; colIdx < 4; colIdx++) {
+    const colType = columnTypes[colIdx] || "_rest";
+    const col = el("div", { className: "backlog-col" });
+
+    // Filter posts for this column
+    let colPosts;
+    if (colType === "_all") {
+      colPosts = backlog;
+    } else if (colType === "_rest") {
+      colPosts = backlog.filter((p) => !assignedTypes.has(p.type));
+    } else {
+      colPosts = backlog.filter((p) => p.type === colType);
+    }
+
+    // Sort: pinned first, then by tag (stark > ok > ja > ad > geht > rewrite > none)
+    const tagOrder = { stark: 0, ja: 1, ok: 2, ad: 3, rewrite: 4, geht: 5 };
+    colPosts.sort((a, b) => {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      return (tagOrder[a.tag] ?? 6) - (tagOrder[b.tag] ?? 6);
+    });
+
+    // Header with type selector
+    const headerBar = el("div", { className: "col-header-bar" });
+    const select = el("select");
+    const options = [
+      { value: "_all", label: "Alle" },
+      { value: "_rest", label: "Sonstige" },
+      ...Object.entries(TYPES).map(([k, v]) => ({ value: k, label: v.full + " (" + backlog.filter((p) => p.type === k).length + ")" })),
+    ];
+    for (const opt of options) {
+      const o = el("option", { value: opt.value }, opt.label);
+      if (opt.value === colType) o.selected = true;
+      select.appendChild(o);
+    }
+    select.addEventListener("change", () => {
+      columnTypes[colIdx] = select.value;
+      saveColumnConfig();
+      renderBacklog();
+    });
+    headerBar.appendChild(select);
+    headerBar.appendChild(el("span", { className: "col-count" }, String(colPosts.length)));
+    col.appendChild(headerBar);
+
+    // Scrollable list
+    const scroll = el("div", {
+      className: "col-scroll",
+      "data-week": "",
+      "data-slot": "0",
+      onDragover: (e) => { e.preventDefault(); },
+      onDrop: (e) => onDrop(e),
+    });
+
+    for (const post of colPosts) {
+      scroll.appendChild(createBlItem(post));
+    }
+    col.appendChild(scroll);
+    area.appendChild(col);
+  }
+}
+
+function createBlItem(post) {
+  const t = typeOf(post.type);
+  const text = post.text?.slide1
+    ? [post.text.slide1, post.text.slide2, post.text.slide3].filter(Boolean).join(" — ")
+    : (post.notes || post.id);
+  const needsWork = post.status === "idea" || post.status === "draft";
+  const isMatch = searchQuery && matchesSearch(post);
+  const isDimmed = searchQuery && !isMatch;
+
+  const cls = "bl-item"
+    + (post.pinned ? " pinned" : "")
+    + (needsWork ? " needs-work" : "")
+    + (isMatch ? " search-match" : "")
+    + (isDimmed ? " search-dim" : "");
+
+  // Header row: pin + tag + type
+  const headChildren = [];
+
+  // Pin toggle
+  const pin = el("span", {
+    className: "bl-pin" + (post.pinned ? " active" : ""),
+    onClick: (e) => { e.stopPropagation(); togglePin(post.id); },
+  }, post.pinned ? "\u2605" : "\u2606");
+  headChildren.push(pin);
+
+  // Tag badge
+  if (post.tag) {
+    headChildren.push(el("span", {
+      className: "bl-tag bl-tag-" + post.tag,
+    }, "#" + post.tag));
+  }
+
+  // Status warning
+  if (needsWork) {
+    headChildren.push(el("span", { className: "bl-warn" }, "!" + post.status));
+  }
+
+  // Type (right-aligned)
+  headChildren.push(el("span", { className: "bl-type", style: { color: t.color } }, t.short));
+
+  const item = el("div", {
+    className: cls,
+    style: { borderLeftColor: t.color },
+    "data-id": post.id,
+    draggable: "true",
+    onDragstart: (e) => onDragStart(e),
+    onDragend: (e) => onDragEnd(e),
+    onClick: () => openPanel(post.id),
+  }, [
+    el("div", { className: "bl-item-head" }, headChildren),
+    el("div", { className: "bl-item-text" }, text),
+  ]);
+
+  return item;
+}
+
+async function togglePin(id) {
+  const post = plan.posts.find((p) => p.id === id);
+  if (!post) return;
+  post.pinned = !post.pinned;
+  renderBacklog();
+  await updatePost(id, "pinned", post.pinned);
+}
+
+// ── Stats ────────────────────────────────────────────────────────────────────
 
 function renderStats() {
   const statsEl = document.getElementById("stats");
@@ -260,9 +381,8 @@ function renderStats() {
   const scheduled = plan.posts.filter((p) => p.targetWeek && p.status !== "published").length;
   const backlog = total - scheduled - published;
 
-  // Type distribution of SCHEDULED posts only
   const schedTypes = {};
-  plan.posts.filter((p) => p.targetWeek).forEach((p) => {
+  plan.posts.filter((p) => p.targetWeek && p.status !== "published").forEach((p) => {
     schedTypes[p.type] = (schedTypes[p.type] || 0) + 1;
   });
 
@@ -276,109 +396,26 @@ function renderStats() {
 
   if (scheduled > 0) {
     parts.push(document.createTextNode("  //  "));
-    const typeStrs = Object.entries(schedTypes)
-      .sort((a, b) => b[1] - a[1])
-      .map(([t, c]) => {
-        const span = el("span", { style: { color: typeOf(t).color } },
-          typeOf(t).short + ":" + c);
-        return span;
-      });
-    for (let i = 0; i < typeStrs.length; i++) {
+    Object.entries(schedTypes).sort((a, b) => b[1] - a[1]).forEach(([t, c], i) => {
       if (i > 0) parts.push(document.createTextNode("  "));
-      parts.push(typeStrs[i]);
-    }
+      parts.push(el("span", { style: { color: typeOf(t).color } }, typeOf(t).short + ":" + c));
+    });
   }
 
   for (const p of parts) statsEl.appendChild(p);
 }
 
-function renderLegend() {
-  const legendEl = document.getElementById("legend");
-  legendEl.replaceChildren();
-
-  // Type legend
-  const typeSec = el("div", { className: "legend-section" });
-  typeSec.appendChild(el("span", { className: "legend-title" }, "Typ"));
-  const presentTypes = new Set(plan.posts.map((p) => p.type));
-  for (const [type, info] of Object.entries(TYPES)) {
-    if (!presentTypes.has(type)) continue;
-    typeSec.appendChild(el("div", { className: "item" }, [
-      el("div", { className: "swatch-border", style: { color: info.color } }),
-      el("span", {}, info.full),
-    ]));
-  }
-  legendEl.appendChild(typeSec);
-
-  // Status legend
-  const statusSec = el("div", { className: "legend-section" });
-  statusSec.appendChild(el("span", { className: "legend-title" }, "Status"));
-  for (const [status, color] of Object.entries(STATUS_COLORS)) {
-    statusSec.appendChild(el("div", { className: "item" }, [
-      el("span", { className: "swatch-status", style: { color } }, status),
-    ]));
-  }
-  legendEl.appendChild(statusSec);
-}
-
-// ── Cards ────────────────────────────────────────────────────────────────────
-
-function createCard(post) {
-  const typeColor = typeOf(post.type).color;
-  const title = post.text?.slide1 || post.text?.slide2?.substring(0, 35) || post.notes || post.id;
-  const displayTitle = title.substring(0, 28);
-  const isMatch = searchQuery && matchesSearch(post);
-  const isDimmed = searchQuery && !isMatch;
-  const needsWork = post.status === "idea" || post.status === "draft";
-
-  const classes = ["card"];
-  if (isMatch) classes.push("search-match");
-  if (isDimmed) classes.push("search-dim");
-  if (needsWork) classes.push("needs-work");
-
-  const DESIGN_SHORT = { "pixel-wall": "LED", "terminal": "TRM", "billboard": "BIL", "newsjacking": "NJ" };
-  const metaChildren = [
-    el("span", { className: "card-type", style: { color: typeColor } }, typeOf(post.type).short),
-  ];
-  if (post.design) {
-    metaChildren.push(el("span", { className: "card-design" }, DESIGN_SHORT[post.design] || post.design));
-  }
-  if (post.tag === "ad") {
-    metaChildren.push(el("span", { className: "card-tag card-tag-ad" }, "#ad"));
-  } else if (post.tag === "geht") {
-    metaChildren.push(el("span", { className: "card-tag card-tag-geht" }, "#geht"));
-  } else if (post.tag === "stark") {
-    metaChildren.push(el("span", { className: "card-tag card-tag-stark" }, "#stark"));
-  }
-  if (needsWork) {
-    metaChildren.push(el("span", { className: "card-warn" }, post.status));
-  }
-
-  const card = el("div", {
-    className: classes.join(" "),
-    style: { borderLeftColor: typeColor },
-    "data-id": post.id,
-    draggable: "true",
-    onDragstart: (e) => onDragStart(e),
-    onDragend: (e) => onDragEnd(e),
-    onClick: () => openPanel(post.id),
-  }, [
-    el("div", { className: "card-title" }, displayTitle),
-    el("div", { className: "card-meta" }, metaChildren),
-  ]);
-  return card;
-}
-
 // ── Drag & Drop ──────────────────────────────────────────────────────────────
 
 function onDragStart(e) {
-  const card = e.target.closest(".card");
+  const card = e.target.closest("[data-id]");
   draggedId = card.dataset.id;
   card.classList.add("dragging");
   e.dataTransfer.effectAllowed = "move";
 }
 
 function onDragEnd(e) {
-  e.target.closest(".card")?.classList.remove("dragging");
+  e.target.closest("[data-id]")?.classList.remove("dragging");
   document.querySelectorAll(".drag-over").forEach((x) => x.classList.remove("drag-over"));
 }
 
@@ -395,7 +432,6 @@ async function onDrop(e) {
 
   const updates = [];
 
-  // If dropping into a specific slot, reorder posts in that week
   if (week) {
     const weekPosts = plan.posts.filter((p) => p.targetWeek === week && p.id !== post.id);
     weekPosts.splice(slotIndex, 0, post);
@@ -408,12 +444,10 @@ async function onDrop(e) {
   }
 
   post.targetWeek = week;
-  post.slotIndex = slotIndex;
+  post.slotIndex = week ? slotIndex : null;
   updates.push(updatePost(post.id, "targetWeek", week));
-  updates.push(updatePost(post.id, "slotIndex", slotIndex));
+  if (week) updates.push(updatePost(post.id, "slotIndex", slotIndex));
 
-  // Only auto-transition ready↔scheduled. Draft/idea cards keep their status
-  // (they need work even if placed in the calendar).
   if (week && post.status === "ready") {
     post.status = "scheduled";
     updates.push(updatePost(post.id, "status", "scheduled"));
@@ -442,9 +476,9 @@ function openPanel(id) {
   const statusColor = STATUS_COLORS[post.status] || "#555";
   content.appendChild(el("span", { className: "status-badge", style: { color: statusColor } }, post.status));
 
-  const typeColor = typeOf(post.type).color;
+  const t = typeOf(post.type);
   content.appendChild(el("label", {}, "Typ"));
-  content.appendChild(el("div", { className: "info-value", style: { color: typeColor } }, typeOf(post.type).full));
+  content.appendChild(el("div", { className: "info-value", style: { color: t.color } }, t.full));
 
   content.appendChild(el("label", {}, "Design"));
   const designSelect = el("select");
@@ -470,6 +504,11 @@ function openPanel(id) {
     }
   }
 
+  if (post.tag) {
+    content.appendChild(el("label", {}, "Tag"));
+    content.appendChild(el("div", { className: "info-value" }, "#" + post.tag + (post.tagComment ? " — " + post.tagComment : "")));
+  }
+
   content.appendChild(el("label", {}, "Zielwoche"));
   const weekInput = el("input", { type: "text", value: post.targetWeek || "", placeholder: "z.B. 2026-KW15" });
   weekInput.addEventListener("change", () => setField(post.id, "targetWeek", weekInput.value || null));
@@ -479,6 +518,11 @@ function openPanel(id) {
   const notesArea = el("textarea", {}, post.notes || "");
   notesArea.addEventListener("change", () => setField(post.id, "notes", notesArea.value));
   content.appendChild(notesArea);
+
+  if (post.source) {
+    content.appendChild(el("label", {}, "Quelle"));
+    content.appendChild(el("div", { className: "mono-value" }, post.source));
+  }
 
   document.getElementById("panelOverlay").classList.add("open");
 }
@@ -501,22 +545,13 @@ document.getElementById("panelOverlay").addEventListener("click", (e) => {
   if (e.target === e.currentTarget) closePanel();
 });
 
-document.getElementById("navPrev").addEventListener("click", () => {
-  weekOffset -= 13;
-  render();
-});
-document.getElementById("navNext").addEventListener("click", () => {
-  weekOffset += 13;
-  render();
-});
+document.getElementById("navPrev").addEventListener("click", () => { weekOffset -= 13; render(); });
+document.getElementById("navNext").addEventListener("click", () => { weekOffset += 13; render(); });
 
 let searchTimer = null;
 document.getElementById("searchInput").addEventListener("input", (e) => {
   clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => {
-    searchQuery = e.target.value.trim();
-    render();
-  }, 150);
+  searchTimer = setTimeout(() => { searchQuery = e.target.value.trim(); render(); }, 150);
 });
 
 document.addEventListener("keydown", (e) => {
