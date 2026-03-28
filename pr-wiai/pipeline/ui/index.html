@@ -37,12 +37,10 @@
 <!-- ── Bottom: 4-Column Backlog ───────────────────────────── -->
 <div class="backlog-area" id="backlogArea"></div>
 
-<!-- ── Detail Panel ────────────────────────────────────────── -->
-<div class="panel-overlay" id="panelOverlay">
-  <div class="panel" id="panel">
-    <button class="close-btn" id="closeBtn">&times;</button>
-    <div id="panelContent"></div>
-  </div>
+<!-- ── Floating Detail Panel (no overlay, no backdrop) ────── -->
+<div class="detail-panel" id="detailPanel">
+  <button class="panel-close" id="panelClose">&times;</button>
+  <div id="panelContent"></div>
 </div>
 
 <script src="app.js"></script>

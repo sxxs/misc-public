@@ -36,6 +36,7 @@ let draggedId = null;
 let weekOffset = 0;
 let searchQuery = "";
 let columnTypes = loadColumnConfig();
+let selectedPostId = null;
 
 // ── API ──────────────────────────────────────────────────────────────────────
 
@@ -192,6 +193,12 @@ function renderCalendar() {
           onDragover: (e) => { e.preventDefault(); e.currentTarget.classList.add("drag-over"); },
           onDragleave: (e) => { e.currentTarget.classList.remove("drag-over"); },
           onDrop: (e) => onDrop(e),
+          onClick: (e) => {
+            if (selectedPostId && !post) {
+              e.stopPropagation();
+              schedulePost(selectedPostId, wk, i);
+            }
+          },
         });
         if (post) slotEl.appendChild(createCalCard(post));
         slotsEl.appendChild(slotEl);
@@ -226,13 +233,13 @@ function createCalCard(post) {
   if (needsWork) children.push(el("span", { className: "cal-card-warn" }, "!" + post.status));
 
   return el("div", {
-    className: cls,
+    className: cls + (post.id === selectedPostId ? " selected" : ""),
     style: { borderLeftColor: t.color },
     "data-id": post.id,
     draggable: "true",
     onDragstart: (e) => onDragStart(e),
     onDragend: (e) => onDragEnd(e),
-    onClick: () => openPanel(post.id),
+    onClick: (e) => { e.stopPropagation(); openPanel(post.id, e); },
   }, children);
 }
 
@@ -347,13 +354,13 @@ function createBlItem(post) {
   headChildren.push(el("span", { className: "bl-type", style: { color: t.color } }, t.short));
 
   const item = el("div", {
-    className: cls,
+    className: cls + (post.id === selectedPostId ? " selected" : ""),
     style: { borderLeftColor: t.color },
     "data-id": post.id,
     draggable: "true",
     onDragstart: (e) => onDragStart(e),
     onDragend: (e) => onDragEnd(e),
-    onClick: () => openPanel(post.id),
+    onClick: (e) => { e.stopPropagation(); openPanel(post.id, e); },
   }, [
     el("div", { className: "bl-item-head" }, headChildren),
     el("div", { className: "bl-item-text" }, text),
@@ -464,18 +471,63 @@ async function onDrop(e) {
 
 // ── Detail Panel ─────────────────────────────────────────────────────────────
 
-function openPanel(id) {
+function openPanel(id, event) {
   const post = plan.posts.find((p) => p.id === id);
   if (!post) return;
 
+  selectedPostId = id;
+  document.body.classList.add("schedule-mode");
+
+  const panel = document.getElementById("detailPanel");
   const content = document.getElementById("panelContent");
   content.replaceChildren();
 
+  // Position the panel near the clicked element
+  if (event) {
+    const clicked = event.currentTarget;
+    const rect = clicked.getBoundingClientRect();
+    const backlogCol = clicked.closest(".backlog-col");
+    const backlogArea = document.getElementById("backlogArea");
+    const backlogTop = backlogArea ? backlogArea.getBoundingClientRect().top : 0;
+
+    if (backlogCol) {
+      const colIdx = [...backlogCol.parentElement.children].indexOf(backlogCol);
+      const colRect = backlogCol.getBoundingClientRect();
+      if (colIdx < 3) {
+        panel.style.left = colRect.right + "px";
+      } else {
+        panel.style.left = Math.max(0, colRect.left - 374) + "px";
+      }
+      panel.style.top = Math.max(backlogTop, Math.min(rect.top, window.innerHeight - 400)) + "px";
+    } else {
+      // Calendar card
+      panel.style.left = Math.min(rect.right + 4, window.innerWidth - 380) + "px";
+      panel.style.top = Math.max(rect.top, 50) + "px";
+    }
+  }
+
+  // Title
   content.appendChild(el("h2", {}, post.id));
 
-  const statusColor = STATUS_COLORS[post.status] || "#555";
-  content.appendChild(el("span", { className: "status-badge", style: { color: statusColor } }, post.status));
+  // Schedule hint
+  if (!post.targetWeek) {
+    content.appendChild(el("div", { className: "schedule-hint" }, "\u2191 Klicke einen leeren Slot im Kalender um einzuplanen"));
+  } else {
+    content.appendChild(el("div", { className: "schedule-hint" }, "Eingeplant: " + post.targetWeek + " — klicke anderen Slot zum Verschieben"));
+  }
 
+  // Status dropdown
+  content.appendChild(el("label", {}, "Status"));
+  const statusSelect = el("select");
+  for (const s of ["idea", "draft", "ready", "scheduled", "published"]) {
+    const opt = el("option", { value: s }, s);
+    if (post.status === s) opt.selected = true;
+    statusSelect.appendChild(opt);
+  }
+  statusSelect.addEventListener("change", () => setField(post.id, "status", statusSelect.value));
+  content.appendChild(statusSelect);
+
+  // Type + Design
   const t = typeOf(post.type);
   content.appendChild(el("label", {}, "Typ"));
   content.appendChild(el("div", { className: "info-value", style: { color: t.color } }, t.full));
@@ -490,11 +542,7 @@ function openPanel(id) {
   designSelect.addEventListener("change", () => setField(post.id, "design", designSelect.value || null));
   content.appendChild(designSelect);
 
-  if (post.json) {
-    content.appendChild(el("label", {}, "JSON"));
-    content.appendChild(el("div", { className: "mono-value" }, post.json));
-  }
-
+  // Slide texts
   if (post.text) {
     for (const [key, label] of [["slide1", "Slide 1"], ["slide2", "Slide 2"], ["slide3", "Slide 3"], ["button", "Button"], ["uebrigens", "Uebrigens"]]) {
       if (post.text[key]) {
@@ -504,16 +552,17 @@ function openPanel(id) {
     }
   }
 
+  if (post.json) {
+    content.appendChild(el("label", {}, "JSON"));
+    content.appendChild(el("div", { className: "mono-value" }, post.json));
+  }
+
   if (post.tag) {
     content.appendChild(el("label", {}, "Tag"));
     content.appendChild(el("div", { className: "info-value" }, "#" + post.tag + (post.tagComment ? " — " + post.tagComment : "")));
   }
 
-  content.appendChild(el("label", {}, "Zielwoche"));
-  const weekInput = el("input", { type: "text", value: post.targetWeek || "", placeholder: "z.B. 2026-KW15" });
-  weekInput.addEventListener("change", () => setField(post.id, "targetWeek", weekInput.value || null));
-  content.appendChild(weekInput);
-
+  // Notes
   content.appendChild(el("label", {}, "Notizen"));
   const notesArea = el("textarea", {}, post.notes || "");
   notesArea.addEventListener("change", () => setField(post.id, "notes", notesArea.value));
@@ -524,11 +573,51 @@ function openPanel(id) {
     content.appendChild(el("div", { className: "mono-value" }, post.source));
   }
 
-  document.getElementById("panelOverlay").classList.add("open");
+  panel.classList.add("open");
+
+  // Re-render to show selected state on cards
+  renderCalendar();
+  renderBacklog();
 }
 
 function closePanel() {
-  document.getElementById("panelOverlay").classList.remove("open");
+  selectedPostId = null;
+  document.body.classList.remove("schedule-mode");
+  document.getElementById("detailPanel").classList.remove("open");
+  renderCalendar();
+  renderBacklog();
+}
+
+async function schedulePost(postId, week, slotIndex) {
+  const post = plan.posts.find((p) => p.id === postId);
+  if (!post) return;
+
+  const updates = [];
+
+  if (week) {
+    const weekPosts = plan.posts.filter((p) => p.targetWeek === week && p.id !== post.id);
+    weekPosts.splice(slotIndex, 0, post);
+    weekPosts.forEach((p, i) => {
+      if (p.slotIndex !== i) {
+        p.slotIndex = i;
+        updates.push(updatePost(p.id, "slotIndex", i));
+      }
+    });
+  }
+
+  post.targetWeek = week;
+  post.slotIndex = week ? slotIndex : null;
+  updates.push(updatePost(post.id, "targetWeek", week));
+  if (week) updates.push(updatePost(post.id, "slotIndex", slotIndex));
+
+  if (week && post.status === "ready") {
+    post.status = "scheduled";
+    updates.push(updatePost(post.id, "status", "scheduled"));
+  }
+
+  // Re-open panel to update schedule hint
+  openPanel(postId);
+  await Promise.all(updates);
 }
 
 async function setField(id, field, value) {
@@ -540,9 +629,16 @@ async function setField(id, field, value) {
 
 // ── Event Listeners ──────────────────────────────────────────────────────────
 
-document.getElementById("closeBtn").addEventListener("click", closePanel);
-document.getElementById("panelOverlay").addEventListener("click", (e) => {
-  if (e.target === e.currentTarget) closePanel();
+document.getElementById("panelClose").addEventListener("click", closePanel);
+
+// Click outside panel closes it (but not on calendar slots or other posts)
+document.addEventListener("click", (e) => {
+  if (!selectedPostId) return;
+  const panel = document.getElementById("detailPanel");
+  if (panel.contains(e.target)) return;
+  if (e.target.closest("[data-id]")) return;
+  if (e.target.closest(".slot")) return;
+  closePanel();
 });
 
 document.getElementById("navPrev").addEventListener("click", () => { weekOffset -= 13; render(); });

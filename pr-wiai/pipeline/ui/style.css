@@ -383,59 +383,83 @@ header h1 .accent { color: var(--yellow); }
   overflow: hidden;
 }
 
-/* ── Detail Panel ────────────────────────────────────────── */
+/* ── Floating Detail Panel ────────────────────────────────── */
 
-.panel-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; }
-.panel-overlay.open { display: flex; justify-content: flex-end; }
-
-.panel {
-  width: 440px;
-  max-width: 92vw;
-  background: var(--surface);
-  border-left: 2px solid var(--yellow);
-  padding: 20px 24px;
+.detail-panel {
+  display: none;
+  position: fixed;
+  width: 370px;
+  max-height: 55vh;
   overflow-y: auto;
-  height: 100vh;
-  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--yellow);
+  padding: 14px 16px;
+  z-index: 150;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
 }
-.panel .close-btn {
-  position: absolute; top: 10px; right: 14px;
-  background: none; border: none; color: var(--dim); font-size: 22px; cursor: pointer;
+.detail-panel.open { display: block; }
+
+.detail-panel::-webkit-scrollbar { width: 4px; }
+.detail-panel::-webkit-scrollbar-track { background: var(--surface); }
+.detail-panel::-webkit-scrollbar-thumb { background: var(--dim2); }
+
+.panel-close {
+  position: absolute; top: 6px; right: 10px;
+  background: none; border: none; color: var(--dim); font-size: 18px; cursor: pointer;
 }
-.panel .close-btn:hover { color: var(--text); }
-.panel h2 {
+.panel-close:hover { color: var(--text); }
+
+.detail-panel h2 {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 14px; font-weight: 800; color: var(--yellow);
-  margin-bottom: 10px; word-break: break-all;
+  font-size: 12px; font-weight: 800; color: var(--yellow);
+  margin-bottom: 8px; margin-right: 20px; word-break: break-all;
 }
-.panel .status-badge {
-  display: inline-block;
+
+.detail-panel .schedule-hint {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; font-weight: 700; padding: 2px 8px;
-  border: 1px solid currentColor; text-transform: uppercase;
+  font-size: 9px; color: var(--yellow); opacity: 0.7;
+  padding: 4px 0 6px; letter-spacing: 0.03em;
 }
-.panel label {
+
+.detail-panel label {
   display: block;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; font-weight: 700; color: var(--dim);
+  font-size: 8px; font-weight: 700; color: var(--dim);
   text-transform: uppercase; letter-spacing: 0.15em;
-  margin: 14px 0 4px;
+  margin: 10px 0 3px;
 }
-.panel .slide-text {
-  background: var(--bg); padding: 10px 12px;
-  font-size: 13px; line-height: 1.6; white-space: pre-wrap;
+.detail-panel .slide-text {
+  background: var(--bg); padding: 8px 10px;
+  font-size: 12px; line-height: 1.55; white-space: pre-wrap;
   border-left: 3px solid var(--dim2);
 }
-.panel .info-value { font-size: 13px; font-weight: 500; }
-.panel .mono-value {
+.detail-panel .info-value { font-size: 12px; font-weight: 500; }
+.detail-panel .mono-value {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px; color: var(--dim);
+  font-size: 10px; color: var(--dim);
 }
-.panel input, .panel textarea, .panel select {
+.detail-panel input, .detail-panel textarea, .detail-panel select {
   background: var(--bg); color: var(--text);
-  border: 1px solid var(--border); padding: 8px 10px;
-  font-size: 13px; font-family: 'JetBrains Mono', monospace;
+  border: 1px solid var(--border); padding: 6px 8px;
+  font-size: 12px; font-family: 'JetBrains Mono', monospace;
   width: 100%;
 }
-.panel input:focus, .panel textarea:focus, .panel select:focus { border-color: var(--yellow); outline: none; }
-.panel textarea { min-height: 100px; resize: vertical; }
+.detail-panel input:focus, .detail-panel textarea:focus, .detail-panel select:focus { border-color: var(--yellow); outline: none; }
+.detail-panel textarea { min-height: 70px; resize: vertical; }
+
+/* Schedule-mode: highlight schedulable slots */
+body.schedule-mode .slot.empty-hint {
+  border-color: var(--yellow);
+  background: rgba(250,204,21,0.04);
+  cursor: pointer;
+}
+body.schedule-mode .slot.empty-hint:hover {
+  background: rgba(250,204,21,0.1);
+}
+
+/* Selected post highlight */
+.bl-item.selected, .cal-card.selected {
+  outline: 2px solid var(--yellow);
+  outline-offset: -2px;
+}
