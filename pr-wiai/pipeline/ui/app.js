@@ -128,28 +128,29 @@ function render() {
   }
   grid.appendChild(el("div", { className: "col-header backlog" }, "Backlog"));
 
+  // Build lookup map: (type, week) → posts[] — avoids O(N*W) filter scans
+  const postsByCell = new Map();
+  for (const p of plan.posts) {
+    const t = mapType(p.type);
+    const w = p.targetWeek || "";
+    const key = t + "|" + w;
+    if (!postsByCell.has(key)) postsByCell.set(key, []);
+    postsByCell.get(key).push(p);
+  }
+
   // Rows
   for (const type of activeTypes) {
     const color = TYPE_COLORS[type] || "#666";
     const dot = el("div", { className: "dot", style: { background: color } });
-    const label = document.createTextNode(TYPE_LABELS[type] || type);
     const rowHeader = el("div", { className: "row-header" }, [dot, el("span", {}, TYPE_LABELS[type] || type)]);
     grid.appendChild(rowHeader);
 
-    // Week cells
     for (const wk of weeks) {
-      const postsInCell = plan.posts.filter(
-        (p) => mapType(p.type) === type && p.targetWeek === wk
-      );
-      const cell = createCell(wk, type, postsInCell);
+      const cell = createCell(wk, type, postsByCell.get(type + "|" + wk) || []);
       grid.appendChild(cell);
     }
 
-    // Backlog cell
-    const backlog = plan.posts.filter(
-      (p) => mapType(p.type) === type && !p.targetWeek
-    );
-    const cell = createCell("", type, backlog);
+    const cell = createCell("", type, postsByCell.get(type + "|") || []);
     grid.appendChild(cell);
   }
 
@@ -226,24 +227,27 @@ async function onDrop(e) {
   const post = plan.posts.find((p) => p.id === draggedId);
   if (!post) return;
 
+  // Collect all changes, then batch-update
+  const updates = [];
   post.targetWeek = week;
+  updates.push(updatePost(post.id, "targetWeek", week));
+
   if (type !== post.type && TYPE_ORDER.includes(type)) {
     post.type = type;
-    await updatePost(post.id, "type", type);
+    updates.push(updatePost(post.id, "type", type));
   }
-  await updatePost(post.id, "targetWeek", week);
-
   if (week && post.status === "ready") {
     post.status = "scheduled";
-    await updatePost(post.id, "status", "scheduled");
+    updates.push(updatePost(post.id, "status", "scheduled"));
   }
   if (!week && post.status === "scheduled") {
     post.status = "ready";
-    await updatePost(post.id, "status", "ready");
+    updates.push(updatePost(post.id, "status", "ready"));
   }
 
-  render();
   draggedId = null;
+  render();
+  await Promise.all(updates);
 }
 
 // ── Detail Panel ─────────────────────────────────────────────────────────────

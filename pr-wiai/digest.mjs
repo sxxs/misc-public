@@ -19,14 +19,22 @@ function bar(count, max, width = 30) {
   return "\u2588".repeat(filled) + " ".repeat(width - filled);
 }
 
-function countTags(dir, tag) {
-  let count = 0;
-  for (const f of readdirSync(dir).filter((f) => f.endsWith(".md"))) {
-    const text = readFileSync(join(dir, f), "utf8");
-    const matches = text.match(new RegExp(`^${tag}`, "gm"));
-    if (matches) count += matches.length;
+function countAllTags(dir, tags) {
+  const counts = Object.fromEntries(tags.map((t) => [t, 0]));
+  const regexes = tags.map((t) => [t, new RegExp(`^${t}`, "gm")]);
+  try {
+    for (const f of readdirSync(dir).filter((f) => f.endsWith(".md"))) {
+      const text = readFileSync(join(dir, f), "utf8");
+      for (const [tag, re] of regexes) {
+        re.lastIndex = 0;
+        const matches = text.match(re);
+        if (matches) counts[tag] += matches.length;
+      }
+    }
+  } catch (e) {
+    if (e.code !== "ENOENT") throw e;
   }
-  return count;
+  return counts;
 }
 
 function getWeekNumber(d) {
@@ -82,21 +90,16 @@ for (let i = 1; i < scheduled.length; i++) {
   }
 }
 
-// Ideas backlog
-const starkIdeen = countTags(IDEAS_DIR, "#stark");
-const gehtIdeen = countTags(IDEAS_DIR, "#geht");
-const neinIdeen = countTags(IDEAS_DIR, "#nein");
+// Ideas backlog (single pass over all files)
+const ideenTags = countAllTags(IDEAS_DIR, ["#stark", "#geht", "#nein"]);
+const starkIdeen = ideenTags["#stark"];
+const gehtIdeen = ideenTags["#geht"];
+const neinIdeen = ideenTags["#nein"];
 
-// Drafts stats
-let okDrafts = 0;
-let jaDrafts = 0;
-try {
-  for (const f of readdirSync(DRAFTS_DIR).filter((f) => f.endsWith(".md") && f !== "README.md")) {
-    const text = readFileSync(join(DRAFTS_DIR, f), "utf8");
-    okDrafts += (text.match(/\[#ok\]/g) || []).length;
-    jaDrafts += (text.match(/\[#ja\]/g) || []).length;
-  }
-} catch {}
+// Drafts stats (single pass, with ENOENT guard)
+const draftTags = countAllTags(DRAFTS_DIR, ["\\[#ok\\]", "\\[#ja\\]"]);
+const okDrafts = draftTags["\\[#ok\\]"];
+const jaDrafts = draftTags["\\[#ja\\]"];
 
 // plan.json last modified
 let planMtime = "unbekannt";

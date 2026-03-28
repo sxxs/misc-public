@@ -4,7 +4,7 @@
 // Opens at http://localhost:3847
 
 import { createServer } from "http";
-import { readFileSync, writeFileSync, readdirSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import { join, extname } from "path";
 
 const ROOT = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
@@ -12,7 +12,10 @@ const PLAN = join(ROOT, "pipeline/plan.json");
 const POSTS = join(ROOT, "wiai-social/posts");
 const PORT = 3847;
 
-// ── API ──────────────────────────────────────────────────────────────────────
+// ── Cache ─────────────────────────────────────────────────────────────────────
+
+let cachedPlan = null;
+let cachedEnriched = null;
 
 function getPlan() {
   return JSON.parse(readFileSync(PLAN, "utf8"));
@@ -20,6 +23,8 @@ function getPlan() {
 
 function savePlan(data) {
   writeFileSync(PLAN, JSON.stringify(data, null, 2) + "\n");
+  cachedPlan = data;
+  cachedEnriched = null;
 }
 
 function getPostText(jsonPath) {
@@ -38,18 +43,35 @@ function getPostText(jsonPath) {
   }
 }
 
+function getEnrichedPlan() {
+  if (cachedEnriched) return cachedEnriched;
+  const plan = cachedPlan || getPlan();
+  cachedPlan = plan;
+  const enriched = {
+    ...plan,
+    posts: plan.posts.map((p) => ({
+      ...p,
+      text: p.json ? getPostText(p.json) : null,
+    })),
+  };
+  cachedEnriched = enriched;
+  return enriched;
+}
+
+// ── API ──────────────────────────────────────────────────────────────────────
+
 function handleAPI(req, res) {
   const url = new URL(req.url, `http://localhost:${PORT}`);
 
   if (url.pathname === "/api/plan" && req.method === "GET") {
-    const plan = getPlan();
-    // Enrich with slide texts
-    plan.posts = plan.posts.map((p) => ({
-      ...p,
-      text: p.json ? getPostText(p.json) : null,
-    }));
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(plan));
+    try {
+      const plan = getEnrichedPlan();
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(plan));
+    } catch (e) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: e.message }));
+    }
     return true;
   }
 
