@@ -313,7 +313,7 @@ header h1 .accent { color: var(--yellow); }
 .bl-item:active { cursor: grabbing; }
 .bl-item.dragging { opacity: 0.25; }
 .bl-item.search-match { background: rgba(250,204,21,0.06); }
-.bl-item.search-dim { opacity: 0.15; }
+.bl-item.search-dim { display: none; }
 
 .bl-item.pinned {
   background: var(--surface3);
