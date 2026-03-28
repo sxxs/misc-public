@@ -6,18 +6,31 @@ Faceless, text-driven, schwarz-dominant. TikTok (primaer), YouTube Shorts, Insta
 ## Quickstart
 
 ```bash
-# Digest: aktueller Stand der Pipeline
+# Pipeline-UI starten (Kalender + Backlog + Editor)
+node pipeline/server.mjs         # → http://localhost:3847
+
+# Pipeline-Status auf einen Blick
 node digest.mjs
 
-# Swimlane-Kalender starten
-node pipeline/server.mjs
-# → http://localhost:3847
+# Post von plan.json → Remotion JSON exportieren
+node export-post.mjs --list      # zeigt alle exportierbaren Posts
+node export-post.mjs <post-id>   # exportiert + registriert in Root.tsx
 
 # Remotion-Preview
 cd wiai-social && npm run preview
 
-# Post rendern
-cd wiai-social && ./render.sh posts/2026-post-id.json
+# Post rendern (Video + PNGs)
+cd wiai-social && ./render.sh posts/<id>.json
+```
+
+## Workflow: Idee → Post → Video
+
+```
+1. UI: Post auswaehlen, Slides schreiben, Status/Design/Format setzen
+2. node export-post.mjs <post-id>    → JSON + Root.tsx
+3. cd wiai-social && npm run preview  → visuell pruefen
+4. ./render.sh posts/<id>.json        → MP4 + PNGs
+5. Upload: TikTok/YouTube/Instagram   → siehe sops/rendern-und-posten.md
 ```
 
 ## Verzeichnisstruktur

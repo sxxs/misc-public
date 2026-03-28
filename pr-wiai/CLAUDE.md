@@ -39,6 +39,8 @@ pr-wiai/
 │   ├── GUIDE.md           JSON-Felder, Timing, Zeichenlaengen
 │   └── CONTENT.md         Post-Typen, Farb-Palette, Durations
 ├── digest.mjs             CLI: Pipeline-Zusammenfassung
+├── export-post.mjs        Post exportieren: plan.json → Remotion JSON + Root.tsx
+├── import-ideas.mjs       Ideen/Drafts aus Markdown → plan.json importieren
 └── README.md              Projektuebersicht
 ```
 

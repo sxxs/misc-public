@@ -1,5 +1,32 @@
 # SOP: Neuer Post erstellen
 
+## Kurzversion
+
+```bash
+# 1. Pipeline-UI starten:
+node pipeline/server.mjs    # → http://localhost:3847
+
+# 2. In der UI: Post auswaehlen, Slides schreiben, Status/Design/Format setzen
+
+# 3. Alle exportierbaren Posts anzeigen:
+node export-post.mjs --list
+
+# 4. Exportieren (plan.json → Remotion JSON + Root.tsx):
+node export-post.mjs <post-id>
+#    → schreibt wiai-social/posts/<id>.json
+#    → registriert in Root.tsx (import + cp())
+#    → setzt status=ready in plan.json
+
+# 5. Vorschau im Remotion Studio:
+cd wiai-social && npm run preview
+
+# 6. Rendern:
+cd wiai-social && ./render.sh posts/<id>.json
+#    → out/<id>.mp4 + 3 Slide-PNGs + 3 Carousel-PNGs
+
+# 7. Posten: siehe sops/rendern-und-posten.md
+```
+
 ## Wann
 
 Wenn eine Idee aus dem Pool in ein fertiges Remotion-Video umgesetzt werden soll.
