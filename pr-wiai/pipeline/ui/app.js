@@ -77,9 +77,13 @@ function generateWeeks(count, offset) {
   for (let i = 0; i < count; i++) {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i * 7);
-    weeks.push(getWeekStr(d));
+    weeks.push({ key: getWeekStr(d), monday: d });
   }
   return weeks;
+}
+
+function formatMonday(date) {
+  return date.getDate() + "." + (date.getMonth() + 1) + ".";
 }
 
 // ── DOM Helpers ──────────────────────────────────────────────────────────────
@@ -117,9 +121,9 @@ function matchesSearch(post) {
 // ── Render ────────────────────────────────────────────────────────────────────
 
 function render() {
-  const weeks = generateWeeks(26, weekOffset);
-  const row1 = weeks.slice(0, 13);
-  const row2 = weeks.slice(13);
+  const allWeeks = generateWeeks(26, weekOffset);
+  const row1 = allWeeks.slice(0, 13);
+  const row2 = allWeeks.slice(13);
   const currentWeek = getWeekStr(new Date());
 
   // Build lookup: week → ordered posts (by slot index)
@@ -150,7 +154,8 @@ function render() {
 
   for (const row of [row1, row2]) {
     const rowEl = el("div", { className: "cal-row" });
-    for (const wk of row) {
+    for (const wkObj of row) {
+      const wk = wkObj.key;
       const isCurrent = wk === currentWeek;
       const isPast = wk < currentWeek;
       const posts = postsByWeek.get(wk) || [];
@@ -158,7 +163,11 @@ function render() {
       const cls = "week" + (isCurrent ? " current" : "") + (isPast ? " past" : "");
       const weekEl = el("div", { className: cls });
 
-      weekEl.appendChild(el("div", { className: "week-header" }, weekLabel(wk)));
+      const header = el("div", { className: "week-header" }, [
+        el("span", { className: "week-kw" }, weekLabel(wk)),
+        el("span", { className: "week-date" }, formatMonday(wkObj.monday)),
+      ]);
+      weekEl.appendChild(header);
 
       const slotsEl = el("div", { className: "week-slots" });
 
@@ -186,7 +195,7 @@ function render() {
 
   // ── Navigation label ──
   document.getElementById("navLabel").textContent =
-    weekLabel(row1[0]) + " – " + weekLabel(row2[row2.length - 1]);
+    weekLabel(row1[0].key) + " – " + weekLabel(row2[row2.length - 1].key);
 
   // ── Backlog ──
   const backlogEl = document.getElementById("backlog");
