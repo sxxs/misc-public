@@ -3,26 +3,22 @@
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const TYPE_LABELS = {
-  contrarian: "CTR", newsjacking: "NEWS", "wusstest-du": "WDU",
-  billboard: "BILL", terminal: "TERM", nachtgedanke: "NACHT",
-  selbstironie: "META", witz: "WITZ", parodie: "PARO",
-  overselling: "OVER", stitch: "STTCH", other: "MISC",
+const TYPES = {
+  contrarian:   { short: "CTR",   full: "Contrarian",    color: "#facc15" },
+  newsjacking:  { short: "NEWS",  full: "Newsjacking",   color: "#ef4444" },
+  "wusstest-du":{ short: "WDU",   full: "Wusstest du",   color: "#f59e0b" },
+  billboard:    { short: "BILL",  full: "Billboard",     color: "#e0e0e0" },
+  terminal:     { short: "TERM",  full: "Terminal",      color: "#33ff33" },
+  nachtgedanke: { short: "NACHT", full: "Nachtgedanke",  color: "#ffb000" },
+  selbstironie: { short: "META",  full: "Selbstironie",  color: "#888" },
+  witz:         { short: "WITZ",  full: "Witz",          color: "#d4a017" },
+  parodie:      { short: "PARO",  full: "Parodie",       color: "#06b6d4" },
+  overselling:  { short: "OVER",  full: "Overselling",   color: "#f97316" },
+  stitch:       { short: "STTCH", full: "Stitch",        color: "#a78bfa" },
+  other:        { short: "MISC",  full: "Sonstige",      color: "#555" },
 };
 
-const TYPE_FULL = {
-  contrarian: "Contrarian", newsjacking: "Newsjacking", "wusstest-du": "Wusstest du",
-  billboard: "Billboard", terminal: "Terminal", nachtgedanke: "Nachtgedanke",
-  selbstironie: "Selbstironie", witz: "Witz", parodie: "Parodie",
-  overselling: "Overselling", stitch: "Stitch", other: "Sonstige",
-};
-
-const TYPE_COLORS = {
-  contrarian: "#facc15", newsjacking: "#ef4444", "wusstest-du": "#f59e0b",
-  billboard: "#e0e0e0", terminal: "#33ff33", nachtgedanke: "#ffb000",
-  selbstironie: "#888", witz: "#d4a017", parodie: "#06b6d4",
-  overselling: "#f97316", stitch: "#a78bfa", other: "#555",
-};
+function typeOf(t) { return TYPES[t] || TYPES.other; }
 
 const STATUS_COLORS = {
   idea: "#555", draft: "#f59e0b", ready: "#22c55e",
@@ -47,11 +43,15 @@ async function loadPlan() {
 }
 
 async function updatePost(id, field, value) {
-  await fetch("/api/post", {
+  const res = await fetch("/api/post", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id, field, value }),
   });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    console.error("updatePost failed:", id, field, err.error || res.status);
+  }
 }
 
 // ── Week helpers ─────────────────────────────────────────────────────────────
@@ -230,8 +230,8 @@ function render() {
   for (const [type, posts] of byType) {
     const group = el("div", { className: "backlog-group" });
     group.appendChild(el("div", { className: "backlog-type-label" }, [
-      el("span", { className: "type-dot", style: { background: TYPE_COLORS[type] || "#555" } }),
-      el("span", {}, TYPE_FULL[type] || type),
+      el("span", { className: "type-dot", style: { background: typeOf(type).color } }),
+      el("span", {}, typeOf(type).full),
       el("span", { className: "type-count" }, "(" + posts.length + ")"),
     ]));
 
@@ -256,8 +256,8 @@ function renderStats() {
   statsEl.replaceChildren();
 
   const total = plan.posts.length;
-  const scheduled = plan.posts.filter((p) => p.targetWeek).length;
   const published = plan.posts.filter((p) => p.status === "published").length;
+  const scheduled = plan.posts.filter((p) => p.targetWeek && p.status !== "published").length;
   const backlog = total - scheduled - published;
 
   // Type distribution of SCHEDULED posts only
@@ -279,8 +279,8 @@ function renderStats() {
     const typeStrs = Object.entries(schedTypes)
       .sort((a, b) => b[1] - a[1])
       .map(([t, c]) => {
-        const span = el("span", { style: { color: TYPE_COLORS[t] || "#555" } },
-          (TYPE_LABELS[t] || t) + ":" + c);
+        const span = el("span", { style: { color: typeOf(t).color } },
+          typeOf(t).short + ":" + c);
         return span;
       });
     for (let i = 0; i < typeStrs.length; i++) {
@@ -299,11 +299,12 @@ function renderLegend() {
   // Type legend
   const typeSec = el("div", { className: "legend-section" });
   typeSec.appendChild(el("span", { className: "legend-title" }, "Typ"));
-  for (const [type, color] of Object.entries(TYPE_COLORS)) {
-    if (!plan.posts.some((p) => p.type === type)) continue;
+  const presentTypes = new Set(plan.posts.map((p) => p.type));
+  for (const [type, info] of Object.entries(TYPES)) {
+    if (!presentTypes.has(type)) continue;
     typeSec.appendChild(el("div", { className: "item" }, [
-      el("div", { className: "swatch-border", style: { color } }),
-      el("span", {}, TYPE_FULL[type] || type),
+      el("div", { className: "swatch-border", style: { color: info.color } }),
+      el("span", {}, info.full),
     ]));
   }
   legendEl.appendChild(typeSec);
@@ -322,7 +323,7 @@ function renderLegend() {
 // ── Cards ────────────────────────────────────────────────────────────────────
 
 function createCard(post) {
-  const typeColor = TYPE_COLORS[post.type] || "#555";
+  const typeColor = typeOf(post.type).color;
   const title = post.text?.slide1 || post.text?.slide2?.substring(0, 35) || post.id;
   const displayTitle = title.substring(0, 28);
   const isMatch = searchQuery && matchesSearch(post);
@@ -335,7 +336,7 @@ function createCard(post) {
   if (needsWork) classes.push("needs-work");
 
   const metaChildren = [
-    el("span", { className: "card-type", style: { color: typeColor } }, TYPE_LABELS[post.type] || "?"),
+    el("span", { className: "card-type", style: { color: typeColor } }, typeOf(post.type).short),
   ];
   if (needsWork) {
     metaChildren.push(el("span", { className: "card-warn" }, post.status));
@@ -430,9 +431,9 @@ function openPanel(id) {
   const statusColor = STATUS_COLORS[post.status] || "#555";
   content.appendChild(el("span", { className: "status-badge", style: { color: statusColor } }, post.status));
 
-  const typeColor = TYPE_COLORS[post.type] || "#555";
+  const typeColor = typeOf(post.type).color;
   content.appendChild(el("label", {}, "Typ"));
-  content.appendChild(el("div", { className: "info-value", style: { color: typeColor } }, TYPE_FULL[post.type] || post.type));
+  content.appendChild(el("div", { className: "info-value", style: { color: typeColor } }, typeOf(post.type).full));
 
   content.appendChild(el("label", {}, "Design"));
   content.appendChild(el("div", { className: "info-value" }, post.design || "—"));
@@ -491,9 +492,13 @@ document.getElementById("navNext").addEventListener("click", () => {
   render();
 });
 
+let searchTimer = null;
 document.getElementById("searchInput").addEventListener("input", (e) => {
-  searchQuery = e.target.value.trim();
-  render();
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    searchQuery = e.target.value.trim();
+    render();
+  }, 150);
 });
 
 document.addEventListener("keydown", (e) => {
