@@ -595,10 +595,15 @@ function openPanel(id, event) {
   } else {
     const addLink = el("div", {
       style: { fontSize: "10px", color: "var(--dim)", cursor: "pointer", fontFamily: "'JetBrains Mono', monospace", padding: "4px 0" },
-      onClick: () => {
+      onClick: (e) => {
+        e.stopPropagation();
         if (!post.slides) post.slides = {};
         post.slides.button = "";
+        setSlides(post.id, post.slides);
+        // Rebuild panel content in-place
         openPanel(post.id);
+        // Re-position to same spot
+        detailPanelEl.classList.add("open");
       },
     }, "+ Button / Uebrigens hinzufuegen");
     content.appendChild(addLink);
