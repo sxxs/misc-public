@@ -425,9 +425,9 @@ header h1 .accent { color: var(--yellow); }
 .detail-panel label {
   display: block;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 8px; font-weight: 700; color: var(--dim);
-  text-transform: uppercase; letter-spacing: 0.15em;
-  margin: 10px 0 3px;
+  font-size: 10px; font-weight: 700; color: #888;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin: 12px 0 4px;
 }
 .detail-panel .slide-text {
   background: var(--bg); padding: 8px 10px;
