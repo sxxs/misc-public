@@ -222,19 +222,23 @@ header h1 .accent { color: var(--yellow); }
 .cal-card.search-dim { opacity: 0.2; }
 
 .cal-card.cal-card-zoomed {
-  flex-direction: column;
-  align-items: flex-start;
+  flex-wrap: wrap;
   padding: 5px 8px;
 }
 .cal-card.cal-card-zoomed .cal-card-title {
   white-space: normal;
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
   overflow: hidden;
   font-size: 11px;
   line-height: 1.4;
+  width: 100%;
+  order: 2;
+  margin-top: 2px;
 }
+.cal-card.cal-card-zoomed .cal-card-type { order: 0; }
+.cal-card.cal-card-zoomed .cal-card-warn { order: 1; margin-left: 4px; }
 
 .cal-card-title {
   font-size: 10px;
