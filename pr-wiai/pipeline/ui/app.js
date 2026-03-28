@@ -561,10 +561,17 @@ function openPanel(id, event) {
   statusSelect.addEventListener("change", () => setField(post.id, "status", statusSelect.value));
   content.appendChild(statusSelect);
 
-  // Type + Design
-  const t = typeOf(post.type);
+  // Type dropdown
   content.appendChild(el("label", {}, "Typ"));
-  content.appendChild(el("div", { className: "info-value", style: { color: t.color } }, t.full));
+  const typeSelect = el("select");
+  for (const [k, v] of Object.entries(TYPES)) {
+    if (k === "other") continue;
+    const opt = el("option", { value: k }, v.full);
+    if (post.type === k) opt.selected = true;
+    typeSelect.appendChild(opt);
+  }
+  typeSelect.addEventListener("change", () => setField(post.id, "type", typeSelect.value));
+  content.appendChild(typeSelect);
 
   content.appendChild(el("label", {}, "Design"));
   const designSelect = el("select");
@@ -575,6 +582,17 @@ function openPanel(id, event) {
   }
   designSelect.addEventListener("change", () => setField(post.id, "design", designSelect.value || null));
   content.appendChild(designSelect);
+
+  // Tag dropdown
+  content.appendChild(el("label", {}, "Tag"));
+  const tagSelect = el("select");
+  for (const t of [null, "stark", "ok", "ja", "ad", "rewrite", "geht"]) {
+    const opt = el("option", { value: t || "" }, t ? "#" + t : "— kein Tag —");
+    if ((post.tag || null) === t) opt.selected = true;
+    tagSelect.appendChild(opt);
+  }
+  tagSelect.addEventListener("change", () => setField(post.id, "tag", tagSelect.value || null));
+  content.appendChild(tagSelect);
 
   // Editable Slides — matches Remotion JSON structure:
   // slide1: { bigText, smallText }  slide2: { text }  slide3: { text, button?, übrigensText? }
@@ -643,9 +661,9 @@ function openPanel(id, event) {
     content.appendChild(el("div", { className: "mono-value" }, post.json));
   }
 
-  if (post.tag) {
-    content.appendChild(el("label", {}, "Tag"));
-    content.appendChild(el("div", { className: "info-value" }, "#" + post.tag + (post.tagComment ? " — " + post.tagComment : "")));
+  if (post.tagComment) {
+    content.appendChild(el("label", {}, "Tag-Kommentar"));
+    content.appendChild(el("div", { className: "mono-value" }, post.tagComment));
   }
 
   // Notes (freeform comments, separate from slide content)
