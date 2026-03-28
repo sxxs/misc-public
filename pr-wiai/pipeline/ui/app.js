@@ -415,12 +415,23 @@ function renderStats() {
   parts.push(el("span", { className: "num" }, String(backlog)));
   parts.push(document.createTextNode(" backlog"));
 
+  // Scheduled type breakdown
   if (scheduled > 0) {
     parts.push(document.createTextNode("  //  "));
     Object.entries(schedTypes).sort((a, b) => b[1] - a[1]).forEach(([t, c], i) => {
       if (i > 0) parts.push(document.createTextNode("  "));
-      parts.push(el("span", { style: { color: typeOf(t).color } }, typeOf(t).short + ":" + c));
+      const pct = Math.round(c / scheduled * 100);
+      parts.push(el("span", { style: { color: typeOf(t).color } }, typeOf(t).short + ":" + c + " (" + pct + "%)"));
     });
+  }
+
+  // #ad count
+  const adCount = plan.posts.filter((p) => p.tag === "ad").length;
+  const adScheduled = plan.posts.filter((p) => p.tag === "ad" && p.targetWeek).length;
+  if (adCount > 0) {
+    parts.push(document.createTextNode("  //  "));
+    const adPct = scheduled > 0 ? Math.round(adScheduled / scheduled * 100) : 0;
+    parts.push(el("span", { style: { color: "#06b6d4" } }, "#ad:" + adCount + " (geplant:" + adScheduled + "/" + adPct + "%)"));
   }
 
   for (const p of parts) statsEl.appendChild(p);
