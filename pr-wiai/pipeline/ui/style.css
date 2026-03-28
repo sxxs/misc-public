@@ -332,7 +332,7 @@ header h1 .accent { color: var(--yellow); }
 }
 
 .bl-pin {
-  font-size: 11px;
+  font-size: 13px;
   cursor: pointer;
   color: var(--dim2);
   flex-shrink: 0;
@@ -343,9 +343,9 @@ header h1 .accent { color: var(--yellow); }
 
 .bl-tag {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 700;
-  padding: 0 3px;
+  padding: 1px 4px;
   border: 1px solid currentColor;
   text-transform: uppercase;
 }
@@ -358,7 +358,7 @@ header h1 .accent { color: var(--yellow); }
 
 .bl-type {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -367,7 +367,7 @@ header h1 .accent { color: var(--yellow); }
 
 .bl-warn {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 700;
   color: var(--amber);
 }
