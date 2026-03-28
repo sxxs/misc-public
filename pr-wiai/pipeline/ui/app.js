@@ -253,7 +253,7 @@ function renderBacklog() {
   const area = document.getElementById("backlogArea");
   area.replaceChildren();
 
-  const backlog = plan.posts.filter((p) => !p.targetWeek);
+  const backlog = plan.posts.filter((p) => !p.targetWeek || p.status === "scheduled");
   const assignedTypes = new Set(columnTypes.filter((t) => t !== "_rest"));
 
   for (let colIdx = 0; colIdx < 4; colIdx++) {
@@ -326,12 +326,14 @@ function createBlItem(post) {
       ? [post.text.slide1, post.text.slide2, post.text.slide3].filter(Boolean).join(" — ")
       : (post.notes || post.id);
   const needsWork = post.status === "idea" || post.status === "draft";
+  const isScheduled = !!post.targetWeek;
   const isMatch = searchQuery && matchesSearch(post);
   const isDimmed = searchQuery && !isMatch;
 
   const cls = "bl-item"
     + (post.pinned ? " pinned" : "")
     + (needsWork ? " needs-work" : "")
+    + (isScheduled ? " scheduled-dim" : "")
     + (isMatch ? " search-match" : "")
     + (isDimmed ? " search-dim" : "");
 
@@ -669,8 +671,8 @@ async function schedulePost(postId, week, slotIndex) {
       : "\u2191 Klicke einen leeren Slot im Kalender um einzuplanen";
   }
 
-  // Only re-render calendar (slot assignment changed) + stats
   renderCalendar();
+  renderBacklog();
   renderStats();
   await Promise.all(updates);
 }

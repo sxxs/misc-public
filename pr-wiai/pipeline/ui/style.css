@@ -321,6 +321,7 @@ header h1 .accent { color: var(--yellow); }
 .bl-item:hover { background: var(--surface3); }
 .bl-item:active { cursor: grabbing; }
 .bl-item.dragging { opacity: 0.25; }
+.bl-item.scheduled-dim { opacity: 0.25; pointer-events: none; }
 .bl-item.search-match { background: rgba(250,204,21,0.06); }
 .bl-item.search-dim { display: none; }
 
