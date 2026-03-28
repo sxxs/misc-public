@@ -281,10 +281,13 @@ function renderBacklog() {
     // Header with type selector
     const headerBar = el("div", { className: "col-header-bar" });
     const select = el("select");
+    const restCount = backlog.filter((p) => !assignedTypes.has(p.type)).length;
     const options = [
-      { value: "_all", label: "Alle" },
-      { value: "_rest", label: "Sonstige" },
-      ...Object.entries(TYPES).map(([k, v]) => ({ value: k, label: v.full + " (" + backlog.filter((p) => p.type === k).length + ")" })),
+      { value: "_all", label: "Alle (" + backlog.length + ")" },
+      { value: "_rest", label: "Uebrige (" + restCount + ")" },
+      ...Object.entries(TYPES).filter(([k]) => k !== "other").map(([k, v]) => ({
+        value: k, label: v.full + " (" + backlog.filter((p) => p.type === k).length + ")",
+      })),
     ];
     for (const opt of options) {
       const o = el("option", { value: opt.value }, opt.label);
