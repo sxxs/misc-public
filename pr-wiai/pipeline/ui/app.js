@@ -690,6 +690,29 @@ function openPanel(id, event) {
     content.appendChild(el("div", { className: "mono-value" }, post.tagComment));
   }
 
+  // Format (video / carousel / both)
+  content.appendChild(el("label", {}, "Format"));
+  const formatSelect = el("select");
+  for (const f of ["both", "video", "carousel"]) {
+    const opt = el("option", { value: f }, f === "both" ? "Video + Carousel" : f === "video" ? "Nur Video" : "Nur Carousel");
+    if ((post.format || "both") === f) opt.selected = true;
+    formatSelect.appendChild(opt);
+  }
+  formatSelect.addEventListener("change", () => setField(post.id, "format", formatSelect.value));
+  content.appendChild(formatSelect);
+
+  // Description (for TikTok/YouTube/Instagram caption)
+  content.appendChild(el("label", {}, "Description / Caption"));
+  const descArea = el("textarea", { style: { minHeight: "50px" } }, post.description || "");
+  descArea.addEventListener("change", () => setField(post.id, "description", descArea.value));
+  content.appendChild(descArea);
+
+  // Hashtags
+  content.appendChild(el("label", {}, "Hashtags"));
+  const hashInput = el("input", { type: "text", value: post.hashtags || "", placeholder: "#informatik #bamberg #wiai" });
+  hashInput.addEventListener("change", () => setField(post.id, "hashtags", hashInput.value));
+  content.appendChild(hashInput);
+
   // Notes (freeform comments, separate from slide content)
   content.appendChild(el("label", {}, "Notizen"));
   const notesArea = el("textarea", {}, post.notes || "");
