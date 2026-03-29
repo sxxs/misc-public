@@ -21,8 +21,10 @@ function rgbToHsv(r, g, b) {
   return [h * 360, s, v]; // h: 0-360, s: 0-1, v: 0-1
 }
 
+const _pixelCache = new WeakMap();
 function getPixels(imageData) {
-  const { data, width, height } = imageData;
+  if (_pixelCache.has(imageData)) return _pixelCache.get(imageData);
+  const { data } = imageData;
   const pixels = [];
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i], g = data[i+1], b = data[i+2];
@@ -30,7 +32,25 @@ function getPixels(imageData) {
     const [h, s, v] = rgbToHsv(r, g, b);
     pixels.push({ r, g, b, luma, h, s, v });
   }
+  _pixelCache.set(imageData, pixels);
   return pixels;
+}
+
+// Returns mean of pixel[field] for the named region.
+function regionMean(pixels, W, H, name, field) {
+  const cx = W / 2, cy = H / 2, rad = W / 4;
+  let sum = 0, n = 0;
+  pixels.forEach((p, i) => {
+    const x = i % W, y = Math.floor(i / W);
+    const inR = name === 'top'    ? y < H / 2
+              : name === 'bottom' ? y >= H / 2
+              : name === 'left'   ? x < W / 2
+              : name === 'right'  ? x >= W / 2
+              : name === 'center' ? Math.hypot(x - cx, y - cy) <= rad
+              : Math.hypot(x - cx, y - cy) > rad; // edges
+    if (inR) { sum += p[field]; n++; }
+  });
+  return n > 0 ? sum / n : 0;
 }
 
 // ── Capture ───────────────────────────────────────────────────────────────────
@@ -91,48 +111,17 @@ function analyzeMonoColor(imageData) {
   return max / pixels.length;
 }
 
-function analyzeRegional(imageData, { axis, region1, region2 }) {
-  const W = imageData.width, H = imageData.height;
+function analyzeRegional(imageData, { region1, region2 }) {
+  const { width: W, height: H } = imageData;
   const pixels = getPixels(imageData);
-
-  function regionLuma(name) {
-    let sum = 0, count = 0;
-    pixels.forEach((p, i) => {
-      const x = i % W, y = Math.floor(i / W);
-      let inRegion = false;
-      if      (name === 'top')    inRegion = y < H / 2;
-      else if (name === 'bottom') inRegion = y >= H / 2;
-      else if (name === 'left')   inRegion = x < W / 2;
-      else if (name === 'right')  inRegion = x >= W / 2;
-      if (inRegion) { sum += p.luma; count++; }
-    });
-    return count > 0 ? sum / count : 0;
-  }
-
-  const l1 = regionLuma(region1), l2 = regionLuma(region2);
-  return l1 - l2; // positive = region1 is brighter
+  return regionMean(pixels, W, H, region1, 'luma') - regionMean(pixels, W, H, region2, 'luma');
 }
 
 function analyzeCenterVsEdges(imageData, { centerBrighter }) {
-  const W = imageData.width, H = imageData.height;
+  const { width: W, height: H } = imageData;
   const pixels = getPixels(imageData);
-  const cx = W / 2, cy = H / 2;
-  const r = W / 4; // inner radius = 25% of width
-
-  let centerSum = 0, centerCount = 0;
-  let edgeSum = 0, edgeCount = 0;
-
-  pixels.forEach((p, i) => {
-    const x = i % W, y = Math.floor(i / W);
-    const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
-    if (dist <= r) { centerSum += p.luma; centerCount++; }
-    else           { edgeSum   += p.luma; edgeCount++; }
-  });
-
-  const centerLuma = centerCount > 0 ? centerSum / centerCount : 0;
-  const edgeLuma   = edgeCount   > 0 ? edgeSum   / edgeCount   : 0;
-  const delta = centerLuma - edgeLuma;
-  return centerBrighter ? delta : -delta; // positive = correct direction
+  const delta = regionMean(pixels, W, H, 'center', 'luma') - regionMean(pixels, W, H, 'edges', 'luma');
+  return centerBrighter ? delta : -delta;
 }
 
 function analyzeStripes(imageData, { axis, bands }) {
@@ -272,24 +261,10 @@ function analyzeDiagonal(imageData, { brightCorner }) {
   return (bN > 0 ? bSum / bN : 0) - (dN > 0 ? dSum / dN : 0);
 }
 
-// Regional saturation: how much more saturated region1 is vs region2
 function analyzeRegionalSaturation(imageData, { region1, region2 }) {
-  const W = imageData.width, H = imageData.height;
+  const { width: W, height: H } = imageData;
   const pixels = getPixels(imageData);
-  function sat(name) {
-    let sum = 0, n = 0;
-    pixels.forEach((p, i) => {
-      const x = i % W, y = Math.floor(i / W);
-      const r = W / 4, cx = W / 2, cy = H / 2;
-      const inR = name === 'top' ? y < H/2 : name === 'bottom' ? y >= H/2
-              : name === 'left' ? x < W/2 : name === 'right' ? x >= W/2
-              : name === 'center' ? Math.hypot(x-cx, y-cy) <= r
-              : Math.hypot(x-cx, y-cy) > r; // edges
-      if (inR) { sum += p.s; n++; }
-    });
-    return n > 0 ? sum / n : 0;
-  }
-  return sat(region1) - sat(region2);
+  return regionMean(pixels, W, H, region1, 's') - regionMean(pixels, W, H, region2, 's');
 }
 
 // All four quadrants roughly equal brightness
@@ -366,31 +341,18 @@ function scoreChallenge(imageData, challenge) {
     return Math.round(weightedScore / totalWeight);
   }
 
-  // Directional analyses return a delta that must be positive and large
-  if (analysis === 'regional') {
+  // Directional analyses: return signed delta, scored against targetDelta
+  const DELTA_TYPES = ['regional', 'center_vs_edges', 'diagonal', 'regional_sat'];
+  if (DELTA_TYPES.includes(analysis)) {
     const delta = runAnalysis(imageData, analysis, params);
     const raw = Math.max(0, Math.min(1, delta / params.targetDelta));
-    return Math.round(Math.sqrt(raw) * 100);
+    return applyBoringPenalty(imageData, Math.round(Math.sqrt(raw) * 100), challenge);
   }
-  if (analysis === 'center_vs_edges') {
-    const delta = runAnalysis(imageData, analysis, params);
-    const raw = Math.max(0, Math.min(1, delta / params.targetDelta));
-    return Math.round(Math.sqrt(raw) * 100);
-  }
-  // three_zones, checkerboard, four_equal already return a 0..1 goodness value
-  if (analysis === 'three_zones' || analysis === 'checkerboard' || analysis === 'four_equal') {
+  // Goodness analyses: already return 0..1
+  const GOODNESS_TYPES = ['three_zones', 'checkerboard', 'four_equal'];
+  if (GOODNESS_TYPES.includes(analysis)) {
     const goodness = runAnalysis(imageData, analysis, params);
-    let score = Math.round(Math.sqrt(Math.max(0, goodness)) * 100);
-    score = applyBoringPenalty(imageData, score, challenge);
-    return score;
-  }
-  // Directional: diagonal, regional_sat
-  if (analysis === 'diagonal' || analysis === 'regional_sat') {
-    const delta = runAnalysis(imageData, analysis, params);
-    const raw = Math.max(0, Math.min(1, delta / params.targetDelta));
-    let score = Math.round(Math.sqrt(raw) * 100);
-    score = applyBoringPenalty(imageData, score, challenge);
-    return score;
+    return applyBoringPenalty(imageData, Math.round(Math.sqrt(Math.max(0, goodness)) * 100), challenge);
   }
 
   const metric = runAnalysis(imageData, analysis, params);
