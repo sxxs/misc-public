@@ -3,6 +3,14 @@
 
 const { useState, useEffect, useRef, useCallback } = React;
 
+async function shareOrCopy(text, label) {
+  if (navigator.share) {
+    try { await navigator.share({ text }); return; } catch {}
+  }
+  try { await navigator.clipboard.writeText(text); alert(label + ' kopiert!'); }
+  catch { alert(text); }
+}
+
 // ── Local Stats ───────────────────────────────────────────────────────────────
 
 const STATS_KEY = 'almost_stats_v1';
@@ -30,8 +38,7 @@ function saveRun(scores) {
 
   let streak = stats.streak || 0;
   if (stats.lastPlayDate === yStr) streak += 1;
-  else if (stats.lastPlayDate === today) streak = streak; // already played today
-  else streak = 1;
+  else if (stats.lastPlayDate !== today) streak = 1;
 
   const history = stats.history || [];
   // Only add if not already played today (keep best)
@@ -297,7 +304,10 @@ function ChallengeScreen({ challenge, challengeIndex, attemptNumber, onCapture, 
         v.play().then(() => setReady(true)).catch(() => setReady(true));
       }
     }).catch(() => onCapture(null, 0));
-    return () => { if (stream) stream.getTracks().forEach(t => t.stop()); };
+    return () => {
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      doneRef.current = false;
+    };
   }, []);
 
   // Start countdown when camera is ready
@@ -471,28 +481,12 @@ function SummaryScreen({ challenges, scores, seed, stats, onPlayAgain, onHome })
 
   const challengeUrl = `${window.location.origin + window.location.pathname}?s=${encodeSeed(seed)}`;
 
-  const handleShare = async () => {
-    const text = shareText();
-    if (navigator.share) {
-      try { await navigator.share({ text }); return; } catch {}
-    }
-    try {
-      await navigator.clipboard.writeText(text);
-      alert('Ergebnis kopiert!');
-    } catch { alert(text); }
-  };
+  const handleShare = () => shareOrCopy(shareText(), 'Ergebnis');
 
-  const handleChallenge = async () => {
+  const handleChallenge = () => {
     const vsParam = encodeScores(scores);
-    const challengeUrlWithScores = `${window.location.origin + window.location.pathname}?s=${encodeSeed(seed)}&vs=${vsParam}`;
-    const msg = `Kannst du das besser? Ich hab ${total}/500 – „${rank}". ${challengeUrlWithScores}`;
-    if (navigator.share) {
-      try { await navigator.share({ text: msg }); return; } catch {}
-    }
-    try {
-      await navigator.clipboard.writeText(msg);
-      alert('Challenge-Link kopiert!');
-    } catch { alert(msg); }
+    const url = `${window.location.origin + window.location.pathname}?s=${encodeSeed(seed)}&vs=${vsParam}`;
+    shareOrCopy(`Kannst du das besser? Ich hab ${total}/500 – „${rank}". ${url}`, 'Challenge-Link');
   };
 
   const color = (s) => s >= 90 ? '#22c55e' : s >= 70 ? '#a3e635' : s >= 40 ? '#facc15' : '#f87171';
@@ -570,11 +564,9 @@ function VSScreen({ challenges, myScores, theirScores, seed, onRematch, onPlayAg
   const tied = myTotal === theirTotal;
   const vsComment = getVSComment(myTotal, theirTotal);
 
-  const handleRematch = async () => {
+  const handleRematch = () => {
     const url = `${window.location.origin}${window.location.pathname}?s=${encodeSeed(seed)}&vs=${encodeScores(myScores)}`;
-    const msg = `Revanche! Ich hab ${myTotal}/500 — kannst du das toppen? ${url}`;
-    if (navigator.share) { try { await navigator.share({ text: msg }); return; } catch {} }
-    try { await navigator.clipboard.writeText(msg); alert('Revanche-Link kopiert!'); } catch { alert(msg); }
+    shareOrCopy(`Revanche! Ich hab ${myTotal}/500 — kannst du das toppen? ${url}`, 'Revanche-Link');
   };
 
   const color = (s) => s >= 90 ? '#22c55e' : s >= 70 ? '#a3e635' : s >= 40 ? '#facc15' : '#f87171';
@@ -709,6 +701,7 @@ function App() {
     if (!file) return;
     const img = new Image();
     img.onload = () => {
+      URL.revokeObjectURL(img.src);
       const canvas = document.createElement('canvas');
       canvas.width = 64; canvas.height = 64;
       const ctx2 = canvas.getContext('2d');
