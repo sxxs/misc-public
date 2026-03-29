@@ -113,6 +113,27 @@ function handleAPI(req, res) {
     return true;
   }
 
+  if (url.pathname === "/api/week-note" && req.method === "PUT") {
+    let body = "";
+    req.on("data", (c) => (body += c));
+    req.on("end", () => {
+      try {
+        const { week, note } = JSON.parse(body);
+        const plan = getPlan();
+        if (!plan.weekNotes) plan.weekNotes = {};
+        if (note) plan.weekNotes[week] = note;
+        else delete plan.weekNotes[week];
+        savePlan(plan);
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: true }));
+      } catch (e) {
+        res.writeHead(400);
+        res.end(JSON.stringify({ error: e.message }));
+      }
+    });
+    return true;
+  }
+
   if (url.pathname === "/api/post" && req.method === "PUT") {
     let body = "";
     req.on("data", (c) => (body += c));

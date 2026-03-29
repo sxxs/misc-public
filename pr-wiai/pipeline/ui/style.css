@@ -38,6 +38,18 @@ body {
   flex-shrink: 0;
   border-bottom: 2px solid var(--border);
 }
+/* In mix mode, top-fixed fills the viewport since backlog is hidden */
+body.mix-active .top-fixed {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+body.mix-active #calendar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
 
 /* ── Header ──────────────────────────────────────────────── */
 
@@ -127,6 +139,8 @@ header h1 .accent { color: var(--yellow); }
   cursor: pointer;
 }
 .nav-btn:hover { color: var(--yellow); border-color: var(--yellow); }
+.mode-btn.active { color: var(--yellow); border-color: var(--yellow); border-bottom: 2px solid var(--yellow); }
+.nav-sep { color: var(--dim2); font-size: 10px; margin: 0 2px; }
 
 .nav-label {
   font-family: 'JetBrains Mono', monospace;
@@ -147,10 +161,10 @@ header h1 .accent { color: var(--yellow); }
 .week {
   background: var(--surface);
   border: 1px solid var(--border);
-  min-height: 200px;
   display: flex;
   flex-direction: column;
 }
+.plan-week { min-height: 0; }
 .week.current { border-color: var(--yellow); }
 .week.drag-over { border-color: var(--yellow); background: #14140a; }
 
@@ -192,13 +206,45 @@ header h1 .accent { color: var(--yellow); }
   align-items: stretch;
   transition: background 0.15s, border-color 0.15s;
 }
-.slot.empty-hint {
-  background: rgba(255,255,255,0.012);
-  border: 1px dashed var(--dim2);
+
+/* Plan mode: larger slots, empty slots invisible by default */
+.plan-mode .slot { min-height: 48px; }
+.slot.empty-slot {
+  border: 1px solid transparent;
 }
+body.dragging .slot.empty-slot,
+body.schedule-mode .slot.empty-slot {
+  border: 1px dashed var(--dim2);
+  background: rgba(255,255,255,0.012);
+}
+body.dragging .slot.empty-slot:hover,
+body.schedule-mode .slot.empty-slot:hover {
+  border-color: var(--yellow);
+  background: rgba(250,204,21,0.06);
+}
+
 .slot.drag-over {
-  background: rgba(250,204,21,0.08);
-  border: 1px dashed var(--yellow);
+  background: rgba(250,204,21,0.08) !important;
+  border: 1px dashed var(--yellow) !important;
+}
+
+/* Week status bar */
+.week-status-bar {
+  display: flex;
+  height: 3px;
+  margin: 0 3px;
+  gap: 1px;
+}
+.wsb-seg { height: 100%; }
+
+/* Week footer */
+.week-footer {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--dim);
+  padding: 2px 5px;
+  border-top: 1px solid var(--border);
+  text-align: center;
 }
 
 /* ── Calendar Cards (compact) ────────────────────────────── */
@@ -223,22 +269,29 @@ header h1 .accent { color: var(--yellow); }
 
 .cal-card.cal-card-zoomed {
   flex-wrap: wrap;
-  padding: 5px 8px;
+  padding: 6px 10px;
 }
 .cal-card.cal-card-zoomed .cal-card-title {
   white-space: normal;
   display: -webkit-box;
-  -webkit-line-clamp: 5;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.4;
   width: 100%;
   order: 2;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 .cal-card.cal-card-zoomed .cal-card-type { order: 0; }
-.cal-card.cal-card-zoomed .cal-card-warn { order: 1; margin-left: 4px; }
+.cal-card.cal-card-zoomed .cal-card-status { order: 1; margin-left: 4px; }
+
+/* Status dot on cal cards */
+.cal-card-status {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
 
 .cal-card-title {
   font-size: 10px;
@@ -263,6 +316,178 @@ header h1 .accent { color: var(--yellow); }
   flex-shrink: 0;
 }
 
+/* ── MIX Mode — colored squares per week ────────────────── */
+
+.mix-mode {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mix-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.mix-list::-webkit-scrollbar { width: 6px; }
+.mix-list::-webkit-scrollbar-track { background: var(--bg); }
+.mix-list::-webkit-scrollbar-thumb { background: var(--dim2); }
+
+/* Each week = one row */
+.mix-row {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+.mix-row:hover { background: var(--surface); }
+.mix-row-current { background: rgba(250,204,21,0.04); }
+.mix-row-current .mix-kw-num { color: var(--yellow); }
+.mix-row-past { opacity: 0.4; }
+.mix-row-empty .mix-squares { opacity: 0.25; }
+
+/* KW label — clickable */
+.mix-label {
+  width: 120px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 16px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+}
+.mix-label:hover .mix-kw-num { color: var(--yellow); }
+.mix-kw { color: var(--dim); font-size: 10px; }
+.mix-kw-num { color: var(--text); font-size: 14px; font-weight: 800; }
+.mix-date { color: var(--dim); font-size: 10px; font-weight: 400; margin-left: auto; }
+
+/* Two rows of 7 colored squares */
+.mix-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 3px 12px;
+  flex-shrink: 0;
+}
+.mix-sq-row {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+.mix-sq-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px;
+  font-weight: 700;
+  color: var(--dim);
+  text-transform: uppercase;
+  width: 22px;
+  flex-shrink: 0;
+  text-align: right;
+  margin-right: 2px;
+}
+.mix-sq {
+  width: 26px;
+  height: 14px;
+  border-radius: 2px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mix-sq-status {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 800;
+  color: rgba(0,0,0,0.6);
+  line-height: 1;
+}
+.mix-sq-empty {
+  background: var(--dim2) !important;
+  opacity: 0.6;
+}
+
+/* Vis row: smaller rectangles with letter */
+.mix-vis {
+  width: 26px;
+  height: 11px;
+  border-radius: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+.mix-vis-empty {
+  background: var(--surface2) !important;
+  opacity: 0.3;
+}
+
+/* Instant tooltip for mix squares + topic tags */
+.mix-tip {
+  display: none;
+  position: fixed;
+  background: #222;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 3px 8px;
+  border: 1px solid var(--border2);
+  white-space: nowrap;
+  z-index: 500;
+  pointer-events: none;
+}
+
+/* Topic keywords between squares and note */
+.mix-topics {
+  display: flex;
+  gap: 4px;
+  padding: 0 8px;
+  flex-shrink: 0;
+  align-items: center;
+  min-width: 80px;
+}
+.mix-topic-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+/* Week note input */
+.mix-note {
+  flex: 1;
+  background: none;
+  border: none;
+  border-left: 1px solid var(--border);
+  color: var(--dim);
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 4px 12px;
+  outline: none;
+  min-width: 0;
+}
+.mix-note:focus { color: var(--text); border-left-color: var(--yellow); }
+.mix-note::placeholder { color: var(--dim2); }
+
+/* Timeline week note */
+.tl-week-note {
+  margin-top: 16px;
+  padding: 8px 20px;
+  border-left: 3px solid var(--yellow);
+  font-size: 13px;
+  color: var(--text);
+  font-family: 'IBM Plex Mono', monospace;
+  line-height: 1.5;
+}
+
 /* ── Backlog Area (4 columns) ────────────────────────────── */
 
 .backlog-area {
@@ -272,6 +497,7 @@ header h1 .accent { color: var(--yellow); }
   overflow: hidden;
   border-top: 1px solid var(--border);
 }
+.backlog-area.mix-hidden { display: none; }
 
 .backlog-col {
   display: flex;
@@ -598,13 +824,13 @@ header h1 .accent { color: var(--yellow); }
 .save-indicator.error { color: var(--red); }
 .save-indicator.fade { opacity: 0; }
 
-/* Schedule-mode: highlight schedulable slots */
-body.schedule-mode .slot.empty-hint {
+/* Schedule-mode: highlight schedulable empty slots */
+body.schedule-mode .slot.empty-slot {
   border-color: var(--yellow);
   background: rgba(250,204,21,0.04);
   cursor: pointer;
 }
-body.schedule-mode .slot.empty-hint:hover {
+body.schedule-mode .slot.empty-slot:hover {
   background: rgba(250,204,21,0.1);
 }
 

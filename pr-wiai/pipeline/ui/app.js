@@ -1,24 +1,62 @@
-// @herdom.bamberg — Pipeline UI v4
-// Split-pane: fixed calendar top, 4-column filterable backlog bottom.
+// @herdom.bamberg — Pipeline UI v5
+// Two-mode dashboard: PLAN (operational) + MIX (strategic content mix).
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// ── Content Type (rhetorical approach) ──────────────────────────────────────
 
 const TYPES = {
-  contrarian:   { short: "CTR",   full: "Contrarian",    color: "#facc15" },
-  newsjacking:  { short: "NEWS",  full: "Newsjacking",   color: "#ef4444" },
-  "wusstest-du":{ short: "WDU",   full: "Wusstest du",   color: "#f59e0b" },
-  billboard:    { short: "BILL",  full: "Billboard",     color: "#e0e0e0" },
-  terminal:     { short: "TERM",  full: "Terminal",      color: "#33ff33" },
-  nachtgedanke: { short: "NACHT", full: "Nachtgedanke",  color: "#ffb000" },
-  selbstironie: { short: "META",  full: "Selbstironie",  color: "#888" },
-  witz:         { short: "WITZ",  full: "Witz",          color: "#d4a017" },
-  parodie:      { short: "PARO",  full: "Parodie",       color: "#06b6d4" },
-  overselling:  { short: "OVER",  full: "Overselling",   color: "#f97316" },
-  stitch:       { short: "STTCH", full: "Stitch",        color: "#a78bfa" },
-  other:        { short: "MISC",  full: "Sonstige",      color: "#555" },
+  contrarian:     { short: "CTR",   full: "Contrarian",        color: "#facc15" },
+  "merkste-selber": { short: "MERK", full: "Merkste selber",   color: "#38bdf8" },
+  aphorismus:     { short: "APH",   full: "Aphorismus",        color: "#e0e0e0" },
+  "wusstest-du":  { short: "WDU",   full: "Wusstest du",       color: "#34d399" },
+  parodie:        { short: "PARO",  full: "Parodie",           color: "#06b6d4" },
+  overselling:    { short: "OVER",  full: "Overselling",       color: "#f97316" },
+  nachtgedanke:   { short: "NACHT", full: "Nachtgedanke",      color: "#c084fc" },
+  nahkastchen:    { short: "NAEH",  full: "Naehkaestchen",     color: "#a78bfa" },
+  selbstironie:   { short: "META",  full: "Selbstironie",      color: "#f472b6" },
+  newsjacking:    { short: "NEWS",  full: "Newsjacking",       color: "#ef4444" },
+  stitch:         { short: "STTCH", full: "Stitch",            color: "#fb923c" },
+  witz:           { short: "WITZ",  full: "Witz",              color: "#fbbf24" },
+  // Legacy: billboard/terminal kept for migration — will be relabeled
+  billboard:      { short: "BILL",  full: "Billboard",         color: "#e0e0e0" },
+  terminal:       { short: "TERM",  full: "Terminal",          color: "#33ff33" },
+  other:          { short: "MISC",  full: "Sonstige",          color: "#555" },
 };
 
 function typeOf(t) { return TYPES[t] || TYPES.other; }
+
+// ── Visual Design (how it looks) ────────────────────────────────────────────
+
+const DESIGNS = {
+  "pixel-wall":  { short: "PXL",  full: "Pixel Wall",    color: "#ef4444", letter: "W", bgColor: "#3a1111", letterColor: "#c44" },
+  billboard:     { short: "BILL", full: "Billboard",      color: "#fafafa", letter: "B", bgColor: "#2a2a2a", letterColor: "#999" },
+  terminal:      { short: "TERM", full: "Terminal",       color: "#33ff33", letter: "T", bgColor: "#0a2a0a", letterColor: "#2a2" },
+  newsjacking:   { short: "NEWS", full: "Newsjacking",    color: "#f97316", letter: "N", bgColor: "#2a1a08", letterColor: "#b84" },
+  "raw-photo":   { short: "RAW",  full: "Raw Photo",     color: "#d4a017", letter: "P", bgColor: "#2a2208", letterColor: "#a83" },
+  other:         { short: "?",    full: "Nicht gesetzt",  color: "#333",    letter: "?", bgColor: "#1a1a1a", letterColor: "#444" },
+};
+
+function designOf(d) { return DESIGNS[d] || DESIGNS.other; }
+
+// ── Topic (what it's about) ─────────────────────────────────────────────────
+
+const TOPICS = {
+  tech:           { short: "TECH",  full: "Technik / CS",        color: "#3b82f6" },
+  datenschutz:    { short: "PRIV",  full: "Datenschutz",         color: "#ef4444" },
+  studium:        { short: "STUD",  full: "Studium",             color: "#22c55e" },
+  karriere:       { short: "JOB",   full: "Karriere",            color: "#f59e0b" },
+  identitaet:     { short: "ID",    full: "Identitaet (Passt CS zu mir?)", color: "#8b5cf6" },
+  manipulation:   { short: "MNPL",  full: "Manipulation / Aufmerksamkeit", color: "#f43f5e" },
+  erwachsenwerden:{ short: "ERWX",  full: "Erwachsenwerden",     color: "#14b8a6" },
+  alltag:         { short: "ALLT",  full: "Tech-Alltag (Kat B)", color: "#06b6d4" },
+  uni:            { short: "UNI",   full: "Uni-Intern (Kat A)",  color: "#a78bfa" },
+  "social-media": { short: "SOME",  full: "Social Media",        color: "#ec4899" },
+  ertappt:        { short: "TRAP",  full: "Ertappt / Bias",      color: "#f97316" },
+  "wiai-ad":      { short: "AD",    full: "WIAI-Werbung",        color: "#facc15" },
+  meta:           { short: "META",  full: "Meta / Kanal",        color: "#888" },
+  other:          { short: "?",     full: "Nicht gesetzt",       color: "#333" },
+};
+
+function topicOf(t) { return TOPICS[t] || TOPICS.other; }
 
 const STATUS_COLORS = {
   idea: "#555", draft: "#f59e0b", ready: "#22c55e",
@@ -27,7 +65,7 @@ const STATUS_COLORS = {
 
 const SLOTS_PER_WEEK = 7;
 
-const DEFAULT_COLUMNS = ["contrarian", "billboard", "terminal", "_rest"];
+const DEFAULT_COLUMNS = ["contrarian", "merkste-selber", "nahkastchen", "_rest"];
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -37,7 +75,7 @@ let weekOffset = 0;
 let searchQuery = "";
 let columnTypes = loadColumnConfig();
 let selectedPostId = null;
-let weeksPerRow = 13;
+let viewMode = localStorage.getItem("herdom-viewMode") || "plan";
 
 // ── API ──────────────────────────────────────────────────────────────────────
 
@@ -143,21 +181,33 @@ function matchesSearch(post) {
 // RENDER
 // ══════════════════════════════════════════════════════════════════════════════
 
+function setViewMode(mode) {
+  viewMode = mode;
+  localStorage.setItem("herdom-viewMode", mode);
+  document.getElementById("modePlan").classList.toggle("active", mode === "plan");
+  document.getElementById("modeMix").classList.toggle("active", mode === "mix");
+  document.body.classList.toggle("mix-active", mode === "mix");
+  render();
+}
+
 function render() {
-  renderCalendar();
-  renderBacklog();
+  // Clean up mode-specific elements
+  document.querySelectorAll(".mix-popover").forEach(p => p.remove());
+
+  if (viewMode === "mix") {
+    renderMixGrid();
+    document.getElementById("backlogArea").classList.add("mix-hidden");
+  } else {
+    renderCalendar();
+    renderBacklog();
+    document.getElementById("backlogArea").classList.remove("mix-hidden");
+  }
   renderStats();
 }
 
 // ── Calendar ─────────────────────────────────────────────────────────────────
 
-function renderCalendar() {
-  const totalWeeks = weeksPerRow * 2;
-  const allWeeks = generateWeeks(totalWeeks, weekOffset);
-  const row1 = allWeeks.slice(0, weeksPerRow);
-  const row2 = allWeeks.slice(weeksPerRow);
-  const currentWeek = getWeekStr(new Date());
-
+function getPostsByWeek() {
   const postsByWeek = new Map();
   for (const p of plan.posts) {
     if (p.targetWeek) {
@@ -168,58 +218,88 @@ function renderCalendar() {
   for (const [, posts] of postsByWeek) {
     posts.sort((a, b) => (a.slotIndex ?? 99) - (b.slotIndex ?? 99));
   }
+  return postsByWeek;
+}
+
+function renderCalendar() {
+  const weeksPerRow = 4;
+  const allWeeks = generateWeeks(weeksPerRow, weekOffset);
+  const currentWeek = getWeekStr(new Date());
+  const postsByWeek = getPostsByWeek();
 
   const cal = document.getElementById("calendar");
   cal.replaceChildren();
+  cal.classList.add("plan-mode");
+  cal.classList.remove("mix-mode");
 
-  for (const row of [row1, row2]) {
-    const rowEl = el("div", {
-      className: "cal-row",
-      style: { gridTemplateColumns: "repeat(" + weeksPerRow + ", minmax(0, 1fr))" },
-    });
-    for (const wkObj of row) {
-      const wk = wkObj.key;
-      const posts = postsByWeek.get(wk) || [];
-      const cls = "week" + (wk === currentWeek ? " current" : "") + (wk < currentWeek ? " past" : "");
-      const weekEl = el("div", { className: cls });
+  const rowEl = el("div", {
+    className: "cal-row",
+    style: { gridTemplateColumns: "repeat(" + weeksPerRow + ", minmax(0, 1fr))" },
+  });
 
-      const kwNum = weekLabel(wk).replace("KW", "");
-      weekEl.appendChild(el("div", { className: "week-header" }, [
-        el("span", { className: "week-kw" }, [
-          el("span", { className: "week-kw-prefix" }, "KW"),
-          el("span", { className: "week-kw-num" }, kwNum),
-        ]),
-        el("span", { className: "week-date" }, formatMonday(wkObj.monday)),
-      ]));
+  for (const wkObj of allWeeks) {
+    const wk = wkObj.key;
+    const posts = postsByWeek.get(wk) || [];
+    const cls = "week plan-week" + (wk === currentWeek ? " current" : "") + (wk < currentWeek ? " past" : "");
+    const weekEl = el("div", { className: cls });
 
-      const slotsEl = el("div", { className: "week-slots" });
-      for (let i = 0; i < SLOTS_PER_WEEK; i++) {
-        const post = posts[i];
-        const slotEl = el("div", {
-          className: "slot" + (!post ? " empty-hint" : ""),
-          "data-week": wk,
-          "data-slot": String(i),
-          onDragover: (e) => { e.preventDefault(); e.currentTarget.classList.add("drag-over"); },
-          onDragleave: (e) => { e.currentTarget.classList.remove("drag-over"); },
-          onDrop: (e) => onDrop(e),
-          onClick: (e) => {
-            if (selectedPostId && !post) {
-              e.stopPropagation();
-              schedulePost(selectedPostId, wk, i);
-            }
-          },
-        });
-        if (post) slotEl.appendChild(createCalCard(post));
-        slotsEl.appendChild(slotEl);
-      }
-      weekEl.appendChild(slotsEl);
-      rowEl.appendChild(weekEl);
+    // Header
+    const kwNum = weekLabel(wk).replace("KW", "");
+    weekEl.appendChild(el("div", { className: "week-header" }, [
+      el("span", { className: "week-kw" }, [
+        el("span", { className: "week-kw-prefix" }, "KW"),
+        el("span", { className: "week-kw-num" }, kwNum),
+      ]),
+      el("span", { className: "week-date" }, formatMonday(wkObj.monday)),
+    ]));
+
+    // Production status bar
+    const readyCount = posts.filter(p => p.status === "ready" || p.status === "scheduled" || p.status === "published").length;
+    const draftCount = posts.filter(p => p.status === "draft").length;
+    const ideaCount = posts.filter(p => p.status === "idea").length;
+    const total = readyCount + draftCount + ideaCount;
+    if (total > 0) {
+      const bar = el("div", { className: "week-status-bar" });
+      if (readyCount) bar.appendChild(el("div", { className: "wsb-seg", style: { flex: readyCount, background: "var(--green)" } }));
+      if (draftCount) bar.appendChild(el("div", { className: "wsb-seg", style: { flex: draftCount, background: "var(--amber)" } }));
+      if (ideaCount) bar.appendChild(el("div", { className: "wsb-seg", style: { flex: ideaCount, background: "var(--dim)" } }));
+      weekEl.appendChild(bar);
     }
-    cal.appendChild(rowEl);
+
+    // Slots
+    const slotsEl = el("div", { className: "week-slots" });
+    for (let i = 0; i < SLOTS_PER_WEEK; i++) {
+      const post = posts[i];
+      const slotEl = el("div", {
+        className: "slot" + (!post ? " empty-slot" : ""),
+        "data-week": wk,
+        "data-slot": String(i),
+        onDragover: (e) => { e.preventDefault(); e.currentTarget.classList.add("drag-over"); },
+        onDragleave: (e) => { e.currentTarget.classList.remove("drag-over"); },
+        onDrop: (e) => onDrop(e),
+        onClick: (e) => {
+          if (selectedPostId && !post) {
+            e.stopPropagation();
+            schedulePost(selectedPostId, wk, i);
+          }
+        },
+      });
+      if (post) slotEl.appendChild(createCalCard(post));
+      slotsEl.appendChild(slotEl);
+    }
+    weekEl.appendChild(slotsEl);
+
+    // Footer: count + draft info
+    const draftInfo = draftCount ? " \u00b7 " + draftCount + " draft" : "";
+    const ideaInfo = ideaCount ? " \u00b7 " + ideaCount + " idea" : "";
+    weekEl.appendChild(el("div", { className: "week-footer" }, total + "/" + SLOTS_PER_WEEK + " Posts" + draftInfo + ideaInfo));
+
+    rowEl.appendChild(weekEl);
   }
+  cal.appendChild(rowEl);
 
   document.getElementById("navLabel").textContent =
-    weekLabel(row1[0].key) + " – " + weekLabel(row2[row2.length - 1].key) + "  (" + totalWeeks + " KW)";
+    weekLabel(allWeeks[0].key) + " – " + weekLabel(allWeeks[allWeeks.length - 1].key) + "  (" + weeksPerRow + " KW)";
 
   const searchCountEl = document.getElementById("searchCount");
   searchCountEl.textContent = searchQuery
@@ -232,33 +312,21 @@ function createCalCard(post) {
   const s = post.slides || {};
   const fromJson = post.text || {};
 
-  // Adapt content to zoom level
-  let titleText;
-  if (weeksPerRow <= 4) {
-    // Zoomed in: show all slides joined
-    const parts = [s.bigText || fromJson.slide1, s.s2 || fromJson.slide2, s.s3 || fromJson.slide3].filter(Boolean);
-    titleText = parts.join(" / ") || post.notes || post.id;
-  } else if (weeksPerRow <= 7) {
-    // Medium: show S1 + start of S2
-    const s1 = s.bigText || fromJson.slide1 || "";
-    const s2 = s.s2 || fromJson.slide2 || "";
-    titleText = s1 + (s2 ? " / " + s2 : "") || post.notes || post.id;
-  } else {
-    // Zoomed out: short title
-    titleText = (s.bigText || fromJson.slide1 || s.s2 || fromJson.slide2?.substring(0, 30) || post.notes || post.id);
-  }
+  // Plan mode: always show full text
+  const parts = [s.bigText || fromJson.slide1, s.s2 || fromJson.slide2, s.s3 || fromJson.slide3].filter(Boolean);
+  const titleText = parts.join(" / ") || post.notes || post.id;
 
   const needsWork = post.status === "idea" || post.status === "draft";
   const isMatch = searchQuery && matchesSearch(post);
   const isDimmed = searchQuery && !isMatch;
-  const isZoomed = weeksPerRow <= 7;
+  const statusColor = STATUS_COLORS[post.status] || STATUS_COLORS.idea;
 
-  const cls = "cal-card" + (needsWork ? " needs-work" : "") + (isMatch ? " search-match" : "") + (isDimmed ? " search-dim" : "") + (isZoomed ? " cal-card-zoomed" : "");
+  const cls = "cal-card cal-card-zoomed" + (needsWork ? " needs-work" : "") + (isMatch ? " search-match" : "") + (isDimmed ? " search-dim" : "");
   const children = [
-    el("span", { className: "cal-card-title" }, titleText),
     el("span", { className: "cal-card-type", style: { color: t.color } }, t.short),
+    el("span", { className: "cal-card-status", style: { background: statusColor } }),
+    el("span", { className: "cal-card-title" }, titleText),
   ];
-  if (needsWork) children.push(el("span", { className: "cal-card-warn" }, "!" + post.status));
 
   return el("div", {
     className: cls + (post.id === selectedPostId ? " selected" : ""),
@@ -269,6 +337,242 @@ function createCalCard(post) {
     onDragend: (e) => onDragEnd(e),
     onClick: (e) => { e.stopPropagation(); openPanel(post.id, e); },
   }, children);
+}
+
+// ── MIX Mode ────────────────────────────────────────────────────────────────
+// Each week = one row. Posts shown as colored squares (color = type).
+// No text, no titles — just the color mix at a glance.
+// Editable note per week. Click week → timeline for that week.
+
+// Tooltip for mix squares — instant, no native delay
+let mixTip = null;
+function showMixTip(e, text) {
+  if (!mixTip) {
+    mixTip = el("div", { className: "mix-tip" });
+    document.body.appendChild(mixTip);
+  }
+  mixTip.textContent = text;
+  mixTip.style.display = "block";
+  const r = e.target.getBoundingClientRect();
+  mixTip.style.left = r.left + "px";
+  mixTip.style.top = (r.top - 26) + "px";
+}
+function hideMixTip() { if (mixTip) mixTip.style.display = "none"; }
+
+function mixSq(color, tipText, statusChar) {
+  const sq = el("div", {
+    className: "mix-sq",
+    style: { background: color },
+    onMouseenter: (e) => showMixTip(e, tipText),
+    onMouseleave: hideMixTip,
+  });
+  if (statusChar) sq.appendChild(el("span", { className: "mix-sq-status" }, statusChar));
+  return sq;
+}
+
+function mixVisSq(design, tipText) {
+  const d = designOf(design);
+  return el("div", {
+    className: "mix-vis",
+    style: { background: d.bgColor, color: d.letterColor },
+    onMouseenter: (e) => showMixTip(e, tipText),
+    onMouseleave: hideMixTip,
+  }, d.letter);
+}
+
+function renderMixGrid() {
+  const totalWeeks = 26;
+  const allWeeks = generateWeeks(totalWeeks, weekOffset);
+  const currentWeek = getWeekStr(new Date());
+  const postsByWeek = getPostsByWeek();
+  const notes = plan.weekNotes || {};
+
+  const cal = document.getElementById("calendar");
+  cal.replaceChildren();
+  cal.classList.remove("plan-mode");
+  cal.classList.add("mix-mode");
+
+  const list = el("div", { className: "mix-list" });
+
+  for (const wkObj of allWeeks) {
+    const wk = wkObj.key;
+    const posts = postsByWeek.get(wk) || [];
+    const n = posts.length;
+    const isCurrent = wk === currentWeek;
+    const isPast = wk < currentWeek;
+
+    const row = el("div", {
+      className: "mix-row" + (isCurrent ? " mix-row-current" : "") + (isPast ? " mix-row-past" : "") + (n === 0 ? " mix-row-empty" : ""),
+    });
+
+    // KW label — clickable to open week timeline
+    const kwNum = weekLabel(wk).replace("KW", "");
+    const label = el("div", {
+      className: "mix-label",
+      onClick: () => openWeekTimeline(wkObj, posts),
+    }, [
+      el("span", { className: "mix-kw" }, "KW"),
+      el("span", { className: "mix-kw-num" }, kwNum),
+      el("span", { className: "mix-date" }, formatMonday(wkObj.monday)),
+    ]);
+    row.appendChild(label);
+
+    // Two rows of 7 squares: content type + visual design
+    const grid = el("div", { className: "mix-grid" });
+
+    // Row 1: Content type
+    const typeRow = el("div", { className: "mix-sq-row" });
+    typeRow.appendChild(el("span", { className: "mix-sq-label" }, "Typ"));
+    for (let i = 0; i < SLOTS_PER_WEEK; i++) {
+      const post = posts[i];
+      if (post) {
+        const t = typeOf(post.type);
+        const s = post.slides || {};
+        const fromJson = post.text || {};
+        const title = s.bigText || fromJson.slide1 || s.smallText || post.notes || post.id;
+        const statusChar = post.status === "idea" ? "I" : post.status === "draft" ? "D" : null;
+        const tipText = t.short + " · " + title.replace(/\n/g, " ").substring(0, 60);
+        typeRow.appendChild(mixSq(t.color, tipText, statusChar));
+      } else {
+        typeRow.appendChild(el("div", { className: "mix-sq mix-sq-empty" }));
+      }
+    }
+    grid.appendChild(typeRow);
+
+    // Row 2: Visual design — smaller rectangles with letter
+    const designRow = el("div", { className: "mix-sq-row" });
+    designRow.appendChild(el("span", { className: "mix-sq-label" }, "Vis"));
+    for (let i = 0; i < SLOTS_PER_WEEK; i++) {
+      const post = posts[i];
+      if (post) {
+        designRow.appendChild(mixVisSq(post.design, designOf(post.design).full));
+      } else {
+        designRow.appendChild(el("div", { className: "mix-vis mix-vis-empty" }));
+      }
+    }
+    grid.appendChild(designRow);
+
+    row.appendChild(grid);
+
+    // Topic keywords — compact summary of what this week covers
+    if (n > 0) {
+      const topicCounts = {};
+      posts.forEach(p => { if (p.topic) topicCounts[p.topic] = (topicCounts[p.topic] || 0) + 1; });
+      const tags = el("div", { className: "mix-topics" });
+      for (const [topic, count] of Object.entries(topicCounts).sort((a, b) => b[1] - a[1])) {
+        const tp = topicOf(topic);
+        tags.appendChild(el("span", {
+          className: "mix-topic-tag",
+          style: { color: tp.color },
+          onMouseenter: (e) => showMixTip(e, tp.full + (count > 1 ? " (" + count + "x)" : "")),
+          onMouseleave: hideMixTip,
+        }, tp.short + (count > 1 ? "\u00d7" + count : "")));
+      }
+      row.appendChild(tags);
+    }
+
+    // Week note — inline editable
+    const noteInput = el("input", {
+      type: "text",
+      className: "mix-note",
+      value: notes[wk] || "",
+      placeholder: n === 0 && !isPast ? "Thema / Plan..." : "",
+      onInput: (e) => debouncedWeekNote(wk, e.target.value),
+      onClick: (e) => e.stopPropagation(),
+    });
+    row.appendChild(noteInput);
+
+    list.appendChild(row);
+  }
+
+  cal.appendChild(list);
+
+  document.getElementById("navLabel").textContent =
+    weekLabel(allWeeks[0].key) + " – " + weekLabel(allWeeks[allWeeks.length - 1].key) + "  (" + totalWeeks + " KW)";
+
+  const searchCountEl = document.getElementById("searchCount");
+  searchCountEl.textContent = searchQuery
+    ? plan.posts.filter(matchesSearch).length + " treffer"
+    : "";
+}
+
+// Debounced save for week notes
+let weekNoteTimers = {};
+function debouncedWeekNote(week, note) {
+  if (!plan.weekNotes) plan.weekNotes = {};
+  plan.weekNotes[week] = note;
+  clearTimeout(weekNoteTimers[week]);
+  weekNoteTimers[week] = setTimeout(async () => {
+    await fetch("/api/week-note", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ week, note }),
+    });
+  }, 1500);
+}
+
+// Open timeline modal filtered to a single week
+function openWeekTimeline(wkObj, posts) {
+  const modal = document.getElementById("timelineModal");
+  const body = document.getElementById("timelineBody");
+  body.replaceChildren();
+
+  const wk = wkObj.key;
+  const kwNum = weekLabel(wk).replace("KW", "");
+  document.getElementById("timelineRange").textContent = "KW" + kwNum + " — " + formatMonday(wkObj.monday);
+
+  const weekDiv = el("div", { className: "tl-week" });
+
+  if (posts.length === 0) {
+    weekDiv.appendChild(el("div", { className: "tl-empty" }, "(keine Posts in dieser Woche)"));
+  } else {
+    for (const post of posts) {
+      const t = typeOf(post.type);
+      const s = post.slides || {};
+      const fromJson = post.text || {};
+      const parts = [
+        s.bigText || fromJson.slide1,
+        s.smallText,
+        s.s2 || fromJson.slide2,
+        s.s3 || fromJson.slide3,
+        s.button || fromJson.button ? "Button: " + (s.button || fromJson.button) : null,
+        s.uebrigens || fromJson.uebrigens ? "Uebrigens: " + (s.uebrigens || fromJson.uebrigens) : null,
+      ].filter(Boolean).map(p => p.replace(/\n/g, " "));
+
+      const lineChildren = [
+        el("span", { className: "tl-type", style: { color: t.color } }, t.short),
+      ];
+      if (post.tag) {
+        lineChildren.push(el("span", { className: "tl-type", style: { color: "#888" } }, "#" + post.tag + " "));
+      }
+      parts.forEach((part, i) => {
+        if (i > 0) lineChildren.push(el("span", { className: "tl-sep" }, " / "));
+        lineChildren.push(document.createTextNode(part));
+      });
+
+      weekDiv.appendChild(el("div", {
+        className: "tl-post",
+        style: { borderLeftColor: t.color, cursor: "pointer" },
+        onClick: (e) => { e.stopPropagation(); openPanel(post.id, e); },
+      }, lineChildren));
+    }
+  }
+
+  body.appendChild(weekDiv);
+
+  // Show note if exists
+  const note = (plan.weekNotes || {})[wk];
+  if (note) {
+    body.appendChild(el("div", {
+      className: "tl-week-note",
+    }, [
+      el("span", { style: { color: "var(--dim)", fontSize: "10px", fontFamily: "'JetBrains Mono', monospace" } }, "NOTIZ: "),
+      document.createTextNode(note),
+    ]));
+  }
+
+  timelineOpen = true;
+  modal.classList.add("open");
 }
 
 // ── Backlog (4 columns) ──────────────────────────────────────────────────────
@@ -472,11 +776,13 @@ function onDragStart(e) {
   const card = e.target.closest("[data-id]");
   draggedId = card.dataset.id;
   card.classList.add("dragging");
+  document.body.classList.add("dragging");
   e.dataTransfer.effectAllowed = "move";
 }
 
 function onDragEnd(e) {
   e.target.closest("[data-id]")?.classList.remove("dragging");
+  document.body.classList.remove("dragging");
   document.querySelectorAll(".drag-over").forEach((x) => x.classList.remove("drag-over"));
 }
 
@@ -556,9 +862,15 @@ function openPanel(id, event) {
       }
       panel.style.top = Math.max(40, Math.min(rect.top - 60, window.innerHeight * 0.15)) + "px";
     } else {
-      // Calendar card
+      // Calendar card — clamp so panel doesn't overflow bottom
       panel.style.left = Math.min(rect.right + 4, window.innerWidth - 490) + "px";
-      panel.style.top = Math.max(40, rect.top) + "px";
+      panel.style.visibility = "hidden";
+      panel.classList.add("open");
+      const panelHeight = panel.offsetHeight;
+      panel.classList.remove("open");
+      panel.style.visibility = "";
+      const maxTop = window.innerHeight - panelHeight - 20;
+      panel.style.top = Math.max(40, Math.min(rect.top, maxTop)) + "px";
     }
   }
 
@@ -621,11 +933,11 @@ function openPanel(id, event) {
   statusSelect.addEventListener("change", () => setField(post.id, "status", statusSelect.value));
   content.appendChild(statusSelect);
 
-  // Type dropdown
+  // Type dropdown (exclude legacy billboard/terminal — those are now designs)
   content.appendChild(el("label", {}, "Typ"));
   const typeSelect = el("select");
   for (const [k, v] of Object.entries(TYPES)) {
-    if (k === "other") continue;
+    if (k === "other" || k === "billboard" || k === "terminal") continue;
     const opt = el("option", { value: k }, v.full);
     if (post.type === k) opt.selected = true;
     typeSelect.appendChild(opt);
@@ -635,13 +947,32 @@ function openPanel(id, event) {
 
   content.appendChild(el("label", {}, "Design"));
   const designSelect = el("select");
-  for (const d of [null, "pixel-wall", "terminal", "billboard", "newsjacking"]) {
-    const opt = el("option", { value: d || "" }, d || "— nicht gesetzt —");
-    if ((post.design || null) === d) opt.selected = true;
+  for (const [k, v] of Object.entries(DESIGNS)) {
+    if (k === "other") continue;
+    const opt = el("option", { value: k }, v.full);
+    if (post.design === k) opt.selected = true;
     designSelect.appendChild(opt);
   }
+  const noDesignOpt = el("option", { value: "" }, "— nicht gesetzt —");
+  if (!post.design) noDesignOpt.selected = true;
+  designSelect.prepend(noDesignOpt);
   designSelect.addEventListener("change", () => setField(post.id, "design", designSelect.value || null));
   content.appendChild(designSelect);
+
+  // Topic dropdown
+  content.appendChild(el("label", {}, "Thema"));
+  const topicSelect = el("select");
+  const noTopicOpt = el("option", { value: "" }, "— kein Thema —");
+  if (!post.topic) noTopicOpt.selected = true;
+  topicSelect.appendChild(noTopicOpt);
+  for (const [k, v] of Object.entries(TOPICS)) {
+    if (k === "other") continue;
+    const opt = el("option", { value: k }, v.full);
+    if (post.topic === k) opt.selected = true;
+    topicSelect.appendChild(opt);
+  }
+  topicSelect.addEventListener("change", () => setField(post.id, "topic", topicSelect.value || null));
+  content.appendChild(topicSelect);
 
   // Tag dropdown
   content.appendChild(el("label", {}, "Tag"));
@@ -971,12 +1302,8 @@ const detailPanelEl = document.getElementById("detailPanel");
 document.getElementById("panelClose").addEventListener("click", closePanel);
 document.getElementById("timelineBtn").addEventListener("click", toggleTimeline);
 document.getElementById("timelineClose").addEventListener("click", toggleTimeline);
-document.getElementById("zoomIn").addEventListener("click", () => {
-  if (weeksPerRow > 2) { weeksPerRow = Math.max(2, weeksPerRow - 2); render(); }
-});
-document.getElementById("zoomOut").addEventListener("click", () => {
-  if (weeksPerRow < 13) { weeksPerRow += 2; render(); }
-});
+document.getElementById("modePlan").addEventListener("click", () => setViewMode("plan"));
+document.getElementById("modeMix").addEventListener("click", () => setViewMode("mix"));
 
 document.addEventListener("click", (e) => {
   if (!selectedPostId) return;
@@ -986,8 +1313,8 @@ document.addEventListener("click", (e) => {
   closePanel();
 });
 
-document.getElementById("navPrev").addEventListener("click", () => { weekOffset -= 13; render(); });
-document.getElementById("navNext").addEventListener("click", () => { weekOffset += 13; render(); });
+document.getElementById("navPrev").addEventListener("click", () => { weekOffset -= (viewMode === "plan" ? 1 : 13); render(); });
+document.getElementById("navNext").addEventListener("click", () => { weekOffset += (viewMode === "plan" ? 1 : 13); render(); });
 
 const searchInput = document.getElementById("searchInput");
 const searchBox = searchInput.closest(".search-box");
@@ -1028,6 +1355,9 @@ document.addEventListener("keydown", (e) => {
   }
   if (e.key === "t" && !e.metaKey && !e.ctrlKey && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA" && document.activeElement.tagName !== "SELECT") {
     toggleTimeline();
+  }
+  if (e.key === "m" && !e.metaKey && !e.ctrlKey && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA" && document.activeElement.tagName !== "SELECT") {
+    setViewMode(viewMode === "plan" ? "mix" : "plan");
   }
   if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "f")) {
     e.preventDefault();
@@ -1075,5 +1405,10 @@ function debouncedSave(id, field, value) {
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
+
+// Set initial mode button state
+document.getElementById("modePlan").classList.toggle("active", viewMode === "plan");
+document.getElementById("modeMix").classList.toggle("active", viewMode === "mix");
+document.body.classList.toggle("mix-active", viewMode === "mix");
 
 loadPlan();
