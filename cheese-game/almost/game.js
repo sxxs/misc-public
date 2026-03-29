@@ -202,8 +202,9 @@ function LandingScreen({ onStart, onStartRandom, stats, opponentScores, opponent
       )}
 
       <div className="flex flex-col gap-3 w-full" style={{ maxWidth: 300 }}>
-        <p style={{ color: '#444', fontSize: 12, textAlign: 'center' }}>
+        <p style={{ color: '#333', fontSize: 12, textAlign: 'center' }}>
           5 Aufgaben · 3 Versuche je · alles lokal
+          <span style={{ color: '#2a2a2a', marginLeft: 8 }}>v{typeof APP_VERSION !== 'undefined' ? APP_VERSION : '?'}</span>
         </p>
         <button
           onClick={onStart}
