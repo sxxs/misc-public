@@ -130,7 +130,7 @@
       "id": "2026-chatgpt-klausur",
       "type": "aphorismus",
       "design": "billboard",
-      "status": "ready",
+      "status": "scheduled",
       "json": "wiai-social/posts/2026-chatgpt-klausur.json",
       "source": null,
       "targetWeek": "2026-KW15",
@@ -145,14 +145,14 @@
         "s3": "380 Laptops. VS Code. Debugger. Das besteht kein Chatbot.",
         "button": "Noch nicht."
       },
-      "slotIndex": 1,
+      "slotIndex": 2,
       "topic": "tech"
     },
     {
       "id": "2026-ehrliche-apps",
       "type": "contrarian",
       "design": "pixel-wall",
-      "status": "ready",
+      "status": "scheduled",
       "json": "wiai-social/posts/2026-ehrliche-apps.json",
       "source": null,
       "targetWeek": "2026-KW14",
@@ -167,14 +167,14 @@
         "s3": "Klingt dystopisch. Ist aber einfach nur der Status quo.",
         "button": "Digital Literacy ist kein Schulfach. Sollte es sein."
       },
-      "slotIndex": 4,
+      "slotIndex": 0,
       "topic": "social-media"
     },
     {
       "id": "2026-fake-statistik",
       "type": "contrarian",
       "design": "pixel-wall",
-      "status": "ready",
+      "status": "scheduled",
       "json": "wiai-social/posts/2026-fake-statistik.json",
       "source": null,
       "targetWeek": "2026-KW14",
@@ -188,7 +188,7 @@
         "s2": "Schöne Zahl. Hast du sie geglaubt? Die Studie gibt es nicht. Ich hab sie gerade erfunden. Und du hast nicht mal nach der Quelle gefragt.",
         "s3": "Das passiert dir 20 Mal am Tag. Folgt für mehr davon."
       },
-      "slotIndex": 0,
+      "slotIndex": 5,
       "topic": "ertappt"
     },
     {
@@ -258,7 +258,7 @@
       "id": "2026-ikea",
       "type": "aphorismus",
       "design": "billboard",
-      "status": "ready",
+      "status": "scheduled",
       "json": "wiai-social/posts/2026-ikea.json",
       "source": null,
       "targetWeek": "2026-KW15",
@@ -272,7 +272,7 @@
         "s2": "Nicht Mathe-LK. Nicht Programmier-AG. Sondern: Du hast schon mal 3 Stunden lang versucht ein IKEA-Regal aufzubauen und nicht aufgegeben.",
         "s3": "Frustrationstoleranz ist die wichtigste Kompetenz in der Informatik."
       },
-      "slotIndex": 3,
+      "slotIndex": 6,
       "topic": "social-media"
     },
     {
@@ -298,12 +298,12 @@
     },
     {
       "id": "2026-intro-alter",
-      "type": "contrarian",
+      "type": "selbstironie",
       "design": "pixel-wall",
-      "status": "ready",
+      "status": "scheduled",
       "json": "wiai-social/posts/2026-intro-alter.json",
       "source": null,
-      "targetWeek": "2026-KW13",
+      "targetWeek": "2026-KW16",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -322,10 +322,10 @@
       "id": "2026-intro-homemade",
       "type": "aphorismus",
       "design": "billboard",
-      "status": "ready",
+      "status": "scheduled",
       "json": "wiai-social/posts/2026-intro-homemade.json",
       "source": null,
-      "targetWeek": "2026-KW14",
+      "targetWeek": "2026-KW16",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -337,7 +337,7 @@
         "s3": "Made in Bamberg.\nSince … äh, heute.",
         "button": "Folgt uns.\n\nFür Takes, die niemand bestellt hat."
       },
-      "slotIndex": 3,
+      "slotIndex": 6,
       "topic": "karriere"
     },
     {
@@ -468,10 +468,10 @@
       "id": "2026-merkste-netflix",
       "type": "merkste-selber",
       "design": "pixel-wall",
-      "status": "ready",
+      "status": "scheduled",
       "json": "wiai-social/posts/2026-merkste-netflix.json",
       "source": null,
-      "targetWeek": null,
+      "targetWeek": "2026-KW14",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -482,16 +482,17 @@
         "s2": "TikTok fragt das nicht.",
         "s3": "Merkste selber, oder?"
       },
-      "topic": "social-media"
+      "topic": "social-media",
+      "slotIndex": 4
     },
     {
       "id": "2026-merkste-schule",
       "type": "merkste-selber",
       "design": "pixel-wall",
-      "status": "ready",
+      "status": "scheduled",
       "json": "wiai-social/posts/2026-merkste-schule.json",
       "source": null,
-      "targetWeek": null,
+      "targetWeek": "2026-KW16",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -502,7 +503,8 @@
         "s2": "Du lernst in der Schule nicht, wie das Internet funktioniert das du 6 Stunden am Tag nutzt.",
         "s3": "Merkste selber, oder?"
       },
-      "topic": "ertappt"
+      "topic": "ertappt",
+      "slotIndex": 1
     },
     {
       "id": "2026-meta-manipulation",
@@ -549,10 +551,10 @@
       "id": "2026-passt-nicht",
       "type": "contrarian",
       "design": "pixel-wall",
-      "status": "ready",
+      "status": "scheduled",
       "json": "wiai-social/posts/2026-passt-nicht.json",
       "source": null,
-      "targetWeek": null,
+      "targetWeek": "2026-KW16",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -564,7 +566,8 @@
         "s3": "Dieses eine Prozent ist es wert.",
         "button": "Die anderen 99% auch. Man lernt am meisten wenn es nicht funktioniert."
       },
-      "topic": "identitaet"
+      "topic": "identitaet",
+      "slotIndex": 4
     },
     {
       "id": "2026-programmierik",
@@ -801,7 +804,7 @@
       "status": "draft",
       "json": null,
       "source": "pipeline/entwuerfe/behind-the-scenes.md#Post-20-—-Variante-D",
-      "targetWeek": "2026-KW16",
+      "targetWeek": null,
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -813,7 +816,7 @@
         "s3": "Seit 2023. 800+ Prüfungen pro Jahr. Nie wieder Zurück zu Papier.",
         "uebrigens": "Übrigens: Das System heißt psi-exam und wir haben es selbst gebaut. Von Null. In Bamberg."
       },
-      "slotIndex": 1,
+      "slotIndex": null,
       "topic": "tech"
     },
     {
@@ -1867,8 +1870,8 @@
     },
     {
       "id": "draft-gehalt-karriere-p56b",
-      "type": "aphorismus",
-      "design": "billboard",
+      "type": "nachtgedanke",
+      "design": "terminal",
       "status": "draft",
       "json": null,
       "source": "pipeline/entwuerfe/gehalt-karriere.md#Post-56-—-Variante-B",
@@ -1883,7 +1886,7 @@
         "s2": "Alle deine Freunde wissen was sie werden wollen. Du nicht.",
         "s3": "Sie lügen. Du bist nur ehrlicher."
       },
-      "slotIndex": 0,
+      "slotIndex": 4,
       "topic": "karriere"
     },
     {
@@ -4094,7 +4097,7 @@
         "s3": "Genau so funktioniert Social Engineering.",
         "button": "Nicht der Computer ist die Schwachstelle. Du bist es."
       },
-      "slotIndex": 5,
+      "slotIndex": 3,
       "topic": "datenschutz"
     },
     {
@@ -4175,7 +4178,7 @@
         "s2": "Tippfehler, schlechtes Deutsch, komischer Absender. Das ist Absicht. Die filtern Leute raus die den Betrug melden würden.",
         "s3": "Die Dummheit ist das Feature, nicht der Bug."
       },
-      "slotIndex": 1,
+      "slotIndex": 0,
       "topic": "datenschutz"
     },
     {
@@ -4810,7 +4813,7 @@
         "s2": "Das ist kein Studierenden-Problem. Das ist ein Software-Problem. Und trotzdem steht es in keinem Curriculum.",
         "s3": ""
       },
-      "slotIndex": 0,
+      "slotIndex": 2,
       "topic": "social-media"
     },
     {
@@ -4872,7 +4875,7 @@
         "s2": "Stimmt. Aber du hörst nicht von den 10.000 Abbrechern die bei Lieferando fahren.",
         "s3": "Übrigens: Das nennt man Survivorship Bias. Und du bist gerade drauf reingefallen."
       },
-      "slotIndex": 0,
+      "slotIndex": 1,
       "topic": "ertappt"
     },
     {
@@ -4882,7 +4885,7 @@
       "status": "idea",
       "json": null,
       "source": "pipeline/ideen/neue-postideen.md",
-      "targetWeek": "2026-KW14",
+      "targetWeek": null,
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -4893,7 +4896,7 @@
         "s2": "Nach dem dritten weißt du, dass du nicht programmieren kannst.",
         "s3": "Nach dem fünften kannst du programmieren."
       },
-      "slotIndex": 1,
+      "slotIndex": null,
       "topic": "ertappt"
     },
     {
@@ -4983,7 +4986,7 @@
       "status": "idea",
       "json": null,
       "source": "pipeline/ideen/neue-postideen.md",
-      "targetWeek": null,
+      "targetWeek": "2026-KW14",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -4994,7 +4997,8 @@
         "s2": "",
         "s3": ""
       },
-      "topic": "datenschutz"
+      "topic": "datenschutz",
+      "slotIndex": 1
     },
     {
       "id": "idea-neue-datenschutz-umgedreht",
@@ -5163,7 +5167,7 @@
       "status": "idea",
       "json": null,
       "source": "pipeline/ideen/neue-postideen.md",
-      "targetWeek": null,
+      "targetWeek": "2026-KW16",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -5174,7 +5178,8 @@
         "s2": "Eine externe Software lässt mich nicht rein. Mein Passwort ist zu lang. Sie müssten eine Datenbanktabelle erweitern.",
         "s3": "Ich habe Fragen."
       },
-      "topic": "datenschutz"
+      "topic": "datenschutz",
+      "slotIndex": 3
     },
     {
       "id": "idea-neue-das-pdfformular",
@@ -5183,7 +5188,7 @@
       "status": "idea",
       "json": null,
       "source": "pipeline/ideen/neue-postideen.md",
-      "targetWeek": null,
+      "targetWeek": "2026-KW14",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -5194,7 +5199,8 @@
         "s2": "",
         "s3": ""
       },
-      "topic": "alltag"
+      "topic": "alltag",
+      "slotIndex": 6
     },
     {
       "id": "idea-neue-zertifikatloop",
@@ -5383,7 +5389,7 @@
       "status": "idea",
       "json": null,
       "source": "pipeline/ideen/stoffsammlung-clickbait-parodie.md",
-      "targetWeek": "2026-KW15",
+      "targetWeek": "2026-KW14",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -5395,7 +5401,7 @@
         "s2": "",
         "s3": ""
       },
-      "slotIndex": 0,
+      "slotIndex": 2,
       "topic": "manipulation"
     },
     {
@@ -5489,7 +5495,7 @@
       "status": "idea",
       "json": null,
       "source": "pipeline/ideen/stoffsammlung-clickbait-parodie.md",
-      "targetWeek": "2026-KW14",
+      "targetWeek": null,
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -5501,7 +5507,7 @@
         "s2": "",
         "s3": ""
       },
-      "slotIndex": 6,
+      "slotIndex": null,
       "topic": "manipulation"
     },
     {
@@ -5574,7 +5580,7 @@
       "status": "idea",
       "json": null,
       "source": "pipeline/ideen/stoffsammlung-clickbait-parodie.md",
-      "targetWeek": "2026-KW16",
+      "targetWeek": "2026-KW15",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -5586,7 +5592,7 @@
         "s2": "",
         "s3": ""
       },
-      "slotIndex": 2,
+      "slotIndex": 5,
       "topic": "manipulation"
     },
     {
@@ -5638,7 +5644,7 @@
       "status": "idea",
       "json": null,
       "source": "pipeline/ideen/stoffsammlung-clickbait-parodie.md",
-      "targetWeek": "2026-KW14",
+      "targetWeek": null,
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -5650,7 +5656,7 @@
         "s2": "",
         "s3": ""
       },
-      "slotIndex": 0,
+      "slotIndex": null,
       "topic": "manipulation"
     },
     {
@@ -5744,7 +5750,7 @@
       "status": "idea",
       "json": null,
       "source": "pipeline/ideen/stoffsammlung-clickbait-parodie.md",
-      "targetWeek": null,
+      "targetWeek": "2026-KW16",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -5756,7 +5762,8 @@
         "s2": "",
         "s3": ""
       },
-      "topic": "manipulation"
+      "topic": "manipulation",
+      "slotIndex": 5
     },
     {
       "id": "idea-clickbait-parodie-exzellente-lehre-innovative-forschung",
@@ -6828,7 +6835,7 @@
         "s2": "",
         "s3": ""
       },
-      "slotIndex": 2,
+      "slotIndex": 3,
       "topic": "studium"
     },
     {
