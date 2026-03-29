@@ -9,7 +9,7 @@ Erstelle `posts/mein-post.json`:
 ```json
 {
   "id": "mein-post",
-  "type": "contrarian",
+  "type": "led-wall",
   "accentColor": "#FACC15",
   "slide1": {
     "bigText": "Aha.",
@@ -48,7 +48,7 @@ Composition im Dropdown links auswählen. Safe-Zone-Overlay zeigt die verbotenen
 | Feld | Pflicht | Beschreibung |
 |---|---|---|
 | `id` | ja | Eindeutiger Bezeichner |
-| `type` | ja | `"contrarian"` (weitere: `"nachtgedanke"`, `"witz"`, `"newsjacking"`) |
+| `type` | ja | `"led-wall"` \| `"billboard"` \| `"terminal"` \| `"newsjacking"` \| `"slideshow"` \| `"nachtgedanke"` \| `"selbstironie"` \| `"wusstest-du"` \| `"witz"` |
 | `accentColor` | ja | Hex-Farbe (`"#FACC15"` gelb, `"#EF4444"` rot, `"#3B82F6"` blau, `"#22C55E"` grün, `"#8B5CF6"` lila, `"#F97316"` orange, `"#F0EDE8"` creme) |
 | `isAd` | nein | Legacy-Feld, wird nicht mehr gebraucht |
 | `slide1.bigText` | nein | Reaktionswort ("Aha.", "Stimmt."). Leer lassen wenn kein Reaktionswort passt. Font skaliert automatisch nach Länge. Mehrzeilig mit `\n` möglich. |

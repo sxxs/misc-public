@@ -5,40 +5,82 @@
 ```
 posts/*.json          ← Post-Daten (hier befüllen)
 src/Root.tsx          ← Compositions registrieren (einmalig pro neuem Post-Typ)
-src/compositions/     ← Composition-Templates
-  Contrarian.tsx      ← Quote → Reaktion → Erklärung → Punchline
-  Newsjacking.tsx     ← News-Screenshot → Reaktion → Erklärung → Punchline
+src/compositions/     ← Composition-Templates (= Visual Designs)
+  LedWall.tsx         ← LED-Raster: Quote → Reaktion → Argument → Punchline (ehem. Contrarian.tsx)
+  Billboard.tsx       ← Schwarz-weiß, große Typo, Fade-In (+ Captions-Modus)
+  Terminal.tsx        ← CRT-Monospace, Typing-Animation (+ Flow-Modus mit Pausen)
+  Newsjacking.tsx     ← News-Screenshot + Halftone → Kommentar → Punchline
+  Slideshow.tsx       ← Foto-basiert mit Pixelation/Saturierung-Effekten
   Nachtgedanke.tsx    ← Uhrzeit → Gedankenfluss → Closing
-  Witz.tsx            ← Setup → Punchline
-  Selbstironie.tsx    ← Selbstkritischer Witz über die Uni
+  Selbstironie.tsx    ← Selbstkritischer Witz
   WusstestDu.tsx      ← Wusstest-du-Fakten
+  Witz.tsx            ← Setup → Punchline
 src/components/       ← Shared UI
   LedWall.tsx         ← LED-Raster-Background (s1/s2/s3 Modi)
   PunchlineSlide.tsx  ← Slide 3 (alle Typen)
   TypewriterText.tsx  ← Typewriter-Animation mit Bounding Boxes
   GlitchText.tsx      ← Grosser Glitch-Text (Reaktion in S1)
-  DirtyCutout.tsx     ← Schmutziger Rahmen für Slide-2-Text
-src/utils/timing.ts   ← Dauer-Berechnung (computeAct2Duration, computeAct3Duration)
+  DirtyCutout.tsx     ← Schmutziger Rahmen fuer Slide-2-Text
+  PhotoFrame.tsx      ← Foto mit Effekten (Pixelation, Saturierung, Tint)
+  CaptionSequence.tsx ← Billboard-Captions: Rapid Cuts
+  TerminalFlow.tsx    ← Terminal-Flow: Durchgehender Text mit Pausen
+src/utils/timing.ts   ← Dauer-Berechnung
 src/styles/colors.ts  ← Farb-Konstanten
 ```
 
 ---
 
-## Post-Typen
+## Visual Designs (Remotion Compositions)
 
-### `contrarian`
-**Ablauf:** Quote des Gegners (S1) → einzeilige Reaktion mit Glitch → Erklärung (S2, Typewriter) → Punchline (S3)
-**Hintergrund:** LED-Wall auf allen drei Slides
+Das `design`-Feld in plan.json bestimmt welche Remotion-Composition genutzt wird:
 
-### `newsjacking`
-**Ablauf:** News-Screenshot mit Glitch-Effekten (S1) → Reaktion → Erklärung (S2) → Punchline (S3)
-**Hintergrund:** Bild mit Chromatic Aberration + Film Grain + Scanlines (bereits implementiert)
+### `led-wall` (design: pixel-wall)
+**Ablauf:** Quote (S1) → Reaktionswort mit Glitch → Argument (S2, Typewriter) → Punchline (S3)
+**Hintergrund:** 24×48 LED-Raster, Glitch-Effekte, Musik mit Beat-Sync
+**Fuer:** contrarian, parodie, overselling, wusstest-du, merkste-selber
 
-### `nachtgedanke`
-**Ablauf:** Uhrzeit (S1) → langer nachdenklicher Text (S2) → kurzes Closing (S3)
+### `billboard` (design: billboard)
+**Ablauf:** Hook-Text (S1) → Argument (S2, Fade) → Punchline (S3, Glow)
+**Hintergrund:** Reines Schwarz, keine LEDs
+**Captions-Modus:** Wenige Wörter gleichzeitig, harte Cuts, Zeitungsausschnitt-Look
+**Fuer:** aphorismus, merkste-selber
 
-### `witz`
-**Ablauf:** Setup-Frage (S1) → Auflösung (S2) → Punchline (S3)
+### `terminal` (design: terminal)
+**Ablauf:** Prompt (S1, Cursor blinkt) → Typing (S2, Zeichen fuer Zeichen) → Closing (S3)
+**Hintergrund:** CRT-Scanlines, Monospace, Glow
+**Flow-Modus:** Ein durchgehender Text mit eingebauten Pausen statt 3 Slides
+**Farben:** green (#33FF33), amber (#FFB000), white
+**Fuer:** nahkastchen, nachtgedanke, selbstironie
+
+### `newsjacking` (design: newsjacking)
+**Ablauf:** News-Screenshot + Glitch (S1) → Kommentar (S2) → Punchline (S3)
+**Hintergrund:** Halftone + Film Grain + Scanlines
+
+### `slideshow` (design: raw-photo)
+**Ablauf:** Foto(s) mit digitalen Effekten + optionalem Text-Overlay
+**Effekte:** depixelate, pixelate, pixel-strips, saturate, desaturate, tint, drift
+**Fuer:** Stress-Bilder, Campus-Slideshows, Ertappt-Fotos
+
+---
+
+## Content-Typen (rhetorischer Ansatz)
+
+Der `type` in plan.json beschreibt WIE der Post aufgebaut ist (unabhaengig vom visuellen Design):
+
+| Type | Beschreibung | Typisches Design |
+|------|-------------|-----------------|
+| contrarian | Gegenposition, "Es wird ja immer gesagt..." | pixel-wall |
+| merkste-selber | Denkanstoß → "Merkste selber, oder?" | billboard / pixel-wall |
+| aphorismus | Kurze Beobachtung, keine Moral | billboard |
+| wusstest-du | Erklaer-Post, ueberraschende Fakten | pixel-wall |
+| parodie | Clickbait/Marketing-Mechanik entlarven | pixel-wall |
+| overselling | Absurde Marketing-Parallelen | pixel-wall |
+| nachtgedanke | 23-Uhr-Gedanke, verletzlich, persoenlich | terminal (amber) |
+| nahkastchen | Persoenliche Anekdote, kafkaesk, "Ich habe Fragen" | terminal (green) |
+| selbstironie | Kanal reflektiert eigene Absurditaet | terminal |
+| newsjacking | Aktuelle Nachricht + herdom-Kommentar | newsjacking |
+| stitch | Reaction auf virales TikTok | App-nativ |
+| witz | Setup → Punchline | pixel-wall |
 
 ---
 
@@ -47,8 +89,8 @@ src/styles/colors.ts  ← Farb-Konstanten
 ```jsonc
 {
   // ── Meta ─────────────────────────────────────────────────────────
-  "id": "2026-03-contrarian-vorhange",     // eindeutige ID (kebab-case)
-  "type": "contrarian",                    // s. Post-Typen oben
+  "id": "2026-03-vorhange",                 // eindeutige ID (kebab-case)
+  "type": "led-wall",                      // s. Visual Designs oben (led-wall/billboard/terminal/newsjacking/slideshow)
   "accentColor": "#FACC15",               // s. Farb-Palette unten
   "isAd": true,                           // Absender in S3 anzeigen (nur bei #ad-Posts)
 
@@ -133,17 +175,16 @@ Formel: `max(150, 150 + 4f × PunchlineWörter + 3f × ButtonWörter)`
 3. `./studio.sh` starten → im Studio scrubben
 4. Wenn ok: `./render.sh posts/<datum>-<id>.json`
 
-### Template: Contrarian
+### Template: LED Wall (Pixel Wall)
 
 ```json
 {
   "id": "2026-MM-DD-stichwort",
-  "type": "contrarian",
+  "type": "led-wall",
   "accentColor": "#FACC15",
-  "isAd": true,
   "slide1": {
     "bigText": "Reaktion.",
-    "smallText": "Der Satz, den man immer hört."
+    "smallText": "Der Satz, den man immer hoert."
   },
   "slide2": {
     "text": "Zeile eins.\nZeile zwei."

@@ -48,7 +48,8 @@ Akzentfarbe          -- variiert nach Design und Thema
 | Visueller Kern | 24x48 LED-Grid mit Retro-Sprite-Patterns |
 | Grid-Signal | Erkennbares Muster in Gelb/Farbe auf dunklem Grund |
 | Akzentfarbe | WIAI_YELLOW (default), WIAI_RED, WIAI_BLUE, WIAI_WHITE |
-| Einsatz | Contrarian, Ertappt, Gaming, WusstestDu |
+| Remotion-Type | `led-wall` (ehemals `contrarian`) |
+| Einsatz | Contrarian, Ertappt, Parodie, Overselling, WusstestDu |
 | Effekte | Glitch, Overdrive, Mic-Drop-Flash, Staggered Enter/Exit |
 
 **Patterns:** pacman, space-invader, maze, lock, eye, heartbeat, binary-rain (+ weitere nach Bedarf)
@@ -67,7 +68,9 @@ Akzentfarbe          -- variiert nach Design und Thema
 | Hintergrund | Schwarz + dezente Scanlines (Opacity 0.06) |
 | Cursor | `Block` (530ms on/off), Farbe = Textfarbe |
 | Typing-Speed | 2 Frames/Zeichen, gelegentlich 3 (menschliches Tippen) |
-| Einsatz | Nachtgedanke, Social Engineering, Selbstzerstörung, "Ich habe Fragen" |
+| Remotion-Type | `terminal` |
+| Modi | Classic (3-Act) oder Flow (durchgehender Text mit Pausen) |
+| Einsatz | Naehkaestchen, Nachtgedanke, Selbstironie, "Ich habe Fragen" |
 
 **Farbmodi:**
 
@@ -86,21 +89,40 @@ Akzentfarbe          -- variiert nach Design und Thema
 | Hintergrund | Reines Schwarz, keine Textur, keine Scanlines |
 | Font | Space Grotesk 700, 96-120px |
 | Akzentfarbe | Immer WIAI_YELLOW, nur als Glow auf S3 |
-| Einsatz | Merkste selber, Unpopular Opinion, Aphorismen |
+| Remotion-Type | `billboard` |
+| Modi | Classic (Fade-In) oder Captions (Rapid Cuts, Zeitungsausschnitt-Look) |
+| Einsatz | Aphorismus, Merkste selber |
 
 **Gelb-Glow (nur S3):** `text-shadow: 0 0 60px rgba(250, 204, 21, 0.12)`
+
+## Wann welches Design
+
+### 4. Raw-Photo / Slideshow
+
+| Eigenschaft | Detail |
+|-------------|--------|
+| Visueller Kern | Fotos mit digitalen Effekten statt Text-Design |
+| Remotion-Type | `slideshow` |
+| Effekte | depixelate, pixelate, pixel-strips, saturate, desaturate, tint, drift |
+| Einsatz | Stress-Bilder, Campus-Slideshows, Ertappt-Fotos |
+
+**Effekt-Kombinationen:**
+- Reveal→Text: Bild depixeliert → haelt → pixeliert + Text-Overlay
+- Text→Reveal: Text auf verpixeltem BG → Bild wird scharf
+- Slideshow: 5-8 Bilder, harte Cuts, abwechselnd Effekte
 
 ## Wann welches Design
 
 | Situation | Design |
 |-----------|--------|
 | Thematischer Post mit Argument | Pixel Wall |
-| Gaming, Hacker, KI | Pixel Wall |
-| Nachdenklich, spät, persönlich | Terminal |
-| IT-Sicherheit als Anekdote | Terminal |
-| Kurze Aussage, max. 2-3 Sätze/Slide | Billboard |
-| Unpopular Opinion, Merkste selber | Billboard |
-| Stress-Bilder | App-nativ (kein Design) |
+| Parodie, Overselling, Ertappt | Pixel Wall |
+| Nachdenklich, spaet, persoenlich | Terminal |
+| Anekdote, Social Engineering | Terminal |
+| Kurze Aussage, Aphorismus | Billboard |
+| Merkste selber | Billboard |
+| Foto-Moment, Stress-Bild | Raw-Photo |
+| Campus/Stadt-Impressionen | Raw-Photo (Slideshow) |
 | Stitches/Duette | App-nativ |
 
 ## 3-Slide-Dramaturgie

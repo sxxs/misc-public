@@ -44,12 +44,41 @@ pr-wiai/
 └── README.md              Projektuebersicht
 ```
 
+## Datenmodell (plan.json)
+
+Jeder Post hat drei unabhaengige Dimensionen. NIEMALS plan.json from scratch generieren — enthält handkurierte Labels fuer 400+ Posts.
+
+### Content-Type (rhetorischer Ansatz — WIE es gesagt wird)
+`contrarian` Gegenposition, "Es wird ja immer gesagt..." | `merkste-selber` Denkanstoß → "Oder?" | `aphorismus` Kurze Beobachtung, keine Moral | `wusstest-du` Erklaerung, Fakten | `parodie` Clickbait/Marketing entlarven | `overselling` Absurde Marketing-Parallelen | `nachtgedanke` 23-Uhr-Gedanke, verletzlich | `nahkastchen` Persoenliche Anekdote, kafkaesk | `selbstironie` Kanal/Dekan macht sich laecherlich | `newsjacking` Aktuelle News + Kommentar | `stitch` Reaction-Video | `witz` Witz
+
+### Visual Design (WIE es aussieht)
+`pixel-wall` LED-Raster, 3 Slides, Glitch-Effekte, Musik | `billboard` Schwarz-weiß, große Typo, plakativ | `terminal` Monospace, CRT-Scanlines, Typing-Animation | `newsjacking` Screenshot + Halftone | `raw-photo` Foto-basiert, Pixelation/Saturierung-Effekte
+
+Design bestimmt den Remotion-Kompositionstyp beim Export:
+- pixel-wall → Remotion `led-wall` (ehemals `contrarian`)
+- billboard → Remotion `billboard`
+- terminal → Remotion `terminal`
+
+### Thema / Topic (WORUM es inhaltlich geht)
+`tech` Informatik-Konzepte, KI | `datenschutz` Privacy, Tracking | `studium` Studienalltag | `karriere` Jobmarkt, Gehalt | `identitaet` "Passt CS zu mir?", Schwellenangst | `manipulation` Aufmerksamkeits-Engineering, Gaming-Psychologie | `erwachsenwerden` Adulting, Generationenwechsel | `alltag` Tech-Absurditaet Kat. B | `uni` Uni-Buerokratie Kat. A | `social-media` Algorithmen, Plattformen | `ertappt` Denkfehler, Bias | `wiai-ad` Explizite WIAI-Werbung | `meta` Kanal reflektiert sich
+
+### Dashboard (Pipeline-UI)
+Zwei Modi: **PLAN** (4 Wochen operativ, Drag-Drop) und **MIX** (26 Wochen, Typ- + Design-Quadrate, Topic-Keywords, Wochen-Notizen). Detail-Panel zeigt design-abhaengige Felder.
+
+### Slide-Felder je Design
+- **Pixel-Wall**: bigText (Reaktionswort) + smallText (Zitat) + s2 (Argument) + s3 (Punchline) + button/uebrigens
+- **Billboard**: bigText (Hook) + s2 (Argument) + s3 (Punchline) + button/uebrigens
+- **Terminal**: bigText (Prompt, z.B. "$ 23:47") + smallText (Text Teil 1) + s2 (Text Teil 2) + s3 (Schlusszeile), terminalColor (green/amber/white)
+- **Raw-Photo**: bigText (Text-Overlay), Rest in notes (Foto-Beschreibung, Effekt)
+
 ## Wichtige Konventionen
 
 ### Pipeline-Stufen
 Status wird in `plan.json` getrackt, NICHT durch Verschieben von Dateien:
-- `ready` — JSON existiert, noch kein Datum
-- `scheduled` — JSON + Zieldatum (targetWeek) gesetzt
+- `idea` — Text-Entwurf, noch nicht produktionsreif
+- `draft` — Ausformuliert, braucht Review
+- `ready` — Produktionsreif, noch kein Datum
+- `scheduled` — Zieldatum (targetWeek) gesetzt
 - `published` — gepostet, Datum + Plattform-Links eingetragen
 
 ### Duale Datenhaltung
