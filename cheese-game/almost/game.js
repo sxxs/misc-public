@@ -132,11 +132,12 @@ function DifficultyDots({ level }) {
 
 // ── Landing Screen ────────────────────────────────────────────────────────────
 
-function LandingScreen({ onStart, stats }) {
+function LandingScreen({ onStart, stats, opponentScores, opponentTotal }) {
   const today = todayStr();
   const todayRun = stats.history && stats.history.find(r => r.date === today);
   const streak = stats.streak || 0;
   const allTimeHigh = stats.allTimeHigh || 0;
+  const isChallenged = opponentScores !== null;
 
   return (
     <div className="flex flex-col items-center justify-between h-full safe-top safe-bottom fade-up"
@@ -145,10 +146,26 @@ function LandingScreen({ onStart, stats }) {
       <div className="flex flex-col items-center gap-3 mt-6">
         <div style={{ fontSize: 64, lineHeight: 1 }}>📸</div>
         <h1 style={{ fontSize: 48, fontWeight: 700, letterSpacing: '-2px', color: '#f0f0f0' }}>Almost.</h1>
-        <p style={{ color: '#888', textAlign: 'center', maxWidth: 280, lineHeight: 1.6, fontSize: 14 }}>
-          Mach ein Foto. Verfehl das Ziel knapp. Versuch's nochmal.
-        </p>
+        {!isChallenged && (
+          <p style={{ color: '#888', textAlign: 'center', maxWidth: 280, lineHeight: 1.6, fontSize: 14 }}>
+            Mach ein Foto. Verfehl das Ziel knapp. Versuch's nochmal.
+          </p>
+        )}
       </div>
+
+      {/* Challenge banner */}
+      {isChallenged && (
+        <div style={{
+          background: '#0f1a0f', border: '1px solid #2a4a2a', borderRadius: 14,
+          padding: '16px 20px', width: '100%', maxWidth: 300, textAlign: 'center'
+        }}>
+          <div style={{ color: '#a3e635', fontWeight: 700, fontSize: 15, marginBottom: 4 }}>⚔️ Du wurdest herausgefordert</div>
+          <div style={{ color: '#666', fontSize: 13, lineHeight: 1.5 }}>
+            Jemand hat <span style={{ color: '#f0f0f0', fontWeight: 600 }}>{opponentTotal}/500</span> geschafft.<br/>
+            Kannst du das toppen?
+          </div>
+        </div>
+      )}
 
       {/* Stats row */}
       {(streak > 0 || allTimeHigh > 0) && (
@@ -191,13 +208,13 @@ function LandingScreen({ onStart, stats }) {
         <button
           onClick={onStart}
           style={{
-            background: '#f0f0f0', color: '#0a0a0a',
-            border: 'none', borderRadius: 14,
+            background: isChallenged ? '#a3e635' : '#f0f0f0',
+            color: '#0a0a0a', border: 'none', borderRadius: 14,
             padding: '16px', fontSize: 18, fontWeight: 700,
             cursor: 'pointer', width: '100%', fontFamily: 'inherit'
           }}
         >
-          {todayRun ? 'Nochmal spielen' : 'Spielen'}
+          {isChallenged ? 'Challenge annehmen ⚔️' : todayRun ? 'Nochmal spielen' : 'Spielen'}
         </button>
       </div>
     </div>
@@ -411,7 +428,9 @@ function SummaryScreen({ challenges, scores, seed, stats, onPlayAgain, onHome })
   };
 
   const handleChallenge = async () => {
-    const msg = `Kannst du das besser? Ich hab ${total}/500. ${challengeUrl}`;
+    const vsParam = encodeScores(scores);
+    const challengeUrlWithScores = `${window.location.origin + window.location.pathname}?s=${encodeSeed(seed)}&vs=${vsParam}`;
+    const msg = `Kannst du das besser? Ich hab ${total}/500 – „${rank}". ${challengeUrlWithScores}`;
     if (navigator.share) {
       try { await navigator.share({ text: msg }); return; } catch {}
     }
@@ -487,6 +506,92 @@ function SummaryScreen({ challenges, scores, seed, stats, onPlayAgain, onHome })
   );
 }
 
+// ── VS Comparison Screen ──────────────────────────────────────────────────────
+
+function VSScreen({ challenges, myScores, theirScores, seed, onRematch, onPlayAgain, onHome }) {
+  const myTotal    = myScores.reduce((a, b) => a + b, 0);
+  const theirTotal = theirScores.reduce((a, b) => a + b, 0);
+  const iWon = myTotal > theirTotal;
+  const tied = myTotal === theirTotal;
+  const vsComment = getVSComment(myTotal, theirTotal);
+
+  const handleRematch = async () => {
+    const url = `${window.location.origin}${window.location.pathname}?s=${encodeSeed(seed)}&vs=${encodeScores(myScores)}`;
+    const msg = `Revanche! Ich hab ${myTotal}/500 — kannst du das toppen? ${url}`;
+    if (navigator.share) { try { await navigator.share({ text: msg }); return; } catch {} }
+    try { await navigator.clipboard.writeText(msg); alert('Revanche-Link kopiert!'); } catch { alert(msg); }
+  };
+
+  const color = (s) => s >= 90 ? '#22c55e' : s >= 70 ? '#a3e635' : s >= 40 ? '#facc15' : '#f87171';
+
+  return (
+    <div className="flex flex-col h-full safe-top safe-bottom fade-up"
+         style={{ padding: '1.5rem', overflowY: 'auto' }}>
+
+      <div className="flex flex-col items-center gap-2 mt-4">
+        <div style={{ fontSize: 40 }}>{tied ? '🤝' : iWon ? '🏆' : '💀'}</div>
+        <div className="flex items-center gap-4">
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: '#555', fontSize: 11, marginBottom: 2 }}>Sie/Er</div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: !iWon && !tied ? '#22c55e' : '#f87171' }}>{theirTotal}</div>
+          </div>
+          <div style={{ color: '#444', fontSize: 20 }}>vs</div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: '#555', fontSize: 11, marginBottom: 2 }}>Du</div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: iWon ? '#22c55e' : tied ? '#facc15' : '#f87171' }}>{myTotal}</div>
+          </div>
+        </div>
+        <p style={{ color: '#777', fontSize: 13, fontStyle: 'italic', textAlign: 'center', maxWidth: 280 }}>
+          „{vsComment}"
+        </p>
+      </div>
+
+      {/* Per-challenge comparison */}
+      <div className="flex flex-col gap-2 mt-6">
+        {challenges.map((c, i) => {
+          const mine = myScores[i], theirs = theirScores[i];
+          const mineWon = mine >= theirs;
+          return (
+            <div key={c.id} style={{ background: '#111', borderRadius: 10, padding: '10px 14px', border: '1px solid #222' }}>
+              <div style={{ color: '#888', fontSize: 12, marginBottom: 6 }}>{c.title}</div>
+              <div className="flex items-center gap-2">
+                <div style={{ flex: 1, textAlign: 'right' }}>
+                  <span style={{ fontSize: 18, fontWeight: 700, color: !mineWon ? '#22c55e' : '#555' }}>{theirs}</span>
+                </div>
+                <div style={{ color: '#333', fontSize: 11, padding: '0 6px' }}>vs</div>
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontSize: 18, fontWeight: 700, color: mineWon ? color(mine) : '#555' }}>{mine}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex flex-col gap-3 mt-6 pb-4">
+        <button onClick={handleRematch} style={{
+          background: '#1a1a2a', color: '#a3e635', border: '1px solid #2a3a1a', borderRadius: 12,
+          padding: '13px', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', width: '100%'
+        }}>
+          Revanche schicken ⚔️
+        </button>
+        <button onClick={onPlayAgain} style={{
+          background: '#f0f0f0', color: '#0a0a0a', border: 'none', borderRadius: 12,
+          padding: '14px', fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', width: '100%'
+        }}>
+          Neues Spiel
+        </button>
+        <button onClick={onHome} style={{
+          background: 'transparent', color: '#444', border: 'none',
+          padding: '8px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit'
+        }}>
+          Startseite
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── App ───────────────────────────────────────────────────────────────────────
 
 function App() {
@@ -498,12 +603,15 @@ function App() {
   const [seed, setSeed] = useState(0);
   const [lastResult, setLastResult] = useState(null);
   const [stats, setStats] = useState(() => loadStats());
+  const [opponentScores, setOpponentScores] = useState(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const s = params.get('s') ? decodeSeed(params.get('s')) : getDailySeed();
     setSeed(s);
     setChallenges(selectChallenges(s));
+    const vs = params.get('vs');
+    if (vs) setOpponentScores(decodeScores(vs));
   }, []);
 
   const startRun = () => {
@@ -551,19 +659,16 @@ function App() {
   const handleNext = () => {
     const nextIndex = challengeIndex + 1;
     if (nextIndex >= challenges.length) {
-      // finalScores includes the last challenge's score just set
       const finalScores = [...scores];
-      // scores state may not have updated yet — use lastResult to patch
       if (lastResult) finalScores[challengeIndex] = Math.max(finalScores[challengeIndex], lastResult.score);
       const newStats = saveRun(finalScores);
       setStats(newStats);
-      const sc = finalScores.map(s => s.toString(36).padStart(2, '0')).join('');
       const url = new URL(window.location.href);
       url.searchParams.set('s', encodeSeed(seed));
-      url.searchParams.set('sc', sc);
+      url.searchParams.set('sc', encodeScores(finalScores));
       window.history.replaceState({}, '', url.toString());
       setScores(finalScores);
-      setPhase('summary');
+      setPhase(opponentScores ? 'versus' : 'summary');
     } else {
       setChallengeIndex(nextIndex);
       setAttemptNumber(0);
@@ -575,9 +680,18 @@ function App() {
   if (!challenges.length) return null;
   const challenge = challenges[challengeIndex] || challenges[0];
 
+  const opponentTotal = opponentScores ? opponentScores.reduce((a, b) => a + b, 0) : 0;
+
   return (
     <div style={{ width: '100%', height: '100%', background: '#0a0a0a', position: 'relative' }}>
-      {phase === 'landing' && <LandingScreen onStart={startRun} stats={stats} />}
+      {phase === 'landing' && (
+        <LandingScreen
+          onStart={startRun}
+          stats={stats}
+          opponentScores={opponentScores}
+          opponentTotal={opponentTotal}
+        />
+      )}
       {phase === 'permission' && (
         <PermissionScreen onRetry={() => setPhase('challenge')} onUpload={handleUpload} />
       )}
@@ -607,6 +721,17 @@ function App() {
           scores={scores}
           seed={seed}
           stats={stats}
+          onPlayAgain={startRun}
+          onHome={() => setPhase('landing')}
+        />
+      )}
+      {phase === 'versus' && opponentScores && (
+        <VSScreen
+          challenges={challenges}
+          myScores={scores}
+          theirScores={opponentScores}
+          seed={seed}
+          onRematch={() => {}}
           onPlayAgain={startRun}
           onHome={() => setPhase('landing')}
         />
