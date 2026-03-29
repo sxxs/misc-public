@@ -8,6 +8,7 @@ import {
   BILLBOARD_ACT3_DURATION,
   computeAct2Duration,
 } from "../utils/timing";
+import { CaptionSequence } from "../components/CaptionSequence";
 
 // ── Shared wrapper: solid black, no halftone, no corner clusters ────────────
 const BillboardFrame: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -160,6 +161,12 @@ const BillboardAct3: React.FC<{ post: Post }> = ({ post }) => {
 
 // ── Billboard composition ───────────────────────────────────────────────────
 export const Billboard: React.FC<{ post: Post }> = ({ post }) => {
+  // Captions mode: rapid-cut lyric-video style
+  if (post.billboard?.mode === "captions" && post.billboard.captions) {
+    return <CaptionSequence captions={post.billboard.captions} />;
+  }
+
+  // Classic mode: 3-act fade-in
   const act2Duration = computeAct2Duration(post.slide2.text);
   const act2Start = BILLBOARD_ACT1_DURATION;
   const act3Start = act2Start + act2Duration;

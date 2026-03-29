@@ -5396,10 +5396,11 @@
       "tag": "stark",
       "tagComment": null,
       "slides": {
-        "bigText": "5 Gründe.",
-        "smallText": "Warum du Informatik studieren\nsolltest. Nummer 3 wird dich\nSCHOCKIEREN.",
-        "s2": "Nummer 1: Du magst Probleme lösen.\nNummer 2: Du magst Probleme lösen.\nNummer 3: Du lernst wie man\nSeitenzahlen in Word einstellt.\n\nSpoiler: Das lernst du nicht.",
-        "s3": "Du hast wegen der 3 geklickt.\nDas ist Clickbait.\n\nJetzt weißt du wie es funktioniert."
+        "bigText": "Nummer 3 wird dich\nSCHOCKIEREN.",
+        "smallText": "5 Gründe warum du Informatik studieren solltest.",
+        "s2": "Nummer 1: Du magst Probleme lösen.\nNummer 2: Du magst Probleme lösen.\nNummer 3: Du lernst wie man Seitenzahlen in Word einstellt.\n\nSpoiler: Das lernst du nicht.",
+        "s3": "Du hast wegen der 3 geklickt.\nDas ist Clickbait.\n\nJetzt weißt du wie es funktioniert.",
+        "button": ""
       },
       "slotIndex": 2,
       "topic": "manipulation"

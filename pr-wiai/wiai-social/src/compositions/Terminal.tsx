@@ -5,6 +5,7 @@ import { BLACK, TERMINAL_GREEN, TERMINAL_AMBER } from "../styles/colors";
 import { spaceMonoFamily, spaceGroteskFamily } from "../styles/fonts";
 import { scanlineGradient } from "../styles/textures";
 import { TerminalText } from "../components/TerminalText";
+import { TerminalFlow } from "../components/TerminalFlow";
 import {
   TERMINAL_ACT1_DURATION,
   TERMINAL_ACT3_DURATION,
@@ -163,6 +164,21 @@ const TerminalAct3: React.FC<{ post: Post; color: string }> = ({ post, color }) 
 // ── Terminal composition ────────────────────────────────────────────────────
 export const Terminal: React.FC<{ post: Post }> = ({ post }) => {
   const color = resolveTerminalColor(post.terminal?.color);
+
+  // Flow mode: continuous text with embedded pauses
+  if (post.terminal?.mode === "flow" && post.terminal.blocks) {
+    return (
+      <TerminalFrame>
+        <TerminalFlow
+          blocks={post.terminal.blocks}
+          baseColor={color}
+          prompt={post.terminal.prompt ?? "$"}
+        />
+      </TerminalFrame>
+    );
+  }
+
+  // Classic mode: 3-act structure
   const act2Duration = computeTerminalAct2Duration(post.slide2.text);
   const act2Start = TERMINAL_ACT1_DURATION;
   const act3Start = act2Start + act2Duration;
