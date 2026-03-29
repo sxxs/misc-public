@@ -903,7 +903,289 @@ const CHALLENGES = [
       perfect: ['Hell und strukturreich. Eindrucksvoll.', 'Das schreit Überforderung. Korrekt.', 'Sehr ordentlich komplex und hell.'],
       good:    ['Fast hell genug und fast kantenreich genug.', 'Ordentliche Kombination.', 'Knapp an beiden Zielen.'],
       mid:     ['Heller oder strukturreicher. Gerne beides.', 'Nur ein Ziel erfüllt.', 'Erkennbar auf dem richtigen Weg.'],
-      bad:     ['Dunkel und ruhig. Das Gegenteil.', 'Weder hell noch strukturreich.', 'Das Bild hat sich das einfach gemacht.']
+      bad:     ['Dunkel und ruhig. Das Gegenteil.', 'Weder hell noch strukturreich.', 'Du scheinst die Aufgabe als Vorschlag verstanden zu haben.']
+    }
+  },
+
+  // ── Difficulty 2 — more ───────────────────────────────────────────────────
+  {
+    id: 'red_and_blue',
+    title: 'Rot und Blau',
+    prompt: 'Mach ein Foto mit ungefähr gleich viel Rot und Blau — kein Grün.',
+    hint: 'Rote und blaue Objekte nebeneinander, oder eine purpurne Fläche.',
+    difficulty: 2,
+    analysis: 'composite',
+    params: { sub: [
+      { analysis: 'color_ratio', params: { hueMin: 340, hueMax: 20, target: 0.22, tolerance: 0.12 }, weight: 0.5 },
+      { analysis: 'color_ratio', params: { hueMin: 200, hueMax: 260, target: 0.22, tolerance: 0.12 }, weight: 0.5 }
+    ]},
+    visualization: 'solid_fill',
+    vizParams: { color: '#882299' },
+    comments: {
+      perfect: ['Rot und Blau. In Würde vereint.', 'Das ist fast Lila. Genau das.', 'Chromatisch korrekt. Unerwarteterweise.'],
+      good:    ['Fast ausgewogen. Eine Farbe fehlt etwas.', 'Ordentliche Rot-Blau-Balance.', 'Knapp. Eine Farbe überwiegt zu sehr.'],
+      mid:     ['Mehr Rot oder mehr Blau. Nicht mehr Grün.', 'Das Verhältnis stimmt nicht.', 'Eine Farbe dominiert zu sehr.'],
+      bad:     ['Das ist grün. Die Aufgabe war das Gegenteil.', 'Weder Rot noch Blau erkennbar.', 'Du scheinst Farben anders zu sehen als das Spiel.']
+    }
+  },
+  {
+    id: 'bright_majority',
+    title: 'Überwiegend hell',
+    prompt: 'Mach ein Foto, in dem deutlich mehr als die Hälfte der Pixel hell sind.',
+    hint: 'Heller Hintergrund, Tageslicht, weiße Flächen mit kleinen dunklen Details.',
+    difficulty: 2,
+    analysis: 'pixel_ratio',
+    params: { threshold: 0.6, target: 0.65, tolerance: 0.12 },
+    visualization: 'solid_fill',
+    vizParams: { color: '#e8e8e8' },
+    comments: {
+      perfect: ['Überwiegend hell. Exakt überwiegend.', 'Zwei Drittel hell. Korrekt gezählt.', 'Das ist erfreulich klar.'],
+      good:    ['Fast zwei Drittel hell. Knapp.', 'Ordentlich hell-dominant.', 'Solide Helligkeitsverteilung.'],
+      mid:     ['Mehr helle Pixel. Noch mehr.', 'Fast fifty-fifty. Das war nicht die Aufgabe.', 'Erkennbar auf dem Weg. Noch nicht angekommen.'],
+      bad:     ['Das ist dunkel. Das Wort "überwiegend" war offenbar schwierig.', 'Die meisten Pixel sind dunkel. Falsch.', 'Du hast die Aufgabe als Herausforderung interpretiert. Richtig. Falsch beantwortet.']
+    }
+  },
+  {
+    id: 'all_colors',
+    title: 'Viele verschiedene Farben',
+    prompt: 'Mach ein Foto mit möglichst vielen verschiedenen Farben — keine soll dominieren.',
+    hint: 'Bunter Marktstand, Spielzeug, Zeichnungen, Gemüsetheke.',
+    difficulty: 2,
+    analysis: 'mono_color',
+    params: { target: 0.17, tolerance: 0.1 },
+    visualization: 'solid_fill',
+    vizParams: { gradient: true },
+    comments: {
+      perfect: ['Farblich vollständig überfordert. Korrekt.', 'Das ist ein Regenbogen ohne Plan.', 'Viele Farben. Alle gleichzeitig.'],
+      good:    ['Gute Farbvielfalt. Eine Farbe leicht dominant.', 'Ordentlich bunt-divers.', 'Fast keine dominierende Farbe.'],
+      mid:     ['Eine Farbe ist noch zu dominant.', 'Mehr Vielfalt. Weniger Eintönigkeit.', 'Der Versuch zur Buntheit ist erkennbar.'],
+      bad:     ['Das ist einfarbig. Die Aufgabe war das Gegenteil davon.', 'Eine einzige Farbe. Das war nicht die Bitte.', 'Mono statt multi. Sehr entschlossen falsch.']
+    }
+  },
+  {
+    id: 'saturated_edges',
+    title: 'Bunter Rand, graue Mitte',
+    prompt: 'Mach ein Foto mit bunten Rändern und farbloserer Mitte.',
+    hint: 'Bunte Objekte an den Seiten, neutraler Hintergrund in der Mitte.',
+    difficulty: 2,
+    analysis: 'regional_sat',
+    params: { region1: 'edges', region2: 'center', targetDelta: 0.18 },
+    visualization: 'center_spot',
+    vizParams: { centerColor: '#888888', edgeColor: '#dd4422' },
+    comments: {
+      perfect: ['Bunter Rand, ruhige Mitte. Antiintuitiv korrekt.', 'Die Farbe sitzt außen. Wie bestellt.', 'Umgekehrte Komposition. Gelungen.'],
+      good:    ['Rand bunter als Mitte. Fast überzeugend.', 'Ordentlicher Randfarb-Effekt.', 'Knapp. Mehr Rand oder weniger Mitte.'],
+      mid:     ['Rand und Mitte zu ähnlich gesättigt.', 'Mehr Farbe am Rand, mehr Grau in der Mitte.', 'Die Verteilung stimmt noch nicht.'],
+      bad:     ['Mitte bunter als Rand. Das ist das Gegenteil.', 'Keine Sättigungsverteilung erkennbar.', 'Das ist gleichmäßig falsch.']
+    }
+  },
+
+  // ── Difficulty 3 — more ───────────────────────────────────────────────────
+  {
+    id: 'v_center_bright',
+    title: 'Seiten dunkel, Mitte hell',
+    prompt: 'Mach ein Foto, das links und rechts dunkel ist und in der Mitte hell.',
+    hint: 'Ein beleuchtetes Objekt in der Mitte eines dunklen Raums.',
+    difficulty: 3,
+    analysis: 'three_zones',
+    params: { axis: 'vertical', targets: [0.1, 0.85, 0.1] },
+    visualization: 'stripes_v',
+    vizParams: {},
+    comments: {
+      perfect: ['Helle Mitte, dunkle Seiten. Spotlight-Effekt. Korrekt.', 'Das ist eine Bühne.', 'Dramatische Vertikale. Eindrucksvoll.'],
+      good:    ['Gut. Die Mitte ist heller. Fast genug.', 'Ordentlicher Spotlight.', 'Knapp am Ziel.'],
+      mid:     ['Die Mitte braucht mehr Licht. Die Seiten mehr Dunkel.', 'Zu gleichmäßig.', 'Die drei Zonen müssen kontrastreicher werden.'],
+      bad:     ['Links und Mitte und Rechts sind gleich hell.', 'Kein vertikales Muster erkennbar.', 'Das ist gleichmäßig. Gleichmäßig ist die falsche Antwort.']
+    }
+  },
+  {
+    id: 'h_center_bright',
+    title: 'Oben dunkel, Mitte hell, unten dunkel',
+    prompt: 'Mach ein Foto mit einem hellen Streifen in der Mitte und dunklen Rändern oben und unten.',
+    hint: 'Horizontes mit hellem Horizont, oder ein beleuchtetes Band in der Mitte.',
+    difficulty: 3,
+    analysis: 'three_zones',
+    params: { axis: 'horizontal', targets: [0.1, 0.85, 0.1] },
+    visualization: 'three_bands_h',
+    vizParams: { colors: ['#111111', '#eeeeee', '#111111'] },
+    comments: {
+      perfect: ['Helles Band in der Mitte. Geometrisch korrekt.', 'Wie ein Horizont im Dunkeln.', 'Das schreit Filmstill.'],
+      good:    ['Gut. Die Mitte ist heller. Noch deutlicher bitte.', 'Ordentliches Helligkeitsband.', 'Knapp am Ziel.'],
+      mid:     ['Die drei Zonen müssen kontrastreicher werden.', 'Zu gleichmäßig verteilt.', 'Die Mitte braucht mehr Licht.'],
+      bad:     ['Oben, Mitte und Unten sind gleich hell.', 'Das ist gleichmäßig. Gleichmäßig ist die falsche Antwort.', 'Keine Zonenstruktur erkennbar.']
+    }
+  },
+  {
+    id: 'right_colorful_left_gray',
+    title: 'Rechts bunt, links grau',
+    prompt: 'Mach ein Foto mit bunten Farben rechts und farblos/grau links.',
+    hint: 'Bunte Objekte auf der rechten Seite, neutraler Hintergrund links.',
+    difficulty: 3,
+    analysis: 'regional_sat',
+    params: { region1: 'right', region2: 'left', targetDelta: 0.22 },
+    visualization: 'half_split_v',
+    vizParams: { left: '#888888', right: '#dd6633' },
+    comments: {
+      perfect: ['Rechts bunt, links farblos. Lateral korrekt.', 'Die Farbe sitzt rechts. Wie bestellt.', 'Seitenrichtig gesättigt.'],
+      good:    ['Guter Unterschied. Noch überzeugender.', 'Ordentliche Seitenverteilung.', 'Knapp.'],
+      mid:     ['Mehr Farbe rechts oder mehr Grau links.', 'Zu gleichmäßig.', 'Der Unterschied ist kaum erkennbar.'],
+      bad:     ['Links und rechts sind gleich langweilig.', 'Keine Sättigungsverteilung erkennbar.', 'Das ist die falsche Seite. Oder keine Seite.']
+    }
+  },
+  {
+    id: 'colorful_bottom_gray_top',
+    title: 'Unten bunt, oben grau',
+    prompt: 'Mach ein Foto mit bunten Farben unten und grau/farblosem Bereich oben.',
+    hint: 'Bunte Gegenstände auf dem Boden, neutraler Hintergrund oder Wand dahinter.',
+    difficulty: 3,
+    analysis: 'regional_sat',
+    params: { region1: 'bottom', region2: 'top', targetDelta: 0.25 },
+    visualization: 'half_sat_h',
+    vizParams: {},
+    comments: {
+      perfect: ['Unten bunt, oben farblos. Bodennah korrekt.', 'Farbverlauf von lebendig nach nichts. Gut.', 'Das schreit Stillleben.'],
+      good:    ['Guter Sättigungsunterschied. Knapp.', 'Ordentliche vertikale Farbverteilung.', 'Fast überzeugend.'],
+      mid:     ['Mehr Farbe unten oder mehr Grau oben.', 'Zu gleichmäßig.', 'Der Unterschied ist erkennbar, aber zu schwach.'],
+      bad:     ['Oben und unten gleichmäßig langweilig.', 'Kein Unterschied erkennbar.', 'Einheitlich. Einheitlich falsch.']
+    }
+  },
+
+  // ── Difficulty 4 — more ───────────────────────────────────────────────────
+  {
+    id: 'v_stripes_fine',
+    title: 'Feine Vertikalstreifen',
+    prompt: 'Mach ein Foto mit vielen feinen vertikalen Streifen.',
+    hint: 'Zaunlatten, Bücherrücken nebeneinander, Schilf, senkrechte Gitter.',
+    difficulty: 4,
+    analysis: 'stripes',
+    params: { axis: 'vertical', bands: 12, target: 0.14, tolerance: 0.07 },
+    visualization: 'stripes_v',
+    vizParams: {},
+    comments: {
+      perfect: ['Feinsäulig. Korrekt.', 'Das ist fast ein Barcode. Gut.', 'Viele dünne Linien. Alle senkrecht.'],
+      good:    ['Feine Streifen erkennbar. Knapp.', 'Ordentliche Vertikalen.', 'Solide Säulenstruktur.'],
+      mid:     ['Feiner. Noch viel feiner.', 'Das sind grobe Streifen. Feiner bitte.', 'Erkennbar gestreift, nicht fein genug.'],
+      bad:     ['Das sind keine Streifen. Das sind Flächen.', 'Keine Feinstruktur erkennbar.', 'Das Bild hat Struktur verweigert.']
+    }
+  },
+  {
+    id: 'no_symmetry',
+    title: 'Möglichst unsymmetrisch',
+    prompt: 'Mach ein möglichst unsymmetrisches Foto — links und rechts sollen sich völlig unterscheiden.',
+    hint: 'Ecken, Übergänge, Bilder die deutlich einseitig sind.',
+    difficulty: 4,
+    analysis: 'symmetry',
+    params: { target: 0.2, tolerance: 0.12 },
+    minContrast: 0.05,
+    visualization: 'half_split_v',
+    vizParams: { left: '#ffffff', right: '#111111' },
+    comments: {
+      perfect: ['Maximale Asymmetrie. Korrekt chaotisch.', 'Links und rechts haben nichts gemein. Perfekt.', 'Das ist das Gegenteil von Ordnung. Gut.'],
+      good:    ['Ordentlich unsymmetrisch. Knapp chaotisch genug.', 'Solide Asymmetrie.', 'Fast perfekt ungeordnet.'],
+      mid:     ['Noch unsymmetrischer. Mehr Chaos bitte.', 'Zu viel Gleichheit noch.', 'Erkennbar asymmetrisch. Nicht extrem genug.'],
+      bad:     ['Das ist symmetrisch. Du hast die Aufgabe rückwärts gelöst.', 'Links = rechts. Das war explizit nicht die Bitte.', 'Korrekt symmetrisch. Korrekt falsch.']
+    }
+  },
+  {
+    id: 'colorful_and_calm',
+    title: 'Bunt und ruhig',
+    prompt: 'Mach ein buntes Foto, das trotzdem kaum Kanten hat — glatte Flächen in Farbe.',
+    hint: 'Farbige Wände, einfarbige Objekte nah fotografiert, gleichmäßig gefärbte Flächen.',
+    difficulty: 4,
+    analysis: 'composite',
+    params: { sub: [
+      { analysis: 'saturation', params: { target: 0.65, tolerance: 0.2 },  weight: 0.5 },
+      { analysis: 'edges',      params: { target: 0.025, tolerance: 0.02 }, weight: 0.5 }
+    ]},
+    visualization: 'solid_fill',
+    vizParams: { gradient: true },
+    comments: {
+      perfect: ['Bunt und glatt. Das ist selten.', 'Farbig ohne jede Struktur. Eindrucksvoll ruhig.', 'Das Bild hat Farbe und Frieden.'],
+      good:    ['Fast bunt genug und fast ruhig genug.', 'Ordentliche Bunt-Stille-Kombination.', 'Knapp an beiden Zielen.'],
+      mid:     ['Bunter oder ruhiger. Gerne beides.', 'Nur eine Eigenschaft erfüllt.', 'Die Kombination ist erkennbar schwierig.'],
+      bad:     ['Grau und kantig. Das maximale Gegenteil.', 'Weder bunt noch ruhig.', 'Das Bild hat sich keine Mühe gegeben. Du offenbar auch nicht.']
+    }
+  },
+  {
+    id: 'coarse_stripes',
+    title: 'Grobe Wechsel',
+    prompt: 'Mach ein Foto mit nur drei bis vier großen abwechselnd hellen und dunklen Bereichen.',
+    hint: 'Breite Fensterrahmen mit Schatten, grobe Streifen an Wänden, Holzbalken von unten.',
+    difficulty: 4,
+    analysis: 'stripes',
+    params: { axis: 'horizontal', bands: 4, target: 0.28, tolerance: 0.1 },
+    visualization: 'stripes_h',
+    vizParams: {},
+    comments: {
+      perfect: ['Vier grobe Abschnitte. Rhythmisch korrekt.', 'Wenige, klare Wechsel. Gut.', 'Das hat Struktur ohne Hysterie.'],
+      good:    ['Gute Abwechslung. Knapp.', 'Ordentliche Grobgliederung.', 'Fast genug Wechsel.'],
+      mid:     ['Mehr Abwechslung zwischen den Bereichen.', 'Die Blöcke sind zu ähnlich.', 'Erkennbar versucht, nicht überzeugend.'],
+      bad:     ['Keine Abwechslung erkennbar.', 'Das ist einheitlich. Einheitlich falsch.', 'Das Bild hat sich für Monotonie entschieden.']
+    }
+  },
+
+  // ── Difficulty 5 — more ───────────────────────────────────────────────────
+  {
+    id: 'bright_sym_colorful',
+    title: 'Hell, symmetrisch und bunt',
+    prompt: 'Mach ein helles, symmetrisches und farbiges Foto — alle drei gleichzeitig.',
+    hint: 'Bunte, beleuchtete Fassaden von vorne, symmetrische Blumenarrangements.',
+    difficulty: 5,
+    analysis: 'composite',
+    params: { sub: [
+      { analysis: 'brightness', params: { target: 0.72, tolerance: 0.14 }, weight: 0.33 },
+      { analysis: 'symmetry',  params: { target: 0.78, tolerance: 0.14 }, weight: 0.34 },
+      { analysis: 'saturation',params: { target: 0.6,  tolerance: 0.2  }, weight: 0.33 }
+    ]},
+    minContrast: 0.05,
+    visualization: 'symmetry_ref',
+    vizParams: {},
+    comments: {
+      perfect: ['Hell, symmetrisch und bunt. Das ist statistisch unwahrscheinlich.', 'Drei Eigenschaften. Alle erfüllt. Beunruhigend.', 'Das war unnötig präzise.'],
+      good:    ['Fast alles richtig. Eine Eigenschaft fehlt leicht.', 'Zwei von drei sehr gut, eine knapp.', 'Solide Dreierkombination.'],
+      mid:     ['Eine oder zwei Eigenschaften fehlen deutlich.', 'Nicht schlecht. Nicht gut. Irgendwo dazwischen.', 'Die Kombination ist erkennbar schwierig. Das entschuldigt nichts.'],
+      bad:     ['Dunkel, chaotisch und grau. Das Gegenteil aller drei Ziele.', 'Kein einziges Ziel erfüllt. Das ist fast eine Leistung.', 'Du hast die Aufgabe als kreativen Vorschlag interpretiert.']
+    }
+  },
+  {
+    id: 'dark_silhouette',
+    title: 'Dunkles Bild mit internem Kontrast',
+    prompt: 'Mach ein insgesamt dunkles Foto, das aber intern Kontrast hat — wie eine Silhouette.',
+    hint: 'Objekte vor schwach beleuchtetem Hintergrund, Gegenlicht in dunkler Szene.',
+    difficulty: 5,
+    analysis: 'composite',
+    params: { sub: [
+      { analysis: 'brightness', params: { target: 0.12, tolerance: 0.1 },  weight: 0.5 },
+      { analysis: 'contrast',   params: { target: 0.28, tolerance: 0.1 },  weight: 0.5 }
+    ]},
+    visualization: 'half_split_h',
+    vizParams: { top: '#111111', bottom: '#333333' },
+    comments: {
+      perfect: ['Dunkle Silhouette mit internem Kontrast. Cineastisch korrekt.', 'Dunkel und trotzdem spannend.', 'Das ist fast Kunst.'],
+      good:    ['Fast dunkel genug oder fast kontrastreich genug.', 'Ordentliche Silhouetten-Energie.', 'Knapp an beiden Zielen.'],
+      mid:     ['Dunkler oder kontrastreicher. Gerne beides.', 'Eine Eigenschaft passt, die andere nicht.', 'Die Kombination ist erkennbar schwierig.'],
+      bad:     ['Hell und flach. Das maximale Gegenteil.', 'Weder dunkel noch kontrastreich.', 'Das ist ein gewöhnliches Foto. Für eine ungewöhnliche Aufgabe.']
+    }
+  },
+  {
+    id: 'three_colors_equal',
+    title: 'Rot, Grün und Blau gleich',
+    prompt: 'Mach ein Foto mit ungefähr gleich viel Rot, Grün und Blau.',
+    hint: 'RGB-gleich ist fast unmöglich in der Natur. Experimentieren ist erlaubt.',
+    difficulty: 5,
+    analysis: 'composite',
+    params: { sub: [
+      { analysis: 'color_ratio', params: { hueMin: 340, hueMax: 20,  target: 0.17, tolerance: 0.1 }, weight: 0.33 },
+      { analysis: 'color_ratio', params: { hueMin: 80,  hueMax: 160, target: 0.17, tolerance: 0.1 }, weight: 0.33 },
+      { analysis: 'color_ratio', params: { hueMin: 200, hueMax: 260, target: 0.17, tolerance: 0.1 }, weight: 0.34 }
+    ]},
+    visualization: 'solid_fill',
+    vizParams: { gradient: true },
+    comments: {
+      perfect: ['RGB-ausgewogen. Das ist physikalisch selten.', 'Rot, Grün und Blau. Gleichzeitig und gleich.', 'Das könnte ein Testbild sein.'],
+      good:    ['Fast ausgewogen. Eine Farbe leicht dominant.', 'Ordentliche Dreierbalance.', 'Knapp an der Gleichverteilung.'],
+      mid:     ['Eine Farbe dominiert zu sehr.', 'Die drei Farben sind noch ungleich.', 'RGB-gleich ist schwer. Erkennbar versucht.'],
+      bad:     ['Das ist einfarbig oder zweifarbig.', 'Keine drei Farben erkennbar.', 'Rot, Grün und Blau haben sich nicht auf dieses Foto geeinigt.']
     }
   }
 ];
@@ -948,18 +1230,18 @@ function decodeSeed(str) {
 // ── Rank Titles ───────────────────────────────────────────────────────────────
 
 function getRankTitle(total) {
-  if (total >= 490) return 'Bitte aufhören';
+  if (total >= 490) return 'Bitte sofort aufhören';
   if (total >= 460) return 'Gruselig präzise';
   if (total >= 420) return 'Verdächtig kompetent';
   if (total >= 380) return 'Unangenehm gut';
-  if (total >= 340) return 'Respektabel, wenn auch seltsam';
-  if (total >= 300) return 'Solide Leistung';
+  if (total >= 340) return 'Respektabel, wenn auch irgendwie seltsam';
+  if (total >= 300) return 'Solide Leistung. Kein Kommentar.';
   if (total >= 250) return 'Brauchbar';
-  if (total >= 200) return 'Erkennbar versucht';
-  if (total >= 150) return 'Konzeptionell vorhanden';
-  if (total >= 100) return 'Ambitioniert, ergebnisoffen';
-  if (total >= 50)  return 'Formal ein Run';
-  return 'Mutig';
+  if (total >= 200) return 'Hat stattgefunden';
+  if (total >= 150) return 'Erkennbar versucht';
+  if (total >= 100) return 'Konzeptionell anwesend';
+  if (total >= 50)  return 'Mutig, das einzureichen';
+  return 'Fotografisch anwesend. Das ist alles.';
 }
 
 // ── VS Challenge Encoding ─────────────────────────────────────────────────────
@@ -981,15 +1263,15 @@ function decodeScores(str) {
 
 function getVSComment(myTotal, theirTotal) {
   const diff = myTotal - theirTotal;
-  if (diff >= 100)  return 'Du hast gewonnen. Deutlich. Fast mitleiderregend.';
-  if (diff >= 50)   return 'Du hast gewonnen. Nicht knapp.';
-  if (diff >= 20)   return 'Du hast gewonnen. Knapp genug, um bescheiden zu bleiben.';
-  if (diff >= 1)    return 'Du hast gewonnen. Um ' + diff + ' Punkte. Ich würde nicht feiern.';
-  if (diff === 0)   return 'Unentschieden. Das ist statistisch unwahrscheinlich und inhaltlich unbefriedigend.';
-  if (diff >= -19)  return 'Du hast verloren. Um ' + Math.abs(diff) + ' Punkte. Nicht weit.';
-  if (diff >= -49)  return 'Du hast verloren. Erkennbar verloren.';
-  if (diff >= -99)  return 'Du hast verloren. Und zwar richtig.';
-  return 'Du hast sehr deutlich verloren. Das ist auch eine Leistung.';
+  if (diff >= 100)  return 'Du hast gewonnen. Deutlich. Leider für die andere Person.';
+  if (diff >= 50)   return 'Du hast gewonnen. Nicht besonders knapp.';
+  if (diff >= 20)   return 'Du hast gewonnen. Um ' + diff + ' Punkte. Ich würde das nicht groß erzählen.';
+  if (diff >= 1)    return 'Du hast gewonnen. Um ' + diff + ' Punkt' + (diff === 1 ? '' : 'e') + '. Das reicht formal.';
+  if (diff === 0)   return 'Unentschieden. Beide gleich mittelmäßig. Eine Art Gerechtigkeit.';
+  if (diff >= -19)  return 'Du hast verloren. Um ' + Math.abs(diff) + ' Punkte. Was du dir dabei gedacht hast, bleibt dein Geheimnis.';
+  if (diff >= -49)  return 'Du hast verloren. Erkennbar verloren. Nicht knapp.';
+  if (diff >= -99)  return 'Du hast deutlich verloren. Die Frage ist nicht ob, sondern warum du "Revanche" drückst.';
+  return 'Du hast sehr deutlich verloren. Das ist statistisch bemerkenswert.';
 }
 
 function getComment(challenge, score, attemptIndex) {

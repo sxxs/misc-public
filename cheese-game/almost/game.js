@@ -271,10 +271,16 @@ function PermissionScreen({ onRetry, onUpload }) {
 
 // ── Challenge Screen ──────────────────────────────────────────────────────────
 
+const MAX_ATTEMPTS = 2;
+const TIMER_SECONDS = 30;
+
 function ChallengeScreen({ challenge, challengeIndex, attemptNumber, onCapture, onUpload }) {
   const videoRef = useRef(null);
   const [ready, setReady] = useState(false);
   const [capturing, setCapturing] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(TIMER_SECONDS);
+  const timerRef = useRef(null);
+  const doneRef = useRef(false);
 
   useEffect(() => {
     let stream;
@@ -290,16 +296,43 @@ function ChallengeScreen({ challenge, challengeIndex, attemptNumber, onCapture, 
         v.muted = true;
         v.play().then(() => setReady(true)).catch(() => setReady(true));
       }
-    }).catch(() => onCapture(null));
+    }).catch(() => onCapture(null, 0));
     return () => { if (stream) stream.getTracks().forEach(t => t.stop()); };
   }, []);
 
+  // Start countdown when camera is ready
+  useEffect(() => {
+    if (!ready) return;
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) { clearInterval(timerRef.current); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timerRef.current);
+  }, [ready]);
+
+  // Auto-capture on timeout
+  useEffect(() => {
+    if (timeLeft === 0 && ready && !doneRef.current && videoRef.current) {
+      doneRef.current = true;
+      const imageData = captureAndDownscale(videoRef.current);
+      onCapture(imageData, 15);
+    }
+  }, [timeLeft, ready]);
+
+  // Penalty tiers: 0–9s left = 10pts, 10–19s = 5pts, 20–30s = 0pts
+  const penalty = timeLeft >= 20 ? 0 : timeLeft >= 10 ? 5 : 10;
+  const timerColor = timeLeft >= 20 ? '#4ade80' : timeLeft >= 10 ? '#facc15' : '#f87171';
+
   const handleCapture = useCallback(() => {
-    if (!ready || capturing) return;
+    if (!ready || capturing || doneRef.current) return;
+    doneRef.current = true;
+    clearInterval(timerRef.current);
     setCapturing(true);
     const imageData = captureAndDownscale(videoRef.current);
-    setTimeout(() => { onCapture(imageData); setCapturing(false); }, 80);
-  }, [ready, capturing, onCapture]);
+    setTimeout(() => { onCapture(imageData, penalty); setCapturing(false); }, 80);
+  }, [ready, capturing, onCapture, penalty]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', background: '#000' }}>
@@ -315,7 +348,15 @@ function ChallengeScreen({ challenge, challengeIndex, attemptNumber, onCapture, 
             <div style={{ color: '#aaa', fontSize: 12 }}>Aufgabe {challengeIndex + 1} / 5</div>
             <DifficultyDots level={challenge.difficulty} />
           </div>
-          <AttemptPips total={3} current={attemptNumber} />
+          <div className="flex flex-col items-end gap-1">
+            <div style={{ color: timerColor, fontSize: 20, fontWeight: 700, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+              {timeLeft}s
+            </div>
+            {penalty > 0 && (
+              <div style={{ color: '#f87171', fontSize: 11 }}>–{penalty} Strafe</div>
+            )}
+            <AttemptPips total={MAX_ATTEMPTS} current={attemptNumber} />
+          </div>
         </div>
         <p style={{ color: '#f0f0f0', fontSize: 20, fontWeight: 600, lineHeight: 1.3, marginTop: 10 }}>
           {challenge.prompt}
@@ -364,7 +405,7 @@ function ChallengeScreen({ challenge, challengeIndex, attemptNumber, onCapture, 
 
 function ResultScreen({ challenge, result, attemptNumber, isLast, onRetry, onNext }) {
   const { score, comment, diagnosis, capturedImageData } = result;
-  const canRetry = attemptNumber < 3;
+  const canRetry = attemptNumber < MAX_ATTEMPTS;
 
   return (
     <div className="flex flex-col h-full safe-top safe-bottom fade-up"
@@ -389,7 +430,7 @@ function ResultScreen({ challenge, result, attemptNumber, isLast, onRetry, onNex
       </div>
 
       <div className="flex justify-center mt-4">
-        <AttemptPips total={3} current={attemptNumber} />
+        <AttemptPips total={MAX_ATTEMPTS} current={attemptNumber} />
       </div>
 
       <div className="flex flex-col gap-3 mt-auto pt-6">
@@ -398,7 +439,7 @@ function ResultScreen({ challenge, result, attemptNumber, isLast, onRetry, onNex
             background: '#1a1a1a', color: '#f0f0f0', border: '1px solid #333', borderRadius: 12,
             padding: '14px', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', width: '100%'
           }}>
-            Nochmal ({3 - attemptNumber} übrig)
+            Nochmal ({MAX_ATTEMPTS - attemptNumber} übrig)
           </button>
         )}
         <button onClick={onNext} style={{
@@ -645,12 +686,14 @@ function App() {
     startRun(s);
   };
 
-  const handleCapture = (imageData) => {
+  const handleCapture = (imageData, penalty = 0) => {
     if (imageData === null) { setPhase('permission'); return; }
     const challenge = challenges[challengeIndex];
-    const score = scoreChallenge(imageData, challenge);
+    const rawScore = scoreChallenge(imageData, challenge);
+    const score = Math.max(0, rawScore - penalty);
     const comment = getComment(challenge, score, attemptNumber);
-    const diagnosis = getDiagnosis(imageData, challenge);
+    const diagnosis = getDiagnosis(imageData, challenge)
+      + (penalty > 0 ? ` · −${penalty} Zeitstrafe` : '');
     setScores(prev => {
       const next = [...prev];
       next[challengeIndex] = Math.max(next[challengeIndex], score);
