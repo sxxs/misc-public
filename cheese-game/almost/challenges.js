@@ -271,6 +271,7 @@ const CHALLENGES = [
     difficulty: 4,
     analysis: 'symmetry',
     params: { target: 0.78, tolerance: 0.15 },
+    minContrast: 0.05,
     visualization: 'symmetry_ref',
     vizParams: {},
     comments: {
@@ -590,6 +591,279 @@ const CHALLENGES = [
     }
   },
 
+  // ── Difficulty 1 — more ───────────────────────────────────────────────────
+  {
+    id: 'pink',
+    title: 'Überwiegend rosa',
+    prompt: 'Mach ein Foto, das überwiegend rosa oder pink ist.',
+    hint: 'Rosa Stoffe, Blüten, pinkfarbene Wände, bunte Süßigkeiten.',
+    difficulty: 1,
+    analysis: 'color_ratio',
+    params: { hueMin: 310, hueMax: 345, target: 0.35, tolerance: 0.18 },
+    visualization: 'solid_fill',
+    vizParams: { color: '#ff66aa' },
+    comments: {
+      perfect: ['Rosa wie ein Flamingo. Korrekt.', 'Das ist eindeutig pink.', 'Bubblegum-Level. Respekt.'],
+      good:    ['Ordentlich rosa. Fast zu viel.', 'Gut pink. Knapp.', 'Erkennbar rosarot.'],
+      mid:     ['Mehr Pink. Es gibt davon.', 'Rosa ist eine Farbe. Diese hier nicht ganz.', 'Fast pink. Eher rotblau.'],
+      bad:     ['Kein Rosa erkennbar.', 'Das ist grün.', 'Pink hat das Bild verlassen.']
+    }
+  },
+  {
+    id: 'cyan',
+    title: 'Überwiegend türkis',
+    prompt: 'Mach ein Foto, das überwiegend türkis oder cyan ist.',
+    hint: 'Türkisfarbenes Wasser, Schwimmbäder, türkise Objekte oder Kleidung.',
+    difficulty: 1,
+    analysis: 'color_ratio',
+    params: { hueMin: 165, hueMax: 200, target: 0.35, tolerance: 0.18 },
+    visualization: 'solid_fill',
+    vizParams: { color: '#00ccbb' },
+    comments: {
+      perfect: ['Türkis wie das Mittelmeer. Gut.', 'Sehr überzeugend cyan.', 'Das könnte ein Schwimmbad sein.'],
+      good:    ['Ordentlich türkis.', 'Fast ein Karibik-Foto.', 'Gut cyan. Knapp.'],
+      mid:     ['Mehr Türkis. Wo ist das Wasser?', 'Cyan angedeutet, nicht überzeugend.', 'Das ist eher blau oder grün.'],
+      bad:     ['Kein Türkis erkennbar.', 'Das ist weder Meer noch Schwimmbad.', 'Cyan hat das Bild verlassen.']
+    }
+  },
+  {
+    id: 'medium_bright',
+    title: 'Genau mittelhell',
+    prompt: 'Mach ein Foto, das weder hell noch dunkel ist — genau in der Mitte.',
+    hint: 'Gleichmäßig beleuchtete Räume, neutrales Tageslicht, mittelhelle Flächen.',
+    difficulty: 1,
+    analysis: 'brightness',
+    params: { target: 0.5, tolerance: 0.08 },
+    visualization: 'solid_fill',
+    vizParams: { color: '#808080' },
+    comments: {
+      perfect: ['Exakt mittelhell. Das ist seltsam präzise.', 'Weder hell noch dunkel. Korrekt.', 'Photographisch ausgewogen.'],
+      good:    ['Fast die Mitte. Knapp.', 'Ordentlich mittelgrau-hell.', 'Solide Mittelmäßigkeit.'],
+      mid:     ['Zu hell oder zu dunkel. Die Mitte fehlt.', 'Erkennbar versucht, nicht getroffen.', 'Die Mitte ist woanders.'],
+      bad:     ['Das ist sehr hell oder sehr dunkel.', 'Mittelwert verfehlt.', 'Extremes Bild. Für eine mittelmäßige Aufgabe.']
+    }
+  },
+
+  // ── Difficulty 2 — more ───────────────────────────────────────────────────
+  {
+    id: 'colorful_center',
+    title: 'Bunte Mitte, grauer Rand',
+    prompt: 'Mach ein Foto, in dem die Mitte bunter ist als der Rand.',
+    hint: 'Ein buntes Objekt nah fotografiert, sodass es die Mitte füllt.',
+    difficulty: 2,
+    analysis: 'regional_sat',
+    params: { region1: 'center', region2: 'edges', targetDelta: 0.2 },
+    visualization: 'half_sat_h',
+    vizParams: {},
+    comments: {
+      perfect: ['Buntes Zentrum, ruhiger Rand. Korrekt.', 'Das Interessante sitzt in der Mitte.', 'Gute Komposition. Unabsichtlich.'],
+      good:    ['Mitte ist bunter. Etwas bunter.', 'Ordentlicher Unterschied.', 'Fast überzeugend.'],
+      mid:     ['Mehr Farbe in der Mitte oder weniger am Rand.', 'Zu gleichmäßig verteilt.', 'Der Unterschied ist kaum erkennbar.'],
+      bad:     ['Mitte und Rand sind gleich langweilig.', 'Keine Sättigungsdifferenz erkennbar.', 'Das ist einheitlich. Einheitlich falsch.']
+    }
+  },
+  {
+    id: 'mid_contrast',
+    title: 'Moderater Kontrast',
+    prompt: 'Mach ein Foto mit mittlerem Kontrast — nicht zu flach, nicht zu dramatisch.',
+    hint: 'Normales Tageslicht, gemischte Flächen, keine extremen Schatten.',
+    difficulty: 2,
+    analysis: 'contrast',
+    params: { target: 0.15, tolerance: 0.06 },
+    visualization: 'half_split_h',
+    vizParams: { top: '#cccccc', bottom: '#444444' },
+    comments: {
+      perfect: ['Moderater Kontrast. Sehr bürgerlich. Korrekt.', 'Weder dramatisch noch langweilig.', 'Das ist mittlere Kontrast-Energie.'],
+      good:    ['Guter Mittelwert. Fast getroffen.', 'Ordentlich ausgewogen.', 'Knapp an der Mitte.'],
+      mid:     ['Zu viel oder zu wenig Kontrast.', 'Die Mitte liegt woanders.', 'Erkennbar auf dem Weg.'],
+      bad:     ['Das ist entweder flach oder explosiv.', 'Moderater Kontrast ist eine Kunst. Diese hier nicht.', 'Kein mittlerer Kontrast erkennbar.']
+    }
+  },
+  {
+    id: 'left_colorful_right_gray',
+    title: 'Links bunt, rechts grau',
+    prompt: 'Mach ein Foto mit bunten Farben links und farblos/grau rechts.',
+    hint: 'Bunte Objekte auf der linken Seite, neutraler Hintergrund rechts.',
+    difficulty: 2,
+    analysis: 'regional_sat',
+    params: { region1: 'left', region2: 'right', targetDelta: 0.22 },
+    visualization: 'half_split_v',
+    vizParams: { left: '#dd6633', right: '#888888' },
+    comments: {
+      perfect: ['Links bunt, rechts farblos. Exakt.', 'Laterale Sättigung. Korrekt.', 'Eine Hälfte gibt sich Mühe.'],
+      good:    ['Guter Unterschied. Knapp.', 'Ordentliche Seitenverteilung.', 'Solide Links-rechts-Sättigungsdifferenz.'],
+      mid:     ['Mehr Farbe links oder mehr Grau rechts.', 'Der Unterschied ist zu gering.', 'Erkennbar asymmetrisch. Nicht überzeugend.'],
+      bad:     ['Links und rechts sind gleich.', 'Keine Sättigungsverteilung erkennbar.', 'Das ist symmetrisch falsch.']
+    }
+  },
+
+  // ── Difficulty 3 — more ───────────────────────────────────────────────────
+  {
+    id: 'diagonal_inv',
+    title: 'Diagonal dunkel nach hell',
+    prompt: 'Mach ein Foto, das von links oben (dunkel) nach rechts unten (hell) aufhellt.',
+    hint: 'Licht von unten rechts, oder natürlicher Helligkeitsanstieg nach rechts unten.',
+    difficulty: 3,
+    analysis: 'diagonal',
+    params: { brightCorner: 'bottomRight', targetDelta: 0.22 },
+    visualization: 'diagonal_viz',
+    vizParams: { brightCorner: 'bottomRight' },
+    comments: {
+      perfect: ['Invertierte Diagonale. Geometrisch korrekt.', 'Von dunkel nach hell. Ungewöhnlich.', 'Das ist fast cinematographisch.'],
+      good:    ['Gute Inversion. Noch klarer bitte.', 'Ordentlicher Diagonalverlauf.', 'Knapp an der Anti-Diagonalen.'],
+      mid:     ['Mehr Unterschied zwischen den Ecken.', 'Die Diagonale ist angedeutet.', 'Erkennbar schräg, nicht überzeugend.'],
+      bad:     ['Kein diagonales Gefälle erkennbar.', 'Links oben hell. Das ist das Gegenteil.', 'Die Diagonale hat das Bild verlassen.']
+    }
+  },
+  {
+    id: 'three_zones_inv',
+    title: 'Drei Zonen: dunkel–mittel–hell',
+    prompt: 'Mach ein Foto mit drei horizontalen Stufen: oben dunkel, Mitte mittel, unten hell.',
+    hint: 'Dunkler Himmel oben, Horizont in der Mitte, heller Boden unten.',
+    difficulty: 3,
+    analysis: 'three_zones',
+    params: { axis: 'horizontal', targets: [0.12, 0.45, 0.80] },
+    visualization: 'three_bands_h',
+    vizParams: { colors: ['#111111', '#777777', '#eeeeee'] },
+    comments: {
+      perfect: ['Dunkel oben, hell unten. Anti-Physik. Korrekt.', 'Drei inverse Zonen. Eindrucksvoll.', 'Das ist fast surreal.'],
+      good:    ['Gut invertiert. Noch klarer.', 'Drei Stufen erkennbar.', 'Ordentliche Inversion.'],
+      mid:     ['Die drei Zonen müssen deutlicher sein.', 'Zu gleichmäßig. Mehr Stufen.', 'Erkennbar strukturiert, nicht überzeugend.'],
+      bad:     ['Keine drei inversen Zonen erkennbar.', 'Das ist gleichmäßig. Gleichmäßig ist falsch.', 'Die Zonenstruktur fehlt komplett.']
+    }
+  },
+  {
+    id: 'left_bright_right_dark',
+    title: 'Links hell, rechts dunkel',
+    prompt: 'Mach ein Foto, das links hell und rechts dunkel ist.',
+    hint: 'Lichtquelle links, oder eine Fläche die rechts im Schatten liegt.',
+    difficulty: 3,
+    analysis: 'regional',
+    params: { axis: 'vertical', region1: 'left', region2: 'right', targetDelta: 0.35 },
+    visualization: 'half_split_v',
+    vizParams: { left: '#f0f0f0', right: '#111111' },
+    comments: {
+      perfect: ['Links hell, rechts dunkel. Lateral korrekt.', 'Die Helligkeit sitzt links. Wie bestellt.', 'Gute Schattenführung.'],
+      good:    ['Guter Unterschied. Noch klarer.', 'Ordentliche Links-rechts-Verteilung.', 'Knapp am Ziel.'],
+      mid:     ['Links und rechts müssen sich mehr unterscheiden.', 'Erkennbar asymmetrisch. Nicht überzeugend.', 'Die Helligkeit verteilt sich zu gleichmäßig.'],
+      bad:     ['Links und rechts sind gleich hell.', 'Das ist symmetrisch. Falsch.', 'Kein laterales Gefälle erkennbar.']
+    }
+  },
+
+  // ── Difficulty 4 — more ───────────────────────────────────────────────────
+  {
+    id: 'h_stripes_fine',
+    title: 'Feine Horizontalstreifen',
+    prompt: 'Mach ein Foto mit vielen feinen horizontalen Streifen.',
+    hint: 'Jalousien, Gitter, Schirme von der Seite — viele dünne Linien.',
+    difficulty: 4,
+    analysis: 'stripes',
+    params: { axis: 'horizontal', bands: 12, target: 0.14, tolerance: 0.07 },
+    visualization: 'stripes_h',
+    vizParams: {},
+    comments: {
+      perfect: ['Sehr fein gestreift. Respekt.', 'Das ist fast ein Barcode.', 'Viele Streifen. Präzise viele.'],
+      good:    ['Feine Streifen erkennbar. Knapp.', 'Ordentliche Feinstreifigkeit.', 'Solide horizontale Rhythmik.'],
+      mid:     ['Feiner. Noch viel feiner.', 'Das sind grobe Streifen. Feiner bitte.', 'Erkennbar gestreift, nicht fein genug.'],
+      bad:     ['Das sind keine Streifen.', 'Keine Feinstruktur erkennbar.', 'Das Bild verweigert Muster.']
+    }
+  },
+  {
+    id: 'very_symmetric',
+    title: 'Sehr symmetrisch',
+    prompt: 'Mach ein extrem symmetrisches Foto — fast spiegelbildlich.',
+    hint: 'Gebäudefassaden von vorne, lange Gänge, Spiegel, Brücken von der Mitte.',
+    difficulty: 4,
+    analysis: 'symmetry',
+    params: { target: 0.88, tolerance: 0.08 },
+    minContrast: 0.05,
+    visualization: 'symmetry_ref',
+    vizParams: {},
+    comments: {
+      perfect: ['Spiegelperfekt. Das ist beunruhigend.', 'Exakte Symmetrie. Fast zu gut.', 'Die Natur selbst wäre neidisch.'],
+      good:    ['Sehr symmetrisch. Fast spiegelperfekt.', 'Ordentliche Symmetrie.', 'Knapp an der Perfektion.'],
+      mid:     ['Noch symmetrischer. Viel symmetrischer.', 'Erkennbar symmetrisch. Nicht extrem.', 'Die Symmetrie ist vorhanden, aber zu schwach.'],
+      bad:     ['Das ist chaotisch.', 'Keine Symmetrie erkennbar.', 'Links und rechts leben in verschiedenen Welten.']
+    }
+  },
+  {
+    id: 'four_equal',
+    title: 'Vier gleiche Quadranten',
+    prompt: 'Mach ein Foto, bei dem alle vier Ecken gleich hell wirken.',
+    hint: 'Gleichmäßig beleuchtete Wände, Decken, Böden ohne Vignette.',
+    difficulty: 4,
+    analysis: 'four_equal',
+    params: {},
+    minContrast: 0.04,
+    visualization: 'four_equal_viz',
+    vizParams: {},
+    comments: {
+      perfect: ['Alle vier Quadranten gleich. Das ist statisch korrekt.', 'Perfekte Gleichverteilung.', 'Das könnte ein Test-Pattern sein.'],
+      good:    ['Fast gleich. Knapp.', 'Ordentliche Viertelgleichheit.', 'Solide Gleichmäßigkeit.'],
+      mid:     ['Ein Quadrant weicht zu sehr ab.', 'Die vier Bereiche sind zu unterschiedlich.', 'Erkennbar versucht, nicht erreicht.'],
+      bad:     ['Alle vier Quadranten sind verschieden.', 'Das ist das Gegenteil von gleich.', 'Vier völlig verschiedene Helligkeiten.']
+    }
+  },
+
+  // ── Difficulty 5 — more ───────────────────────────────────────────────────
+  {
+    id: 'dark_colorful_extreme',
+    title: 'Sehr dunkel, sehr bunt',
+    prompt: 'Mach ein extrem dunkles, aber trotzdem sehr buntes Foto.',
+    hint: 'Neonlichter in einem fast dunklen Raum — minimales Licht, maximale Farbe.',
+    difficulty: 5,
+    analysis: 'composite',
+    params: { sub: [
+      { analysis: 'brightness', params: { target: 0.08, tolerance: 0.07 }, weight: 0.5 },
+      { analysis: 'saturation', params: { target: 0.75, tolerance: 0.18 }, weight: 0.5 }
+    ]},
+    visualization: 'combo_dark_sat',
+    vizParams: {},
+    comments: {
+      perfect: ['Neon-Niveau erreicht.', 'Dunkel und explosiv bunt.', 'Das ist gefährlich gut.'],
+      good:    ['Fast dunkel genug und fast bunt genug.', 'Ordentliche Neon-Energie.', 'Knapp an beiden Extremen.'],
+      mid:     ['Dunkler und bunter. Gleichzeitig.', 'Nur ein Extrem erfüllt.', 'Die Kombination ist erkennbar schwierig.'],
+      bad:     ['Hell und grau. Das maximale Gegenteil.', 'Weder dunkel noch bunt.', 'Diese Aufgabe erfordert mehr Einsatz.']
+    }
+  },
+  {
+    id: 'extreme_contrast',
+    title: 'Extremer Kontrast',
+    prompt: 'Mach ein Foto mit maximalem Kontrast — so hell und dunkel wie möglich gleichzeitig.',
+    hint: 'Weiße Fläche neben tiefem Schwarz, starke Schatten im Sonnenlicht.',
+    difficulty: 5,
+    analysis: 'contrast',
+    params: { target: 0.42, tolerance: 0.08 },
+    visualization: 'half_split_h',
+    vizParams: { top: '#ffffff', bottom: '#000000' },
+    comments: {
+      perfect: ['Extremer Kontrast. Fast zerstörerisch.', 'Die Helligkeit kämpft gegen die Dunkelheit. Beide gewinnen.', 'Das ist kardiovaskulär.'],
+      good:    ['Sehr hoher Kontrast. Knapp.', 'Ordentlich dramatisch.', 'Fast das Maximum.'],
+      mid:     ['Noch mehr Kontrast. Noch viel mehr.', 'Das ist stark, aber nicht extrem.', 'Mehr Extremismus im Kontrast bitte.'],
+      bad:     ['Das ist harmonisch.', 'Kein extremer Kontrast erkennbar.', 'Das Bild hat sich für Frieden entschieden.']
+    }
+  },
+  {
+    id: 'foggy_colorful',
+    title: 'Bunt aber flau',
+    prompt: 'Mach ein Foto, das bunt ist, aber wenig Kontrast hat — wie durch Milchglas.',
+    hint: 'Bunte Objekte in diffusem Licht, durch Glas fotografiert, oder in Schatten.',
+    difficulty: 5,
+    analysis: 'composite',
+    params: { sub: [
+      { analysis: 'saturation', params: { target: 0.55, tolerance: 0.2 },  weight: 0.5 },
+      { analysis: 'contrast',   params: { target: 0.06, tolerance: 0.05 }, weight: 0.5 }
+    ]},
+    visualization: 'foggy_colorful',
+    vizParams: {},
+    comments: {
+      perfect: ['Bunt aber flau. Wie eine alte Postkarte.', 'Genau diese unwirkliche Flauhheit.', 'Das könnte durch Milchglas sein.'],
+      good:    ['Fast bunt genug und fast flau genug.', 'Ordentlich diffuse Farbigkeit.', 'Knapp an dieser merkwürdigen Kombination.'],
+      mid:     ['Entweder bunter oder flauer. Gerne beides.', 'Die Kombination stimmt noch nicht.', 'Erkennbar kompositorisch anspruchsvoll.'],
+      bad:     ['Scharf und farblos. Das Gegenteil.', 'Weder bunt noch flau.', 'Das Bild hat eine klare Meinung. Falsche.']
+    }
+  },
+
   // ── Difficulty 5 — additional ─────────────────────────────────────────────
   {
     id: 'dark_symmetric',
@@ -598,6 +872,7 @@ const CHALLENGES = [
     hint: 'Dunkle Gänge, Tunnel oder Bögen, die symmetrisch wirken.',
     difficulty: 5,
     analysis: 'composite',
+    minContrast: 0.04,
     params: { sub: [
       { analysis: 'brightness', params: { target: 0.12, tolerance: 0.1 }, weight: 0.45 },
       { analysis: 'symmetry',  params: { target: 0.75, tolerance: 0.15 }, weight: 0.55 }

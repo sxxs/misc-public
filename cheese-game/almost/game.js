@@ -132,7 +132,7 @@ function DifficultyDots({ level }) {
 
 // ── Landing Screen ────────────────────────────────────────────────────────────
 
-function LandingScreen({ onStart, stats, opponentScores, opponentTotal }) {
+function LandingScreen({ onStart, onStartRandom, stats, opponentScores, opponentTotal }) {
   const today = todayStr();
   const todayRun = stats.history && stats.history.find(r => r.date === today);
   const streak = stats.streak || 0;
@@ -214,8 +214,21 @@ function LandingScreen({ onStart, stats, opponentScores, opponentTotal }) {
             cursor: 'pointer', width: '100%', fontFamily: 'inherit'
           }}
         >
-          {isChallenged ? 'Challenge annehmen ⚔️' : todayRun ? 'Nochmal spielen' : 'Spielen'}
+          {isChallenged ? 'Challenge annehmen ⚔️' : todayRun ? 'Daily wiederholen' : 'Daily spielen'}
         </button>
+        {!isChallenged && (
+          <button
+            onClick={onStartRandom}
+            style={{
+              background: 'transparent', color: '#aaa',
+              border: '1px solid #2a2a2a', borderRadius: 14,
+              padding: '13px', fontSize: 15,
+              cursor: 'pointer', width: '100%', fontFamily: 'inherit'
+            }}
+          >
+            🎲 Zufälliger Run
+          </button>
+        )}
       </div>
     </div>
   );
@@ -614,15 +627,21 @@ function App() {
     if (vs) setOpponentScores(decodeScores(vs));
   }, []);
 
-  const startRun = () => {
-    const s = getDailySeed();
+  const startRun = (customSeed) => {
+    const s = customSeed !== undefined ? customSeed : getDailySeed();
     setSeed(s);
     setChallenges(selectChallenges(s));
     setChallengeIndex(0);
     setAttemptNumber(0);
     setScores([0, 0, 0, 0, 0]);
     setLastResult(null);
+    setOpponentScores(null);
     setPhase('challenge');
+  };
+
+  const startRandomRun = () => {
+    const s = (Math.random() * 0xffffffff) >>> 0;
+    startRun(s);
   };
 
   const handleCapture = (imageData) => {
@@ -687,6 +706,7 @@ function App() {
       {phase === 'landing' && (
         <LandingScreen
           onStart={startRun}
+          onStartRandom={startRandomRun}
           stats={stats}
           opponentScores={opponentScores}
           opponentTotal={opponentTotal}

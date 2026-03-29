@@ -292,6 +292,21 @@ function analyzeRegionalSaturation(imageData, { region1, region2 }) {
   return sat(region1) - sat(region2);
 }
 
+// All four quadrants roughly equal brightness
+function analyzeFourEqual(imageData) {
+  const W = imageData.width, H = imageData.height;
+  const pixels = getPixels(imageData);
+  const quads = [0, 0, 0, 0], counts = [0, 0, 0, 0];
+  pixels.forEach((p, i) => {
+    const q = (Math.floor(i / W) >= H / 2 ? 2 : 0) + ((i % W) >= W / 2 ? 1 : 0);
+    quads[q] += p.luma; counts[q]++;
+  });
+  const means = quads.map((s, i) => s / (counts[i] || 1));
+  const avg = means.reduce((a, b) => a + b, 0) / 4;
+  const std = Math.sqrt(means.reduce((s, m) => s + (m - avg) ** 2, 0) / 4);
+  return Math.max(0, 1 - std * 8); // 1 = all equal
+}
+
 // ── Dispatch & Scoring ────────────────────────────────────────────────────────
 
 function runAnalysis(imageData, type, params) {
@@ -313,8 +328,21 @@ function runAnalysis(imageData, type, params) {
     case 'checkerboard':  return analyzeCheckerboard(imageData);
     case 'diagonal':      return analyzeDiagonal(imageData, params);
     case 'regional_sat':  return analyzeRegionalSaturation(imageData, params);
+    case 'four_equal':    return analyzeFourEqual(imageData);
     default: return 0;
   }
+}
+
+// Anti-boring-image penalty for structural challenges.
+// A uniform black/white image is trivially symmetric, calm, etc.
+// minContrast is set per-challenge; if image contrast is below it, score is penalized.
+function applyBoringPenalty(imageData, score, challenge) {
+  const minC = challenge.minContrast;
+  if (!minC) return score;
+  const c = analyzeContrast(imageData);
+  if (c >= minC) return score;
+  const factor = (c / minC) ** 2; // quadratic — soft near threshold, hard near zero
+  return Math.round(score * factor);
 }
 
 function calcScore(rawMetric, target, tolerance) {
@@ -349,20 +377,26 @@ function scoreChallenge(imageData, challenge) {
     const raw = Math.max(0, Math.min(1, delta / params.targetDelta));
     return Math.round(Math.sqrt(raw) * 100);
   }
-  // three_zones and checkerboard already return a 0..1 goodness value
-  if (analysis === 'three_zones' || analysis === 'checkerboard') {
+  // three_zones, checkerboard, four_equal already return a 0..1 goodness value
+  if (analysis === 'three_zones' || analysis === 'checkerboard' || analysis === 'four_equal') {
     const goodness = runAnalysis(imageData, analysis, params);
-    return Math.round(Math.sqrt(Math.max(0, goodness)) * 100);
+    let score = Math.round(Math.sqrt(Math.max(0, goodness)) * 100);
+    score = applyBoringPenalty(imageData, score, challenge);
+    return score;
   }
   // Directional: diagonal, regional_sat
   if (analysis === 'diagonal' || analysis === 'regional_sat') {
     const delta = runAnalysis(imageData, analysis, params);
     const raw = Math.max(0, Math.min(1, delta / params.targetDelta));
-    return Math.round(Math.sqrt(raw) * 100);
+    let score = Math.round(Math.sqrt(raw) * 100);
+    score = applyBoringPenalty(imageData, score, challenge);
+    return score;
   }
 
   const metric = runAnalysis(imageData, analysis, params);
-  return calcScore(metric, params.target, params.tolerance);
+  let score = calcScore(metric, params.target, params.tolerance);
+  score = applyBoringPenalty(imageData, score, challenge);
+  return score;
 }
 
 // ── Diagnosis Text ────────────────────────────────────────────────────────────
@@ -634,6 +668,37 @@ function drawVisualization(canvas, vizType, vizParams) {
       const cGrad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W*0.4);
       cGrad.addColorStop(0, '#111111'); cGrad.addColorStop(0.5, '#111111'); cGrad.addColorStop(1, 'transparent');
       ctx.fillStyle = cGrad; ctx.fillRect(0, 0, W, H);
+      break;
+    }
+    case 'four_equal_viz': {
+      // Four quadrants, each a slightly different shade of mid-gray
+      const shades = ['#919191', '#8e8e8e', '#939393', '#909090'];
+      [[0,0],[1,0],[0,1],[1,1]].forEach(([qx,qy], i) => {
+        ctx.fillStyle = shades[i];
+        ctx.fillRect(qx*W/2, qy*H/2, W/2+1, H/2+1);
+      });
+      // Grid lines
+      ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(W/2,0); ctx.lineTo(W/2,H); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0,H/2); ctx.lineTo(W,H/2); ctx.stroke();
+      break;
+    }
+    case 'medium_viz': {
+      const grad = ctx.createLinearGradient(0, 0, W, H);
+      grad.addColorStop(0, '#111'); grad.addColorStop(0.5, '#808080'); grad.addColorStop(1, '#f0f0f0');
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+      // Center band highlight
+      ctx.fillStyle = '#808080'; ctx.fillRect(W*0.3, 0, W*0.4, H);
+      break;
+    }
+    case 'foggy_colorful': {
+      ctx.fillStyle = '#bbbbbb'; ctx.fillRect(0, 0, W, H);
+      ['hsl(0,60%,70%)','hsl(120,60%,70%)','hsl(240,60%,70%)','hsl(60,60%,70%)'].forEach((c, i) => {
+        const x = (i % 2) * W/2 + W/4, y = Math.floor(i/2) * H/2 + H/4;
+        const g = ctx.createRadialGradient(x, y, 0, x, y, W*0.35);
+        g.addColorStop(0, c); g.addColorStop(1, 'transparent');
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      });
       break;
     }
     default: {
