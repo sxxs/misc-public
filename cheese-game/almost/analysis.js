@@ -275,6 +275,11 @@ function scoreChallenge(imageData, challenge) {
     const raw = Math.max(0, Math.min(1, delta / params.targetDelta));
     return Math.round(Math.sqrt(raw) * 100);
   }
+  // three_zones already returns a 0..1 goodness value internally
+  if (analysis === 'three_zones') {
+    const goodness = runAnalysis(imageData, analysis, params);
+    return Math.round(Math.sqrt(Math.max(0, goodness)) * 100);
+  }
 
   const metric = runAnalysis(imageData, analysis, params);
   return calcScore(metric, params.target, params.tolerance);
