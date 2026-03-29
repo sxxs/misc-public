@@ -862,15 +862,9 @@ function openPanel(id, event) {
       }
       panel.style.top = Math.max(40, Math.min(rect.top - 60, window.innerHeight * 0.15)) + "px";
     } else {
-      // Calendar card — clamp so panel doesn't overflow bottom
+      // Calendar card — fixed top, only x from card position
       panel.style.left = Math.min(rect.right + 4, window.innerWidth - 490) + "px";
-      panel.style.visibility = "hidden";
-      panel.classList.add("open");
-      const panelHeight = panel.offsetHeight;
-      panel.classList.remove("open");
-      panel.style.visibility = "";
-      const maxTop = window.innerHeight - panelHeight - 20;
-      panel.style.top = Math.max(40, Math.min(rect.top, maxTop)) + "px";
+      panel.style.top = "40px";
     }
   }
 
