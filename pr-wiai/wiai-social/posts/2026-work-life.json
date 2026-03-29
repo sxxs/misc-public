@@ -1,6 +1,6 @@
 {
   "id": "2026-work-life",
-  "type": "contrarian",
+  "type": "led-wall",
   "accentColor": "#22C55E",
   "isAd": false,
   "timing": { "variant": "through-scratch", "act1Duration": 120 },

@@ -1,6 +1,6 @@
 {
   "id": "2026-akinator",
-  "type": "contrarian",
+  "type": "led-wall",
   "accentColor": "#22C55E",
   "isAd": false,
   "timing": { "variant": "through" },

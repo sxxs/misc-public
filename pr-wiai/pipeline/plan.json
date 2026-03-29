@@ -4799,7 +4799,7 @@
       "id": "idea-neue-wordseitenzahlen-metakommen",
       "type": "aphorismus",
       "design": "billboard",
-      "status": "idea",
+      "status": "draft",
       "json": null,
       "source": "pipeline/ideen/neue-postideen.md",
       "targetWeek": "2026-KW16",
@@ -4808,10 +4808,10 @@
       "notes": "",
       "tag": "stark",
       "slides": {
-        "bigText": "Es ist 2026 und die meistgesuchte Frage unter Studierenden ist wie man in Word die Seitenzahlen ab Seite 3 beginnt.",
-        "smallText": "",
-        "s2": "Das ist kein Studierenden-Problem. Das ist ein Software-Problem. Und trotzdem steht es in keinem Curriculum.",
-        "s3": ""
+        "bigText": "Es ist 2026.",
+        "smallText": "Die meistgesuchte Frage unter\nStudierenden:",
+        "s2": "Wie beginnt man in Word die\nSeitenzahlen ab Seite 3?",
+        "s3": "Das ist kein Studierenden-Problem.\nDas ist ein Software-Problem.\n\nUnd trotzdem steht es in\nkeinem Curriculum."
       },
       "slotIndex": 2,
       "topic": "social-media"
@@ -4861,7 +4861,7 @@
       "id": "idea-neue-survivorship-bias",
       "type": "merkste-selber",
       "design": "billboard",
-      "status": "idea",
+      "status": "draft",
       "json": null,
       "source": "pipeline/ideen/neue-postideen.md",
       "targetWeek": "2026-KW15",
@@ -4870,10 +4870,10 @@
       "notes": "",
       "tag": "stark",
       "slides": {
-        "bigText": "Alle erfolgreichen Gründer haben ihr Studium abgebrochen.",
+        "bigText": "Alle erfolgreichen Gründer\nhaben ihr Studium abgebrochen.",
         "smallText": "",
-        "s2": "Stimmt. Aber du hörst nicht von den 10.000 Abbrechern die bei Lieferando fahren.",
-        "s3": "Übrigens: Das nennt man Survivorship Bias. Und du bist gerade drauf reingefallen."
+        "s2": "Stimmt.\n\nAber du hörst nicht von\nden 10.000 Abbrechern\ndie bei Lieferando fahren.",
+        "s3": "Survivorship Bias.\nDu bist gerade\ndrauf reingefallen."
       },
       "slotIndex": 1,
       "topic": "ertappt"
@@ -4983,7 +4983,7 @@
       "id": "idea-neue-handy-vs-freund",
       "type": "aphorismus",
       "design": "billboard",
-      "status": "idea",
+      "status": "draft",
       "json": null,
       "source": "pipeline/ideen/neue-postideen.md",
       "targetWeek": "2026-KW14",
@@ -4992,10 +4992,10 @@
       "notes": "",
       "tag": "stark",
       "slides": {
-        "bigText": "\"Dein Handy weiß wo du gestern warst, was du gegessen hast und wie lange du geschlafen hast. Dein bester Freund weiß das nicht. Wem von beiden vertraust du mehr?\"",
-        "smallText": "",
-        "s2": "",
-        "s3": ""
+        "bigText": "Dein Handy weiß\nwo du gestern warst.",
+        "smallText": "Was du gegessen hast.\nUnd wie lange du geschlafen hast.",
+        "s2": "Dein bester Freund\nweiß das nicht.",
+        "s3": "Wem von beiden\nvertraust du mehr?"
       },
       "topic": "datenschutz",
       "slotIndex": 1
@@ -5164,7 +5164,7 @@
       "id": "idea-neue-passwort-zu-lang",
       "type": "nahkastchen",
       "design": "terminal",
-      "status": "idea",
+      "status": "draft",
       "json": null,
       "source": "pipeline/ideen/neue-postideen.md",
       "targetWeek": "2026-KW16",
@@ -5173,9 +5173,9 @@
       "notes": "",
       "tag": "stark",
       "slides": {
-        "bigText": "Ich bin Professor für IT-Sicherheit. Ich empfehle lange Passwörter.",
-        "smallText": "",
-        "s2": "Eine externe Software lässt mich nicht rein. Mein Passwort ist zu lang. Sie müssten eine Datenbanktabelle erweitern.",
+        "bigText": "",
+        "smallText": "Ich bin Professor für IT-Sicherheit.",
+        "s2": "Ich empfehle lange Passwörter.\n\nEin System hat meins abgelehnt.\nZu lang.\n\nSie müssten eine Datenbanktabelle\nerweitern.",
         "s3": "Ich habe Fragen."
       },
       "topic": "datenschutz",
@@ -5185,7 +5185,7 @@
       "id": "idea-neue-das-pdfformular",
       "type": "aphorismus",
       "design": "billboard",
-      "status": "idea",
+      "status": "draft",
       "json": null,
       "source": "pipeline/ideen/neue-postideen.md",
       "targetWeek": "2026-KW14",
@@ -5194,10 +5194,10 @@
       "notes": "",
       "tag": "stark",
       "slides": {
-        "bigText": "\"Habe gerade 45 Minuten in einem PDF-Formular verbracht das man nicht digital ausfüllen kann, es dann ausgedruckt, unterschrieben, eingescannt und per E-Mail an jemanden geschickt der es wieder ausdruckt.\"",
-        "smallText": "",
-        "s2": "",
-        "s3": ""
+        "bigText": "45 Minuten.",
+        "smallText": "PDF-Formular.\nKann man nicht digital ausfüllen.",
+        "s2": "Ausgedruckt.\nUnterschrieben.\nEingescannt.\nPer Mail geschickt.",
+        "s3": "An jemanden\nder es wieder ausdruckt."
       },
       "topic": "alltag",
       "slotIndex": 6
@@ -5386,7 +5386,7 @@
       "id": "idea-clickbait-parodie-5-grnde-warum-du-informatik",
       "type": "parodie",
       "design": "pixel-wall",
-      "status": "idea",
+      "status": "draft",
       "json": null,
       "source": "pipeline/ideen/stoffsammlung-clickbait-parodie.md",
       "targetWeek": "2026-KW14",
@@ -5396,10 +5396,10 @@
       "tag": "stark",
       "tagComment": null,
       "slides": {
-        "bigText": "\"5 Gründe warum du Informatik studieren solltest. Nummer 3 wird dich SCHOCKIEREN.\" Nummer 3: \"Du lernst wie man Seitenzahlen in Word einstellt.\" (Spoiler: Das lernst du nicht. Aber du hast draufgeklickt.)",
-        "smallText": "",
-        "s2": "",
-        "s3": ""
+        "bigText": "5 Gründe.",
+        "smallText": "Warum du Informatik studieren\nsolltest. Nummer 3 wird dich\nSCHOCKIEREN.",
+        "s2": "Nummer 1: Du magst Probleme lösen.\nNummer 2: Du magst Probleme lösen.\nNummer 3: Du lernst wie man\nSeitenzahlen in Word einstellt.\n\nSpoiler: Das lernst du nicht.",
+        "s3": "Du hast wegen der 3 geklickt.\nDas ist Clickbait.\n\nJetzt weißt du wie es funktioniert."
       },
       "slotIndex": 2,
       "topic": "manipulation"
@@ -5577,7 +5577,7 @@
       "id": "idea-clickbait-parodie-schreib-ja-in-die-kommentare",
       "type": "parodie",
       "design": "pixel-wall",
-      "status": "idea",
+      "status": "draft",
       "json": null,
       "source": "pipeline/ideen/stoffsammlung-clickbait-parodie.md",
       "targetWeek": "2026-KW15",
@@ -5587,10 +5587,10 @@
       "tag": "stark",
       "tagComment": null,
       "slides": {
-        "bigText": "\"SCHREIB 'JA' IN DIE KOMMENTARE WENN DU AUCH FINDEST DASS MATHE IM STUDIUM ZU SCHWER IST 💪\" Das ist kein Gespräch. Das ist ein Knopf den du drückst damit der Algorithmus mich belohnt. Du bist nicht Teil einer Community. Du bist ein Datenpunkt. Aber es fühlt sich gut an, oder? Genau das ist das Problem.",
-        "smallText": "",
-        "s2": "",
-        "s3": ""
+        "bigText": "SCHREIB JA.",
+        "smallText": "Wenn du auch findest dass Mathe\nim Studium zu schwer ist. 💪",
+        "s2": "Das ist kein Gespräch.\nDas ist ein Knopf den du drückst\ndamit der Algorithmus\nmich belohnt.\n\nDu bist kein Teil einer Community.\nDu bist ein Datenpunkt.",
+        "s3": "Aber es fühlt sich gut an, oder?\n\nGenau das ist das Problem."
       },
       "slotIndex": 5,
       "topic": "manipulation"
@@ -5747,7 +5747,7 @@
       "id": "idea-clickbait-parodie-bei-uns-stehst-du-im",
       "type": "parodie",
       "design": "pixel-wall",
-      "status": "idea",
+      "status": "draft",
       "json": null,
       "source": "pipeline/ideen/stoffsammlung-clickbait-parodie.md",
       "targetWeek": "2026-KW16",
@@ -5757,10 +5757,10 @@
       "tag": "stark",
       "tagComment": null,
       "slides": {
-        "bigText": "\"Bei uns stehst du im Mittelpunkt.\" – Das steht auf 47 Uni-Webseiten. Wörtlich. Ich habe es geprüft. Wenn 47 Unis sagen dass DU im Mittelpunkt stehst, stehst du in 47 Mittelpunkten gleichzeitig. Geometrisch schwierig.",
+        "bigText": "Bei uns stehst du\nim Mittelpunkt.",
         "smallText": "",
-        "s2": "",
-        "s3": ""
+        "s2": "Das steht auf 47 Uni-Webseiten.\nWörtlich.\n\nIch habe es geprüft.",
+        "s3": "Wenn 47 Unis sagen\ndass DU im Mittelpunkt stehst,\nstehst du in 47 Mittelpunkten\ngleichzeitig.\n\nGeometrisch schwierig."
       },
       "topic": "manipulation",
       "slotIndex": 5
@@ -6820,7 +6820,7 @@
       "id": "idea-overselling-s1-airbnbfotos-werden-mit-weitwinkel",
       "type": "overselling",
       "design": "pixel-wall",
-      "status": "idea",
+      "status": "draft",
       "json": null,
       "source": "pipeline/ideen/stoffsammlung-overselling.md",
       "targetWeek": "2026-KW15",
@@ -6830,10 +6830,10 @@
       "tag": "stark",
       "tagComment": null,
       "slides": {
-        "bigText": "S1: \"Airbnb-Fotos werden mit Weitwinkel gemacht damit das Zimmer größer aussieht.\" S2: \"Uni-Fotos werden an dem einen Tag gemacht an dem der Campus grün ist und die Sonne scheint und zufällig drei diverse Studierende auf einer Bank sitzen und lachen.\" S3: \"Beide Fotos zeigen einen Ort der so existiert. Einmal im Jahr. Für 20 Minuten.\"",
-        "smallText": "",
-        "s2": "",
-        "s3": ""
+        "bigText": "Weitwinkel.",
+        "smallText": "Airbnb-Fotos werden damit gemacht\ndamit das Zimmer größer aussieht.",
+        "s2": "Uni-Fotos werden an dem einen Tag\ngemacht an dem der Campus grün ist\nund die Sonne scheint\nund zufällig drei diverse Studierende\nauf einer Bank sitzen und lachen.",
+        "s3": "Beide Fotos zeigen einen Ort\nder so existiert.\n\nEinmal im Jahr.\nFür 20 Minuten."
       },
       "slotIndex": 3,
       "topic": "studium"
@@ -8202,6 +8202,206 @@
         "s3": ""
       },
       "topic": "social-media"
+    },
+    {
+      "id": "foto-pruefungstag-0630",
+      "type": "aphorismus",
+      "design": "raw-photo",
+      "status": "idea",
+      "json": null,
+      "source": null,
+      "targetWeek": null,
+      "publishedDate": null,
+      "platforms": {},
+      "notes": "Foto: 300 aufgereihte Laptops in leerem Hörsaal, Morgenlicht. Effekt: depixelate (Spannung) → hält → pixelate + Text-Overlay. Zweites Bild gleiche Location 1h später: voll besetzt. Emotion: Ruhe vor dem Sturm.",
+      "tag": "stark",
+      "tagComment": null,
+      "slides": {
+        "bigText": "300 Laptops. 06:30. Keiner da."
+      },
+      "slotIndex": null,
+      "topic": "studium",
+      "format": "both"
+    },
+    {
+      "id": "foto-desktop-professor",
+      "type": "selbstironie",
+      "design": "raw-photo",
+      "status": "idea",
+      "json": null,
+      "source": null,
+      "targetWeek": null,
+      "publishedDate": null,
+      "platforms": {},
+      "notes": "Screenshot: Echter Desktop mit 200+ Dateien. \"Unbenannt (12)\" bis \"Unbenannt (47)\". Ordner \"TODO (alt)\" neben \"TODO (neu)\" neben \"TODO (echt jetzt)\". Effekt: drift + Text am Ende. Selbstzerstörung pur.",
+      "tag": "stark",
+      "tagComment": null,
+      "slides": {
+        "bigText": "Ich unterrichte Informatik."
+      },
+      "slotIndex": null,
+      "topic": "meta",
+      "format": "both"
+    },
+    {
+      "id": "foto-git-log-0400",
+      "type": "aphorismus",
+      "design": "raw-photo",
+      "status": "idea",
+      "json": null,
+      "source": null,
+      "targetWeek": null,
+      "publishedDate": null,
+      "platforms": {},
+      "notes": "Terminal-Screenshot: Git-Commit-Log mit zunehmend verzweifelten Messages: \"fix\" → \"fix fix\" → \"WHY\" → \"please work\" → \"final version\" → \"final version 2\" → \"ACTUAL final\" → \"i hate this\" → \"ok it works dont touch it\". Effekt: desaturate→saturate. Extrem shareable bei Programmierern.",
+      "tag": "stark",
+      "tagComment": null,
+      "slides": {
+        "bigText": ""
+      },
+      "slotIndex": null,
+      "topic": "studium",
+      "format": "both"
+    },
+    {
+      "id": "foto-inbox-1347",
+      "type": "selbstironie",
+      "design": "raw-photo",
+      "status": "idea",
+      "json": null,
+      "source": null,
+      "targetWeek": null,
+      "publishedDate": null,
+      "platforms": {},
+      "notes": "Foto/Screenshot: Mail-Programm mit 1.347 ungelesenen Mails. Keine Inszenierung nötig. Effekt: depixelate → Text-Overlay. Nähkästchen Kat. A als Bild. LinkedIn-Gold.",
+      "tag": "stark",
+      "tagComment": null,
+      "slides": {
+        "bigText": "Ich bin Dekan einer Informatik-Fakultät."
+      },
+      "slotIndex": null,
+      "topic": "uni",
+      "format": "both"
+    },
+    {
+      "id": "foto-beamer-no-signal",
+      "type": "aphorismus",
+      "design": "raw-photo",
+      "status": "idea",
+      "json": null,
+      "source": null,
+      "targetWeek": null,
+      "publishedDate": null,
+      "platforms": {},
+      "notes": "Foto: Hörsaal, Beamer-Fehlermeldung auf Leinwand (\"No Signal\" / blauer Bildschirm). 300 leere Stühle. Effekt: tint in Terminal-Amber → Text. Universal Kat. B.",
+      "tag": "stark",
+      "tagComment": null,
+      "slides": {
+        "bigText": "15 Minuten. 300 Studierende. 1 VGA-Kabel."
+      },
+      "slotIndex": null,
+      "topic": "alltag",
+      "format": "both"
+    },
+    {
+      "id": "foto-bamberg-5-sekunden",
+      "type": "aphorismus",
+      "design": "raw-photo",
+      "status": "idea",
+      "json": null,
+      "source": null,
+      "targetWeek": null,
+      "publishedDate": null,
+      "platforms": {},
+      "notes": "Slideshow (5-8 Bilder, je 1s): ERBA-Campus am Wasser → Alte Rathaus-Brücke → Bierkeller im Sommer → Hörsaal mit Sonnenlicht → 24/7-Bibliothek nachts. Abwechselnd saturate (S/W→Farbe) und drift. Kein Text, nur @herdom.bamberg am Ende. Saisonaler Frühling/Sommer-Content.",
+      "tag": "ok",
+      "tagComment": null,
+      "slides": {
+        "bigText": ""
+      },
+      "slotIndex": null,
+      "topic": "wiai-ad",
+      "format": "both"
+    },
+    {
+      "id": "foto-freitag-vs-samstag",
+      "type": "aphorismus",
+      "design": "raw-photo",
+      "status": "idea",
+      "json": null,
+      "source": null,
+      "targetWeek": null,
+      "publishedDate": null,
+      "platforms": {},
+      "notes": "Zwei Fotos gleiche Location (Informatik-Gebäude/Lab): Freitag 17:00 komplett leer, Lichter aus → Cut → Samstag 02:00 Lichter an, Laptops offen, Pizza-Kartons (Hackathon). Erstes Bild desaturate, zweites saturate. Zeigt Kultur ohne es zu erklären.",
+      "tag": "stark",
+      "tagComment": null,
+      "slides": {
+        "bigText": "Freiwillig."
+      },
+      "slotIndex": null,
+      "topic": "studium",
+      "format": "both"
+    },
+    {
+      "id": "foto-kontaktformular",
+      "type": "nahkastchen",
+      "design": "raw-photo",
+      "status": "idea",
+      "json": null,
+      "source": null,
+      "targetWeek": null,
+      "publishedDate": null,
+      "platforms": {},
+      "notes": "Screenshot: Ein Kontaktformular das Passwörter im Klartext per Mail verschickt. Echt, keine Inszenierung. Effekt: depixelate (langsam erkennt man was man sieht). Nähkästchen Kat. B + Selbstzerstörung.",
+      "tag": "stark",
+      "tagComment": null,
+      "slides": {
+        "bigText": "Ich bin Professor für IT-Sicherheit.\nDas ist unsere eigene Software."
+      },
+      "slotIndex": null,
+      "topic": "datenschutz",
+      "format": "both"
+    },
+    {
+      "id": "foto-handy-24h",
+      "type": "merkste-selber",
+      "design": "raw-photo",
+      "status": "idea",
+      "json": null,
+      "source": null,
+      "targetWeek": null,
+      "publishedDate": null,
+      "platforms": {},
+      "notes": "Slideshow: Morgens Wecker (Schlafrhythmus) → Maps (Standort) → WhatsApp (Kontakte) → Instagram (Interessen) → Banking (Finanzen) → Fotos (Gesichtserkennung) → Abends: alle Icons mit roten Badges. Effekt: pixel-strips (horizontal scan), zunehmend rote Tönung. Ambitious — braucht Produktion.",
+      "tag": "ok",
+      "tagComment": null,
+      "slides": {
+        "bigText": "Du hast heute keiner dieser Apps widersprochen."
+      },
+      "slotIndex": null,
+      "topic": "datenschutz",
+      "format": "both"
+    },
+    {
+      "id": "foto-bewerbung",
+      "type": "merkste-selber",
+      "design": "raw-photo",
+      "status": "idea",
+      "json": null,
+      "source": null,
+      "targetWeek": null,
+      "publishedDate": null,
+      "platforms": {},
+      "notes": "Slideshow: LinkedIn-Stellenanzeige \"Berufseinsteiger:in (m/w/d)\" → Scrollen zu Anforderungen → \"3-5 Jahre Berufserfahrung\" → \"Fließend in 4 Programmiersprachen\" → \"Teamplayer UND Einzelkämpfer\". Effekt: drift, rotes Highlight-Overlay auf Widersprüchen.",
+      "tag": "stark",
+      "tagComment": null,
+      "slides": {
+        "bigText": "Berufseinsteiger. 5 Jahre Erfahrung.\nMerkste selber, oder?"
+      },
+      "slotIndex": null,
+      "topic": "karriere",
+      "format": "both"
     }
   ]
 }

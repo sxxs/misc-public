@@ -1,0 +1,22 @@
+{
+  "id": "test-slideshow",
+  "type": "slideshow",
+  "accentColor": "#FACC15",
+  "music": false,
+  "slide1": { "smallText": "" },
+  "slide2": { "text": "" },
+  "slide3": { "text": "" },
+  "slideshow": {
+    "images": [
+      { "src": "media/julian-hochgesang-4tBwdhM2wnk-unsplash.jpg", "duration": 50, "effect": "depixelate" },
+      { "src": "media/markus-spiske-2GGOT72tkzk-unsplash.jpg", "duration": 40, "effect": "tint" },
+      { "src": "media/georgi-kyurpanov-OaaC4LOSWYU-unsplash.jpg", "duration": 40, "effect": "drift" },
+      { "src": "media/markus-spiske-giSEzH62wm0-unsplash.jpg", "duration": 40, "effect": "saturate" },
+      { "src": "media/markus-spiske-o6EwaIulWn8-unsplash.jpg", "duration": 40, "effect": ["desaturate", "depixelate"] }
+    ],
+    "endCard": {
+      "text": "@herdom.bamberg",
+      "duration": 60
+    }
+  }
+}

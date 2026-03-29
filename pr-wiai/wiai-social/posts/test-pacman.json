@@ -1,6 +1,6 @@
 {
   "id": "test-pacman",
-  "type": "contrarian",
+  "type": "led-wall",
   "ledPattern": "pacman",
   "timing": { "variant": "through" },
   "slide1": { "bigText": "Lootboxen", "smallText": "\"Ist doch nur ein Spiel.\"", "textAlign": "bottom" },

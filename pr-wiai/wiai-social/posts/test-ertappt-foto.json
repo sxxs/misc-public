@@ -1,0 +1,16 @@
+{
+  "id": "test-ertappt-foto",
+  "type": "slideshow",
+  "music": false,
+  "slide1": { "smallText": "" },
+  "slide2": { "text": "" },
+  "slide3": { "text": "" },
+  "slideshow": {
+    "images": [
+      { "src": "media/markus-spiske-2GGOT72tkzk-unsplash.jpg", "duration": 90, "effect": "depixelate" },
+      { "src": "media/markus-spiske-2GGOT72tkzk-unsplash.jpg", "duration": 90, "effect": "pixelate",
+        "text": "300 Laptops. 06:30.\nKeiner da." }
+    ],
+    "endCard": { "text": "@herdom.bamberg", "duration": 60 }
+  }
+}

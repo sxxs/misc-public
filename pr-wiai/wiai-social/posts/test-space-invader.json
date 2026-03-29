@@ -1,6 +1,6 @@
 {
   "id": "test-space-invader",
-  "type": "contrarian",
+  "type": "led-wall",
   "ledPattern": "space-invader",
   "timing": { "variant": "through" },
   "slide1": { "bigText": "Anti-Cheat", "smallText": "\"Ich cheate doch gar nicht.\"", "textAlign": "bottom" },

@@ -54,6 +54,7 @@ function getPostText(jsonPath) {
     const data = JSON.parse(readFileSync(full, "utf8"));
     return {
       slide1: data.slide1?.bigText || data.slide1?.label || "",
+      smallText: data.slide1?.smallText || "",
       slide2: data.slide2?.text || "",
       slide3: data.slide3?.text || "",
       button: data.slide3?.button || "",

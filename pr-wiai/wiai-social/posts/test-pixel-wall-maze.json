@@ -1,6 +1,6 @@
 {
   "id": "test-pixel-wall-maze",
-  "type": "contrarian",
+  "type": "led-wall",
   "ledPattern": "maze",
   "timing": {
     "variant": "through"

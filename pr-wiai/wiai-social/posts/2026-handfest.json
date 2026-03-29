@@ -1,6 +1,6 @@
 {
   "id": "2026-handfest",
-  "type": "contrarian",
+  "type": "led-wall",
   "accentColor": "#F97316",
   "isAd": false,
   "timing": { "variant": "through-scratch" },

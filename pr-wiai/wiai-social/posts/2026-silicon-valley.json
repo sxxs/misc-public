@@ -1,6 +1,6 @@
 {
   "id": "2026-silicon-valley",
-  "type": "contrarian",
+  "type": "led-wall",
   "accentColor": "#10B981",
   "timing": { "variant": "through" },
   "slide1": {

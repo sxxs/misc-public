@@ -1,6 +1,6 @@
 {
   "id": "2026-intro-alter",
-  "type": "contrarian",
+  "type": "led-wall",
   "accentColor": "#F0EDE8",
   "isAd": false,
   "timing": { "variant": "through-scratch", "act1Duration": 150 },

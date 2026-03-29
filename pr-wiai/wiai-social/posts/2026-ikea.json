@@ -1,6 +1,6 @@
 {
   "id": "2026-ikea",
-  "type": "contrarian",
+  "type": "led-wall",
   "accentColor": "#FACC15",
   "timing": { "variant": "through-scratch" },
   "slide1": {

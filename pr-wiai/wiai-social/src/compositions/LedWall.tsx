@@ -261,7 +261,7 @@ const Act3: React.FC<{ post: Post; dur: number; subtextStart?: number; absenderS
 
 const ACT3_DURATION = 295; // default: punchline + mic-drop, beat-sync with track.mp3
 
-export const Contrarian: React.FC<{ post: Post }> = ({ post }) => {
+export const LedWallComposition: React.FC<{ post: Post }> = ({ post }) => {
   const { durationInFrames } = useVideoConfig();
   const t = post.timing;
 

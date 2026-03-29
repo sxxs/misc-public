@@ -1,0 +1,19 @@
+{
+  "id": "test-billboard-captions",
+  "type": "billboard",
+  "music": false,
+  "slide1": { "smallText": "" },
+  "slide2": { "text": "" },
+  "slide3": { "text": "" },
+  "billboard": {
+    "mode": "captions",
+    "captions": [
+      { "text": "Dein Handy weiß", "style": "white" },
+      { "text": "wo du gestern warst", "style": "cutout" },
+      { "text": "was du gegessen hast", "style": "white" },
+      { "text": "und wie lange\ndu geschlafen hast.", "style": "cutout" },
+      { "text": "Dein bester Freund", "style": "white" },
+      { "text": "weiß das nicht.", "style": "white", "hold": 45 }
+    ]
+  }
+}

@@ -4,11 +4,12 @@ import { Post } from "../types";
 import { Newsjacking } from "./Newsjacking";
 import { Nachtgedanke } from "./Nachtgedanke";
 import { WusstestDu } from "./WusstestDu";
-import { Contrarian } from "./Contrarian";
+import { LedWallComposition as LedWall } from "./LedWall";
 import { Selbstironie } from "./Selbstironie";
 import { Witz } from "./Witz";
 import { Terminal } from "./Terminal";
 import { Billboard } from "./Billboard";
+import { Slideshow } from "./Slideshow";
 import { SafeZoneOverlay } from "../components/SafeZoneOverlay";
 
 const BackgroundMusic: React.FC = () => {
@@ -38,8 +39,8 @@ export const WiaiPost: React.FC<Post> = (post) => {
         return withMusic(<Nachtgedanke post={post} />);
       case "wusstest-du":
         return withMusic(<WusstestDu post={post} />);
-      case "contrarian":
-        return <Contrarian post={post} />;
+      case "led-wall":
+        return <LedWall post={post} />;
       case "selbstironie":
         return withMusic(<Selbstironie post={post} />);
       case "witz":
@@ -48,6 +49,8 @@ export const WiaiPost: React.FC<Post> = (post) => {
         return withMusic(<Terminal post={post} />);
       case "billboard":
         return withMusic(<Billboard post={post} />);
+      case "slideshow":
+        return <Slideshow post={post} />;
       default: {
         const _exhaustive: never = post.type;
         return null;

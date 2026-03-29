@@ -1,6 +1,6 @@
 {
   "id": "2026-merkste-fahrpruefung",
-  "type": "contrarian",
+  "type": "led-wall",
   "accentColor": "#F0EDE8",
   "timing": { "variant": "through" },
   "slide1": {

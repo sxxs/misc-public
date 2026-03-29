@@ -1,6 +1,6 @@
 {
   "id": "2026-merkste-netflix",
-  "type": "contrarian",
+  "type": "led-wall",
   "accentColor": "#EF4444",
   "timing": { "variant": "through" },
   "slide1": {

@@ -1,6 +1,6 @@
 {
   "id": "2026-vorlesung-netflix",
-  "type": "contrarian",
+  "type": "led-wall",
   "accentColor": "#22C55E",
   "timing": { "variant": "through-scratch" },
   "slide1": {

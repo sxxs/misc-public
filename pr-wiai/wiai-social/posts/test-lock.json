@@ -1,6 +1,6 @@
 {
   "id": "test-lock",
-  "type": "contrarian",
+  "type": "led-wall",
   "ledPattern": "lock",
   "timing": { "variant": "through" },
   "slide1": { "bigText": "Privatsphäre", "smallText": "\"Mein Passwort ist sicher genug.\"", "textAlign": "bottom" },

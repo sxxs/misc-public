@@ -1,6 +1,6 @@
 {
   "id": "2026-ki-bald",
-  "type": "contrarian",
+  "type": "led-wall",
   "accentColor": "#FACC15",
   "isAd": false,
   "timing": { "variant": "through-scratch" },

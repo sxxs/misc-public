@@ -2,7 +2,15 @@ import React from "react";
 import { Composition } from "remotion";
 import { WiaiPost } from "./compositions/WiaiPost";
 import { Post, ContrarianTiming } from "./types";
-import { computeAct2Duration, ACT3_ALT_TRACKS, computeBillboardDuration, computeTerminalDuration } from "./utils/timing";
+import {
+  computeAct2Duration,
+  ACT3_ALT_TRACKS,
+  computeBillboardDuration,
+  computeTerminalDuration,
+  computeBillboardCaptionDuration,
+  computeTerminalFlowDuration,
+  computeSlideshowDuration,
+} from "./utils/timing";
 
 // ── Post imports (one per JSON file in posts/) ────────────────────────────────
 import contrarianoerhaengePost from "../posts/contrarian-vorhange.json";
@@ -53,11 +61,30 @@ import testBinaryRainPost       from "../posts/test-binary-rain.json";
 import testLockPost             from "../posts/test-lock.json";
 import testPacmanPost           from "../posts/test-pacman.json";
 import testHeartbeatPost        from "../posts/test-heartbeat.json";
+import testBillboardCaptionsPost from "../posts/test-billboard-captions.json";
+import testTerminalFlowPost      from "../posts/test-terminal-flow.json";
+import testSlideshowPost         from "../posts/test-slideshow.json";
+import testErtapptFotoPost       from "../posts/test-ertappt-foto.json";
+import testFxDepixelatePost      from "../posts/test-fx-depixelate.json";
+import testFxPixelatePost        from "../posts/test-fx-pixelate.json";
+import testFxPixelStripsHPost    from "../posts/test-fx-pixel-strips-h.json";
+import testFxPixelStripsVPost    from "../posts/test-fx-pixel-strips-v.json";
+import testFxSaturatePost        from "../posts/test-fx-saturate.json";
+import testFxDesaturatePost      from "../posts/test-fx-desaturate.json";
+import testFxTintPost            from "../posts/test-fx-tint.json";
+import testFxDriftPost           from "../posts/test-fx-drift.json";
+import testFxComboPost           from "../posts/test-fx-combo.json";
+import testFxBlockRevealPost     from "../posts/test-fx-block-reveal.json";
+import testFxAutofocusPost       from "../posts/test-fx-autofocus.json";
+import testFxScanlineDesatPost   from "../posts/test-fx-scanline-desat.json";
+import testFxDepixelateBlurPost  from "../posts/test-fx-depixelate-blur.json";
+import testFxBeatSlideshowPost   from "../posts/test-fx-beat-slideshow.json";
+import testFxBlurHoldTextPost    from "../posts/test-fx-blur-hold-text.json";
 
 // ── Duration helpers ──────────────────────────────────────────────────────────
 const TRACK_DURATION = 520; // track.mp3 ~17.3s at 30fps
 
-const contrarianDuration = (post: Post) => {
+const ledWallDuration = (post: Post) => {
   const act1 = post.timing?.act1Duration ?? (post.slide1?.bigText ? 150 : 100);
   if (post.timing?.variant === "through") return TRACK_DURATION;
   const alt = post.timing?.act3Track ? ACT3_ALT_TRACKS[post.timing.act3Track] : null;
@@ -72,9 +99,22 @@ const S = { fps: 30, width: 1080, height: 1920 }; // screen spec
 
 // Duration dispatch by post type
 const selectDuration = (post: Post): number => {
-  if (post.type === "billboard") return computeBillboardDuration(post);
-  if (post.type === "terminal")  return computeTerminalDuration(post);
-  return contrarianDuration(post); // contrarian + all legacy types
+  if (post.type === "billboard") {
+    if (post.billboard?.mode === "captions" && post.billboard.captions) {
+      return computeBillboardCaptionDuration(post.billboard.captions);
+    }
+    return computeBillboardDuration(post);
+  }
+  if (post.type === "terminal") {
+    if (post.terminal?.mode === "flow" && post.terminal.blocks) {
+      return computeTerminalFlowDuration(post.terminal.blocks);
+    }
+    return computeTerminalDuration(post);
+  }
+  if (post.type === "slideshow" && post.slideshow) {
+    return computeSlideshowDuration(post.slideshow);
+  }
+  return ledWallDuration(post); // led-wall + all legacy types
 };
 
 // cp: register a post (timing comes from JSON)
@@ -89,7 +129,7 @@ const cv = (id: string, post: Post, timing: ContrarianTiming) => {
   const p: Post = { ...post, timing };
   return (
     <Composition key={id} id={id} component={C}
-      durationInFrames={contrarianDuration(p)} {...S}
+      durationInFrames={ledWallDuration(p)} {...S}
       defaultProps={p as unknown as Record<string, unknown>} />
   );
 };
@@ -159,6 +199,29 @@ export const Root: React.FC = () => (
     {cp("WiaiPost-test-lock",           testLockPost            as unknown as Post)}
     {cp("WiaiPost-test-pacman",         testPacmanPost          as unknown as Post)}
     {cp("WiaiPost-test-heartbeat",      testHeartbeatPost       as unknown as Post)}
+
+    {/* ── New designs: Captions, Flow, Slideshow ────────────────────────── */}
+    {cp("WiaiPost-test-billboard-captions", testBillboardCaptionsPost as unknown as Post)}
+    {cp("WiaiPost-test-terminal-flow",      testTerminalFlowPost      as unknown as Post)}
+    {cp("WiaiPost-test-slideshow",          testSlideshowPost         as unknown as Post)}
+    {cp("WiaiPost-test-ertappt-foto",       testErtapptFotoPost       as unknown as Post)}
+
+    {/* ── Slideshow effect tests (one per effect) ───────────────────────── */}
+    {cp("WiaiPost-test-fx-depixelate",      testFxDepixelatePost      as unknown as Post)}
+    {cp("WiaiPost-test-fx-pixelate",        testFxPixelatePost        as unknown as Post)}
+    {cp("WiaiPost-test-fx-pixel-strips-h",  testFxPixelStripsHPost    as unknown as Post)}
+    {cp("WiaiPost-test-fx-pixel-strips-v",  testFxPixelStripsVPost    as unknown as Post)}
+    {cp("WiaiPost-test-fx-saturate",        testFxSaturatePost        as unknown as Post)}
+    {cp("WiaiPost-test-fx-desaturate",      testFxDesaturatePost      as unknown as Post)}
+    {cp("WiaiPost-test-fx-tint",            testFxTintPost            as unknown as Post)}
+    {cp("WiaiPost-test-fx-drift",           testFxDriftPost           as unknown as Post)}
+    {cp("WiaiPost-test-fx-combo",           testFxComboPost           as unknown as Post)}
+    {cp("WiaiPost-test-fx-block-reveal",   testFxBlockRevealPost     as unknown as Post)}
+    {cp("WiaiPost-test-fx-autofocus",      testFxAutofocusPost       as unknown as Post)}
+    {cp("WiaiPost-test-fx-scanline-desat", testFxScanlineDesatPost   as unknown as Post)}
+    {cp("WiaiPost-test-fx-depixelate-blur", testFxDepixelateBlurPost as unknown as Post)}
+    {cp("WiaiPost-test-fx-beat-slideshow", testFxBeatSlideshowPost   as unknown as Post)}
+    {cp("WiaiPost-test-fx-blur-hold-text", testFxBlurHoldTextPost   as unknown as Post)}
 
     {/* ── A/B experiments: timing overrides on existing posts ────────────── */}
     {/* These test different music variants without changing the post JSON.  */}

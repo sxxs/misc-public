@@ -1,6 +1,6 @@
 {
   "id": "2026-ehrliche-apps",
-  "type": "contrarian",
+  "type": "led-wall",
   "accentColor": "#F97316",
   "timing": { "variant": "through-scratch" },
   "slide1": {

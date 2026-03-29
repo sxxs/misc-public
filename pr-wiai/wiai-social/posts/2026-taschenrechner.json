@@ -1,6 +1,6 @@
 {
   "id": "2026-taschenrechner",
-  "type": "contrarian",
+  "type": "led-wall",
   "accentColor": "#FACC15",
   "timing": { "variant": "through", "act1Duration": 120 },
   "slide1": {

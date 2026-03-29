@@ -2,11 +2,12 @@ export type PostType =
   | "newsjacking"
   | "nachtgedanke"
   | "wusstest-du"
-  | "contrarian"
+  | "led-wall"
   | "selbstironie"
   | "witz"
   | "terminal"
-  | "billboard";
+  | "billboard"
+  | "slideshow";
 
 // Contrarian timing config — all fields optional, sensible defaults apply
 export interface ContrarianTiming {
@@ -22,6 +23,52 @@ export interface ContrarianTiming {
 export interface TerminalConfig {
   color?: "green" | "amber" | "white"; // default: "green"
   prompt?: string;                      // shown in Act1 (e.g. "$ 23:31")
+  mode?: "classic" | "flow";           // classic: 3-act (default); flow: continuous with pauses
+  blocks?: TerminalFlowBlock[];        // flow mode only
+}
+
+export type TerminalFlowBlock =
+  | { text: string; color?: "green" | "amber" | "white"; pause?: never }
+  | { pause: number; text?: never; color?: never };
+
+// Billboard config — captions mode for rapid-cut lyric-video style
+export interface BillboardConfig {
+  mode?: "classic" | "captions"; // classic: 3-act (default); captions: rapid cuts
+  captions?: BillboardCaption[];
+}
+
+export interface BillboardCaption {
+  text: string;
+  style?: "white" | "cutout"; // white: white-on-black (default); cutout: black-on-white box
+  hold?: number;              // frames to hold (default: 25)
+}
+
+// Slideshow config — photo/image-based posts
+export interface SlideshowConfig {
+  images: SlideshowImage[];
+  endCard?: SlideshowEndCard;
+}
+
+export interface SlideshowImage {
+  src: string;                          // relative to public/, e.g. "media/campus.jpg"
+  duration?: number;                    // total visible frames (default: 35)
+  effect?: SlideshowEffect | SlideshowEffect[];
+  text?: string;                        // optional text overlay
+  direction?: "h" | "v";               // for pixel-strips
+  hold?: number;                        // frames to hold at effect START state before animating
+  effectDuration?: number;              // frames for effect animation (rest = hold at END state)
+}
+
+export type SlideshowEffect =
+  | "depixelate" | "pixelate" | "depixelate-blur" | "pixelate-blur"
+  | "pixel-strips" | "block-reveal"
+  | "desaturate" | "saturate" | "tint" | "drift" | "autofocus"
+  | "beat";
+
+export interface SlideshowEndCard {
+  text?: string;     // default: "@herdom.bamberg"
+  duration?: number; // frames (default: 60)
+  effect?: SlideshowEffect;
 }
 
 export interface Post {
@@ -34,6 +81,8 @@ export interface Post {
   music?: false;         // opt-out of BackgroundMusic (undefined = music on)
   timing?: ContrarianTiming; // contrarian-only
   terminal?: TerminalConfig; // terminal-only
+  billboard?: BillboardConfig; // billboard captions mode
+  slideshow?: SlideshowConfig; // slideshow-only
   ledPattern?: string;   // pattern name for LedWall sprite overlay (e.g. "maze")
   slide1: {
     image?: string;

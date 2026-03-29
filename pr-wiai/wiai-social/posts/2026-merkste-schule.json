@@ -1,6 +1,6 @@
 {
   "id": "2026-merkste-schule",
-  "type": "contrarian",
+  "type": "led-wall",
   "accentColor": "#3B82F6",
   "timing": { "variant": "through" },
   "slide1": {

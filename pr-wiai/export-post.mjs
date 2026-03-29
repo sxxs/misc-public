@@ -49,7 +49,7 @@ if (!post) {
   process.exit(1);
 }
 
-if (!post.slides || !post.slides.bigText) {
+if (!post.slides || !(post.slides.bigText || post.slides.smallText || post.slides.s2)) {
   console.error("Post has no slide content. Edit slides first in the UI.");
   process.exit(1);
 }
@@ -57,7 +57,7 @@ if (!post.slides || !post.slides.bigText) {
 // ── Build Remotion JSON ──────────────────────────────────────────────────────
 
 const s = post.slides;
-const remotionType = mapType(post.type);
+const remotionType = mapDesignToRemotionType(post);
 
 const remotionPost = {
   id: post.id,
@@ -68,18 +68,26 @@ const remotionPost = {
 if (post.design) remotionPost.design = post.design;
 if (post.tag === "ad") remotionPost.isAd = true;
 
-// Slide 1
-remotionPost.slide1 = {};
-if (s.bigText) remotionPost.slide1.bigText = s.bigText;
-if (s.smallText) remotionPost.slide1.smallText = s.smallText;
-
-// Slide 2
-remotionPost.slide2 = { text: s.s2 || "" };
-
-// Slide 3
-remotionPost.slide3 = { text: s.s3 || "" };
-if (s.button) remotionPost.slide3.button = s.button;
-if (s.uebrigens) remotionPost.slide3["\u00fcbrigensText"] = s.uebrigens;
+if (remotionType === "terminal") {
+  // Terminal: bigText → prompt, smallText+s2 → typing text, s3 → closing
+  remotionPost.terminal = {
+    color: s.terminalColor || "green",
+    prompt: s.bigText || "$",
+  };
+  remotionPost.slide1 = {};
+  const typingParts = [s.smallText, s.s2].filter(Boolean);
+  remotionPost.slide2 = { text: typingParts.join("\n\n") };
+  remotionPost.slide3 = { text: s.s3 || "" };
+} else {
+  // Pixel-Wall / Billboard / Newsjacking: standard 3-slide mapping
+  remotionPost.slide1 = {};
+  if (s.bigText) remotionPost.slide1.bigText = s.bigText;
+  if (s.smallText) remotionPost.slide1.smallText = s.smallText;
+  remotionPost.slide2 = { text: s.s2 || "" };
+  remotionPost.slide3 = { text: s.s3 || "" };
+  if (s.button) remotionPost.slide3.button = s.button;
+  if (s.uebrigens) remotionPost.slide3["\u00fcbrigensText"] = s.uebrigens;
+}
 
 // ── Output ───────────────────────────────────────────────────────────────────
 
@@ -156,10 +164,24 @@ console.log("\nDone! Next: cd wiai-social && ./render.sh posts/" + jsonFilename)
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function mapType(type) {
-  const valid = ["newsjacking", "nachtgedanke", "wusstest-du", "contrarian", "selbstironie", "witz", "terminal", "billboard"];
-  if (valid.includes(type)) return type;
-  // Map planning types to Remotion types
-  const map = { parodie: "contrarian", overselling: "contrarian" };
-  return map[type] || "contrarian";
+function mapDesignToRemotionType(post) {
+  // Design determines the Remotion composition type
+  const designMap = {
+    "pixel-wall": "led-wall",
+    billboard: "billboard",
+    terminal: "terminal",
+    newsjacking: "newsjacking",
+  };
+  if (post.design && designMap[post.design]) return designMap[post.design];
+
+  // Fallback: derive from content type
+  const typeMap = {
+    nachtgedanke: "terminal",
+    nahkastchen: "terminal",
+    selbstironie: "terminal",
+    aphorismus: "billboard",
+    "merkste-selber": "billboard",
+    newsjacking: "newsjacking",
+  };
+  return typeMap[post.type] || "led-wall";
 }

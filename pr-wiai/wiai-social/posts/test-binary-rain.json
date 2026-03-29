@@ -1,6 +1,6 @@
 {
   "id": "test-binary-rain",
-  "type": "contrarian",
+  "type": "led-wall",
   "ledPattern": "binary-rain",
   "accentColor": "#3B82F6",
   "timing": { "variant": "through" },

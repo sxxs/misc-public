@@ -985,12 +985,49 @@ function openPanel(id, event) {
   tagSelect.addEventListener("change", () => setField(post.id, "tag", tagSelect.value || null));
   content.appendChild(tagSelect);
 
-  // Editable Slides — matches Remotion JSON structure:
-  // slide1: { bigText, smallText }  slide2: { text }  slide3: { text, button?, übrigensText? }
+  // Editable Slides — fields depend on visual design
   const slides = post.slides || {};
   const fromJson = post.text || {};
-  const hasAnySlide = slides.bigText || slides.s2 || slides.s3 || fromJson.slide1 || fromJson.slide2;
+  const hasAnySlide = slides.bigText || slides.smallText || slides.s2 || slides.s3 || fromJson.slide1 || fromJson.slide2;
   const notesFallback = !hasAnySlide ? (post.notes || "") : "";
+
+  const DESIGN_FIELDS = {
+    "pixel-wall": {
+      bigText: "S1 \u2014 Reaktionswort",
+      smallText: "S1 \u2014 Zitat / Setup",
+      s2: "S2 \u2014 Argument (Typewriter)",
+      s3: "S3 \u2014 Punchline",
+      button: true, uebrigens: true,
+    },
+    billboard: {
+      bigText: "Hook-Text (gro\u00df, plakativ)",
+      smallText: null,
+      s2: "Argument",
+      s3: "Punchline",
+      button: true, uebrigens: true,
+    },
+    terminal: {
+      bigText: "Prompt (z.B. '$ 23:47')",
+      smallText: "Text Teil 1 (Typing)",
+      s2: "Text Teil 2 (Typing, optional)",
+      s3: "Schlusszeile",
+      button: null, uebrigens: null,
+    },
+    newsjacking: {
+      bigText: "Reaktionswort",
+      smallText: "News-Kontext",
+      s2: "Kommentar",
+      s3: "Punchline",
+      button: true, uebrigens: true,
+    },
+    "raw-photo": {
+      bigText: "Text-Overlay auf Bild",
+      smallText: null, s2: null, s3: null,
+      button: null, uebrigens: null,
+    },
+  };
+
+  const df = DESIGN_FIELDS[post.design] || DESIGN_FIELDS["pixel-wall"];
 
   function slideField(key, label, jsonKey, cssClass, fallback) {
     const val = slides[key] ?? fromJson[jsonKey] ?? fallback ?? "";
@@ -1006,24 +1043,38 @@ function openPanel(id, event) {
     return group;
   }
 
-  // S1: bigText (hook/reaction) + smallText (context line)
-  content.appendChild(slideField("bigText", "S1 — bigText (Hook / Reaktion)", "slide1", "", notesFallback));
-  content.appendChild(slideField("smallText", "S1 — smallText (Kontext, optional)", "", ""));
+  // Terminal: color dropdown
+  if (post.design === "terminal") {
+    content.appendChild(el("label", {}, "Terminal-Farbe"));
+    const colorSelect = el("select");
+    for (const c of ["green", "amber", "white"]) {
+      const opt = el("option", { value: c }, c);
+      if ((slides.terminalColor || "green") === c) opt.selected = true;
+      colorSelect.appendChild(opt);
+    }
+    colorSelect.addEventListener("change", () => {
+      if (!post.slides) post.slides = {};
+      post.slides.terminalColor = colorSelect.value;
+      debouncedSave(post.id, "slides", post.slides);
+    });
+    content.appendChild(colorSelect);
+  }
 
-  // S2: main text
-  content.appendChild(slideField("s2", "S2 — Text (Argument / Punchline)", "slide2", "slide-main", ""));
+  // Slide fields — only render if design config says so
+  if (df.bigText) content.appendChild(slideField("bigText", df.bigText, "slide1", "", notesFallback));
+  if (df.smallText) content.appendChild(slideField("smallText", df.smallText, "", ""));
+  if (df.s2) content.appendChild(slideField("s2", df.s2, "slide2", "slide-main", ""));
+  if (df.s3) content.appendChild(slideField("s3", df.s3, "slide3", "", ""));
 
-  // S3: punchline + optional button + optional uebrigens
-  content.appendChild(slideField("s3", "S3 — Text (Punch / Closer)", "slide3", "", ""));
-
-  const hasButton = "button" in slides || fromJson.button;
-  const hasUebrigens = "uebrigens" in slides || fromJson.uebrigens;
+  // Button / Uebrigens — only for designs that support them
+  const hasButton = df.button && ("button" in slides || fromJson.button);
+  const hasUebrigens = df.uebrigens && ("uebrigens" in slides || fromJson.uebrigens);
 
   if (hasButton) {
-    content.appendChild(slideField("button", "S3 — Button (gedimmt, optional)", "button", "", ""));
+    content.appendChild(slideField("button", "Button (gedimmt, optional)", "button", "", ""));
   }
   if (hasUebrigens) {
-    content.appendChild(slideField("uebrigens", "S3 — Uebrigens (optional)", "uebrigens", "", ""));
+    content.appendChild(slideField("uebrigens", "Uebrigens (optional)", "uebrigens", "", ""));
   }
 
   function addFieldLink(label, key) {
@@ -1040,7 +1091,7 @@ function openPanel(id, event) {
     }, label);
   }
 
-  if (!hasButton || !hasUebrigens) {
+  if (df.button && df.uebrigens && (!hasButton || !hasUebrigens)) {
     const links = el("div", { style: { padding: "4px 0" } });
     if (!hasButton) links.appendChild(addFieldLink("+ Button", "button"));
     if (!hasUebrigens) links.appendChild(addFieldLink("+ Uebrigens", "uebrigens"));

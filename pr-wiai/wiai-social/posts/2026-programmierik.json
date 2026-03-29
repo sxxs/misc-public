@@ -1,6 +1,6 @@
 {
   "id": "2026-programmierik",
-  "type": "contrarian",
+  "type": "led-wall",
   "accentColor": "#8B5CF6",
   "timing": { "variant": "through-scratch" },
   "slide1": {

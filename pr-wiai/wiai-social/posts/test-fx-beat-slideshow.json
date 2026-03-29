@@ -1,0 +1,21 @@
+{
+  "id": "test-fx-beat-slideshow",
+  "type": "slideshow",
+  "music": false,
+  "slide1": { "smallText": "" },
+  "slide2": { "text": "" },
+  "slide3": { "text": "" },
+  "slideshow": {
+    "images": [
+      { "src": "media/julian-hochgesang-4tBwdhM2wnk-unsplash.jpg", "duration": 15, "effect": "beat" },
+      { "src": "media/markus-spiske-2GGOT72tkzk-unsplash.jpg", "duration": 15, "effect": "beat" },
+      { "src": "media/georgi-kyurpanov-OaaC4LOSWYU-unsplash.jpg", "duration": 15, "effect": "beat" },
+      { "src": "media/markus-spiske-giSEzH62wm0-unsplash.jpg", "duration": 15, "effect": "beat" },
+      { "src": "media/markus-spiske-o6EwaIulWn8-unsplash.jpg", "duration": 15, "effect": "beat" },
+      { "src": "media/julian-hochgesang-4tBwdhM2wnk-unsplash.jpg", "duration": 15, "effect": "beat" },
+      { "src": "media/markus-spiske-2GGOT72tkzk-unsplash.jpg", "duration": 15, "effect": "beat" },
+      { "src": "media/georgi-kyurpanov-OaaC4LOSWYU-unsplash.jpg", "duration": 15, "effect": "beat" }
+    ],
+    "endCard": { "text": "@herdom.bamberg", "duration": 30 }
+  }
+}

@@ -1,6 +1,6 @@
 {
   "id": "test-eye",
-  "type": "contrarian",
+  "type": "led-wall",
   "ledPattern": "eye",
   "accentColor": "#EF4444",
   "timing": { "variant": "through" },

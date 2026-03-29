@@ -1,6 +1,6 @@
 {
   "id": "contrarian-vorhange",
-  "type": "contrarian",
+  "type": "led-wall",
   "accentColor": "#FACC15",
   "slide1": {
     "bigText": "Aha.",

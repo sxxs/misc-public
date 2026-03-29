@@ -1,0 +1,14 @@
+{
+  "id": "test-fx-pixelate",
+  "type": "slideshow",
+  "music": false,
+  "slide1": { "smallText": "" },
+  "slide2": { "text": "" },
+  "slide3": { "text": "" },
+  "slideshow": {
+    "images": [
+      { "src": "media/markus-spiske-2GGOT72tkzk-unsplash.jpg", "duration": 120, "effect": "pixelate", "effectDuration": 40 }
+    ],
+    "endCard": { "text": "@herdom.bamberg", "duration": 45 }
+  }
+}

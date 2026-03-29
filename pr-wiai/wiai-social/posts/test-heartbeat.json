@@ -1,6 +1,6 @@
 {
   "id": "test-heartbeat",
-  "type": "contrarian",
+  "type": "led-wall",
   "ledPattern": "heartbeat",
   "accentColor": "#EF4444",
   "timing": { "variant": "through" },
