@@ -223,6 +223,75 @@ function analyzeThreeZones(imageData, { axis, targets }) {
   return Math.max(0, 1 - avgError * 3);
 }
 
+// ── New Analysis Functions ────────────────────────────────────────────────────
+
+// Fraction of pixels with luma >= threshold
+function analyzePixelRatio(imageData, { threshold }) {
+  const pixels = getPixels(imageData);
+  return pixels.filter(p => p.luma >= threshold).length / pixels.length;
+}
+
+// Fraction of warm-hued pixels (reds, oranges, yellows: 0-80° and 300-360°)
+function analyzeWarmRatio(imageData) {
+  const pixels = getPixels(imageData);
+  return pixels.filter(p => (p.h <= 80 || p.h >= 300) && p.s > 0.25 && p.v > 0.2).length / pixels.length;
+}
+
+// Checkerboard score: divide into 4×4 cells, score alternating bright/dark pattern
+function analyzeCheckerboard(imageData) {
+  const W = imageData.width, H = imageData.height, N = 4;
+  const pixels = getPixels(imageData);
+  const cells = Array.from({ length: N * N }, () => ({ sum: 0, count: 0 }));
+  pixels.forEach((p, i) => {
+    const cx = Math.min(Math.floor((i % W) / (W / N)), N - 1);
+    const cy = Math.min(Math.floor(Math.floor(i / W) / (H / N)), N - 1);
+    cells[cy * N + cx].sum += p.luma;
+    cells[cy * N + cx].count++;
+  });
+  const means = cells.map(c => c.sum / (c.count || 1));
+  // Error against expected checkerboard (bright on (0,0) cell)
+  let err = 0;
+  means.forEach((m, i) => {
+    const expected = ((Math.floor(i / N) + (i % N)) % 2 === 0) ? 1 : 0;
+    err += Math.abs(m - expected);
+  });
+  return Math.max(0, 1 - (err / (N * N)) * 2);
+}
+
+// Diagonal brightness: one triangular half brighter than the other
+function analyzeDiagonal(imageData, { brightCorner }) {
+  const W = imageData.width, H = imageData.height;
+  const pixels = getPixels(imageData);
+  let bSum = 0, bN = 0, dSum = 0, dN = 0;
+  pixels.forEach((p, i) => {
+    const nx = (i % W) / W, ny = Math.floor(i / W) / H;
+    // topLeft = triangle where nx+ny < 1; topRight = where nx > ny
+    const inBright = brightCorner === 'topLeft' ? (nx + ny < 1) : (nx + ny > 1);
+    if (inBright) { bSum += p.luma; bN++; } else { dSum += p.luma; dN++; }
+  });
+  return (bN > 0 ? bSum / bN : 0) - (dN > 0 ? dSum / dN : 0);
+}
+
+// Regional saturation: how much more saturated region1 is vs region2
+function analyzeRegionalSaturation(imageData, { region1, region2 }) {
+  const W = imageData.width, H = imageData.height;
+  const pixels = getPixels(imageData);
+  function sat(name) {
+    let sum = 0, n = 0;
+    pixels.forEach((p, i) => {
+      const x = i % W, y = Math.floor(i / W);
+      const r = W / 4, cx = W / 2, cy = H / 2;
+      const inR = name === 'top' ? y < H/2 : name === 'bottom' ? y >= H/2
+              : name === 'left' ? x < W/2 : name === 'right' ? x >= W/2
+              : name === 'center' ? Math.hypot(x-cx, y-cy) <= r
+              : Math.hypot(x-cx, y-cy) > r; // edges
+      if (inR) { sum += p.s; n++; }
+    });
+    return n > 0 ? sum / n : 0;
+  }
+  return sat(region1) - sat(region2);
+}
+
 // ── Dispatch & Scoring ────────────────────────────────────────────────────────
 
 function runAnalysis(imageData, type, params) {
@@ -239,6 +308,11 @@ function runAnalysis(imageData, type, params) {
     case 'edges':         return analyzeEdges(imageData);
     case 'symmetry':      return analyzeSymmetry(imageData);
     case 'three_zones':   return analyzeThreeZones(imageData, params);
+    case 'pixel_ratio':   return analyzePixelRatio(imageData, params);
+    case 'warm_ratio':    return analyzeWarmRatio(imageData);
+    case 'checkerboard':  return analyzeCheckerboard(imageData);
+    case 'diagonal':      return analyzeDiagonal(imageData, params);
+    case 'regional_sat':  return analyzeRegionalSaturation(imageData, params);
     default: return 0;
   }
 }
@@ -275,10 +349,16 @@ function scoreChallenge(imageData, challenge) {
     const raw = Math.max(0, Math.min(1, delta / params.targetDelta));
     return Math.round(Math.sqrt(raw) * 100);
   }
-  // three_zones already returns a 0..1 goodness value internally
-  if (analysis === 'three_zones') {
+  // three_zones and checkerboard already return a 0..1 goodness value
+  if (analysis === 'three_zones' || analysis === 'checkerboard') {
     const goodness = runAnalysis(imageData, analysis, params);
     return Math.round(Math.sqrt(Math.max(0, goodness)) * 100);
+  }
+  // Directional: diagonal, regional_sat
+  if (analysis === 'diagonal' || analysis === 'regional_sat') {
+    const delta = runAnalysis(imageData, analysis, params);
+    const raw = Math.max(0, Math.min(1, delta / params.targetDelta));
+    return Math.round(Math.sqrt(raw) * 100);
   }
 
   const metric = runAnalysis(imageData, analysis, params);
@@ -335,6 +415,32 @@ function getDiagnosis(imageData, challenge) {
   }
   if (analysis === 'three_zones') {
     return 'Drei Helligkeitsbänder analysiert';
+  }
+  if (analysis === 'pixel_ratio') {
+    const v = Math.round(analyzePixelRatio(imageData, params) * 100);
+    const t = Math.round(params.target * 100);
+    return `Helle Pixel: ${v}% · Ziel: ${t}%`;
+  }
+  if (analysis === 'warm_ratio') {
+    const v = Math.round(analyzeWarmRatio(imageData) * 100);
+    const t = Math.round(params.target * 100);
+    return `Warme Töne: ${v}% · Ziel: ${t}%`;
+  }
+  if (analysis === 'checkerboard') {
+    const v = Math.round(analyzeCheckerboard(imageData) * 100);
+    return `Schachbrett-Score: ${v}% · Ziel: hoch`;
+  }
+  if (analysis === 'diagonal') {
+    const delta = analyzeDiagonal(imageData, params);
+    const v = Math.round(delta * 100);
+    const t = Math.round(params.targetDelta * 100);
+    return `Diagonale Differenz: ${v > 0 ? '+' : ''}${v} · Ziel: +${t}`;
+  }
+  if (analysis === 'regional_sat') {
+    const delta = analyzeRegionalSaturation(imageData, params);
+    const v = Math.round(delta * 100);
+    const t = Math.round(params.targetDelta * 100);
+    return `Sättigungsunterschied: ${v > 0 ? '+' : ''}${v} · Ziel: +${t}`;
   }
   if (analysis === 'composite') {
     return 'Kombinations-Analyse';
@@ -476,6 +582,58 @@ function drawVisualization(canvas, vizType, vizParams) {
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, W, H);
       });
+      break;
+    }
+    case 'checkerboard_viz': {
+      const N = 4;
+      for (let cy = 0; cy < N; cy++) for (let cx = 0; cx < N; cx++) {
+        ctx.fillStyle = (cx + cy) % 2 === 0 ? '#f0f0f0' : '#111111';
+        ctx.fillRect((W/N)*cx, (H/N)*cy, W/N+1, H/N+1);
+      }
+      break;
+    }
+    case 'diagonal_viz': {
+      const grad = ctx.createLinearGradient(0, 0, W, H);
+      const bright = vizParams.brightCorner === 'topLeft';
+      grad.addColorStop(0,   bright ? '#f0f0f0' : '#111111');
+      grad.addColorStop(1,   bright ? '#111111' : '#f0f0f0');
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+      break;
+    }
+    case 'warm_fill': {
+      const grad = ctx.createLinearGradient(0, 0, W, 0);
+      grad.addColorStop(0,   '#ff4400');
+      grad.addColorStop(0.5, '#ff9900');
+      grad.addColorStop(1,   '#ffdd00');
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+      break;
+    }
+    case 'cool_fill': {
+      const grad = ctx.createLinearGradient(0, 0, W, 0);
+      grad.addColorStop(0,   '#00aaff');
+      grad.addColorStop(0.5, '#0066cc');
+      grad.addColorStop(1,   '#22ddaa');
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+      break;
+    }
+    case 'half_sat_h': {
+      // top half saturated, bottom half gray
+      const grad1 = ctx.createLinearGradient(0, 0, W, 0);
+      grad1.addColorStop(0, '#ff4444'); grad1.addColorStop(0.5, '#44ff44'); grad1.addColorStop(1, '#4444ff');
+      ctx.fillStyle = grad1; ctx.fillRect(0, 0, W, H/2);
+      ctx.fillStyle = '#888888'; ctx.fillRect(0, H/2, W, H/2);
+      break;
+    }
+    case 'two_thirds_dark': {
+      ctx.fillStyle = '#111111'; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#f0f0f0'; ctx.fillRect(0, 0, W, H/3);
+      break;
+    }
+    case 'dark_center': {
+      ctx.fillStyle = '#f0f0f0'; ctx.fillRect(0, 0, W, H);
+      const cGrad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W*0.4);
+      cGrad.addColorStop(0, '#111111'); cGrad.addColorStop(0.5, '#111111'); cGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = cGrad; ctx.fillRect(0, 0, W, H);
       break;
     }
     default: {
