@@ -169,7 +169,7 @@
     },
     {
       "id": "2026-fake-statistik",
-      "type": "aphorismus",
+      "type": "merkste-selber",
       "design": "billboard",
       "status": "scheduled",
       "json": "wiai-social/posts/2026-fake-statistik.json",
@@ -3816,7 +3816,7 @@
     },
     {
       "id": "draft-selbstzerstoerung-p02a",
-      "type": "parodie",
+      "type": "selbstironie",
       "design": "pixel-wall",
       "status": "draft",
       "json": null,
@@ -6085,7 +6085,7 @@
     },
     {
       "id": "idea-herdom-perspektive-die-universitt-hat-eine-digitalisierung",
-      "type": "stimmt-eigentlich",
+      "type": "nahkastchen",
       "design": "terminal",
       "status": "idea",
       "json": null,

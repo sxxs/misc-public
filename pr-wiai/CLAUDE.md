@@ -49,7 +49,7 @@ pr-wiai/
 Jeder Post hat drei unabhaengige Dimensionen. NIEMALS plan.json from scratch generieren — enthält handkurierte Labels fuer 400+ Posts.
 
 ### Content-Type (rhetorischer Ansatz — WIE es gesagt wird)
-`contrarian` Gegenposition, "Es wird ja immer gesagt..." | `merkste-selber` Denkanstoß → "Oder?" | `aphorismus` Kurze Beobachtung, keine Moral | `wusstest-du` Erklaerung, Fakten | `parodie` Clickbait/Marketing entlarven | `overselling` Absurde Marketing-Parallelen | `nachtgedanke` 23-Uhr-Gedanke, verletzlich | `nahkastchen` Persoenliche Anekdote, kafkaesk | `selbstironie` Kanal/Dekan macht sich laecherlich | `newsjacking` Aktuelle News + Kommentar | `stitch` Reaction-Video | `witz` Witz
+`contrarian` Gegenposition, "Es wird ja immer gesagt..." | `merkste-selber` Denkanstoß → explizites "Oder?" am Schluss | `stimmt-eigentlich` Du-Ansprache, beobachtbare Wahrheit, keine explizite Moral — Leser zieht Schluss selbst | `aphorismus` Kurze Beobachtung, keine Moral | `wusstest-du` Erklaerung, Fakten | `parodie` Clickbait/Marketing entlarven | `overselling` Absurde Marketing-Parallelen | `nachtgedanke` 23-Uhr-Gedanke, verletzlich | `nahkastchen` Persoenliche Anekdote, kafkaesk | `selbstironie` Kanal/Dekan macht sich laecherlich | `newsjacking` Aktuelle News + Kommentar | `stitch` Reaction-Video | `witz` Witz
 
 ### Visual Design (WIE es aussieht)
 `pixel-wall` LED-Raster, 3 Slides, Glitch-Effekte, Musik | `billboard` Schwarz-weiß, große Typo, plakativ | `terminal` Monospace, CRT-Scanlines, Typing-Animation | `newsjacking` Screenshot + Halftone | `raw-photo` Foto-basiert, Pixelation/Saturierung-Effekte

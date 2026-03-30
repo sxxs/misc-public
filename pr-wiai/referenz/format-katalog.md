@@ -9,6 +9,7 @@
 | # | Format | Design | Pipeline/App | Share-Impuls |
 |---|--------|--------|-------------|-------------|
 | 1 | Merkste selber | Billboard | Pipeline | Wiedererkennung |
+| 1b | Stimmt eigentlich | Billboard | Pipeline | Wiedererkennung |
 | 2 | Ertappt (Fake-Statistik) | Pixel Wall | Pipeline | Spiel |
 | 3 | Ertappt (Cognitive Bias) | Pixel Wall | Pipeline | Spiel |
 | 4 | Contrarian / Unpopular Opinion | Pixel Wall | Pipeline | Stellvertreter |
@@ -38,6 +39,23 @@
 | S1 | "'Ich hab nichts zu verbergen.'" |
 | S2 | "Du hast Vorhänge an deinen Fenstern." |
 | S3 | "Merkste selber, oder?" |
+
+---
+
+## 1b. Stimmt eigentlich
+
+**Du-Ansprache, beobachtbare Wahrheit über das eigene Verhalten. Keine explizite Moral, kein "Merkste selber?" — der Leser zieht den Schluss selbst.**
+
+- Design: **Billboard** (meistens), gelegentlich Terminal
+- Produktion: Pipeline
+- Ton: Direkt, ohne Zeigefinger. Keine Auflösung nötig.
+- Abgrenzung zu Merkste selber: kein explizites "Oder?" am Schluss
+
+| Slide | Beispiel |
+|-------|----------|
+| S1 | "Du lässt dir von ChatGPT erklären was du in der Vorlesung nicht verstanden hast." |
+| S2 | "ChatGPT hat es auch nicht verstanden." |
+| S3 | "Es klingt nur überzeugender." |
 
 ---
 
