@@ -61,7 +61,7 @@ function topicOf(t) { return TOPICS[t] || TOPICS.other; }
 
 const STATUS_COLORS = {
   idea: "#555", draft: "#f59e0b", ready: "#22c55e",
-  scheduled: "#3b82f6", published: "#06b6d4",
+  published: "#06b6d4",
 };
 
 const SLOTS_PER_WEEK = 7;
@@ -262,7 +262,7 @@ function renderCalendar() {
     ]));
 
     // Production status bar
-    const readyCount = posts.filter(p => p.status === "ready" || p.status === "scheduled" || p.status === "published").length;
+    const readyCount = posts.filter(p => p.status === "ready" || p.status === "published").length;
     const draftCount = posts.filter(p => p.status === "draft").length;
     const ideaCount = posts.filter(p => p.status === "idea").length;
     const total = readyCount + draftCount + ideaCount;
@@ -587,8 +587,8 @@ function renderBacklog() {
 
   const allBacklog = plan.posts.filter((p) => !p.targetWeek && !p.hidden);
   const hiddenPosts = plan.posts.filter((p) => p.hidden && !p.targetWeek);
-  const scheduledDimmed = plan.posts.filter((p) => p.targetWeek && p.status === "scheduled");
-  const backlog = [...allBacklog, ...scheduledDimmed];
+  const placedDimmed = plan.posts.filter((p) => p.targetWeek && p.status !== "published");
+  const backlog = [...allBacklog, ...placedDimmed];
   const assignedTypes = new Set(columnTypes.filter((t) => t !== "_rest" && t !== "_all"));
 
   for (let colIdx = 0; colIdx < 4; colIdx++) {
@@ -805,14 +805,6 @@ function applySlotAssignment(post, week, slotIndex) {
   post.slotIndex = week ? slotIndex : null;
   updates.push(updatePost(post.id, "targetWeek", week));
   if (week) updates.push(updatePost(post.id, "slotIndex", slotIndex));
-  if (week && post.status === "ready") {
-    post.status = "scheduled";
-    updates.push(updatePost(post.id, "status", "scheduled"));
-  }
-  if (!week && post.status === "scheduled") {
-    post.status = "ready";
-    updates.push(updatePost(post.id, "status", "ready"));
-  }
   return updates;
 }
 
@@ -921,7 +913,7 @@ function openPanel(id, event) {
   // Status dropdown
   content.appendChild(el("label", {}, "Status"));
   const statusSelect = el("select");
-  for (const s of ["idea", "draft", "ready", "scheduled", "published"]) {
+  for (const s of ["idea", "draft", "ready", "published"]) {
     const opt = el("option", { value: s }, s);
     if (post.status === s) opt.selected = true;
     statusSelect.appendChild(opt);
@@ -1016,10 +1008,10 @@ function openPanel(id, event) {
       hasAside: true,
     },
     "raw-photo": {
-      act1Setup:  "Text-Overlay auf Bild",
-      act1Reveal: null,
-      act2:       null,
-      act3:       null,
+      act1Setup:  null,
+      act1Reveal: "Text-Overlay (Haupttext auf dem Bild)",
+      act2:       "Zusatztext / zweite Zeile \u2014 optional",
+      act3:       "Schlusstext \u2014 optional",
       hasAside: false,
     },
   };
@@ -1053,6 +1045,26 @@ function openPanel(id, event) {
       debouncedSave(post.id, "terminalColor", colorSelect.value);
     });
     content.appendChild(colorSelect);
+  }
+
+  // Raw-photo: reveal style dropdown
+  if (post.design === "raw-photo") {
+    content.appendChild(el("label", {}, "Photo-Reveal"));
+    const revealSelect = el("select");
+    const revealOptions = [
+      ["simultaneous", "Gleichzeitig (Foto + Text, Ken Burns)"],
+      ["photo-first", "Erst Foto, dann Text"],
+      ["text-first", "Erst Text, dann Foto (Depixelate)"],
+    ];
+    for (const [val, label] of revealOptions) {
+      const opt = el("option", { value: val }, label);
+      if ((post.photoReveal || "simultaneous") === val) opt.selected = true;
+      revealSelect.appendChild(opt);
+    }
+    revealSelect.addEventListener("change", () => {
+      debouncedSave(post.id, "photoReveal", revealSelect.value);
+    });
+    content.appendChild(revealSelect);
   }
 
   // Content fields — only render if design config defines them
@@ -1315,17 +1327,15 @@ function renderTimeline() {
     } else {
       for (const post of posts) {
         const t = typeOf(post.type);
-        const s = post.slides || {};
-        const fromJson = post.text || {};
+        const c = post.content || {};
 
         // Build text parts: all non-empty fields joined with /
         const parts = [
-          s.bigText || fromJson.slide1,
-          s.smallText,
-          s.s2 || fromJson.slide2,
-          s.s3 || fromJson.slide3,
-          s.button || fromJson.button ? "Button: " + (s.button || fromJson.button) : null,
-          s.uebrigens || fromJson.uebrigens ? "Uebrigens: " + (s.uebrigens || fromJson.uebrigens) : null,
+          c.act1Setup,
+          c.act1Reveal,
+          c.act2,
+          c.act3,
+          c.aside ? ((c.asideStyle === "uebrigens" ? "Uebrigens: " : "Button: ") + c.aside) : null,
         ].filter(Boolean).map((p) => p.replace(/\n/g, " "));
 
         const lineChildren = [

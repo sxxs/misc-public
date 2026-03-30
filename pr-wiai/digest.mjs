@@ -84,9 +84,13 @@ posts.forEach((p) => {
 });
 
 // Planned posts by week (same semantic as UI: any targetWeek, not published)
+// Sort by targetWeek first, then slotIndex within each week
 const planned = posts
   .filter((p) => p.targetWeek)
-  .sort((a, b) => (a.targetWeek > b.targetWeek ? 1 : -1));
+  .sort((a, b) =>
+    a.targetWeek > b.targetWeek ? 1 : a.targetWeek < b.targetWeek ? -1 :
+    (a.slotIndex ?? 99) - (b.slotIndex ?? 99)
+  );
 
 const plannedActive = planned.filter((p) => p.status !== "published");
 
@@ -99,12 +103,19 @@ for (const p of plannedActive) {
 // Published posts
 const published = posts.filter((p) => p.status === "published");
 
-// Variable Reward check: consecutive same types in schedule
+// Variable Reward check: consecutive same types or designs in schedule
 const vrWarnings = [];
 for (let i = 1; i < plannedActive.length; i++) {
-  if (plannedActive[i].type === plannedActive[i - 1].type) {
+  const prev = plannedActive[i - 1];
+  const curr = plannedActive[i];
+  if (curr.type === prev.type) {
     vrWarnings.push(
-      `${plannedActive[i - 1].id} und ${plannedActive[i].id} sind beide ${plannedActive[i].type}`
+      `${prev.id} → ${curr.id}: type=${curr.type} (${prev.targetWeek}#${prev.slotIndex ?? "?"}→${curr.targetWeek}#${curr.slotIndex ?? "?"})`
+    );
+  }
+  if (curr.design === prev.design) {
+    vrWarnings.push(
+      `${prev.id} → ${curr.id}: design=${curr.design} (${prev.targetWeek}#${prev.slotIndex ?? "?"}→${curr.targetWeek}#${curr.slotIndex ?? "?"})`
     );
   }
 }
@@ -157,7 +168,6 @@ if (jsonOutput) {
         prod_json: prodJsons.length,
         test_json: testJsons.length,
         planned: plannedActive.length,
-        scheduled: statusCounts.scheduled || 0,
         ready: statusCounts.ready || 0,
         draft: statusCounts.draft || 0,
         idea: statusCounts.idea || 0,
@@ -185,7 +195,7 @@ const currentWeek = "KW " + getWeekNumber(new Date());
 
 console.log(`@herdom digest | date=${now} | week=${currentWeek} | plan_mtime=${planMtime}`);
 console.log(
-  `counts | posts=${posts.length} | prod_json=${prodJsons.length} | test_json=${testJsons.length} | planned=${plannedActive.length} | scheduled=${statusCounts.scheduled || 0} | ready=${statusCounts.ready || 0} | draft=${statusCounts.draft || 0} | idea=${statusCounts.idea || 0} | published=${statusCounts.published || 0}`
+  `counts | posts=${posts.length} | prod_json=${prodJsons.length} | test_json=${testJsons.length} | eingeplant=${plannedActive.length} | ready=${statusCounts.ready || 0} | draft=${statusCounts.draft || 0} | idea=${statusCounts.idea || 0} | published=${statusCounts.published || 0}`
 );
 console.log(`hint | default=--planned-only | use --all for all posts | use --json for JSON | use --json --all for all posts as JSON`);
 console.log(`types | ${fmtPairs(typeCounts)}`);

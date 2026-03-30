@@ -7,8 +7,9 @@
   },
   "content": {
     "act1Setup": "Es wird ja immer gesagt: Informatik ist trocken.",
-    "act2": "Trocken: Folie 47 von 93 vorlesen. Nicht trocken: Eine interaktive Story in der du entscheidest ob du den Server patchen oder das Lösegeld zahlen sollst.",
-    "act3": "Beides gibt es. Das Zweite wird mehr.",
-    "aside": "Zumindest bei mir. Für den Rest der Uni-Landschaft kann ich nicht sprechen."
+    "act1Reveal": "Ja.",
+    "act2": "Da lernt man, wie man Passwörter knackt, Wahlen manipuliert und Krankenhäuser lahmlegt. Auf Folie 47 von 93.",
+    "act3": "Die Informatik ist nicht trocken. Viele Vorlesungen aber schon.",
+    "aside": "Ich spreche aus Erfahrung. Leider eigener."
   }
 }
