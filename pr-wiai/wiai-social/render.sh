@@ -8,9 +8,8 @@ mkdir -p "$OUT_DIR"
 
 echo "Rendering: $POST_ID"
 
-# 1. Render full 15s video
-npx remotion render src/index.ts WiaiPost \
-  --props="$POST_JSON" \
+# 1. Render video (duration from Root.tsx composition registration)
+npx remotion render src/index.ts "WiaiPost-$POST_ID" \
   --output="$OUT_DIR/$POST_ID.mp4" \
   --codec=h264 \
   --crf=18 \
@@ -24,8 +23,7 @@ for SLIDE in 1 2 3; do
     2) FRAME=200 ;;
     3) FRAME=390 ;;
   esac
-  npx remotion still src/index.ts WiaiPost \
-    --props="$POST_JSON" \
+  npx remotion still src/index.ts "WiaiPost-$POST_ID" \
     --frame="$FRAME" \
     --output="$OUT_DIR/$POST_ID-slide${SLIDE}.png"
 done

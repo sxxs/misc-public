@@ -3,8 +3,11 @@
 ## Systemübersicht
 
 ```
-posts/*.json          ← Post-Daten (hier befüllen)
-src/Root.tsx          ← Compositions registrieren (einmalig pro neuem Post-Typ)
+posts/                ← Neue Post-JSONs (nach Export via export-post.mjs)
+posts/archive/
+  prelaunch/          ← Referenz-Posts aus der Entwicklungsphase
+  test/               ← Design-Varianten + Effekt-Tests
+src/Root.tsx          ← Composition-Registry (Marker-basiert, export-post.mjs fuegt ein)
 src/compositions/     ← Composition-Templates (= Visual Designs)
   LedWall.tsx         ← LED-Raster: Quote → Reaktion → Argument → Punchline (ehem. Contrarian.tsx)
   Billboard.tsx       ← Schwarz-weiß, große Typo, Fade-In (+ Captions-Modus)

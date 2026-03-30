@@ -2,83 +2,82 @@
 
 ## Neuen Post erstellen
 
-### 1. JSON-Datei anlegen
+### 1. Content in plan.json schreiben
 
-Erstelle `posts/mein-post.json`:
+Per Pipeline-UI (`node pipeline/server.mjs`) oder CLI (`node edit.mjs`).
 
-```json
-{
-  "id": "mein-post",
-  "type": "led-wall",
-  "accentColor": "#FACC15",
-  "slide1": {
-    "bigText": "Aha.",
-    "smallText": "Irgendein Statement."
-  },
-  "slide2": {
-    "text": "Die Erklärung\nwarum das so ist."
-  },
-  "slide3": {
-    "text": "Die Pointe.",
-    "button": "Optionaler Nachsatz."
-  }
-}
+### 2. Exportieren
+
+```bash
+node export-post.mjs --list              # Exportierbare Posts anzeigen
+node export-post.mjs <post-id> --dry-run # Vorschau
+node export-post.mjs <post-id>           # Export: JSON + Root.tsx-Eintrag
 ```
 
-### 2. In Root.tsx registrieren
-
-```tsx
-import meinPost from "../posts/mein-post.json";
-// ...
-{cp("WiaiPost-mein-post", meinPost as unknown as Post)}
-```
+Der Export:
+- Schreibt `wiai-social/posts/<id>.json` (Remotion-Input)
+- Fuegt Import + `cp()` in `Root.tsx` ein (Marker-basiert)
+- Setzt `status=ready` in plan.json
 
 ### 3. Preview
 
 ```bash
-npm run preview
+cd wiai-social && npm run preview
 ```
 
-Composition im Dropdown links auswählen. Safe-Zone-Overlay zeigt die verbotenen Zonen (nur im Studio sichtbar, nicht im Render).
+Composition im Dropdown links auswaehlen. Safe-Zone-Overlay zeigt die verbotenen Zonen (nur im Studio sichtbar, nicht im Render).
+
+### 4. Rendern
+
+```bash
+cd wiai-social && ./render.sh posts/<id>.json
+```
+
+Output:
+- `out/<id>.mp4` — Video (H.264, muted)
+- `out/<id>-slide{1,2,3}.png` — Story-Stills (1080x1920)
+- `out/<id>-carousel{1,2,3}.png` — Carousel-Crops (1080x1350)
+
+**Wichtig:** render.sh nutzt die spezifische Composition `WiaiPost-<id>` aus Root.tsx. Der Post muss vorher exportiert sein (Schritt 2).
 
 ---
 
-## Post-Felder
+## Post-Felder (Remotion JSON)
 
 | Feld | Pflicht | Beschreibung |
 |---|---|---|
 | `id` | ja | Eindeutiger Bezeichner |
 | `type` | ja | `"led-wall"` \| `"billboard"` \| `"terminal"` \| `"newsjacking"` \| `"slideshow"` \| `"nachtgedanke"` \| `"selbstironie"` \| `"wusstest-du"` \| `"witz"` |
-| `accentColor` | ja | Hex-Farbe (`"#FACC15"` gelb, `"#EF4444"` rot, `"#3B82F6"` blau, `"#22C55E"` grün, `"#8B5CF6"` lila, `"#F97316"` orange, `"#F0EDE8"` creme) |
-| `isAd` | nein | Legacy-Feld, wird nicht mehr gebraucht |
-| `slide1.bigText` | nein | Reaktionswort ("Aha.", "Stimmt."). Leer lassen wenn kein Reaktionswort passt. Font skaliert automatisch nach Länge. Mehrzeilig mit `\n` möglich. |
-| `slide1.smallText` | nein | Setup-Zitat. Anführungszeichen selbst setzen wenn gewünscht (`\u201C` / `\u201D`). |
-| `slide2.text` | ja | Erklärungstext. Zeilenumbrüche mit `\n`. Leerzeilen mit `\n\n`. |
-| `slide3.text` | ja | Pointe/Abschluss. |
-| `slide3.button` | nein | Gedimmter Nachsatz unter der Pointe. |
-| `slide3.übrigensText` | nein | Alternative zu button, mit "ÜBRIGENS…"-Label. |
-| `slide3.url` | nein | CTA-URL unter button/übrigensText. |
+| `accentColor` | nein | Hex-Farbe (`"#FACC15"` gelb, `"#EF4444"` rot, `"#3B82F6"` blau, `"#22C55E"` gruen, `"#8B5CF6"` lila, `"#F97316"` orange, `"#F0EDE8"` creme) |
+| `content.act1Setup` | nein | Setup-Zitat (led-wall/billboard) oder Prompt (terminal, z.B. `"$ 23:47"`). Leer lassen wenn kein Setup passt. |
+| `content.act1Reveal` | nein | Reaktionswort ("Aha.", "Stimmt."). Nur led-wall/billboard. Font skaliert automatisch. |
+| `content.act2` | ja | Haupttext. Zeilenumbrueche mit `\n`. Leerzeilen mit `\n\n`. |
+| `content.act3` | ja | Pointe/Abschluss. |
+| `content.aside` | nein | Nachsatz/CTA unter der Pointe. |
+| `content.asideStyle` | nein | `"button"` (default) oder `"uebrigens"`. |
+| `content.url` | nein | CTA-URL unter aside. |
 
 ## Text-Formatierung
 
-- **Zeilenumbrüche**: `\n` im JSON-String
-- **Absätze**: `\n\n` (erzeugt Leerzeile im Typewriter)
-- **Max. Zeichenlänge**: Auto-Wrap ist aktiv, aber für sauberes Layout:
-  - slide2 (fontSize 78): ~18 Zeichen/Zeile
-  - slide1.smallText (fontSize 72): ~22 Zeichen/Zeile
-  - slide3.text (fontSize 84): ~15 Zeichen/Zeile
-  - slide3.button (fontSize 48): ~30 Zeichen/Zeile
-- **Lange Wörter** (z.B. "Kommunikationsproblem"): als Fließtext schreiben, Auto-Wrap bricht innerhalb des Worts
+- **Zeilenumbrueche**: `\n` im JSON-String
+- **Absaetze**: `\n\n` (erzeugt Leerzeile im Typewriter)
+- **Max. Zeichenlaenge**: Auto-Wrap ist aktiv, aber fuer sauberes Layout:
+  - act2 (fontSize 78): ~18 Zeichen/Zeile
+  - act1Setup (fontSize 72): ~22 Zeichen/Zeile
+  - act3 (fontSize 84): ~15 Zeichen/Zeile
+  - aside/button (fontSize 48): ~30 Zeichen/Zeile
+- **Lange Woerter** (z.B. "Kommunikationsproblem"): als Fliesstext schreiben, Auto-Wrap bricht innerhalb des Worts
 
 ---
 
 ## Timing (optional)
 
 Die meisten Posts brauchen kein Timing — Defaults werden automatisch berechnet:
-- **act1Duration**: 150 Frames (5s) mit bigText, 100 Frames (3.3s) ohne
-- **subtextStartFrame / absenderStartFrame**: automatisch, je nach Act3-Länge
+- **act1Duration**: 150 Frames (5s) mit act1Reveal, 100 Frames (3.3s) ohne
+- **act2**: automatisch nach Textlaenge (Typewriter-Speed + Lesepuffer)
+- **act3**: automatisch nach Punchline-Laenge
 
-Wenn du etwas anpassen willst, füge `timing` zum JSON hinzu:
+Wenn du etwas anpassen willst, fuege `timing` zum JSON hinzu:
 
 ```json
 "timing": {
@@ -92,31 +91,17 @@ Wenn du etwas anpassen willst, füge `timing` zum JSON hinzu:
 | Wert | Verhalten | Wann nutzen |
 |---|---|---|
 | `"scratch"` | Musik fadet langsam aus, Vinyl-Scratch, Beat-Sync in Act3 | Default. Dramatischer Aufbau. |
-| `"through"` | Musik läuft einfach durch, kein Scratch | Kurzer Act2. Video endet wenn Musik endet. |
-| `"through-scratch"` | Musik volle Lautstärke, Scratch am Act2-Ende, Beat-Sync Act3 | Langer Act2. Musik bleibt energetisch. |
+| `"through"` | Musik laeuft einfach durch, kein Scratch | Kurzer Act2. Video endet wenn Musik endet. |
+| `"through-scratch"` | Musik volle Lautstaerke, Scratch am Act2-Ende, Beat-Sync Act3 | Langer Act2. Musik bleibt energetisch. |
 
 ### Weitere Timing-Felder
 
 | Feld | Default | Beschreibung |
 |---|---|---|
-| `act1Duration` | 150/100 | Frames für Act1. 225 = 7.5s für lange Zitate. |
-| `act3Track` | — | Alt-Musik für Act3: `"a"` bis `"f"`. Nur mit through-scratch. |
-| `act3MusicDelay` | 0 | Frames Verzögerung für Act3-Musik (halb-Overlap mit Scratch). |
+| `act1Duration` | 150/100 | Frames fuer Act1. 225 = 7.5s fuer lange Zitate. |
+| `act3Track` | — | Alt-Musik fuer Act3: `"a"` bis `"f"`. Nur mit through-scratch. |
+| `act3MusicDelay` | 0 | Frames Verzoegerung fuer Act3-Musik (halb-Overlap mit Scratch). |
 | `scratchOffset` | 15 | Frames vor Act3-Start wo Scratch beginnt. 0 = genau bei Act3. |
-
----
-
-## Rendern
-
-```bash
-# Einzelnes Video
-npx remotion render src/index.ts WiaiPost-mein-post \
-  --output=out/mein-post.mp4 --codec=h264 --crf=18 --pixel-format=yuv420p
-
-# Story-Stills (1080x1920)
-npx remotion still src/index.ts WiaiPost-mein-post \
-  --frame=60 --output=out/mein-post-slide1.png
-```
 
 ---
 
@@ -124,14 +109,29 @@ npx remotion still src/index.ts WiaiPost-mein-post \
 
 ```
 wiai-social/
-├── posts/              ← Post-JSONs (Single Source of Truth)
-├── assets/music/       ← Musik-Dateien (track.mp3, vinyl-rewind.mp3, track-act3-*.mp3)
+├── posts/                  ← Neue Post-JSONs (nach Export)
+│   └── archive/
+│       ├── prelaunch/      ← Vorhandene Referenz-Posts (36 Stueck)
+│       └── test/           ← Design-Varianten + FX-Tests (32 Stueck)
+├── assets/music/           ← Musik-Dateien (track.mp3, vinyl-rewind.mp3, track-act3-*.mp3)
 ├── src/
-│   ├── Root.tsx        ← Composition-Registry (1 Zeile pro Post)
-│   ├── types.ts        ← Post + ContrarianTiming Typen
-│   ├── compositions/   ← Contrarian.tsx, Nachtgedanke.tsx, etc.
-│   ├── components/     ← TypewriterText, PunchlineSlide, SafeZoneOverlay, etc.
-│   ├── styles/         ← colors.ts, fonts.ts, safeZones.ts
-│   └── utils/          ← timing.ts (computeAct2Duration, ACT3_ALT_TRACKS)
-└── GUIDE.md            ← Diese Datei
+│   ├── Root.tsx            ← Composition-Registry (Marker-basiert, export-post.mjs fuegt ein)
+│   ├── types.ts            ← Post + ContrarianTiming Typen
+│   ├── compositions/       ← LedWall, Billboard, Terminal, Slideshow, etc.
+│   ├── components/         ← TypewriterText, PunchlineSlide, SafeZoneOverlay, etc.
+│   ├── styles/             ← colors.ts, fonts.ts, safeZones.ts
+│   └── utils/              ← timing.ts (Duration-Berechnung)
+├── render.sh               ← Video + Stills + Carousel rendern
+├── crop.mjs                ← Carousel-Crop (1920→1350 Hoehe)
+├── GUIDE.md                ← Diese Datei
+└── CONTENT.md              ← Visual Designs + Farb-Palette
 ```
+
+## Root.tsx Marker-System
+
+`export-post.mjs` fuegt neue Posts per Marker-Kommentaren ein:
+
+- `// @export-post:imports-end` — Neue Imports werden davor eingefuegt
+- `{/* @export-post:compositions-end */}` — Neue `cp()` Zeilen werden davor eingefuegt
+
+Diese Marker nicht entfernen oder umbenennen.

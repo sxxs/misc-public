@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Export a post from plan.json → Remotion JSON + Root.tsx registration
 // Usage: node export-post.mjs <post-id> [--dry-run]
-// Also: node export-post.mjs --list  (show all ready/scheduled posts without JSON)
+// Also: node export-post.mjs --list  (show all ready/draft posts without JSON)
 
 import { readFileSync, writeFileSync, existsSync } from "fs";
 import { join } from "path";
@@ -21,7 +21,7 @@ const plan = JSON.parse(readFileSync(PLAN, "utf8"));
 
 if (listMode) {
   const exportable = plan.posts.filter((p) =>
-    !p.json && p.content && (p.status === "ready" || p.status === "scheduled" || p.status === "draft")
+    !p.json && p.content && (p.status === "ready" || p.status === "draft")
   );
   console.log("\nExportable posts (" + exportable.length + "):\n");
   for (const p of exportable) {
@@ -121,23 +121,34 @@ writeFileSync(jsonPath, jsonStr + "\n");
 console.log("Written: " + jsonPath);
 
 // Update Root.tsx — add import + cp() if not already there
+const IMPORT_MARKER = "// @export-post:imports-end";
+const CP_MARKER = "{/* @export-post:compositions-end */}";
+
 const rootContent = readFileSync(ROOT_TSX, "utf8");
 const importName = post.id.replace(/[^a-zA-Z0-9]/g, "_") + "Post";
 const importLine = 'import ' + importName + ' from "../posts/' + jsonFilename + '";';
-const cpLine = '    {cp("WiaiPost-' + post.id + '", ' + importName + ' as unknown as Post)}';
+const cpLine = '{cp("WiaiPost-' + post.id + '", ' + importName + ' as unknown as Post)}';
 
 if (rootContent.includes(jsonFilename)) {
   console.log("Root.tsx already references " + jsonFilename);
 } else {
-  // Find last import line and add after it
-  const importInsertIdx = rootContent.lastIndexOf("\nimport ");
-  const nextNewline = rootContent.indexOf("\n", importInsertIdx + 1);
-  let updated = rootContent.substring(0, nextNewline + 1) + importLine + "\n" + rootContent.substring(nextNewline + 1);
+  // Insert import before the imports-end marker
+  const importMarkerIdx = rootContent.indexOf(IMPORT_MARKER);
+  if (importMarkerIdx === -1) {
+    console.error("Root.tsx missing marker: " + IMPORT_MARKER);
+    process.exit(1);
+  }
+  let updated = rootContent.substring(0, importMarkerIdx) + importLine + "\n" + rootContent.substring(importMarkerIdx);
 
-  // Find last cp() line and add after it
-  const cpInsertIdx = updated.lastIndexOf("{cp(");
-  const cpNewline = updated.indexOf("\n", cpInsertIdx);
-  updated = updated.substring(0, cpNewline + 1) + cpLine + "\n" + updated.substring(cpNewline + 1);
+  // Insert cp() before the compositions-end marker
+  const cpMarkerIdx = updated.indexOf(CP_MARKER);
+  if (cpMarkerIdx === -1) {
+    console.error("Root.tsx missing marker: " + CP_MARKER);
+    process.exit(1);
+  }
+  updated = updated.substring(0, cpMarkerIdx) + cpLine + "\n    " + updated.substring(cpMarkerIdx);
+  // Note: the 4 spaces before CP_MARKER serve as indentation for cpLine;
+  // the "\n    " after cpLine provides indentation for the marker itself.
 
   writeFileSync(ROOT_TSX, updated);
   console.log("Root.tsx updated: import + cp() added");
