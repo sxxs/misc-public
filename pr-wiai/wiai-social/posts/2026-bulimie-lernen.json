@@ -3,16 +3,15 @@
   "type": "led-wall",
   "accentColor": "#8B5CF6",
   "isAd": false,
-  "timing": { "variant": "through-scratch", "act3Track": "f"},
-  "slide1": {
-    "bigText": "Nervig.",
-    "smallText": "Bulimie-Lernen."
+  "timing": {
+    "variant": "through-scratch",
+    "act3Track": "f"
   },
-  "slide2": {
-    "text": "Alles rein, Klausur, alles raus.\n\nDas System belohnt es seit Jahrzehnten.\n\nIch hab was dagegen gebaut."
-  },
-  "slide3": {
-    "text": "Jede Woche eine halbe Seite in eigenen Worten. Die darfst du in die Klausur mitnehmen. Plötzlich lernen alle freiwillig.",
-    "button": "Das Booklet-System. Nicht patentiert. Nachmachen erwünscht."
+  "content": {
+    "act1Setup": "Bulimie-Lernen.",
+    "act1Reveal": "Nervig.",
+    "act2": "Alles rein, Klausur, alles raus.\n\nDas System belohnt es seit Jahrzehnten.\n\nIch hab was dagegen gebaut.",
+    "act3": "Jede Woche eine halbe Seite in eigenen Worten. Die darfst du in die Klausur mitnehmen. Plötzlich lernen alle freiwillig.",
+    "aside": "Das Booklet-System. Nicht patentiert. Nachmachen erwünscht."
   }
 }

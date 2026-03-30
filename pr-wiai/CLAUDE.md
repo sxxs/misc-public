@@ -5,7 +5,7 @@ Social-Media-Kanal (TikTok, YouTube Shorts, Instagram Reels) der Fakultaet WIAI,
 ## Schnelleinstieg
 
 ```bash
-node digest.mjs              # Pipeline-Status auf einen Blick
+bash digest.sh               # Pipeline-Status auf einen Blick
 node pipeline/server.mjs     # Swimlane-Kalender → http://localhost:3847
 cd wiai-social && npm run preview  # Remotion Studio
 ```

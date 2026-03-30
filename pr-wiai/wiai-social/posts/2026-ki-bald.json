@@ -3,16 +3,14 @@
   "type": "led-wall",
   "accentColor": "#FACC15",
   "isAd": false,
-  "timing": { "variant": "through-scratch" },
-  "slide1": {
-    "bigText": "Und?",
-    "smallText": "Es wird ja immer gesagt: Das kann doch bald jeder mit KI."
+  "timing": {
+    "variant": "through-scratch"
   },
-  "slide2": {
-    "text": "Stimmt. Jeder kann mit KI ein Bild generieren und eine App zusammenklicken. Genauso wie jeder ein Fertighaus bestellen kann. Trotzdem gibt es Architekten."
-  },
-  "slide3": {
-    "text": "Der Unterschied zwischen benutzen und verstehen bleibt. Egal wie gut das Tool wird.",
-    "button": "Folgt für mehr “Es wird ja immer gesagt”."
+  "content": {
+    "act1Setup": "Es wird ja immer gesagt: Das kann doch bald jeder mit KI.",
+    "act1Reveal": "Und?",
+    "act2": "Stimmt. Jeder kann mit KI ein Bild generieren und eine App zusammenklicken. Genauso wie jeder ein Fertighaus bestellen kann. Trotzdem gibt es Architekten.",
+    "act3": "Der Unterschied zwischen benutzen und verstehen bleibt. Egal wie gut das Tool wird.",
+    "aside": "Folgt für mehr “Es wird ja immer gesagt”."
   }
 }

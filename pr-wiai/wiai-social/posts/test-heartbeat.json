@@ -3,8 +3,15 @@
   "type": "led-wall",
   "ledPattern": "heartbeat",
   "accentColor": "#EF4444",
-  "timing": { "variant": "through" },
-  "slide1": { "bigText": "Matchmaking", "smallText": "\"Tinder ist doch Zufall.\"", "textAlign": "bottom" },
-  "slide2": { "text": "Tinder zeigt dir nicht\nzufällige Profile.\n\nEin Algorithmus berechnet\ndeinen 'Desirability Score'\nund matched dich\nentsprechend." },
-  "slide3": { "text": "Dein Liebesleben\nwird von einem\nAlgorithmus gesteuert.", "button": "WIAI · Recommender Systems" }
+  "timing": {
+    "variant": "through"
+  },
+  "content": {
+    "act1Setup": "\"Tinder ist doch Zufall.\"",
+    "act1Reveal": "Matchmaking",
+    "textAlign": "bottom",
+    "act2": "Tinder zeigt dir nicht\nzufällige Profile.\n\nEin Algorithmus berechnet\ndeinen 'Desirability Score'\nund matched dich\nentsprechend.",
+    "act3": "Dein Liebesleben\nwird von einem\nAlgorithmus gesteuert.",
+    "aside": "WIAI · Recommender Systems"
+  }
 }

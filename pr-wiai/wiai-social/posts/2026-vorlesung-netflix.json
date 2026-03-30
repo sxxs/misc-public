@@ -2,15 +2,13 @@
   "id": "2026-vorlesung-netflix",
   "type": "led-wall",
   "accentColor": "#22C55E",
-  "timing": { "variant": "through-scratch" },
-  "slide1": {
-    "smallText": "Montag, 8:15. Hörsaal. 300 Leute. PowerPoint. Folie 47 von 93."
+  "timing": {
+    "variant": "through-scratch"
   },
-  "slide2": {
-    "text": "Das ist wie Netflix schauen nur jemand anderes hält die Fernbedienung und du darfst nicht aufs Klo."
-  },
-  "slide3": {
-    "text": "In einer meiner Vorlesungen entscheidest du als Cybersecurity-Analystin, ob du den Server patchen oder das Lösegeld zahlen willst.",
-    "button": "Server patchen. Immer."
+  "content": {
+    "act1Setup": "Montag, 8:15. Hörsaal. 300 Leute. PowerPoint. Folie 47 von 93.",
+    "act2": "Das ist wie Netflix schauen nur jemand anderes hält die Fernbedienung und du darfst nicht aufs Klo.",
+    "act3": "In einer meiner Vorlesungen entscheidest du als Cybersecurity-Analystin, ob du den Server patchen oder das Lösegeld zahlen willst.",
+    "aside": "Server patchen. Immer."
   }
 }

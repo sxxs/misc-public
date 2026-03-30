@@ -1,20 +1,11 @@
 {
   "id": "2026-chatgpt-klausur",
-  "type": "led-wall",
-  "accentColor": "#EF4444",
-  "isAd": false,
-  "timing": {
-    "variant": "through",
-    "act1Duration": 100
-  },
-  "slide1": {
-    "smallText": "ChatGPT besteht unsere alte Klausur.\n\nLocker."
-  },
-  "slide2": {
-    "text": "Also haben wir eine neue geschrieben. Die prüft nicht Wissen sondern Können. Und Können kann man nicht prompten."
-  },
-  "slide3": {
-    "text": "380 Laptops. VS Code. Debugger. Das besteht kein Chatbot.",
-    "button": "Noch nicht."
+  "type": "billboard",
+  "design": "billboard",
+  "content": {
+    "act1Setup": "ChatGPT besteht unsere alte Klausur.\n\nLocker.",
+    "act2": "Also haben wir eine neue geschrieben. Die prüft nicht Wissen sondern Können. Und Können kann man nicht prompten.",
+    "act3": "380 Laptops. VS Code. Debugger. Das besteht kein Chatbot.",
+    "aside": "Noch nicht."
   }
 }

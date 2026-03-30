@@ -2,15 +2,13 @@
   "id": "2026-programmierik",
   "type": "led-wall",
   "accentColor": "#8B5CF6",
-  "timing": { "variant": "through-scratch" },
-  "slide1": {
-    "smallText": "Unpopular Opinion:"
+  "timing": {
+    "variant": "through-scratch"
   },
-  "slide2": {
-    "text": "Die meisten Informatiker:innen verbringen mehr Zeit damit, Code zu lesen als Code zu schreiben. Und noch mehr Zeit damit, darüber nachzudenken."
-  },
-  "slide3": {
-    "text": "Deshalb heißt es Informatik und nicht Programmierik.",
-    "button": "Folgt für mehr Unpopular Opinions."
+  "content": {
+    "act1Setup": "Unpopular Opinion:",
+    "act2": "Die meisten Informatiker:innen verbringen mehr Zeit damit, Code zu lesen als Code zu schreiben. Und noch mehr Zeit damit, darüber nachzudenken.",
+    "act3": "Deshalb heißt es Informatik und nicht Programmierik.",
+    "aside": "Folgt für mehr Unpopular Opinions."
   }
 }

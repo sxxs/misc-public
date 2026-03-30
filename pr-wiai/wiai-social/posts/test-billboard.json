@@ -2,14 +2,10 @@
   "id": "test-billboard",
   "type": "billboard",
   "music": false,
-  "slide1": {
-    "bigText": "'Ich hab nichts zu verbergen.'"
-  },
-  "slide2": {
-    "text": "Du hast Vorhänge an deinen Fenstern."
-  },
-  "slide3": {
-    "text": "Merkste selber, oder?",
+  "content": {
+    "act1Reveal": "'Ich hab nichts zu verbergen.'",
+    "act2": "Du hast Vorhänge an deinen Fenstern.",
+    "act3": "Merkste selber, oder?",
     "url": "studium.wiai.uni-bamberg.de"
   }
 }

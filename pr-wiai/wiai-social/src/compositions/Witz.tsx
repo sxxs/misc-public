@@ -7,7 +7,7 @@ import { SlideFrame } from "../components/SlideFrame";
 import { PunchlineSlide } from "../components/PunchlineSlide";
 import { resolvePattern } from "../patterns";
 
-// Slide 1: question in yellow
+// Slide 1: question in yellow (act1Reveal — the big bold setup line)
 const Act1: React.FC<{ post: Post }> = ({ post }) => {
   const frame = useCurrentFrame();
   const accent = post.accentColor ?? WIAI_YELLOW;
@@ -34,7 +34,7 @@ const Act1: React.FC<{ post: Post }> = ({ post }) => {
             whiteSpace: "pre-line",
           }}
         >
-          {post.slide1.bigText}
+          {post.content.act1Reveal}
         </div>
       </div>
     </SlideFrame>
@@ -68,7 +68,7 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
             whiteSpace: "pre-line",
           }}
         >
-          {post.slide2.text}
+          {post.content.act2}
         </div>
       </div>
     </SlideFrame>
@@ -79,7 +79,7 @@ const Act3: React.FC<{ post: Post }> = ({ post }) => {
   const accent = post.accentColor ?? WIAI_YELLOW;
   return (
     <SlideFrame accentColor={accent}>
-      <PunchlineSlide accentColor={accent} text={post.slide3.text} button={post.slide3.button} pattern={resolvePattern(post.ledPattern)} />
+      <PunchlineSlide accentColor={accent} text={post.content.act3} button={post.content.aside} pattern={resolvePattern(post.ledPattern)} />
     </SlideFrame>
   );
 };

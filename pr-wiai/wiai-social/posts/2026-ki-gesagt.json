@@ -3,15 +3,11 @@
   "type": "led-wall",
   "accentColor": "#FACC15",
   "isAd": false,
-  "slide1": {
-    "bigText": "Naja.",
-    "smallText": "Es wird ja immer gesagt:\nKI nimmt uns die Jobs weg."
-  },
-  "slide2": {
-    "text": "Richtig ist:\nKI verändert Jobs.\n\nDie Frage ist:\nBist du die Person, die etwas verändert\noder die, die verändert wird?"
-  },
-  "slide3": {
-    "text": "Der Unterschied:\nVerstehst du was passiert oder nicht?",
-    "button": "Folgt für mehr\n“Es wird ja immer gesagt”."
+  "content": {
+    "act1Setup": "Es wird ja immer gesagt:\nKI nimmt uns die Jobs weg.",
+    "act1Reveal": "Naja.",
+    "act2": "Richtig ist:\nKI verändert Jobs.\n\nDie Frage ist:\nBist du die Person, die etwas verändert\noder die, die verändert wird?",
+    "act3": "Der Unterschied:\nVerstehst du was passiert oder nicht?",
+    "aside": "Folgt für mehr\n“Es wird ja immer gesagt”."
   }
 }

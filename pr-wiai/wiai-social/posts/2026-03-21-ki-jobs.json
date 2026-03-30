@@ -3,16 +3,12 @@
   "type": "newsjacking",
   "category": "KI",
   "accentColor": "#FACC15",
-  "slide1": {
+  "content": {
+    "act1Setup": "Alle paar Monate erklärt jemand die Informatik für tot.",
+    "act1Reveal": "Tja.",
     "image": "./assets/screenshots/some-news-on-ki.png",
-    "bigText": "Tja.",
-    "smallText": "Alle paar Monate erklärt jemand die Informatik für tot."
-  },
-  "slide2": {
-    "text": "Panik ist das Geschäftsmodell mancher Leute.\n\nFür uns ist das ein Studienfach."
-  },
-  "slide3": {
-    "text": "Wer KI versteht, baut sie.",
-    "button": "Informatik in Bamberg. Kein NC."
+    "act2": "Panik ist das Geschäftsmodell mancher Leute.\n\nFür uns ist das ein Studienfach.",
+    "act3": "Wer KI versteht, baut sie.",
+    "aside": "Informatik in Bamberg. Kein NC."
   }
 }

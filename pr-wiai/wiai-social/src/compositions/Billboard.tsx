@@ -28,34 +28,80 @@ const BillboardFrame: React.FC<{ children: React.ReactNode }> = ({ children }) =
   </div>
 );
 
-// ── Act1: Hook — big text fade in, hold, fade out ───────────────────────────
+// ── Act1: Hook — optional setup line (act1Setup), then larger reveal below (act1Reveal) ──
 const BillboardAct1: React.FC<{ post: Post }> = ({ post }) => {
   const frame = useCurrentFrame();
-  const text = post.slide1.bigText || post.slide1.smallText || "";
+  const { act1Setup, act1Reveal } = post.content;
+  const hasSetup = !!act1Setup;
+  const hasReveal = !!act1Reveal;
   const fadeIn = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp" });
+  const revealFadeIn = interpolate(frame, [14, 30], [0, 1], { extrapolateRight: "clamp" });
   const fadeOut = interpolate(
     frame,
     [BILLBOARD_ACT1_DURATION - 8, BILLBOARD_ACT1_DURATION],
     [1, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
   );
+  const opacity = Math.min(fadeIn, fadeOut);
 
   return (
     <BillboardFrame>
-      <div
-        style={{
-          opacity: Math.min(fadeIn, fadeOut),
-          color: "#ffffff",
-          fontSize: 108,
-          fontFamily: spaceGroteskFamily,
-          fontWeight: 700,
-          lineHeight: 1.15,
-          textAlign: "center",
-          maxWidth: 900,
-        }}
-      >
-        {text}
-      </div>
+      {hasSetup && hasReveal ? (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 36,
+            maxWidth: 900,
+          }}
+        >
+          <div
+            style={{
+              opacity,
+              color: "#ffffff",
+              fontSize: 72,
+              fontFamily: spaceGroteskFamily,
+              fontWeight: 700,
+              lineHeight: 1.2,
+              textAlign: "center",
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {act1Setup}
+          </div>
+          <div
+            style={{
+              opacity: Math.min(revealFadeIn, fadeOut),
+              color: "#ffffff",
+              fontSize: 108,
+              fontFamily: spaceGroteskFamily,
+              fontWeight: 700,
+              lineHeight: 1.15,
+              textAlign: "center",
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {act1Reveal}
+          </div>
+        </div>
+      ) : (
+        <div
+          style={{
+            opacity,
+            color: "#ffffff",
+            fontSize: 108,
+            fontFamily: spaceGroteskFamily,
+            fontWeight: 700,
+            lineHeight: 1.15,
+            textAlign: "center",
+            maxWidth: 900,
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          {act1Reveal || act1Setup || ""}
+        </div>
+      )}
     </BillboardFrame>
   );
 };
@@ -84,13 +130,13 @@ const BillboardAct2: React.FC<{ post: Post; duration: number }> = ({ post, durat
           whiteSpace: "pre-wrap",
         }}
       >
-        {post.slide2.text}
+        {post.content.act2}
       </div>
     </BillboardFrame>
   );
 };
 
-// ── Act3: Punch — text + delayed yellow glow, optional button, footer ───────
+// ── Act3: Punch — text + delayed yellow glow, optional aside, footer ────────
 const BillboardAct3: React.FC<{ post: Post }> = ({ post }) => {
   const frame = useCurrentFrame();
   const textFadeIn = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp" });
@@ -99,6 +145,7 @@ const BillboardAct3: React.FC<{ post: Post }> = ({ post }) => {
   const buttonOpacity = interpolate(frame, [60, 76], [0, 1], { extrapolateRight: "clamp" });
 
   const glowShadow = `0 0 60px rgba(250, 204, 21, ${(0.12 * glowOpacity).toFixed(3)})`;
+  const { act3, aside } = post.content;
 
   return (
     <BillboardFrame>
@@ -116,11 +163,11 @@ const BillboardAct3: React.FC<{ post: Post }> = ({ post }) => {
           textShadow: glowShadow,
         }}
       >
-        {post.slide3.text}
+        {act3}
       </div>
 
-      {/* Button / ÜbrigensText */}
-      {(post.slide3.button || post.slide3.übrigensText) && (
+      {/* Aside (button or übrigens) — same visual treatment in Billboard */}
+      {aside && (
         <div
           style={{
             opacity: buttonOpacity,
@@ -134,7 +181,7 @@ const BillboardAct3: React.FC<{ post: Post }> = ({ post }) => {
             whiteSpace: "pre-wrap",
           }}
         >
-          {post.slide3.button || post.slide3.übrigensText}
+          {aside}
         </div>
       )}
 
@@ -167,7 +214,7 @@ export const Billboard: React.FC<{ post: Post }> = ({ post }) => {
   }
 
   // Classic mode: 3-act fade-in
-  const act2Duration = computeAct2Duration(post.slide2.text);
+  const act2Duration = computeAct2Duration(post.content.act2);
   const act2Start = BILLBOARD_ACT1_DURATION;
   const act3Start = act2Start + act2Duration;
 

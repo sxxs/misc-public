@@ -2,15 +2,13 @@
   "id": "2026-stopp-handy",
   "type": "led-wall",
   "accentColor": "#F0EDE8",
-  "timing": { "variant": "through" },
-  "slide1": {
-    "smallText": "Stopp. Leg das Handy weg."
+  "timing": {
+    "variant": "through"
   },
-  "slide2": {
-    "text": "Hast du nicht. Weil 'Stopp' auf Social Media nicht 'Stopp' bedeutet. Es bedeutet: Gleich kommt was."
-  },
-  "slide3": {
-    "text": "Und da ist es: Du liest immer noch.",
-    "button": "Das Handy weglegen können ist eine Kernkompetenz. Verstehen warum du es nicht kannst auch."
+  "content": {
+    "act1Setup": "Stopp. Leg das Handy weg.",
+    "act2": "Hast du nicht. Weil 'Stopp' auf Social Media nicht 'Stopp' bedeutet. Es bedeutet: Gleich kommt was.",
+    "act3": "Und da ist es: Du liest immer noch.",
+    "aside": "Das Handy weglegen können ist eine Kernkompetenz. Verstehen warum du es nicht kannst auch."
   }
 }

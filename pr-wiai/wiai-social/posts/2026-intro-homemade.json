@@ -1,21 +1,10 @@
 {
   "id": "2026-intro-homemade",
   "type": "led-wall",
-  "accentColor": "#FACC15",
-  "isAd": false,
-  "timing": {
-    "variant": "through",
-    "act1Duration": 100
-  },
-  "slide1": {
-    "bigText": "Haben\nandere\nUnis.",
-    "smallText": "Redaktionsplan, Agentur, Content-Strategie."
-  },
-  "slide2": {
-    "text": "Was wir haben:\nEinen Dekan mit Handy und dem Gefühl, dass diese Fakultät mehr Sichtbarkeit verdient."
-  },
-  "slide3": {
-    "text": "Made in Bamberg.\nSince … äh, heute.",
-    "button": "Folgt uns.\n\nFür Takes, die niemand bestellt hat."
+  "design": "pixel-wall",
+  "content": {
+    "act1Setup": "Das hier ist keine Uni-Kampagne.",
+    "act2": "Das hier kommt aus der Bamberger Informatik. Nicht aus einer Agentur. Nicht aus einer Pressestelle.",
+    "act3": "Hier geht es um Studium, Internet und den Wahnsinn dazwischen."
   }
 }

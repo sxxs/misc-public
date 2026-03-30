@@ -2,8 +2,15 @@
   "id": "test-pacman",
   "type": "led-wall",
   "ledPattern": "pacman",
-  "timing": { "variant": "through" },
-  "slide1": { "bigText": "Lootboxen", "smallText": "\"Ist doch nur ein Spiel.\"", "textAlign": "bottom" },
-  "slide2": { "text": "Lootboxen nutzen die\ngleichen Mechanismen\nwie Spielautomaten.\n\nDie Algorithmen dahinter?\nInformatik." },
-  "slide3": { "text": "Wer die Mechaniken\nversteht, wird nicht\nmanipuliert.", "button": "WIAI · Games Engineering" }
+  "timing": {
+    "variant": "through"
+  },
+  "content": {
+    "act1Setup": "\"Ist doch nur ein Spiel.\"",
+    "act1Reveal": "Lootboxen",
+    "textAlign": "bottom",
+    "act2": "Lootboxen nutzen die\ngleichen Mechanismen\nwie Spielautomaten.\n\nDie Algorithmen dahinter?\nInformatik.",
+    "act3": "Wer die Mechaniken\nversteht, wird nicht\nmanipuliert.",
+    "aside": "WIAI · Games Engineering"
+  }
 }

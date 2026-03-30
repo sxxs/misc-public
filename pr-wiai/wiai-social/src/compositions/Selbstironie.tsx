@@ -8,7 +8,7 @@ import { TypewriterText } from "../components/TypewriterText";
 import { PunchlineSlide } from "../components/PunchlineSlide";
 import { resolvePattern } from "../patterns";
 
-// Like Nachtgedanke but with optional label instead of time
+// Like Nachtgedanke but with optional label (act1Setup) instead of time
 const Act1: React.FC<{ post: Post }> = ({ post }) => {
   const frame = useCurrentFrame();
   const accent = post.accentColor ?? WIAI_YELLOW;
@@ -17,7 +17,7 @@ const Act1: React.FC<{ post: Post }> = ({ post }) => {
   return (
     <SlideFrame accentColor={accent}>
       <div style={{ flex: 1, display: "flex", alignItems: "flex-start", padding: "100px 108px 0" }}>
-        {post.slide1.label && (
+        {post.content.act1Setup && (
           <div
             style={{
               opacity: labelOpacity,
@@ -29,7 +29,7 @@ const Act1: React.FC<{ post: Post }> = ({ post }) => {
               textTransform: "uppercase",
             }}
           >
-            {post.slide1.label}
+            {post.content.act1Setup}
           </div>
         )}
       </div>
@@ -53,7 +53,7 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
           opacity: containerOpacity,
         }}
       >
-        <TypewriterText text={post.slide2.text} startFrame={6} color="#ffffff" fontSize={72} />
+        <TypewriterText text={post.content.act2} startFrame={6} color="#ffffff" fontSize={72} />
       </div>
     </SlideFrame>
   );
@@ -63,7 +63,7 @@ const Act3: React.FC<{ post: Post }> = ({ post }) => {
   const accent = post.accentColor ?? WIAI_YELLOW;
   return (
     <SlideFrame accentColor={accent}>
-      <PunchlineSlide accentColor={accent} text={post.slide3.text} button={post.slide3.button} pattern={resolvePattern(post.ledPattern)} />
+      <PunchlineSlide accentColor={accent} text={post.content.act3} button={post.content.aside} pattern={resolvePattern(post.ledPattern)} />
     </SlideFrame>
   );
 };

@@ -2,16 +2,12 @@
   "id": "contrarian-vorhange",
   "type": "led-wall",
   "accentColor": "#FACC15",
-  "slide1": {
-    "bigText": "Aha.",
-    "smallText": "Ich hab nichts\nzu verbergen."
-  },
-  "slide2": {
-    "text": "Du hast Vorhänge\nan deinen Fenstern."
-  },
   "isAd": true,
-  "slide3": {
-    "text": "Merkste selber, oder?",
-    "button": "Unsere Seminarräume\nhaben keine Vorhänge.\nWas das jetzt heißt\nweiß ich auch nicht."
+  "content": {
+    "act1Setup": "Ich hab nichts\nzu verbergen.",
+    "act1Reveal": "Aha.",
+    "act2": "Du hast Vorhänge\nan deinen Fenstern.",
+    "act3": "Merkste selber, oder?",
+    "aside": "Unsere Seminarräume\nhaben keine Vorhänge.\nWas das jetzt heißt\nweiß ich auch nicht."
   }
 }

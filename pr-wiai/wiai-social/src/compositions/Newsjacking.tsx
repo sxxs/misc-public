@@ -156,12 +156,15 @@ const GlitchBackground: React.FC<{ src: string }> = ({ src }) => {
 };
 
 // ─── Act 1: Hook ─────────────────────────────────────────────────────────────
+// act1Setup = context/quote line (act1Setup shown first)
+// act1Reveal = reaction word (big GlitchText, shown after)
+// image = optional screenshot/background
 
 const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote = false }) => {
   const frame = useCurrentFrame();
   const accent = post.accentColor ?? WIAI_YELLOW;
+  const { act1Setup, act1Reveal, image } = post.content;
 
-  const imgOpacity = 1;
   const smallOpacity = interpolate(frame, [14, 22], [0, 1], { extrapolateRight: "clamp" });
   const bigOpacity = interpolate(frame, [26, 36], [0, 1], { extrapolateRight: "clamp" });
 
@@ -169,8 +172,8 @@ const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote =
     <SlideFrame accentColor={accent} currentSlide={1}>
       {/* Full-bleed background — image or LED wall fallback */}
       {!showQuote && (
-        post.slide1.image
-          ? <GlitchBackground src={resolveAssetPath(post.slide1.image)} />
+        image
+          ? <GlitchBackground src={resolveAssetPath(image)} />
           : <LedWall accentColor={accent} pattern={resolvePattern(post.ledPattern)} />
       )}
 
@@ -181,8 +184,6 @@ const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote =
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",
-          // Bottom 380px = TikTok safe zone (caption + audio strip)
-          // Right 180px = action buttons
           padding: "0 240px 400px 108px",
           position: "relative",
           zIndex: 5,
@@ -190,7 +191,7 @@ const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote =
         }}
       >
         {/* Context line */}
-        {post.slide1.smallText && (
+        {act1Setup && (
           <div
             style={{
               opacity: smallOpacity,
@@ -201,14 +202,14 @@ const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote =
               whiteSpace: "pre-line",
             }}
           >
-            {post.slide1.smallText}
+            {act1Setup}
           </div>
         )}
 
         {/* Reaction — big glitch text */}
         <div style={{ opacity: bigOpacity }}>
           <GlitchText
-            text={post.slide1.bigText}
+            text={act1Reveal ?? ""}
             fontSize={168}
             glitchStartFrame={38}
             glitchEndFrame={52}
@@ -217,7 +218,7 @@ const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote =
       </div>
 
       {/* Contrarian: quoted opinion overlay */}
-      {showQuote && post.slide1.smallText && (
+      {showQuote && act1Setup && (
         <div
           style={{
             position: "absolute",
@@ -235,14 +236,14 @@ const Act1: React.FC<{ post: Post; showQuote?: boolean }> = ({ post, showQuote =
             paddingLeft: 36,
           }}
         >
-          {`"${post.slide1.smallText}"`}
+          {`"${act1Setup}"`}
         </div>
       )}
     </SlideFrame>
   );
 };
 
-// ─── Act 2: Punchline ─────────────────────────────────────────────────────────
+// ─── Act 2: Argument ──────────────────────────────────────────────────────────
 
 const Act2: React.FC<{ post: Post }> = ({ post }) => {
   const frame = useCurrentFrame();
@@ -254,12 +255,10 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
   });
 
   // Two glitch moments after text has been sitting a while
-  // Glitch 1: frames 110–116
   const g1Active = frame >= 110 && frame < 117;
   const g1t = frame - 110;
   const glitch1X = g1Active ? (g1t < 4 ? 18 : -(g1t - 4) * 6) : 0;
 
-  // Glitch 2: frames 145–150 (shorter, smaller)
   const g2Active = frame >= 145 && frame < 151;
   const g2t = frame - 145;
   const glitch2X = g2Active ? (g2t < 3 ? -12 : (g2t - 3) * 4) : 0;
@@ -273,13 +272,12 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
           flex: 1,
           display: "flex",
           alignItems: "center",
-          // Keep content out of TikTok bottom/right zones
           padding: "200px 240px 200px 108px",
         }}
       >
         <DirtyCutout accentColor={accent} enterProgress={enterProgress} glitchX={glitchX}>
           <TypewriterText
-            text={post.slide2.text}
+            text={post.content.act2}
             startFrame={10}
             framesPerLine={3}
           />
@@ -295,7 +293,7 @@ const Act3: React.FC<{ post: Post }> = ({ post }) => {
   const accent = post.accentColor ?? WIAI_YELLOW;
   return (
     <SlideFrame accentColor={accent}>
-      <PunchlineSlide accentColor={accent} text={post.slide3.text} button={post.slide3.button} pattern={resolvePattern(post.ledPattern)} />
+      <PunchlineSlide accentColor={accent} text={post.content.act3} button={post.content.aside} pattern={resolvePattern(post.ledPattern)} />
     </SlideFrame>
   );
 };

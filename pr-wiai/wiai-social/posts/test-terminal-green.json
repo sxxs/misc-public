@@ -3,15 +3,12 @@
   "type": "terminal",
   "music": false,
   "terminal": {
-    "color": "green",
-    "prompt": "$ whois target"
+    "color": "green"
   },
-  "slide1": {},
-  "slide2": {
-    "text": "Der erfolgreichste Hacker\naller Zeiten hat nie eine\nZeile Code geschrieben.\n\nKevin Mitnick hat einfach\nMenschen angerufen und\ngefragt."
-  },
-  "slide3": {
-    "text": "Social Engineering.\nDas größte Sicherheitsrisiko\nsitzt vor dem Bildschirm.",
-    "button": "WIAI · IT-Sicherheit"
+  "content": {
+    "act1Setup": "$ whois target",
+    "act2": "Der erfolgreichste Hacker\naller Zeiten hat nie eine\nZeile Code geschrieben.\n\nKevin Mitnick hat einfach\nMenschen angerufen und\ngefragt.",
+    "act3": "Social Engineering.\nDas größte Sicherheitsrisiko\nsitzt vor dem Bildschirm.",
+    "aside": "WIAI · IT-Sicherheit"
   }
 }

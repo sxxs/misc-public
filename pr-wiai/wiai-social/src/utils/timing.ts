@@ -192,11 +192,11 @@ export const BILLBOARD_ACT1_DURATION = 120;
 export const BILLBOARD_ACT3_DURATION = 160;
 
 export function computeBillboardDuration(post: {
-  slide2: { text: string };
+  content: { act2: string };
 }): number {
   return (
     BILLBOARD_ACT1_DURATION +
-    computeAct2Duration(post.slide2.text) +
+    computeAct2Duration(post.content.act2) +
     BILLBOARD_ACT3_DURATION
   );
 }
@@ -219,11 +219,11 @@ export const TERMINAL_ACT1_DURATION = 75;
 export const TERMINAL_ACT3_DURATION = 150;
 
 export function computeTerminalDuration(post: {
-  slide2: { text: string };
+  content: { act2: string };
 }): number {
   return (
     TERMINAL_ACT1_DURATION +
-    computeTerminalAct2Duration(post.slide2.text) +
+    computeTerminalAct2Duration(post.content.act2) +
     TERMINAL_ACT3_DURATION
   );
 }

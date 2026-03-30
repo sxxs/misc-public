@@ -3,16 +3,12 @@
   "type": "led-wall",
   "accentColor": "#3B82F6",
   "isAd": true,
-  "slide1": {
-    "bigText": "Geht.",
-    "smallText": "Informatik mit einer 3 in Mathe?"
-  },
-  "slide2": {
-    "text": "Informatik-Mathe ist nicht Schul-Mathe. Durchbeißen zählt mehr als Talent."
-  },
-  "slide3": {
-    "text": "Durchbeißen > Talent.\nJeden Tag.",
-    "button": "Dein Schnitt ist egal. Wirklich.",
+  "content": {
+    "act1Setup": "Informatik mit einer 3 in Mathe?",
+    "act1Reveal": "Geht.",
+    "act2": "Informatik-Mathe ist nicht Schul-Mathe. Durchbeißen zählt mehr als Talent.",
+    "act3": "Durchbeißen > Talent.\nJeden Tag.",
+    "aside": "Dein Schnitt ist egal. Wirklich.",
     "url": "studium.wiai.uni-bamberg.de"
   }
 }

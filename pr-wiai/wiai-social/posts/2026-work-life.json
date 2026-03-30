@@ -3,16 +3,15 @@
   "type": "led-wall",
   "accentColor": "#22C55E",
   "isAd": false,
-  "timing": { "variant": "through-scratch", "act1Duration": 120 },
-  "slide1": {
-    "bigText": "Kommt drauf an\nwo du studierst.",
-    "smallText": "Es wird ja immer\ngesagt, Infor-\nmatiker:innen\nverdienen gut,\naber leben\nschlecht."
+  "timing": {
+    "variant": "through-scratch",
+    "act1Duration": 120
   },
-  "slide2": {
-    "text": "Großstadt: verdienst gut, zahlst alles für Miete.\n\nBamberg: verdienst auch gut, zahlst die Hälfte, wohnst im UNESCO-Welterbe."
-  },
-  "slide3": {
-    "text": "Work-Life-Balance:\nFängt beim Studienort an.",
-    "button": "Und beim Rauchbier.\nAber das ist eine persönliche Meinung."
+  "content": {
+    "act1Setup": "Es wird ja immer\ngesagt, Infor-\nmatiker:innen\nverdienen gut,\naber leben\nschlecht.",
+    "act1Reveal": "Kommt drauf an\nwo du studierst.",
+    "act2": "Großstadt: verdienst gut, zahlst alles für Miete.\n\nBamberg: verdienst auch gut, zahlst die Hälfte, wohnst im UNESCO-Welterbe.",
+    "act3": "Work-Life-Balance:\nFängt beim Studienort an.",
+    "aside": "Und beim Rauchbier.\nAber das ist eine persönliche Meinung."
   }
 }

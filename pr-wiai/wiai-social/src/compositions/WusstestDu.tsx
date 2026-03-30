@@ -14,18 +14,19 @@ function resolveAssetPath(raw: string): string {
   return raw.replace(/^\.\/assets\//, "");
 }
 
-// Fact hook: big keyword/number, optional background image at 15% opacity
+// Fact hook: big keyword/number (act1Reveal), optional caption (act1Setup), optional background image
 const Act1: React.FC<{ post: Post }> = ({ post }) => {
   const frame = useCurrentFrame();
   const accent = post.accentColor ?? WIAI_YELLOW;
+  const { act1Setup, act1Reveal, image } = post.content;
   const bigOpacity = interpolate(frame, [5, 15], [0, 1], { extrapolateRight: "clamp" });
 
   return (
     <SlideFrame accentColor={accent}>
       {/* Optional background image at low opacity */}
-      {post.slide1.image && (
+      {image && (
         <div style={{ position: "absolute", inset: 0, opacity: 0.15, zIndex: 1 }}>
-          <HalftoneImage src={resolveAssetPath(post.slide1.image)} style={{ height: "100%", objectFit: "cover" }} />
+          <HalftoneImage src={resolveAssetPath(image)} style={{ height: "100%", objectFit: "cover" }} />
         </div>
       )}
       <div
@@ -42,13 +43,13 @@ const Act1: React.FC<{ post: Post }> = ({ post }) => {
         }}
       >
         <GlitchText
-          text={post.slide1.bigText}
+          text={act1Reveal ?? ""}
           fontSize={180}
           glitchStartFrame={40}
           glitchEndFrame={52}
           color={accent}
         />
-        {post.slide1.smallText && (
+        {act1Setup && (
           <div
             style={{
               color: "rgba(255,255,255,0.7)",
@@ -56,7 +57,7 @@ const Act1: React.FC<{ post: Post }> = ({ post }) => {
               lineHeight: 1.3,
             }}
           >
-            {post.slide1.smallText}
+            {act1Setup}
           </div>
         )}
       </div>
@@ -76,7 +77,7 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
     <SlideFrame accentColor={accent}>
       <div style={{ flex: 1, display: "flex", alignItems: "center", padding: "0 108px" }}>
         <DirtyCutout accentColor={accent} enterProgress={enterProgress}>
-          <TypewriterText text={post.slide2.text} startFrame={10} />
+          <TypewriterText text={post.content.act2} startFrame={10} />
         </DirtyCutout>
       </div>
     </SlideFrame>
@@ -87,7 +88,7 @@ const Act3: React.FC<{ post: Post }> = ({ post }) => {
   const accent = post.accentColor ?? WIAI_YELLOW;
   return (
     <SlideFrame accentColor={accent}>
-      <PunchlineSlide accentColor={accent} text={post.slide3.text} button={post.slide3.button} pattern={resolvePattern(post.ledPattern)} />
+      <PunchlineSlide accentColor={accent} text={post.content.act3} button={post.content.aside} pattern={resolvePattern(post.ledPattern)} />
     </SlideFrame>
   );
 };

@@ -1,15 +1,10 @@
 {
   "id": "2026-merkste-netflix",
   "type": "led-wall",
-  "accentColor": "#EF4444",
-  "timing": { "variant": "through" },
-  "slide1": {
-    "smallText": "Netflix fragt: 'Schaust du noch?'"
-  },
-  "slide2": {
-    "text": "TikTok fragt das nicht."
-  },
-  "slide3": {
-    "text": "Merkste selber, oder?"
+  "design": "pixel-wall",
+  "content": {
+    "act1Setup": "Netflix fragt: 'Schaust du noch?'",
+    "act2": "TikTok fragt das nicht.",
+    "act3": "Merkste selber, oder?"
   }
 }

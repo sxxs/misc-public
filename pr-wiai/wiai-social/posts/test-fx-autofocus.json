@@ -2,13 +2,21 @@
   "id": "test-fx-autofocus",
   "type": "slideshow",
   "music": false,
-  "slide1": { "smallText": "" },
-  "slide2": { "text": "" },
-  "slide3": { "text": "" },
   "slideshow": {
     "images": [
-      { "src": "media/markus-spiske-2GGOT72tkzk-unsplash.jpg", "duration": 120, "effect": "autofocus" }
+      {
+        "src": "media/markus-spiske-2GGOT72tkzk-unsplash.jpg",
+        "duration": 120,
+        "effect": "autofocus"
+      }
     ],
-    "endCard": { "text": "@herdom.bamberg", "duration": 45 }
+    "endCard": {
+      "text": "@herdom.bamberg",
+      "duration": 45
+    }
+  },
+  "content": {
+    "act2": "",
+    "act3": ""
   }
 }

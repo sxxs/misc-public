@@ -3,15 +3,11 @@
   "type": "led-wall",
   "accentColor": "#F0EDE8",
   "isAd": false,
-  "slide1": {
-    "bigText": "Jaja.",
-    "smallText": "KI übernimmt die Weltherrschaft."
-  },
-  "slide2": {
-    "text": "Aktueller Stand:\nRoomba fällt die Treppe runter. Tesla bremst vor Schatten. ChatGPT erfindet Gerichtsurteile."
-  },
-  "slide3": {
-    "text": "Bis zur Weltherrschaft dauert es wohl noch ein bisschen.",
-    "button": "Trotzdem: Verstehen wie es funktioniert ist keine schlechte Idee. Und immer freundlich zu ChatGPT. Sicher ist sicher."
+  "content": {
+    "act1Setup": "KI übernimmt die Weltherrschaft.",
+    "act1Reveal": "Jaja.",
+    "act2": "Aktueller Stand:\nRoomba fällt die Treppe runter. Tesla bremst vor Schatten. ChatGPT erfindet Gerichtsurteile.",
+    "act3": "Bis zur Weltherrschaft dauert es wohl noch ein bisschen.",
+    "aside": "Trotzdem: Verstehen wie es funktioniert ist keine schlechte Idee. Und immer freundlich zu ChatGPT. Sicher ist sicher."
   }
 }

@@ -3,14 +3,11 @@
   "type": "terminal",
   "music": false,
   "terminal": {
-    "color": "amber",
-    "prompt": "$ 23:31"
+    "color": "amber"
   },
-  "slide1": {},
-  "slide2": {
-    "text": "Du musst nicht wissen\nwas du mit deinem Leben\nmachen willst.\n\nDu musst nur wissen\nwas du morgen ausprobieren\nwillst."
-  },
-  "slide3": {
-    "text": "Der Rest ergibt sich.\nOder auch nicht.\nBeides ist okay."
+  "content": {
+    "act1Setup": "$ 23:31",
+    "act2": "Du musst nicht wissen\nwas du mit deinem Leben\nmachen willst.\n\nDu musst nur wissen\nwas du morgen ausprobieren\nwillst.",
+    "act3": "Der Rest ergibt sich.\nOder auch nicht.\nBeides ist okay."
   }
 }

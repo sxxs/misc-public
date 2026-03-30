@@ -3,8 +3,15 @@
   "type": "led-wall",
   "ledPattern": "eye",
   "accentColor": "#EF4444",
-  "timing": { "variant": "through" },
-  "slide1": { "bigText": "Ertappt.", "smallText": "\"Ich hab nichts zu verbergen.\"", "textAlign": "bottom" },
-  "slide2": { "text": "Dein Handy trackt\n47 Datenpunkte pro Minute.\n\nStandort. Beschleunigung.\nBildschirmzeit. Apps.\n\nUnd du denkst du hast\nnichts zu verbergen." },
-  "slide3": { "text": "Du hast Vorhänge.\nMerkste selber.", "button": "WIAI · Datenschutz" }
+  "timing": {
+    "variant": "through"
+  },
+  "content": {
+    "act1Setup": "\"Ich hab nichts zu verbergen.\"",
+    "act1Reveal": "Ertappt.",
+    "textAlign": "bottom",
+    "act2": "Dein Handy trackt\n47 Datenpunkte pro Minute.\n\nStandort. Beschleunigung.\nBildschirmzeit. Apps.\n\nUnd du denkst du hast\nnichts zu verbergen.",
+    "act3": "Du hast Vorhänge.\nMerkste selber.",
+    "aside": "WIAI · Datenschutz"
+  }
 }

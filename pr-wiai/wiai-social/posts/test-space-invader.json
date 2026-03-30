@@ -2,8 +2,15 @@
   "id": "test-space-invader",
   "type": "led-wall",
   "ledPattern": "space-invader",
-  "timing": { "variant": "through" },
-  "slide1": { "bigText": "Anti-Cheat", "smallText": "\"Ich cheate doch gar nicht.\"", "textAlign": "bottom" },
-  "slide2": { "text": "Jeder Online-Shooter hat\nein Anti-Cheat-System.\n\nDiese Systeme sind\nKI-gestützte Anomalie-\nDetektoren.\n\nGebaut von Informatikern." },
-  "slide3": { "text": "Dein Lieblingsspiel\nbraucht Informatik.", "button": "WIAI · Games Engineering" }
+  "timing": {
+    "variant": "through"
+  },
+  "content": {
+    "act1Setup": "\"Ich cheate doch gar nicht.\"",
+    "act1Reveal": "Anti-Cheat",
+    "textAlign": "bottom",
+    "act2": "Jeder Online-Shooter hat\nein Anti-Cheat-System.\n\nDiese Systeme sind\nKI-gestützte Anomalie-\nDetektoren.\n\nGebaut von Informatikern.",
+    "act3": "Dein Lieblingsspiel\nbraucht Informatik.",
+    "aside": "WIAI · Games Engineering"
+  }
 }

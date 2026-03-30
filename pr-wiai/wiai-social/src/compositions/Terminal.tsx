@@ -35,10 +35,10 @@ const TerminalFrame: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   </div>
 );
 
-// ── Act1: Prompt + blinking cursor ──────────────────────────────────────────
+// ── Act1: Prompt (act1Setup) + blinking cursor ──────────────────────────────
 const TerminalAct1: React.FC<{ post: Post; color: string }> = ({ post, color }) => {
   const frame = useCurrentFrame();
-  const prompt = post.terminal?.prompt ?? "$";
+  const prompt = post.content.act1Setup ?? "$";
   const fadeIn = interpolate(frame, [0, 15], [0, 1], { extrapolateRight: "clamp" });
   // Cursor blinks at 530ms ≈ 16 frames
   const cursorOn = frame % 16 < 8;
@@ -73,7 +73,7 @@ const TerminalAct1: React.FC<{ post: Post; color: string }> = ({ post, color }) 
   );
 };
 
-// ── Act2: Char-by-char text typing ──────────────────────────────────────────
+// ── Act2: Char-by-char text typing (act2) ──────────────────────────────────
 const TerminalAct2: React.FC<{ post: Post; color: string }> = ({ post, color }) => {
   const frame = useCurrentFrame();
   const containerFadeIn = interpolate(frame, [0, 8], [0, 1], { extrapolateRight: "clamp" });
@@ -91,7 +91,7 @@ const TerminalAct2: React.FC<{ post: Post; color: string }> = ({ post, color }) 
         }}
       >
         <TerminalText
-          text={post.slide2.text}
+          text={post.content.act2}
           color={color}
           startFrame={6}
           charsPerFrame={0.5}
@@ -109,6 +109,7 @@ const TerminalAct3: React.FC<{ post: Post; color: string }> = ({ post, color }) 
   const subtextOpacity = interpolate(frame, [50, 66], [0, 1], { extrapolateRight: "clamp" });
   // Cursor blinks, then stops (stays solid) 20f before end = "done typing"
   const cursorOn = frame < TERMINAL_ACT3_DURATION - 20 ? frame % 16 < 8 : true;
+  const { act3, aside } = post.content;
 
   return (
     <TerminalFrame>
@@ -136,12 +137,12 @@ const TerminalAct3: React.FC<{ post: Post; color: string }> = ({ post, color }) 
             whiteSpace: "pre-wrap",
           }}
         >
-          {post.slide3.text}
+          {act3}
           <span style={{ opacity: cursorOn ? 1 : 0 }}>{"\u2588"}</span>
         </div>
 
-        {/* Button / ÜbrigensText — smaller, dimmed */}
-        {(post.slide3.button || post.slide3.übrigensText) && (
+        {/* Aside — smaller, dimmed */}
+        {aside && (
           <div
             style={{
               opacity: subtextOpacity * 0.5,
@@ -153,7 +154,7 @@ const TerminalAct3: React.FC<{ post: Post; color: string }> = ({ post, color }) 
               whiteSpace: "pre-wrap",
             }}
           >
-            {post.slide3.button || post.slide3.übrigensText}
+            {aside}
           </div>
         )}
       </div>
@@ -172,14 +173,14 @@ export const Terminal: React.FC<{ post: Post }> = ({ post }) => {
         <TerminalFlow
           blocks={post.terminal.blocks}
           baseColor={color}
-          prompt={post.terminal.prompt ?? "$"}
+          prompt={post.content.act1Setup ?? "$"}
         />
       </TerminalFrame>
     );
   }
 
   // Classic mode: 3-act structure
-  const act2Duration = computeTerminalAct2Duration(post.slide2.text);
+  const act2Duration = computeTerminalAct2Duration(post.content.act2);
   const act2Start = TERMINAL_ACT1_DURATION;
   const act3Start = act2Start + act2Duration;
 

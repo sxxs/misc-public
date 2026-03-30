@@ -3,16 +3,14 @@
   "type": "led-wall",
   "accentColor": "#22C55E",
   "isAd": false,
-  "timing": { "variant": "through" },
-  "slide1": {
-    "bigText": "Logik.",
-    "smallText": "Warum errät Akinator immer welche Person du meinst?"
+  "timing": {
+    "variant": "through"
   },
-  "slide2": {
-    "text": "Weil jede Frage die Hälfte der Möglichkeiten eliminiert. 20 Ja/Nein-Fragen reichen für über eine Million Personen. Das Prinzip heißt Entscheidungsbaum."
-  },
-  "slide3": {
-    "text": "Informatik ist nicht Magie. Es ist Logik, die sich wie Magie anfühlt.",
-    "button": "Das lernst du in Woche 3 des Informatikstudiums. Ab Woche 4 wird es noch besser."
+  "content": {
+    "act1Setup": "Warum errät Akinator immer welche Person du meinst?",
+    "act1Reveal": "Logik.",
+    "act2": "Weil jede Frage die Hälfte der Möglichkeiten eliminiert. 20 Ja/Nein-Fragen reichen für über eine Million Personen. Das Prinzip heißt Entscheidungsbaum.",
+    "act3": "Informatik ist nicht Magie. Es ist Logik, die sich wie Magie anfühlt.",
+    "aside": "Das lernst du in Woche 3 des Informatikstudiums. Ab Woche 4 wird es noch besser."
   }
 }

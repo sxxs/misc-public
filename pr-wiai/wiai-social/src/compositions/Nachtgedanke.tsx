@@ -8,7 +8,7 @@ import { TypewriterText } from "../components/TypewriterText";
 import { PunchlineSlide } from "../components/PunchlineSlide";
 import { resolvePattern } from "../patterns";
 
-// Minimal: just the time, no image, no glitch
+// Minimal: just the timestamp (act1Setup), no image, no glitch
 const Act1: React.FC<{ post: Post }> = ({ post }) => {
   const frame = useCurrentFrame();
   const accent = post.accentColor ?? WIAI_YELLOW;
@@ -24,7 +24,7 @@ const Act1: React.FC<{ post: Post }> = ({ post }) => {
           padding: "100px 108px 0",
         }}
       >
-        {post.slide1.time && (
+        {post.content.act1Setup && (
           <div
             style={{
               opacity: timeOpacity,
@@ -34,7 +34,7 @@ const Act1: React.FC<{ post: Post }> = ({ post }) => {
               letterSpacing: "0.05em",
             }}
           >
-            {post.slide1.time}
+            {post.content.act1Setup}
           </div>
         )}
       </div>
@@ -60,7 +60,7 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
         }}
       >
         <TypewriterText
-          text={post.slide2.text}
+          text={post.content.act2}
           startFrame={6}
           color="#ffffff"
           fontSize={72}
@@ -74,7 +74,7 @@ const Act3: React.FC<{ post: Post }> = ({ post }) => {
   const accent = post.accentColor ?? WIAI_YELLOW;
   return (
     <SlideFrame accentColor={accent}>
-      <PunchlineSlide accentColor={accent} text={post.slide3.text} button={post.slide3.button} pattern={resolvePattern(post.ledPattern)} />
+      <PunchlineSlide accentColor={accent} text={post.content.act3} button={post.content.aside} pattern={resolvePattern(post.ledPattern)} />
     </SlideFrame>
   );
 };

@@ -10,7 +10,9 @@ Faceless, text-driven, schwarz-dominant. TikTok (primaer), YouTube Shorts, Insta
 node pipeline/server.mjs         # → http://localhost:3847
 
 # Pipeline-Status auf einen Blick
-node digest.mjs
+bash digest.sh
+bash digest.sh --all
+bash digest.sh --json
 
 # Post von plan.json → Remotion JSON exportieren
 node export-post.mjs --list      # zeigt alle exportierbaren Posts

@@ -2,15 +2,13 @@
   "id": "2026-binary-search",
   "type": "led-wall",
   "accentColor": "#FACC15",
-  "timing": { "variant": "through-scratch" },
-  "slide1": {
-    "smallText": "Lifehack den du schon kannst:"
+  "timing": {
+    "variant": "through-scratch"
   },
-  "slide2": {
-    "text": "WLAN geht nicht. Hälfte der Geräte ausschalten. Geht's? Andere Hälfte. Hälfte davon ausschalten. In 5 Schritten hast du das Problem."
-  },
-  "slide3": {
-    "text": "Das heißt Binary Search. Informatiker:innen nutzen das bei allem.",
-    "button": "Von der Fehlersuche im Code bis zur Frage welches Gewürz im Essen fehlt."
+  "content": {
+    "act1Setup": "Lifehack den du schon kannst:",
+    "act2": "WLAN geht nicht. Hälfte der Geräte ausschalten. Geht's? Andere Hälfte. Hälfte davon ausschalten. In 5 Schritten hast du das Problem.",
+    "act3": "Das heißt Binary Search. Informatiker:innen nutzen das bei allem.",
+    "aside": "Von der Fehlersuche im Code bis zur Frage welches Gewürz im Essen fehlt."
   }
 }

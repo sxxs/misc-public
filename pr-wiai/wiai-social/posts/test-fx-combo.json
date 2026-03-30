@@ -2,13 +2,24 @@
   "id": "test-fx-combo",
   "type": "slideshow",
   "music": false,
-  "slide1": { "smallText": "" },
-  "slide2": { "text": "" },
-  "slide3": { "text": "" },
   "slideshow": {
     "images": [
-      { "src": "media/markus-spiske-giSEzH62wm0-unsplash.jpg", "duration": 90, "effect": ["desaturate", "depixelate"] }
+      {
+        "src": "media/markus-spiske-giSEzH62wm0-unsplash.jpg",
+        "duration": 90,
+        "effect": [
+          "desaturate",
+          "depixelate"
+        ]
+      }
     ],
-    "endCard": { "text": "@herdom.bamberg", "duration": 45 }
+    "endCard": {
+      "text": "@herdom.bamberg",
+      "duration": 45
+    }
+  },
+  "content": {
+    "act2": "",
+    "act3": ""
   }
 }

@@ -1,16 +1,11 @@
 {
   "id": "2026-passt-nicht",
   "type": "led-wall",
-  "accentColor": "#EF4444",
-  "isAd": false,
-  "slide1": {
-    "smallText": "Informatik passt nicht zu dir wenn …"
-  },
-  "slide2": {
-    "text": "… du immer sofort die richtige Antwort willst.\n\nInformatik ist: 90% der Zeit läuft es nicht.\n1% der Zeit läufts. Der Rest ist Lernen."
-  },
-  "slide3": {
-    "text": "Dieses eine Prozent ist es wert.",
-    "button": "Die anderen 99% auch. Man lernt am meisten wenn es nicht funktioniert."
+  "design": "pixel-wall",
+  "content": {
+    "act1Setup": "Informatik passt nicht zu dir wenn …",
+    "act2": "… du immer sofort die richtige Antwort willst.\n\nInformatik ist: 90% der Zeit läuft es nicht.\n1% der Zeit läufts. Der Rest ist Lernen.",
+    "act3": "Dieses eine Prozent ist es wert.",
+    "aside": "Die anderen 99% auch. Man lernt am meisten wenn es nicht funktioniert."
   }
 }

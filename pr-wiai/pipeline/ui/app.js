@@ -6,6 +6,7 @@
 const TYPES = {
   contrarian:     { short: "CTR",   full: "Contrarian",        color: "#facc15" },
   "merkste-selber": { short: "MERK", full: "Merkste selber",   color: "#38bdf8" },
+  "stimmt-eigentlich": { short: "STIM", full: "Stimmt eigentlich", color: "#60a5fa" },
   aphorismus:     { short: "APH",   full: "Aphorismus",        color: "#e0e0e0" },
   "wusstest-du":  { short: "WDU",   full: "Wusstest du",       color: "#34d399" },
   parodie:        { short: "PARO",  full: "Parodie",           color: "#06b6d4" },
@@ -65,7 +66,7 @@ const STATUS_COLORS = {
 
 const SLOTS_PER_WEEK = 7;
 
-const DEFAULT_COLUMNS = ["contrarian", "merkste-selber", "nahkastchen", "_rest"];
+const DEFAULT_COLUMNS = ["merkste-selber", "stimmt-eigentlich", "aphorismus", "_rest"];
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -104,7 +105,14 @@ async function updatePost(id, field, value) {
 function loadColumnConfig() {
   try {
     const saved = localStorage.getItem("herdom-columns");
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const legacyDefault = ["contrarian", "merkste-selber", "nahkastchen", "_rest"];
+      if (JSON.stringify(parsed) === JSON.stringify(legacyDefault)) {
+        return [...DEFAULT_COLUMNS];
+      }
+      return parsed;
+    }
   } catch {}
   return [...DEFAULT_COLUMNS];
 }
@@ -168,10 +176,10 @@ function el(tag, attrs, children) {
 function matchesSearch(post) {
   if (!searchQuery) return true;
   const q = searchQuery.toLowerCase();
+  const c = post.content || {};
   const hay = [
     post.id, post.type, post.tag ? "#" + post.tag : null, post.design, post.status,
-    post.slides?.bigText, post.slides?.smallText, post.slides?.s2, post.slides?.s3, post.slides?.button, post.slides?.uebrigens,
-    post.text?.slide1, post.text?.slide2, post.text?.slide3, post.text?.button, post.text?.uebrigens,
+    c.act1Setup, c.act1Reveal, c.act2, c.act3, c.aside,
     post.notes,
   ].filter(Boolean).join(" ").toLowerCase();
   return hay.includes(q);
@@ -309,11 +317,10 @@ function renderCalendar() {
 
 function createCalCard(post) {
   const t = typeOf(post.type);
-  const s = post.slides || {};
-  const fromJson = post.text || {};
+  const c = post.content || {};
 
   // Plan mode: always show full text
-  const parts = [s.bigText || fromJson.slide1, s.s2 || fromJson.slide2, s.s3 || fromJson.slide3].filter(Boolean);
+  const parts = [c.act1Setup || c.act1Reveal, c.act2, c.act3].filter(Boolean);
   const titleText = parts.join(" / ") || post.notes || post.id;
 
   const needsWork = post.status === "idea" || post.status === "draft";
@@ -427,9 +434,8 @@ function renderMixGrid() {
       const post = posts[i];
       if (post) {
         const t = typeOf(post.type);
-        const s = post.slides || {};
-        const fromJson = post.text || {};
-        const title = s.bigText || fromJson.slide1 || s.smallText || post.notes || post.id;
+        const c = post.content || {};
+        const title = c.act1Setup || c.act1Reveal || post.notes || post.id;
         const statusChar = post.status === "idea" ? "I" : post.status === "draft" ? "D" : null;
         const tipText = t.short + " · " + title.replace(/\n/g, " ").substring(0, 60);
         typeRow.appendChild(mixSq(t.color, tipText, statusChar));
@@ -528,15 +534,13 @@ function openWeekTimeline(wkObj, posts) {
   } else {
     for (const post of posts) {
       const t = typeOf(post.type);
-      const s = post.slides || {};
-      const fromJson = post.text || {};
+      const c = post.content || {};
       const parts = [
-        s.bigText || fromJson.slide1,
-        s.smallText,
-        s.s2 || fromJson.slide2,
-        s.s3 || fromJson.slide3,
-        s.button || fromJson.button ? "Button: " + (s.button || fromJson.button) : null,
-        s.uebrigens || fromJson.uebrigens ? "Uebrigens: " + (s.uebrigens || fromJson.uebrigens) : null,
+        c.act1Setup,
+        c.act1Reveal,
+        c.act2,
+        c.act3,
+        c.aside ? (c.asideStyle === "uebrigens" ? "Uebrigens: " : "Button: ") + c.aside : null,
       ].filter(Boolean).map(p => p.replace(/\n/g, " "));
 
       const lineChildren = [
@@ -656,12 +660,10 @@ function renderBacklog() {
 
 function createBlItem(post) {
   const t = typeOf(post.type);
-  const s = post.slides;
-  const text = s?.bigText
-    ? [s.bigText, s.s2, s.s3].filter(Boolean).join(" — ")
-    : post.text?.slide1
-      ? [post.text.slide1, post.text.slide2, post.text.slide3].filter(Boolean).join(" — ")
-      : (post.notes || post.id);
+  const c = post.content;
+  const text = c
+    ? [c.act1Setup || c.act1Reveal, c.act2, c.act3].filter(Boolean).join(" — ")
+    : (post.notes || post.id);
   const needsWork = post.status === "idea" || post.status === "draft";
   const isScheduled = !!post.targetWeek;
   const isMatch = searchQuery && matchesSearch(post);
@@ -979,117 +981,131 @@ function openPanel(id, event) {
   tagSelect.addEventListener("change", () => setField(post.id, "tag", tagSelect.value || null));
   content.appendChild(tagSelect);
 
-  // Editable Slides — fields depend on visual design
-  const slides = post.slides || {};
-  const fromJson = post.text || {};
-  const hasAnySlide = slides.bigText || slides.smallText || slides.s2 || slides.s3 || fromJson.slide1 || fromJson.slide2;
-  const notesFallback = !hasAnySlide ? (post.notes || "") : "";
+  // Editable content — field labels depend on visual design
+  const postContent = post.content || {};
 
+  // Per-design: which fields are shown and with what label
+  // act1Setup / act1Reveal / act2 / act3 / aside / asideStyle
   const DESIGN_FIELDS = {
     "pixel-wall": {
-      bigText: "S1 \u2014 Reaktionswort",
-      smallText: "S1 \u2014 Zitat / Setup",
-      s2: "S2 \u2014 Argument (Typewriter)",
-      s3: "S3 \u2014 Punchline",
-      button: true, uebrigens: true,
+      act1Setup:  "S1 \u2014 Setup / Zitat (erscheint zuerst)",
+      act1Reveal: "S1 \u2014 Reaktionswort (erscheint danach, gro\u00df)",
+      act2:       "S2 \u2014 Argument (Typewriter)",
+      act3:       "S3 \u2014 Punchline",
+      hasAside: true,
     },
     billboard: {
-      bigText: "Hook-Text (gro\u00df, plakativ)",
-      smallText: null,
-      s2: "Argument",
-      s3: "Punchline",
-      button: true, uebrigens: true,
+      act1Setup:  "S1 \u2014 Hook-Setup (erscheint zuerst, kleiner)",
+      act1Reveal: "S1 \u2014 Hook-Reveal (erscheint darunter, gro\u00df) \u2014 optional",
+      act2:       "S2 \u2014 Argument",
+      act3:       "S3 \u2014 Punchline",
+      hasAside: true,
     },
     terminal: {
-      bigText: "Prompt (z.B. '$ 23:47')",
-      smallText: "Text Teil 1 (Typing)",
-      s2: "Text Teil 2 (Typing, optional)",
-      s3: "Schlusszeile",
-      button: null, uebrigens: null,
+      act1Setup:  "Prompt (S1, z.B. '$ 23:47')",
+      act1Reveal: null,
+      act2:       "S2 \u2014 Typing-Text",
+      act3:       "S3 \u2014 Schlusszeile",
+      hasAside: true,
     },
     newsjacking: {
-      bigText: "Reaktionswort",
-      smallText: "News-Kontext",
-      s2: "Kommentar",
-      s3: "Punchline",
-      button: true, uebrigens: true,
+      act1Setup:  "S1 \u2014 News-Kontext / Zitat",
+      act1Reveal: "S1 \u2014 Reaktionswort (Glitch)",
+      act2:       "S2 \u2014 Kommentar",
+      act3:       "S3 \u2014 Punchline",
+      hasAside: true,
     },
     "raw-photo": {
-      bigText: "Text-Overlay auf Bild",
-      smallText: null, s2: null, s3: null,
-      button: null, uebrigens: null,
+      act1Setup:  "Text-Overlay auf Bild",
+      act1Reveal: null,
+      act2:       null,
+      act3:       null,
+      hasAside: false,
     },
   };
 
   const df = DESIGN_FIELDS[post.design] || DESIGN_FIELDS["pixel-wall"];
 
-  function slideField(key, label, jsonKey, cssClass, fallback) {
-    const val = slides[key] ?? fromJson[jsonKey] ?? fallback ?? "";
+  function contentField(key, label, cssClass) {
+    const val = postContent[key] ?? "";
     const group = el("div", { className: "slide-group" });
     group.appendChild(el("label", {}, label));
     const area = el("textarea", { className: cssClass || "" }, val);
     area.addEventListener("input", () => {
-      if (!post.slides) post.slides = {};
-      post.slides[key] = area.value;
-      debouncedSave(post.id, "slides", post.slides);
+      if (!post.content) post.content = {};
+      post.content[key] = area.value;
+      debouncedSave(post.id, "content", post.content);
     });
     group.appendChild(area);
     return group;
   }
 
-  // Terminal: color dropdown
+  // Terminal: color dropdown (this is a config value, not content)
   if (post.design === "terminal") {
     content.appendChild(el("label", {}, "Terminal-Farbe"));
     const colorSelect = el("select");
-    for (const c of ["green", "amber", "white"]) {
-      const opt = el("option", { value: c }, c);
-      if ((slides.terminalColor || "green") === c) opt.selected = true;
+    for (const col of ["green", "amber", "white"]) {
+      const opt = el("option", { value: col }, col);
+      if ((post.terminalColor || "green") === col) opt.selected = true;
       colorSelect.appendChild(opt);
     }
     colorSelect.addEventListener("change", () => {
-      if (!post.slides) post.slides = {};
-      post.slides.terminalColor = colorSelect.value;
-      debouncedSave(post.id, "slides", post.slides);
+      debouncedSave(post.id, "terminalColor", colorSelect.value);
     });
     content.appendChild(colorSelect);
   }
 
-  // Slide fields — only render if design config says so
-  if (df.bigText) content.appendChild(slideField("bigText", df.bigText, "slide1", "", notesFallback));
-  if (df.smallText) content.appendChild(slideField("smallText", df.smallText, "", ""));
-  if (df.s2) content.appendChild(slideField("s2", df.s2, "slide2", "slide-main", ""));
-  if (df.s3) content.appendChild(slideField("s3", df.s3, "slide3", "", ""));
+  // Content fields — only render if design config defines them
+  if (df.act1Setup) content.appendChild(contentField("act1Setup", df.act1Setup, ""));
+  if (df.act1Reveal) content.appendChild(contentField("act1Reveal", df.act1Reveal, ""));
+  if (df.act2) content.appendChild(contentField("act2", df.act2, "slide-main"));
+  if (df.act3) content.appendChild(contentField("act3", df.act3, ""));
 
-  // Button / Uebrigens — only for designs that support them
-  const hasButton = df.button && ("button" in slides || fromJson.button);
-  const hasUebrigens = df.uebrigens && ("uebrigens" in slides || fromJson.uebrigens);
-
-  if (hasButton) {
-    content.appendChild(slideField("button", "Button (gedimmt, optional)", "button", "", ""));
-  }
-  if (hasUebrigens) {
-    content.appendChild(slideField("uebrigens", "Uebrigens (optional)", "uebrigens", "", ""));
-  }
-
-  function addFieldLink(label, key) {
-    return el("span", {
-      style: { fontSize: "10px", color: "var(--dim)", cursor: "pointer", fontFamily: "'JetBrains Mono', monospace", marginRight: "12px" },
-      onClick: (e) => {
-        e.stopPropagation();
-        if (!post.slides) post.slides = {};
-        post.slides[key] = "";
-        setSlides(post.id, post.slides);
-        openPanel(post.id);
-        detailPanelEl.classList.add("open");
-      },
-    }, label);
-  }
-
-  if (df.button && df.uebrigens && (!hasButton || !hasUebrigens)) {
-    const links = el("div", { style: { padding: "4px 0" } });
-    if (!hasButton) links.appendChild(addFieldLink("+ Button", "button"));
-    if (!hasUebrigens) links.appendChild(addFieldLink("+ Uebrigens", "uebrigens"));
-    content.appendChild(links);
+  // Aside (button/uebrigens) — shown for designs that support it
+  if (df.hasAside) {
+    const hasAside = "aside" in postContent;
+    if (hasAside) {
+      content.appendChild(contentField("aside", "Aside (optional, Button/Uebrigens)", ""));
+      // Aside style toggle
+      const styleRow = el("div", { style: { display: "flex", gap: "8px", padding: "2px 0 8px" } });
+      for (const styleVal of ["button", "uebrigens"]) {
+        const btn = el("span", {
+          style: {
+            fontSize: "10px",
+            padding: "2px 8px",
+            border: "1px solid " + ((postContent.asideStyle || "button") === styleVal ? "var(--green)" : "var(--dim)"),
+            color: (postContent.asideStyle || "button") === styleVal ? "var(--green)" : "var(--dim)",
+            cursor: "pointer",
+            fontFamily: "'JetBrains Mono', monospace",
+            borderRadius: "2px",
+          },
+          onClick: (e) => {
+            e.stopPropagation();
+            if (!post.content) post.content = {};
+            post.content.asideStyle = styleVal;
+            debouncedSave(post.id, "content", post.content);
+            openPanel(post.id);
+            detailPanelEl.classList.add("open");
+          },
+        }, styleVal);
+        styleRow.appendChild(btn);
+      }
+      content.appendChild(styleRow);
+    } else {
+      // Link to add aside
+      const addLink = el("span", {
+        style: { fontSize: "10px", color: "var(--dim)", cursor: "pointer", fontFamily: "'JetBrains Mono', monospace", padding: "4px 0", display: "inline-block" },
+        onClick: (e) => {
+          e.stopPropagation();
+          if (!post.content) post.content = {};
+          post.content.aside = "";
+          debouncedSave(post.id, "content", post.content);
+          openPanel(post.id);
+          detailPanelEl.classList.add("open");
+        },
+      }, "+ Aside (Button / Uebrigens)");
+      content.appendChild(addLink);
+    }
   }
 
   if (post.json) {
@@ -1232,11 +1248,6 @@ async function setField(id, field, value) {
   render();
 }
 
-async function setSlides(id, slides) {
-  showSaveStatus("saving");
-  const ok = await updatePost(id, "slides", slides);
-  showSaveStatus(ok ? "saved" : "error");
-}
 
 function showSaveStatus(state) {
   let indicator = detailPanelEl.querySelector(".save-indicator");

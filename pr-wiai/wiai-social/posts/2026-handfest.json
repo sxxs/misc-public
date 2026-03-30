@@ -3,16 +3,14 @@
   "type": "led-wall",
   "accentColor": "#F97316",
   "isAd": false,
-  "timing": { "variant": "through-scratch" },
-  "slide1": {
-    "bigText": "Stimmt.",
-    "smallText": "Es wird ja immer gesagt: Lern lieber was Handfestes. Handwerk!"
+  "timing": {
+    "variant": "through-scratch"
   },
-  "slide2": {
-    "text": "Dein Schreiner benutzt CAD-Software. Dein Bäcker hat ein Warenwirtschaftssystem. Dein Friseur braucht ein Buchungstool. Rate mal wer das alles baut."
-  },
-  "slide3": {
-    "text": "Informatik ist nicht das Gegenteil von handfest. Informatik macht Handfestes möglich.",
-    "button": "Außerdem: Holz anfassen können wir auch. Wir sind in Franken."
+  "content": {
+    "act1Setup": "Es wird ja immer gesagt: Lern lieber was Handfestes. Handwerk!",
+    "act1Reveal": "Stimmt.",
+    "act2": "Dein Schreiner benutzt CAD-Software. Dein Bäcker hat ein Warenwirtschaftssystem. Dein Friseur braucht ein Buchungstool. Rate mal wer das alles baut.",
+    "act3": "Informatik ist nicht das Gegenteil von handfest. Informatik macht Handfestes möglich.",
+    "aside": "Außerdem: Holz anfassen können wir auch. Wir sind in Franken."
   }
 }

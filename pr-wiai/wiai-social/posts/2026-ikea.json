@@ -1,15 +1,10 @@
 {
   "id": "2026-ikea",
-  "type": "led-wall",
-  "accentColor": "#FACC15",
-  "timing": { "variant": "through-scratch" },
-  "slide1": {
-    "smallText": "Beste Voraussetzung für ein Informatikstudium?"
-  },
-  "slide2": {
-    "text": "Nicht Mathe-LK. Nicht Programmier-AG. Sondern: Du hast schon mal 3 Stunden lang versucht ein IKEA-Regal aufzubauen und nicht aufgegeben."
-  },
-  "slide3": {
-    "text": "Frustrationstoleranz ist die wichtigste Kompetenz in der Informatik."
+  "type": "billboard",
+  "design": "billboard",
+  "content": {
+    "act1Setup": "Beste Voraussetzung für ein Informatikstudium?",
+    "act2": "Nicht Mathe-LK. Nicht Programmier-AG. Sondern: Du hast schon mal 3 Stunden lang versucht ein IKEA-Regal aufzubauen und nicht aufgegeben.",
+    "act3": "Frustrationstoleranz ist die wichtigste Kompetenz in der Informatik."
   }
 }

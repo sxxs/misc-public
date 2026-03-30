@@ -2,21 +2,38 @@
   "id": "test-terminal-flow",
   "type": "terminal",
   "music": false,
-  "slide1": { "smallText": "" },
-  "slide2": { "text": "" },
-  "slide3": { "text": "" },
   "terminal": {
     "mode": "flow",
     "color": "green",
-    "prompt": "herdom $",
     "blocks": [
-      { "text": "Dein Handy wurde gehackt." },
-      { "pause": 45 },
-      { "text": "\nKein Totenkopf auf dem Bildschirm.\nDein Handy funktioniert normal.", "color": "amber" },
-      { "pause": 30 },
-      { "text": "\nNur dass jemand mitliest." },
-      { "pause": 60 },
-      { "text": "\nDas Gefährliche am Hack ist\ndass du ihn nicht merkst.", "color": "white" }
+      {
+        "text": "Dein Handy wurde gehackt."
+      },
+      {
+        "pause": 45
+      },
+      {
+        "text": "\nKein Totenkopf auf dem Bildschirm.\nDein Handy funktioniert normal.",
+        "color": "amber"
+      },
+      {
+        "pause": 30
+      },
+      {
+        "text": "\nNur dass jemand mitliest."
+      },
+      {
+        "pause": 60
+      },
+      {
+        "text": "\nDas Gefährliche am Hack ist\ndass du ihn nicht merkst.",
+        "color": "white"
+      }
     ]
+  },
+  "content": {
+    "act1Setup": "herdom $",
+    "act2": "",
+    "act3": ""
   }
 }

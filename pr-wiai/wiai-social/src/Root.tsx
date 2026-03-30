@@ -85,12 +85,12 @@ import testFxBlurHoldTextPost    from "../posts/test-fx-blur-hold-text.json";
 const TRACK_DURATION = 520; // track.mp3 ~17.3s at 30fps
 
 const ledWallDuration = (post: Post) => {
-  const act1 = post.timing?.act1Duration ?? (post.slide1?.bigText ? 150 : 100);
+  const act1 = post.timing?.act1Duration ?? (post.content.act1Reveal ? 150 : 100);
   if (post.timing?.variant === "through") return TRACK_DURATION;
   const alt = post.timing?.act3Track ? ACT3_ALT_TRACKS[post.timing.act3Track] : null;
   const delay = post.timing?.act3MusicDelay ?? 0;
   const act3 = alt ? alt.dur + delay : 295;
-  return act1 + computeAct2Duration(post.slide2.text) + act3;
+  return act1 + computeAct2Duration(post.content.act2) + act3;
 };
 
 // ── Composition factories ─────────────────────────────────────────────────────

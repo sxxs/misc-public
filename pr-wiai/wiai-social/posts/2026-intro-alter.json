@@ -1,18 +1,12 @@
 {
   "id": "2026-intro-alter",
   "type": "led-wall",
-  "accentColor": "#F0EDE8",
-  "isAd": false,
-  "timing": { "variant": "through-scratch", "act1Duration": 150 },
-  "slide1": {
-    "bigText": "43.",
-    "smallText": "Durchschnittsalter der Person, die dieses Video gemacht hat."
-  },
-  "slide2": {
-    "text": "Durchschnittsalter der Leute, die es sehen werden:\n\n18."
-  },
-  "slide3": {
-    "text": "Wenn das kein Kommunikationsproblem ist, weiß ich auch nicht.\n\nAber Probleme lösen ist, was ich mache.",
-    "button": "Auch dieses hier.\nIrgendwie."
+  "design": "pixel-wall",
+  "content": {
+    "act1Setup": "Durchschnittsalter der Person, die dieses Video gemacht hat.",
+    "act1Reveal": "43.",
+    "act2": "Durchschnittsalter der Leute, die es sehen werden:\n\n18.",
+    "act3": "Wenn das kein Kommunikationsproblem ist, weiß ich auch nicht.\n\nAber Probleme lösen ist, was ich mache.",
+    "aside": "Auch dieses hier.\nIrgendwie."
   }
 }

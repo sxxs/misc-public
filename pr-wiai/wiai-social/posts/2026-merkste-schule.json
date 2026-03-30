@@ -1,15 +1,10 @@
 {
   "id": "2026-merkste-schule",
   "type": "led-wall",
-  "accentColor": "#3B82F6",
-  "timing": { "variant": "through" },
-  "slide1": {
-    "smallText": "Du lernst in der Schule wie der Dreißigjährige Krieg verlief."
-  },
-  "slide2": {
-    "text": "Du lernst in der Schule nicht, wie das Internet funktioniert das du 6 Stunden am Tag nutzt."
-  },
-  "slide3": {
-    "text": "Merkste selber, oder?"
+  "design": "pixel-wall",
+  "content": {
+    "act1Setup": "Du lernst in der Schule wie der Dreißigjährige Krieg verlief.",
+    "act2": "Du lernst in der Schule nicht, wie das Internet funktioniert das du 6 Stunden am Tag nutzt.",
+    "act3": "Merkste selber, oder?"
   }
 }

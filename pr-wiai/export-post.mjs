@@ -21,13 +21,13 @@ const plan = JSON.parse(readFileSync(PLAN, "utf8"));
 
 if (listMode) {
   const exportable = plan.posts.filter((p) =>
-    !p.json && p.slides?.bigText && (p.status === "ready" || p.status === "scheduled" || p.status === "draft")
+    !p.json && p.content && (p.status === "ready" || p.status === "scheduled" || p.status === "draft")
   );
   console.log("\nExportable posts (" + exportable.length + "):\n");
   for (const p of exportable) {
-    const s = p.slides;
-    const preview = [s.bigText, s.s2, s.s3].filter(Boolean).join(" / ").substring(0, 70);
-    console.log("  " + p.status.padEnd(10) + p.type.padEnd(14) + p.id);
+    const c = p.content;
+    const preview = [c.act1Setup, c.act2, c.act3].filter(Boolean).join(" / ").substring(0, 70);
+    console.log("  " + p.status.padEnd(10) + (p.design || p.type).padEnd(14) + p.id);
     console.log("  " + " ".repeat(24) + preview);
     console.log();
   }
@@ -49,14 +49,14 @@ if (!post) {
   process.exit(1);
 }
 
-if (!post.slides || !(post.slides.bigText || post.slides.smallText || post.slides.s2)) {
-  console.error("Post has no slide content. Edit slides first in the UI.");
+if (!post.content || !(post.content.act2 || post.content.act3)) {
+  console.error("Post has no content. Edit content fields first in the UI.");
   process.exit(1);
 }
 
 // ── Build Remotion JSON ──────────────────────────────────────────────────────
 
-const s = post.slides;
+const c = post.content;
 const remotionType = mapDesignToRemotionType(post);
 
 const remotionPost = {
@@ -64,30 +64,22 @@ const remotionPost = {
   type: remotionType,
 };
 
-// Optional fields
+// Optional top-level fields
 if (post.design) remotionPost.design = post.design;
 if (post.tag === "ad") remotionPost.isAd = true;
+if (post.accentColor) remotionPost.accentColor = post.accentColor;
 
+// timing (led-wall only)
+if (post.timing) remotionPost.timing = post.timing;
+
+// terminal config — color only (prompt is now in content.act1Setup)
 if (remotionType === "terminal") {
-  // Terminal: bigText → prompt, smallText+s2 → typing text, s3 → closing
-  remotionPost.terminal = {
-    color: s.terminalColor || "green",
-    prompt: s.bigText || "$",
-  };
-  remotionPost.slide1 = {};
-  const typingParts = [s.smallText, s.s2].filter(Boolean);
-  remotionPost.slide2 = { text: typingParts.join("\n\n") };
-  remotionPost.slide3 = { text: s.s3 || "" };
-} else {
-  // Pixel-Wall / Billboard / Newsjacking: standard 3-slide mapping
-  remotionPost.slide1 = {};
-  if (s.bigText) remotionPost.slide1.bigText = s.bigText;
-  if (s.smallText) remotionPost.slide1.smallText = s.smallText;
-  remotionPost.slide2 = { text: s.s2 || "" };
-  remotionPost.slide3 = { text: s.s3 || "" };
-  if (s.button) remotionPost.slide3.button = s.button;
-  if (s.uebrigens) remotionPost.slide3["\u00fcbrigensText"] = s.uebrigens;
+  const termColor = post.terminalColor || "green";
+  remotionPost.terminal = { color: termColor };
 }
+
+// Copy content directly — same structure in plan.json and Remotion JSON
+remotionPost.content = buildContent(c, remotionType);
 
 // ── Output ───────────────────────────────────────────────────────────────────
 
@@ -100,12 +92,11 @@ console.log("Type:   " + remotionType);
 console.log("Design: " + (post.design || "default"));
 console.log("Format: " + (post.format || "both"));
 console.log();
-console.log("S1 bigText:  " + (s.bigText || "").substring(0, 60));
-console.log("S1 smallText:" + (s.smallText || "").substring(0, 60));
-console.log("S2 text:     " + (s.s2 || "").substring(0, 60));
-console.log("S3 text:     " + (s.s3 || "").substring(0, 60));
-if (s.button) console.log("S3 button:   " + s.button.substring(0, 60));
-if (s.uebrigens) console.log("S3 uebrigens:" + s.uebrigens.substring(0, 60));
+console.log("act1Setup:  " + (c.act1Setup || "").substring(0, 60));
+console.log("act1Reveal: " + (c.act1Reveal || "").substring(0, 60));
+console.log("act2:       " + (c.act2 || "").substring(0, 60));
+console.log("act3:       " + (c.act3 || "").substring(0, 60));
+if (c.aside) console.log("aside:      " + c.aside.substring(0, 60) + (c.asideStyle ? " [" + c.asideStyle + "]" : ""));
 console.log();
 
 if (post.description) console.log("Description: " + post.description.substring(0, 80));
@@ -163,6 +154,33 @@ console.log("plan.json updated: json=" + jsonRelative + ", status=" + post.statu
 console.log("\nDone! Next: cd wiai-social && ./render.sh posts/" + jsonFilename);
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+
+function buildContent(c, remotionType) {
+  const out = {};
+
+  // act1Setup: for terminal this is the prompt; for others it's the setup line
+  if (c.act1Setup) out.act1Setup = c.act1Setup;
+
+  // act1Reveal: reaction word / hook reveal (not used by terminal)
+  if (remotionType !== "terminal" && c.act1Reveal) out.act1Reveal = c.act1Reveal;
+
+  // act2 and act3 are always present
+  out.act2 = c.act2 || "";
+  out.act3 = c.act3 || "";
+
+  // aside with optional style
+  if (c.aside) {
+    out.aside = c.aside;
+    if (c.asideStyle && c.asideStyle !== "button") out.asideStyle = c.asideStyle;
+  }
+
+  // optional fields
+  if (c.url) out.url = c.url;
+  if (c.textAlign && remotionType === "led-wall") out.textAlign = c.textAlign;
+  if (c.image) out.image = c.image;
+
+  return out;
+}
 
 function mapDesignToRemotionType(post) {
   // Design determines the Remotion composition type

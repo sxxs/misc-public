@@ -126,14 +126,15 @@ const ContrarianMusicThroughScratch: React.FC<{
   );
 };
 
-// Slide1: quote fades in immediately (eye-catcher), Aha. time-offset below
+// Act1: setup quote fades in immediately, act1Reveal (reaction word) appears at frame 75
 const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Duration }) => {
   const frame = useCurrentFrame();
   const accent = post.accentColor ?? WIAI_YELLOW;
+  const { act1Setup, act1Reveal, textAlign } = post.content;
 
   // Quote appears right away — this is what draws the eye
   const quoteOpacity = interpolate(frame, [0, 12], [0, 1], { extrapolateRight: "clamp" });
-  // Aha. enters at local frame 75, punchline moment
+  // act1Reveal enters at local frame 75, punchline moment
   const bigOpacity = interpolate(frame, [75, 90], [0, 1], { extrapolateRight: "clamp" });
   // Text fade-out: last 11 frames of Act1 (dynamic, works for any act1Duration)
   const textFadeOut = interpolate(frame, [act1Duration - 11, act1Duration - 1], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
@@ -146,9 +147,9 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          justifyContent: post.slide1.textAlign === "top" ? "flex-start"
-            : post.slide1.textAlign === "bottom" ? "flex-end" : "center",
-          padding: post.slide1.textAlign === "bottom"
+          justifyContent: textAlign === "top" ? "flex-start"
+            : textAlign === "bottom" ? "flex-end" : "center",
+          padding: textAlign === "bottom"
             ? "180px 240px 420px 108px"  // push text down, above safe zone
             : "180px 240px 500px 108px", // default: slightly above center
           gap: 44,
@@ -158,9 +159,9 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
         }}
       >
         {/* Setup quote — per-line bounding boxes, content-width */}
-        {post.slide1.smallText && (
+        {act1Setup && (
           <div style={{ opacity: quoteOpacity, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 0, marginLeft: -26 }}>
-            {post.slide1.smallText.split("\n").map((line, i) => (
+            {act1Setup.split("\n").map((line, i) => (
               <div
                 key={i}
                 style={{
@@ -182,14 +183,14 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
           </div>
         )}
 
-        {/* Contrarian reaction — auto-scaled to fit available width (732px) */}
-        {post.slide1.bigText && (() => {
-          const maxLineLen = Math.max(...post.slide1.bigText.split("\n").map(l => l.length), 1);
+        {/* act1Reveal (reaction word) — auto-scaled to fit available width (732px) */}
+        {act1Reveal && (() => {
+          const maxLineLen = Math.max(...act1Reveal.split("\n").map(l => l.length), 1);
           const bigFontSize = Math.min(240, Math.floor(700 / (maxLineLen * 0.52)));
           return (
             <div style={{ opacity: bigOpacity }}>
               <GlitchText
-                text={post.slide1.bigText}
+                text={act1Reveal}
                 fontSize={bigFontSize}
                 glitchStartFrame={46}
                 glitchEndFrame={58}
@@ -231,7 +232,7 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
         ...(exitGlitch > 0.01 ? { filter: exitFilter, transform: `translateX(${exitShiftX.toFixed(1)}px)` } : {}),
       }}>
         <DirtyCutout accentColor={accent} enterProgress={enterProgress}>
-          <TypewriterText text={post.slide2.text} startFrame={10} blinkLastPeriod />
+          <TypewriterText text={post.content.act2} startFrame={10} blinkLastPeriod />
         </DirtyCutout>
       </div>
     </SlideFrame>
@@ -242,14 +243,15 @@ const Act3: React.FC<{ post: Post; dur: number; subtextStart?: number; absenderS
   post, dur, subtextStart = 80, absenderStart = 155,
 }) => {
   const accent = post.accentColor ?? WIAI_YELLOW;
+  const { act3, aside, asideStyle, url } = post.content;
   return (
     <SlideFrame accentColor={accent}>
       <PunchlineSlide
         accentColor={accent}
-        text={post.slide3.text}
-        button={post.slide3.button}
-        übrigensText={post.slide3.übrigensText}
-        url={post.slide3.url}
+        text={act3}
+        button={asideStyle !== "uebrigens" ? aside : undefined}
+        übrigensText={asideStyle === "uebrigens" ? aside : undefined}
+        url={url}
         totalDuration={dur}
         subtextStartFrame={subtextStart}
         absenderStartFrame={absenderStart}
@@ -266,12 +268,12 @@ export const LedWallComposition: React.FC<{ post: Post }> = ({ post }) => {
   const t = post.timing;
 
   // ── Smart defaults ──────────────────────────────────────────────────────
-  const act1Duration = t?.act1Duration ?? (post.slide1.bigText ? 150 : 100);
+  const act1Duration = t?.act1Duration ?? (post.content.act1Reveal ? 150 : 100);
   const variant      = t?.variant      ?? "scratch";
   const altTrack     = t?.act3Track ? ACT3_ALT_TRACKS[t.act3Track] : null;
   const musicDelay   = t?.act3MusicDelay ?? 0;
 
-  const act2Duration = computeAct2Duration(post.slide2.text);
+  const act2Duration = computeAct2Duration(post.content.act2);
   const act3Start    = act1Duration + act2Duration;
   const act3Duration = variant === "through"
     ? durationInFrames - act3Start
