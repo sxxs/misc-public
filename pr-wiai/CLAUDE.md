@@ -6,6 +6,10 @@ Social-Media-Kanal (TikTok, YouTube Shorts, Instagram Reels) der Fakultaet WIAI,
 
 ```bash
 bash digest.sh               # Pipeline-Status auf einen Blick
+node edit.mjs --week 2026-KW14  # Posts einer Woche anzeigen
+node edit.mjs netflix            # Post anzeigen (fuzzy ID match)
+node edit.mjs netflix content.act2="Neuer Text"  # Felder setzen
+node edit.mjs --new <id> type=T design=D topic=T  # Neuen Post anlegen
 node pipeline/server.mjs     # Swimlane-Kalender → http://localhost:3847
 cd wiai-social && npm run preview  # Remotion Studio
 ```
@@ -15,7 +19,7 @@ cd wiai-social && npm run preview  # Remotion Studio
 ```
 pr-wiai/
 ├── pipeline/              Redaktionspipeline
-│   ├── plan.json          ZENTRAL: Status aller Posts (ready/scheduled/published)
+│   ├── plan.json          ZENTRAL: Status aller Posts (ready/published) + Planung (targetWeek)
 │   ├── server.mjs         Swimlane-Kalender Webserver
 │   ├── ui/                Web-UI Frontend (app.js, index.html)
 │   ├── ideen/             Stufe 1: Stoffsammlungen mit #stark/#geht/#nein Tags
@@ -38,6 +42,7 @@ pr-wiai/
 │   ├── render.sh          Video + PNG rendern
 │   ├── GUIDE.md           JSON-Felder, Timing, Zeichenlaengen
 │   └── CONTENT.md         Post-Typen, Farb-Palette, Durations
+├── edit.mjs               CLI: Posts anzeigen, suchen, editieren (Dot-Notation)
 ├── digest.mjs             CLI: Pipeline-Zusammenfassung
 ├── export-post.mjs        Post exportieren: plan.json → Remotion JSON + Root.tsx
 ├── import-ideas.mjs       Ideen/Drafts aus Markdown → plan.json importieren
@@ -74,12 +79,18 @@ Zwei Modi: **PLAN** (4 Wochen operativ, Drag-Drop) und **MIX** (26 Wochen, Typ- 
 ## Wichtige Konventionen
 
 ### Pipeline-Stufen
-Status wird in `plan.json` getrackt, NICHT durch Verschieben von Dateien:
+Status (Produktionsreife) und Planung (Terminierung) sind zwei unabhaengige Dimensionen in `plan.json`:
+
+**Status** (`status`-Feld) — Produktionsreife, NICHT durch Verschieben von Dateien:
 - `idea` — Text-Entwurf, noch nicht produktionsreif
 - `draft` — Ausformuliert, braucht Review
-- `ready` — Produktionsreif, noch kein Datum
-- `scheduled` — Zieldatum (targetWeek) gesetzt
+- `ready` — Produktionsreif (JSON exportiert, renderbar)
 - `published` — gepostet, Datum + Plattform-Links eingetragen
+
+**Planung** (`targetWeek`-Feld) — Terminierung, orthogonal zum Status:
+- `null` — noch nicht eingeplant (Backlog)
+- `"2026-KW15"` — fuer diese Woche eingeplant
+- Ein Post kann `draft` sein und trotzdem eine targetWeek haben (= eingeplant, aber noch nicht produktionsreif)
 
 ### Duale Datenhaltung
 - **Planung**: Markdown in `pipeline/entwuerfe/` (viele Varianten pro Datei, Bulk-Editing)
@@ -92,6 +103,30 @@ Status wird in `plan.json` getrackt, NICHT durch Verschieben von Dateien:
 3. In `wiai-social/src/Root.tsx` registrieren: `import` + `cp("WiaiPost-<id>", post)`
 4. `plan.json` aktualisieren
 5. Details: `sops/neuer-post.md`
+
+### Posts editieren (edit.mjs)
+
+CLI-Tool zum Anzeigen, Suchen, Editieren und Erstellen von plan.json-Posts. Bevorzugtes Werkzeug fuer alle plan.json-Aenderungen — ersetzt manuelle JSON-Edits.
+
+```bash
+# Anzeigen
+node edit.mjs <id>                      # Post anzeigen (fuzzy ID match)
+node edit.mjs --week 2026-KW14          # Alle Posts einer Woche
+node edit.mjs --find datenschutz         # Suche in id, type, design, topic, content
+node edit.mjs --status ready             # Alle Posts mit Status
+
+# Editieren (beliebig viele Felder pro Aufruf)
+node edit.mjs <id> field=value           # Top-Level-Feld setzen
+node edit.mjs <id> content.act2="Text"   # Verschachtelt via Dot-Notation
+node edit.mjs <id> social.tiktok.caption="..." social.tiktok.hashtags="..."
+node edit.mjs <id> targetWeek=2026-KW15 slotIndex=3   # Post verschieben
+node edit.mjs <id> field=null            # Feld entfernen
+
+# Neuen Post erstellen (type, design, topic sind Pflicht)
+node edit.mjs --new <id> type=<type> design=<design> topic=<topic> [field=value ...]
+node edit.mjs --new foto-test type=aphorismus design=raw-photo topic=studium notes="Foto: ..."
+node edit.mjs --new my-post type=contrarian design=pixel-wall topic=tech content.act1Setup="Hook"
+```
 
 ### Post rendern
 ```bash
