@@ -148,7 +148,7 @@
     },
     {
       "id": "2026-ehrliche-apps",
-      "type": "contrarian",
+      "type": "aphorismus",
       "design": "pixel-wall",
       "status": "scheduled",
       "json": "wiai-social/posts/2026-ehrliche-apps.json",
@@ -263,7 +263,7 @@
       "notes": "",
       "tag": null,
       "slotIndex": 6,
-      "topic": "social-media",
+      "topic": "studium",
       "content": {
         "act1Setup": "Beste Voraussetzung für ein Informatikstudium?",
         "act2": "Nicht Mathe-LK. Nicht Programmier-AG. Sondern: Du hast schon mal 3 Stunden lang versucht ein IKEA-Regal aufzubauen und nicht aufgegeben.",
@@ -3895,7 +3895,7 @@
     },
     {
       "id": "draft-social-engineering-p51b",
-      "type": "aphorismus",
+      "type": "stimmt-eigentlich",
       "design": "terminal",
       "status": "draft",
       "json": null,
@@ -4750,7 +4750,7 @@
     },
     {
       "id": "idea-neue-handy-vs-freund",
-      "type": "aphorismus",
+      "type": "stimmt-eigentlich",
       "design": "billboard",
       "status": "draft",
       "json": null,
