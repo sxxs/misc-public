@@ -4800,7 +4800,7 @@
       "type": "stimmt-eigentlich",
       "design": "billboard",
       "status": "ready",
-      "json": null,
+      "json": "wiai-social/posts/idea-neue-handy-vs-freund.json",
       "source": "pipeline/ideen/neue-postideen.md",
       "targetWeek": "2026-KW14",
       "publishedDate": null,
@@ -4810,10 +4810,11 @@
       "topic": "datenschutz",
       "slotIndex": 1,
       "content": {
-        "act1Setup": "Was du gegessen hast.\nUnd wie lange du geschlafen hast.",
-        "act1Reveal": "Dein Handy weiß\nwo du gestern warst.",
-        "act2": "Dein bester Freund\nweiß das nicht.",
-        "act3": "Wem von beiden\nvertraust du mehr?"
+        "act1Setup": "Wo du gestern\\nwarst. Und wie\\nlange du ge-\\nschlafen hast.",
+        "act1Reveal": "Dein Handy weiß das.",
+        "act2": "Dein\\nbester\\nFreund\\nweiß\\ndas\\nnicht.\\n\\n– Ok.",
+        "act3": "Wem von beiden\\nvertraust\\ndu mehr?",
+        "aside": "– Oh."
       },
       "social": {
         "tiktok": {

@@ -193,12 +193,12 @@ export const BILLBOARD_ACT3_DURATION = 160;
 
 export function computeBillboardDuration(post: {
   content: { act2: string };
+  billboard?: { act1Duration?: number; act2Duration?: number; act3Duration?: number };
 }): number {
-  return (
-    BILLBOARD_ACT1_DURATION +
-    computeAct2Duration(post.content.act2) +
-    BILLBOARD_ACT3_DURATION
-  );
+  const act1 = post.billboard?.act1Duration ?? BILLBOARD_ACT1_DURATION;
+  const act2 = post.billboard?.act2Duration ?? computeAct2Duration(post.content.act2);
+  const act3 = post.billboard?.act3Duration ?? BILLBOARD_ACT3_DURATION;
+  return act1 + act2 + act3;
 }
 
 // ── Terminal duration ───────────────────────────────────────────────────────

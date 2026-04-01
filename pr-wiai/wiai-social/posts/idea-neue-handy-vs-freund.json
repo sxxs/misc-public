@@ -1,0 +1,19 @@
+{
+  "id": "idea-neue-handy-vs-freund",
+  "type": "billboard",
+  "design": "billboard",
+  "musicFile": "music/billboard-best.mp3",
+  "billboard": {
+    "act1Duration": 145,
+    "act2Duration": 146,
+    "act3Duration": 284,
+    "revealAtFrame": 91
+  },
+  "content": {
+    "act1Setup": "Wo du gestern\nwarst. Und wie\nlange du ge-\nschlafen hast.",
+    "act1Reveal": "Dein Handy weiß das.",
+    "act2": "Dein\nbester\nFreund\nweiß\ndas\nnicht.\n\n– Ok.",
+    "act3": "Wem von beiden\nvertraust\ndu mehr?",
+    "aside": "– Oh."
+  }
+}

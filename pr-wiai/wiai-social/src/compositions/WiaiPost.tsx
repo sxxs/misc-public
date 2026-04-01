@@ -12,7 +12,7 @@ import { Billboard } from "./Billboard";
 import { Slideshow } from "./Slideshow";
 import { SafeZoneOverlay } from "../components/SafeZoneOverlay";
 
-const BackgroundMusic: React.FC = () => {
+const BackgroundMusic: React.FC<{ file?: string }> = ({ file }) => {
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
   const fadeOut = interpolate(frame, [durationInFrames - 3, durationInFrames], [1, 0], {
@@ -21,7 +21,7 @@ const BackgroundMusic: React.FC = () => {
   });
   return (
     <Audio
-      src={staticFile("music/track.mp3")}
+      src={staticFile(file ?? "music/track.mp3")}
       volume={fadeOut * 0.65}
     />
   );
@@ -29,7 +29,7 @@ const BackgroundMusic: React.FC = () => {
 
 export const WiaiPost: React.FC<Post> = (post) => {
   const withMusic = (node: React.ReactNode) =>
-    post.music !== false ? <><BackgroundMusic />{node}</> : <>{node}</>;
+    post.music !== false ? <><BackgroundMusic file={post.musicFile} />{node}</> : <>{node}</>;
 
   const content = (() => {
     switch (post.type) {

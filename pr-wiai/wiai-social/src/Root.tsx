@@ -17,6 +17,7 @@ import samplePost from "../posts/archive/prelaunch/2026-mathe3.json";
 
 // ── Active post imports (auto-managed by sync-root.mjs) ─────────────────────
 // @sync-root:imports-start
+import idea_neue_handy_vs_freund from "../posts/idea-neue-handy-vs-freund.json";
 // @sync-root:imports-end
 
 // ── Duration helpers ──────────────────────────────────────────────────────────
@@ -83,6 +84,7 @@ export const Root: React.FC = () => (
 
     {/* ── Active posts (auto-managed by sync-root.mjs) ─────────────── */}
     {/* @sync-root:compositions-start */}
+    {cp("WiaiPost-idea-neue-handy-vs-freund", idea_neue_handy_vs_freund as unknown as Post)}
     {/* @sync-root:compositions-end */}
   </>
 );

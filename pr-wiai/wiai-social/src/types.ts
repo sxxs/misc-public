@@ -105,6 +105,10 @@ export type TerminalFlowBlock =
 export interface BillboardConfig {
   mode?: "classic" | "captions"; // classic: 3-act (default); captions: rapid cuts
   captions?: BillboardCaption[];
+  act1Duration?: number;         // override default 120
+  act2Duration?: number;         // override computed act2 duration (for beat-sync)
+  act3Duration?: number;         // override default 160
+  revealAtFrame?: number;        // frame when act1Reveal appears (default: 14)
 }
 
 export interface BillboardCaption {
@@ -149,6 +153,7 @@ export interface Post {
   accentColor?: string;
   isAd?: boolean;        // opt-in: shows absender/footer on S3 (default: hidden)
   music?: false;         // opt-out of BackgroundMusic (undefined = music on)
+  musicFile?: string;    // custom track (default: music/track.mp3)
   timing?: ContrarianTiming; // led-wall only
   terminal?: TerminalConfig; // terminal-only (color, mode, blocks — NOT prompt)
   billboard?: BillboardConfig; // billboard captions mode
