@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// @herdom.bamberg — plan.json Editor
+// @echt.bamberg — plan.json Editor
 //
 // Single-post viewer & editor with fuzzy ID matching and dot-notation for nested fields.
 // Replaces manual node -e JSON editing for all plan.json operations.
@@ -114,6 +114,7 @@ if (args[0] === "--new" || args[0] === "-n") {
     targetWeek: null,
     publishedDate: null,
     platforms: {},
+    posted: {},
     notes: null,
     tag: null,
     tagComment: null,
@@ -336,11 +337,20 @@ function showPost(p) {
     }
   }
 
-  // Platforms (published links)
+  // Platforms (published links, legacy)
   if (p.platforms && Object.keys(p.platforms).length > 0) {
     console.log(`${dim}── platforms ──${reset}`);
     for (const [k, v] of Object.entries(p.platforms)) {
       console.log(`  ${k}: ${v}`);
+    }
+  }
+
+  // Posted (format → date per platform)
+  if (p.posted && Object.keys(p.posted).length > 0) {
+    console.log(`${dim}── posted ──${reset}`);
+    for (const [plat, formats] of Object.entries(p.posted)) {
+      const parts = Object.entries(formats).map(([f, d]) => `${f} ${d}`);
+      console.log(`  ${yellow}${plat}${reset}: ${parts.join(", ")}`);
     }
   }
 }

@@ -8,6 +8,9 @@ mkdir -p "$OUT_DIR"
 
 echo "Rendering: $POST_ID"
 
+# ── Sync Root.tsx with active posts ────────────────────────────────────────
+node "$(dirname "$0")/../sync-root.mjs" --quiet
+
 # ── Compute still frames from post timing ───────────────────────────────────
 read S1A S1B S2A S2B S3F <<< $(node -e '
 const post = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));

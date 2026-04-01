@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// @herdom.bamberg — Swimlane Calendar Server
+// @echt.bamberg — Swimlane Calendar Server
 // Usage: node pipeline/server.mjs
 // Opens at http://localhost:3847
 
@@ -191,5 +191,5 @@ const server = createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`\n  @herdom.bamberg Pipeline → http://localhost:${PORT}\n`);
+  console.log(`\n  @echt.bamberg Pipeline → http://localhost:${PORT}\n`);
 });

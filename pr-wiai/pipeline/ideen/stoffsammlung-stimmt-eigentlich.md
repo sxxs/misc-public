@@ -1,4 +1,4 @@
-# @herdom.bamberg – Stoffsammlung "Stimmt eigentlich"
+# @echt.bamberg – Stoffsammlung "Stimmt eigentlich"
 
 Rohmaterial. Noch keine fertigen Posts, nur Beobachtungen in 1-3 Sätzen. Sortiert nach Lebenswelt-Themen der Zielgruppe (16-25). Jede Beobachtung muss den "stimmt eigentlich"-Test bestehen: Liest man sie und denkt "warum hab ich das nicht selbst gesehen?"
 

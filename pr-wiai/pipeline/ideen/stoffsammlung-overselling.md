@@ -1,4 +1,4 @@
-# @herdom.bamberg – Stoffsammlung: Overselling-Parallelen
+# @echt.bamberg – Stoffsammlung: Overselling-Parallelen
 
 Dominik: haha sehr lustig. die parallele zwischen hochglanz unimarketung und anzeigen für wg zimmer (in städten mit wenig nachfrage wo overselling gemacht wird) oder AirBnB-Zimmer oder Hotelzimmer ist auch etwas, was wir uns genauer anschauen könnten. das hat auch potential für comical effect.
 

@@ -1,4 +1,4 @@
-# @herdom.bamberg – Stoffsammlung: Clickbait-Parodie & Manipulation entlarvt
+# @echt.bamberg – Stoffsammlung: Clickbait-Parodie & Manipulation entlarvt
 
 Dominik: Ok. Was noch fehlt: clickbait headlines und clickbait social media (das 5. Wird dich überraschen). Listen mit pronzipien auf Social Media. Prouktivitätstipps die als einfache Medizin verkauft werden. Ragebait. Attention farming. Engagement farming. Also solche cognitive psycho Tricks auf die die Leute reinfallen und es eigtl besser wissen. Und das könnten wir parodieren in dem wir sagen: wie würde sich das hier in meinem Kanal anfühlen oder was wäre wenn Hochschulen so Marketing machen würden. Das ist lustig und kritisch und regt zum grübeln an.
 

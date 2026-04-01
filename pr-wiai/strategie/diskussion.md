@@ -184,13 +184,13 @@ Klassisches Newsjacking (Spiegel-Screenshot + Kommentar) funktioniert für Linke
 ### Zwei Arten von "Aktuell"
 
 **Typ 1: Nachrichten-Newsjacking (bestehend)**
-Spiegel/Tagesschau meldet etwas → @herdom.bamberg kommentiert mit Screenshot.
+Spiegel/Tagesschau meldet etwas → @echt.bamberg kommentiert mit Screenshot.
 - Funktioniert für: LinkedIn, Peer-Community, Bachelor-Studis
 - Funktioniert nicht für: Schüler
 - Produktionsweg: Remotion-Pipeline
 
 **Typ 2: Creator-Reaktion (fehlt in der Strategie)**
-Ein großer TikTok-Creator redet über KI/Datenschutz/Berufswahl/Studium → @herdom.bamberg reagiert per Stitch/Duett oder Antwort-Post.
+Ein großer TikTok-Creator redet über KI/Datenschutz/Berufswahl/Studium → @echt.bamberg reagiert per Stitch/Duett oder Antwort-Post.
 - Funktioniert für: genau die Primärzielgruppe (kennt den Creator schon)
 - Algorithmischer Vorteil: Stitches auf virale Videos werden gepusht
 - Produktionsweg: in der App, nicht Pipeline — ist reaktiv

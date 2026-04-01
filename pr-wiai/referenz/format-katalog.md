@@ -119,7 +119,7 @@
 |-------|----------|
 | S1 | [Spiegel-Screenshot: "Millionen Passwörter geleakt"] |
 | S2 | "Jedes Mal dieselbe Meldung. Jedes Mal dieselbe Reaktion: 'Betrifft mich nicht.'" |
-| S3 | "Betrifft dich. @herdom.bamberg" |
+| S3 | "Betrifft dich. @echt.bamberg" |
 
 ---
 

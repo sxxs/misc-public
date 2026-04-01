@@ -155,7 +155,7 @@ Typische Sequenzen:
 3. **Slideshow**: 5-8 Bilder mit harten Cuts, je 1s, abwechselnd Effekte, letztes Bild hält + Text
 
 ### Harte Cuts zwischen Bildern (kein Fade)
-### Abspann: Letztes Bild verpixelt + blurrt → @herdom.bamberg Wasserzeichen
+### Abspann: Letztes Bild verpixelt + blurrt → @echt.bamberg Wasserzeichen
 
 ### Datenmodell (JSON)
 
@@ -172,7 +172,7 @@ Variante B — Slideshow (mehrere Bilder, schnell geschnitten):
       { "src": "media/bierkeller-sommer.jpg", "duration": 35, "effect": "saturate" }
     ],
     "endCard": {
-      "text": "@herdom.bamberg",
+      "text": "@echt.bamberg",
       "duration": 60,
       "effect": "pixelate"
     }
@@ -190,7 +190,7 @@ Variante A — Einzel-Foto mit Reveal→Text-Sequenz:
       { "src": "media/300-laptops-0630.jpg", "duration": 120, "effect": "pixelate",
         "text": "300 Laptops. 06:30. Keiner da." }
     ],
-    "endCard": { "text": "@herdom.bamberg", "duration": 60 }
+    "endCard": { "text": "@echt.bamberg", "duration": 60 }
   }
 }
 ```

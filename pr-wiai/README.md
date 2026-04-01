@@ -1,4 +1,4 @@
-# @herdom.bamberg — Content Pipeline
+# @echt.bamberg — Content Pipeline
 
 Social-Media-Kanal der Fakultaet WIAI, Uni Bamberg. Persoenlicher Account von Dominik Herrmann.
 Faceless, text-driven, schwarz-dominant. TikTok (primaer), YouTube Shorts, Instagram Reels.

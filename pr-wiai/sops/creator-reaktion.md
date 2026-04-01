@@ -6,7 +6,7 @@ Wenn ein relevantes Creator-Video auf TikTok auftaucht, auf das herdom mit einem
 
 ## Voraussetzungen
 
-- [ ] TikTok-App mit @herdom.bamberg eingeloggt
+- [ ] TikTok-App mit @echt.bamberg eingeloggt
 - [ ] Originalvideo erlaubt Stitch/Duett (Einstellung des Creators)
 - [ ] Video ist nicht aelter als 48 Stunden (Timing-Fenster)
 
@@ -71,7 +71,7 @@ Neuen Eintrag in `pipeline/plan.json` erstellen:
   "targetWeek": null,
   "publishedDate": "2026-03-27",
   "platforms": {
-    "tiktok": "https://www.tiktok.com/@herdom.bamberg/video/..."
+    "tiktok": "https://www.tiktok.com/@echt.bamberg/video/..."
   },
   "notes": "Stitch auf @creator zum Thema XY"
 }

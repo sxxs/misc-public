@@ -65,7 +65,7 @@ Beispiel fuer einen Passwort-Post:
 # Per Claude Code CLI:
 claude -p "Generiere Captions und Hashtags fuer diesen Post.
 Post-Inhalt: [S1/S2/S3 Text hier]
-Kanal: @herdom.bamberg (IT-Sicherheit, Uni Bamberg, trocken-lakonisch)
+Kanal: @echt.bamberg (IT-Sicherheit, Uni Bamberg, trocken-lakonisch)
 Zielgruppe: Schueler 16-19 und Bachelor-Studis
 
 Erstelle fuer jede Plattform:

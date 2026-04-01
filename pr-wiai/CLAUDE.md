@@ -1,6 +1,6 @@
-# @herdom.bamberg — Content Pipeline
+# @echt.bamberg — Content Pipeline
 
-Social-Media-Kanal (TikTok, YouTube Shorts, Instagram Reels) der Fakultaet WIAI, Uni Bamberg. Persoenlicher Account von Dominik Herrmann (@herdom). Faceless, text-driven, schwarz-dominant mit WIAI-Gelb als Akzent.
+Social-Media-Kanal (TikTok, YouTube Shorts, Instagram Reels) der Fakultaet WIAI, Uni Bamberg. Persoenlicher Account von Dominik Herrmann (@echt.bamberg). Faceless, text-driven, schwarz-dominant mit WIAI-Gelb als Akzent.
 
 ## Schnelleinstieg
 
@@ -37,14 +37,17 @@ pr-wiai/
 │   └── diskussion.md      Diskussionsnotizen (Launch-Mix, Creator-Reaktionen)
 ├── archiv/                Historisch (Tournaments, alte PRDs) — nicht loeschen
 ├── wiai-social/           Remotion Video-Pipeline
-│   ├── posts/*.json       1 JSON pro Post (Produktionswahrheit)
-│   ├── src/Root.tsx        Alle Posts hier registriert (import + cp())
-│   ├── render.sh          Video + PNG rendern
+│   ├── posts/*.json       Aktiver Workspace (Remotion-Input)
+│   ├── posts/archive/     Archivierte Posts (gepostet oder Test)
+│   ├── src/Root.tsx        Auto-generiert von sync-root.mjs
+│   ├── render.sh          Video + PNG rendern (ruft sync-root auf)
+│   ├── archive-post.sh    Post archivieren (JSON + Renders → archive/)
 │   ├── GUIDE.md           JSON-Felder, Timing, Zeichenlaengen
 │   └── CONTENT.md         Post-Typen, Farb-Palette, Durations
 ├── edit.mjs               CLI: Posts anzeigen, suchen, editieren (Dot-Notation)
 ├── digest.mjs             CLI: Pipeline-Zusammenfassung
-├── export-post.mjs        Post exportieren: plan.json → Remotion JSON + Root.tsx
+├── export-post.mjs        Post exportieren: plan.json → Remotion JSON
+├── sync-root.mjs          Root.tsx aus posts/*.json regenerieren
 ├── import-ideas.mjs       Ideen/Drafts aus Markdown → plan.json importieren
 └── README.md              Projektuebersicht
 ```
@@ -85,7 +88,7 @@ Status (Produktionsreife) und Planung (Terminierung) sind zwei unabhaengige Dime
 - `idea` — Text-Entwurf, noch nicht produktionsreif
 - `draft` — Ausformuliert, braucht Review
 - `ready` — Produktionsreif (JSON exportiert, renderbar)
-- `published` — gepostet, Datum + Plattform-Links eingetragen
+- `published` — gepostet, `posted`-Feld mit Format+Datum pro Plattform eingetragen
 
 **Planung** (`targetWeek`-Feld) — Terminierung, orthogonal zum Status:
 - `null` — noch nicht eingeplant (Backlog)
@@ -98,10 +101,10 @@ Status (Produktionsreife) und Planung (Terminierung) sind zwei unabhaengige Dime
 - Beide koexistieren. JSON ist die Produktionswahrheit. Im Markdown wird die gewaehlte Variante mit `[JSON: dateiname.json]` annotiert.
 
 ### Neuen Post erstellen
-1. Text in `pipeline/entwuerfe/<format>.md` schreiben
-2. JSON in `wiai-social/posts/2026-<id>.json` anlegen
-3. In `wiai-social/src/Root.tsx` registrieren: `import` + `cp("WiaiPost-<id>", post)`
-4. `plan.json` aktualisieren
+1. Text in `pipeline/entwuerfe/<format>.md` oder Pipeline-UI schreiben
+2. `node export-post.mjs <post-id>` — erzeugt JSON in `wiai-social/posts/`, setzt status=ready
+3. `cd wiai-social && npm run preview` — Vorschau (sync-root laeuft automatisch)
+4. `cd wiai-social && ./render.sh posts/<id>.json` — rendert Video + Stills + Carousel
 5. Details: `sops/neuer-post.md`
 
 ### Posts editieren (edit.mjs)
@@ -128,17 +131,23 @@ node edit.mjs --new foto-test type=aphorismus design=raw-photo topic=studium not
 node edit.mjs --new my-post type=contrarian design=pixel-wall topic=tech content.act1Setup="Hook"
 ```
 
-### Post rendern
+### Post rendern und archivieren
 ```bash
 cd wiai-social && ./render.sh posts/2026-<id>.json
-# → out/<id>.mp4 + 3 Slide-PNGs + 3 Carousel-PNGs
+# → out/<id>.mp4 + 3 Slide-PNGs + 3 Carousel-PNGs (sync-root laeuft automatisch)
+
+# Nach dem Posten: Posting-Datum tracken + archivieren
+node edit.mjs <id> status=published posted.tiktok.carousel=2026-04-01 posted.youtube.video=2026-04-01
+cd wiai-social && ./archive-post.sh 2026-<id>
+# → JSON nach posts/archive/posted/, Renders nach out/archive/
+# → Zum Restaurieren: cp posts/archive/posted/<id>.json posts/ && node ../sync-root.mjs
 ```
 
 ## Content-Prinzipien (Kurzfassung)
 
 - **Ton**: "Loriot trifft IT-Sicherheit, produziert von Kafka." Trocken, lakonisch, selbstironisch.
 - **herdom-Filter**: "Kann nur jemand in dieser Position das sagen?" Wenn nein → raus.
-- **90/10-Regel**: Max 10% der Posts mit explizitem WIAI/Bamberg-Bezug. Die Sichtbarkeit entsteht durchs Wasserzeichen (@herdom.bamberg), nicht durch die Botschaft.
+- **90/10-Regel**: Max 10% der Posts mit explizitem WIAI/Bamberg-Bezug. Die Sichtbarkeit entsteht durchs Wasserzeichen (@echt.bamberg), nicht durch die Botschaft.
 - **Variable Reward Schedule**: Nie zwei Posts gleichen Typs hintereinander.
 - **Naehkaestchen**: Kat. A (uni-intern) sparsam, Kat. B (universelle Tech-Absurditaet) oefter.
 - **KI-Posts**: Vorsicht, altern schnell. Nur wenn zeitlos formulierbar.

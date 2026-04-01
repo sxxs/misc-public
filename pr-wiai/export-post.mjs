@@ -9,7 +9,6 @@ import { join } from "path";
 const ROOT = new URL(".", import.meta.url).pathname.replace(/\/$/, "");
 const PLAN = join(ROOT, "pipeline/plan.json");
 const POSTS_DIR = join(ROOT, "wiai-social/posts");
-const ROOT_TSX = join(ROOT, "wiai-social/src/Root.tsx");
 
 const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
@@ -120,41 +119,8 @@ if (existsSync(jsonPath)) {
 writeFileSync(jsonPath, jsonStr + "\n");
 console.log("Written: " + jsonPath);
 
-// Update Root.tsx — add import + cp() if not already there
-const IMPORT_MARKER = "// @export-post:imports-end";
-const CP_MARKER = "{/* @export-post:compositions-end */}";
-
-const rootContent = readFileSync(ROOT_TSX, "utf8");
-let importName = post.id.replace(/[^a-zA-Z0-9]/g, "_");
-if (/^\d/.test(importName)) importName = "post_" + importName;
-else importName += "Post";
-const importLine = 'import ' + importName + ' from "../posts/' + jsonFilename + '";';
-const cpLine = '{cp("WiaiPost-' + post.id + '", ' + importName + ' as unknown as Post)}';
-
-if (rootContent.includes(jsonFilename)) {
-  console.log("Root.tsx already references " + jsonFilename);
-} else {
-  // Insert import before the imports-end marker
-  const importMarkerIdx = rootContent.indexOf(IMPORT_MARKER);
-  if (importMarkerIdx === -1) {
-    console.error("Root.tsx missing marker: " + IMPORT_MARKER);
-    process.exit(1);
-  }
-  let updated = rootContent.substring(0, importMarkerIdx) + importLine + "\n" + rootContent.substring(importMarkerIdx);
-
-  // Insert cp() before the compositions-end marker
-  const cpMarkerIdx = updated.indexOf(CP_MARKER);
-  if (cpMarkerIdx === -1) {
-    console.error("Root.tsx missing marker: " + CP_MARKER);
-    process.exit(1);
-  }
-  updated = updated.substring(0, cpMarkerIdx) + cpLine + "\n    " + updated.substring(cpMarkerIdx);
-  // Note: the 4 spaces before CP_MARKER serve as indentation for cpLine;
-  // the "\n    " after cpLine provides indentation for the marker itself.
-
-  writeFileSync(ROOT_TSX, updated);
-  console.log("Root.tsx updated: import + cp() added");
-}
+// Root.tsx is auto-managed by sync-root.mjs (called by render.sh)
+console.log("Root.tsx will be synced automatically by render.sh or: node sync-root.mjs");
 
 // Update plan.json — set json path and status
 post.json = jsonRelative;

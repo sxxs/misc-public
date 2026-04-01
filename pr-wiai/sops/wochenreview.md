@@ -27,8 +27,7 @@ Einmal pro Woche, idealerweise Montag oder Freitag -- fester Termin im Kalender.
 ### 3. Geplante Posts kontrollieren
 
 - Haben alle Posts fuer die naechsten 2 Wochen eine JSON-Datei in `wiai-social/posts/`?
-- Sind sie in `src/Root.tsx` registriert (Import + `cp()`)?
-- Wurde die Studio-Preview gemacht (`./studio.sh`)?
+- Wurde die Studio-Preview gemacht (`cd wiai-social && npm run preview`)?
 
 ### 4. FYP scannen (Stitch-Chancen)
 

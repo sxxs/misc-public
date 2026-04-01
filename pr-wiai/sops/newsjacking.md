@@ -71,17 +71,7 @@ Datei: `wiai-social/posts/2026-03-27-thema.json`
 - slide3.text (fontSize 84): ~15 Zeichen/Zeile
 - Zeilenumbrueche mit `\n`, Absaetze mit `\n\n`
 
-### 5. In Root.tsx registrieren
-
-Datei: `wiai-social/src/Root.tsx`
-
-```tsx
-import themaPost from "../posts/2026-03-27-thema.json";
-// ...
-{cp("WiaiPost-2026-03-27-thema", themaPost as unknown as Post)}
-```
-
-### 6. Schnell-Preview
+### 5. Schnell-Preview
 
 ```bash
 ./studio.sh
@@ -124,7 +114,7 @@ Neuen Eintrag in `pipeline/plan.json`:
   "targetWeek": null,
   "publishedDate": "2026-03-27",
   "platforms": {
-    "tiktok": "https://www.tiktok.com/@herdom.bamberg/video/...",
+    "tiktok": "https://www.tiktok.com/@echt.bamberg/video/...",
     "youtube": "https://youtube.com/shorts/...",
     "instagram": "https://www.instagram.com/reel/..."
   },
@@ -137,7 +127,6 @@ Neuen Eintrag in `pipeline/plan.json`:
 - [ ] Nachricht ist aktuell und relevant (3/4 Schnell-Check bestanden)
 - [ ] Screenshot erstellt und in `pipeline/media/` + `wiai-social/assets/screenshots/` gespeichert
 - [ ] JSON mit `type: "newsjacking"` angelegt
-- [ ] Root.tsx: Import + `cp()` eingetragen
 - [ ] Studio-Preview: Screenshot lesbar, Text passt, Safe Zones frei
 - [ ] Gerendert mit `./render.sh`
 - [ ] Auf allen Plattformen gepostet

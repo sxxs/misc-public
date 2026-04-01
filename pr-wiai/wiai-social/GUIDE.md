@@ -127,11 +127,8 @@ wiai-social/
 └── CONTENT.md              ← Visual Designs + Farb-Palette
 ```
 
-## Root.tsx Marker-System
+## Root.tsx Workspace-System
 
-`export-post.mjs` fuegt neue Posts per Marker-Kommentaren ein:
+Root.tsx wird automatisch von `sync-root.mjs` aus den JSONs in `posts/` generiert (laeuft automatisch in `render.sh` und `npm run preview`). Manuelle Edits an den Import/Composition-Bloecken werden ueberschrieben.
 
-- `// @export-post:imports-end` — Neue Imports werden davor eingefuegt
-- `{/* @export-post:compositions-end */}` — Neue `cp()` Zeilen werden davor eingefuegt
-
-Diese Marker nicht entfernen oder umbenennen.
+Marker in Root.tsx: `@sync-root:imports-start/end` und `@sync-root:compositions-start/end` — nicht entfernen.

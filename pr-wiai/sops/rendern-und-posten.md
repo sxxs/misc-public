@@ -7,7 +7,6 @@ Wenn ein Post im Studio fertig aussieht und auf TikTok, YouTube Shorts und Insta
 ## Voraussetzungen
 
 - [ ] Post-JSON existiert in `wiai-social/posts/`
-- [ ] Post ist in `Root.tsx` registriert
 - [ ] Studio-Preview sieht gut aus (SOP: Neuer Post)
 - [ ] Status in `plan.json` ist `"ready"`
 
@@ -58,18 +57,23 @@ Das Script erzeugt automatisch:
 
 ### 6. plan.json aktualisieren
 
-Status und Links eintragen:
+Status und Posting-Daten eintragen (Format + Datum pro Plattform):
 
-```json
-{
-  "status": "published",
-  "publishedDate": "2026-03-27",
-  "platforms": {
-    "tiktok": "https://www.tiktok.com/@herdom.bamberg/video/...",
-    "youtube": "https://youtube.com/shorts/...",
-    "instagram": "https://www.instagram.com/reel/..."
-  }
-}
+```bash
+node edit.mjs <id> status=published \
+  posted.tiktok.carousel=2026-04-01 \
+  posted.youtube.video=2026-04-01 \
+  posted.instagram.reel=2026-04-01
+```
+
+### 7. Post archivieren
+
+JSON und Renders aus dem aktiven Workspace entfernen:
+
+```bash
+cd wiai-social && ./archive-post.sh <post-id>
+# → posts/archive/posted/ + out/archive/
+# Restaurieren: cp posts/archive/posted/<id>.json posts/ && node ../sync-root.mjs
 ```
 
 ## Checkliste
@@ -80,13 +84,14 @@ Status und Links eintragen:
 - [ ] TikTok: hochgeladen, Musik gewaehlt, Bamberg getaggt
 - [ ] YouTube Shorts: hochgeladen, SEO-Beschreibung geschrieben
 - [ ] Instagram Reels: hochgeladen, Caption + Cover gesetzt
-- [ ] `plan.json`: status `"published"`, Datum + Links eingetragen
+- [ ] `plan.json`: status `"published"`, posted-Daten eingetragen (Format + Datum pro Plattform)
+- [ ] `archive-post.sh` ausgefuehrt (JSON + Renders archiviert)
 
 ## Haeufige Fehler
 
-- **Render bricht ab**: Meistens fehlt ein Import in Root.tsx oder die JSON-Datei hat einen Syntaxfehler. Fehlermeldung im Terminal lesen.
+- **Render bricht ab**: Meistens hat die JSON-Datei einen Syntaxfehler. Root.tsx wird automatisch synchronisiert (sync-root.mjs). Fehlermeldung im Terminal lesen.
 - **Video ohne Ton**: Das ist korrekt -- `render.sh` rendert mit `--muted`. Musik kommt bei TikTok aus der App, bei YouTube/Instagram ist das Video stumm (gewollt: Carousel-Stil).
 - **Falscher Dateiname**: `render.sh` erwartet den Pfad relativ zu `wiai-social/`, also `posts/datei.json`, nicht den absoluten Pfad.
 - **Carousel-Reihenfolge**: Immer slide1, slide2, slide3 -- sonst stimmt der Erzaehlbogen nicht.
-- **Links vergessen**: Ohne Links in `plan.json` laesst sich spaeter nicht nachvollziehen, wo der Post gelandet ist.
+- **posted-Daten vergessen**: Ohne `posted`-Feld in plan.json laesst sich spaeter nicht nachvollziehen, was wann wo gepostet wurde. Wichtig fuer Repost-Abstaende.
 - **TikTok ohne Standort**: Bamberg-Tag erhoet die lokale Sichtbarkeit deutlich. Nicht vergessen.

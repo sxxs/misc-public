@@ -1,4 +1,4 @@
-// @herdom.bamberg — Pipeline UI v5
+// @echt.bamberg — Pipeline UI v5
 // Two-mode dashboard: PLAN (operational) + MIX (strategic content mix).
 
 // ── Content Type (rhetorical approach) ──────────────────────────────────────
@@ -76,7 +76,7 @@ let weekOffset = 0;
 let searchQuery = "";
 let columnTypes = loadColumnConfig();
 let selectedPostId = null;
-let viewMode = localStorage.getItem("herdom-viewMode") || "plan";
+let viewMode = localStorage.getItem("echt-viewMode") || "plan";
 
 // ── API ──────────────────────────────────────────────────────────────────────
 
@@ -104,7 +104,7 @@ async function updatePost(id, field, value) {
 
 function loadColumnConfig() {
   try {
-    const saved = localStorage.getItem("herdom-columns");
+    const saved = localStorage.getItem("echt-columns");
     if (saved) {
       const parsed = JSON.parse(saved);
       const legacyDefault = ["contrarian", "merkste-selber", "nahkastchen", "_rest"];
@@ -118,7 +118,7 @@ function loadColumnConfig() {
 }
 
 function saveColumnConfig() {
-  localStorage.setItem("herdom-columns", JSON.stringify(columnTypes));
+  localStorage.setItem("echt-columns", JSON.stringify(columnTypes));
 }
 
 // ── Week helpers ─────────────────────────────────────────────────────────────
@@ -191,7 +191,7 @@ function matchesSearch(post) {
 
 function setViewMode(mode) {
   viewMode = mode;
-  localStorage.setItem("herdom-viewMode", mode);
+  localStorage.setItem("echt-viewMode", mode);
   document.getElementById("modePlan").classList.toggle("active", mode === "plan");
   document.getElementById("modeMix").classList.toggle("active", mode === "mix");
   document.body.classList.toggle("mix-active", mode === "mix");

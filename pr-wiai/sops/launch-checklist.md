@@ -14,28 +14,27 @@ KW14 ab 1.4. = 5 Posts (Mi–So), dann KW15–KW17 je 7. Gesamt: ~26 Posts fuer 
 
 ## Phase 1: Konten einrichten
 
-- [ ] **TikTok**: @herdom.bamberg erstellt
-  - Profilbild (WIAI-Logo oder herdom-Branding)
-  - Bio: max 80 Zeichen, kein Uni-Marketing-Sprech
-  - Link zu wiai25.de (oder Linktree falls mehrere Ziele)
-  - Standort: Bamberg
-  - Creator-Account (nicht Business — bessere Sounds)
-- [ ] **YouTube**: Kanal erstellt
-  - Handle: @herdom.bamberg (oder @herdom-bamberg falls Punkt nicht erlaubt)
-  - Profilbild + Banner
-  - Kanalbeschreibung: 2-3 Saetze + Keywords (Informatik, Datenschutz, Uni Bamberg)
-  - Link zu wiai25.de in About
-- [ ] **Instagram**: @herdom.bamberg erstellt
-  - Creator-Account
-  - Bio + Link
-  - Profilbild konsistent mit TikTok
+- [x] **TikTok**: https://www.tiktok.com/@echt.bamberg
+  - Creator-Account, Standort: Bamberg
+  - Baseline: 3 Gefolgt, 0 Follower, 0 Likes
+  - Bio: "Prof für IT-Sicherheit aus Bamberg. Ich habe Fragen. Zum Studium. Zum Internet. Und manchmal an mich selbst."
+  - Link: studium.wiai.uni-bamberg.de/3/
+- [x] **YouTube**: https://www.youtube.com/@echt.bamberg
+  - Baseline: 0 Abonnenten
+  - Bio: "Professor für IT-Sicherheit an der Uni Bamberg. Kommentiert Datenschutz, KI und Absurditäten im Internet. Persönlicher Account."
+  - Link: studium.wiai.uni-bamberg.de/1
+- [x] **Instagram**: https://www.instagram.com/echt.bamberg/
+  - Creator-Account, Profilbild konsistent mit TikTok
+  - Baseline: 76 Follower (Altbestand), 69 Following (Altbestand)
+  - Bio: "Prof für IT-Sicherheit an der Uni Bamberg. Datenschutz. Internet. Absurditäten. Ich habe Fragen. Manchmal an mich selbst."
+  - Link: studium.wiai.uni-bamberg.de/2
 
 ## Phase 2: Infrastruktur pruefen
 
-- [ ] **Short-URLs live**: Caddy-Routen `/t/`, `/y/`, `/i/` funktionieren und loggen
-- [ ] **JSON Access Log aktiv**: Caddy schreibt Zugriffe als JSON, Pfad-Kodierung erlaubt Plattform-Zuordnung
-- [ ] **Remotion-Pipeline getestet**: Mindestens einen Post end-to-end gerendert (`./render.sh`) und Output geprueft
-- [ ] **Backup der plan.json**: Lokale Kopie vor Go-Live, falls versehentlich ueberschrieben
+- [x] **Short-URLs live**: Caddy-Routen `/1/` (YouTube), `/2/` (Instagram), `/3/` (TikTok) funktionieren und loggen
+- [x] **JSON Access Log aktiv**: Caddy schreibt Zugriffe als JSON, Pfad-Kodierung erlaubt Plattform-Zuordnung
+- [ ] **Remotion-Pipeline aufräumen**: Tracking was wo gepostet wurde (Video und/oder Carousel), mit Datum pro Plattform+Format in plan.json — damit Reposts in ausreichendem Abstand moeglich sind
+- [x] **Backup plan.json**: Im Git versioniert — bei kritischen Schritten (Export, Bulk-Edits) vor der Aenderung committen
 
 ## Phase 3: Content fuer die ersten 4 Wochen festlegen
 

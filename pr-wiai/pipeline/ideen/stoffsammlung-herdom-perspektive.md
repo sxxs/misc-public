@@ -1,4 +1,4 @@
-# @herdom.bamberg – Stoffsammlung Teil 2: Nur Herdom-Perspektive
+# @echt.bamberg – Stoffsammlung Teil 2: Nur Herdom-Perspektive
 
 Fortsetzung von 2026-03-27-1-herdom-stoffsammlung-stimmt-eigentlich.md
 

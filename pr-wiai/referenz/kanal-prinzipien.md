@@ -7,13 +7,13 @@
 ## Account-Identität
 
 - **Persönlicher Account**, nicht institutionell. Formal privat.
-- Accountname `@herdom.bamberg` = Person + Ort, keine Rolle, kein Fach.
+- Accountname `@echt.bamberg` = Person + Ort, keine Rolle, kein Fach.
 - Bio: "Persönlicher Account. Meinungen meine eigenen." + Impressum-Link.
 - Faceless, text-driven, keine Kameraaufnahmen.
 
 ## "Wasserzeichen, nicht Absender"
 
-Die Posts die Bamberg **nicht** erwähnen, werden am meisten geteilt. Auf jedem geteilten Post steht `@herdom.bamberg` als Absender. Die Sichtbarkeit entsteht nicht durch die Botschaft, sondern durch das Wasserzeichen.
+Die Posts die Bamberg **nicht** erwähnen, werden am meisten geteilt. Auf jedem geteilten Post steht `@echt.bamberg` als Absender. Die Sichtbarkeit entsteht nicht durch die Botschaft, sondern durch das Wasserzeichen.
 
 > Jemand sieht den geteilten Post, lacht, schaut auf den Account, sieht "Bamberg" im Namen, klickt aufs Profil, sieht die Bio. Das ist der Pfad.
 

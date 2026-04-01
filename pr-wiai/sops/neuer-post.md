@@ -3,167 +3,70 @@
 ## Kurzversion
 
 ```bash
-# 1. Pipeline-UI starten:
-node pipeline/server.mjs    # → http://localhost:3847
+# 1. Pipeline-UI oder edit.mjs: Post anlegen, Content schreiben
+node pipeline/server.mjs                    # → http://localhost:3847
+node edit.mjs --new <id> type=T design=D topic=T content.act1Setup="..."
 
-# 2. In der UI: Post auswaehlen, Slides schreiben, Status/Design/Format setzen
-
-# 3. Alle exportierbaren Posts anzeigen:
-node export-post.mjs --list
-
-# 4. Exportieren (plan.json → Remotion JSON + Root.tsx):
+# 2. Exportieren (plan.json → Remotion JSON):
 node export-post.mjs <post-id>
 #    → schreibt wiai-social/posts/<id>.json
-#    → registriert in Root.tsx (import + cp())
 #    → setzt status=ready in plan.json
 
-# 5. Vorschau im Remotion Studio:
+# 3. Vorschau (sync-root laeuft automatisch):
 cd wiai-social && npm run preview
 
-# 6. Rendern:
+# 4. Rendern:
 cd wiai-social && ./render.sh posts/<id>.json
-#    → out/<id>.mp4 + 3 Slide-PNGs + 3 Carousel-PNGs
+#    → out/<id>.mp4 + Slide-PNGs + Carousel-PNGs
 
-# 7. Posten: siehe sops/rendern-und-posten.md
+# 5. Posten: siehe sops/rendern-und-posten.md
 ```
-
-## Wann
-
-Wenn eine Idee aus dem Pool in ein fertiges Remotion-Video umgesetzt werden soll.
 
 ## Voraussetzungen
 
-- [ ] Node.js installiert, `npm install` in `wiai-social/` ausgefuehrt
-- [ ] Remotion Studio laeuft (`./studio.sh`)
-- [ ] Idee in `pipeline/entwuerfe/` vorhanden und mit **#ok** oder **#ja** getaggt
+- Node.js installiert, `npm install` in `wiai-social/` ausgefuehrt
+- Idee in `pipeline/entwuerfe/` oder plan.json vorhanden
 
 ## Schritte
 
 ### 1. Idee waehlen
 
-In `pipeline/entwuerfe/` die passende Datei oeffnen (z.B. `contrarian.md`, `merkste-selber.md`). Variante mit **#ok** oder **#ja** suchen. Notiere Post-Nummer und Variante.
+In `pipeline/entwuerfe/` oder der Pipeline-UI die passende Idee finden. Alternativ direkt ueber `edit.mjs --new` anlegen.
 
-### 2. JSON-Datei anlegen
-
-Neue Datei erstellen: `wiai-social/posts/<datum>-<stichwort>.json`
-
-Namenskonvention: `2026-03-27-survivorship-bias.json`
-
-**Template (Contrarian):**
-
-```json
-{
-  "id": "2026-03-27-survivorship-bias",
-  "type": "contrarian",
-  "accentColor": "#FACC15",
-  "slide1": {
-    "bigText": "Reaktion.",
-    "smallText": "Der Satz, den man immer hoert."
-  },
-  "slide2": {
-    "text": "Zeile eins.\nZeile zwei."
-  },
-  "slide3": {
-    "text": "Kurze Punchline.",
-    "button": "Optionaler Follow-up."
-  }
-}
-```
-
-**Template (Newsjacking):**
-
-```json
-{
-  "id": "2026-03-27-stichwort",
-  "type": "newsjacking",
-  "accentColor": "#FACC15",
-  "slide1": {
-    "image": "./assets/screenshots/dateiname.png",
-    "bigText": "Reaktion."
-  },
-  "slide2": {
-    "text": "Erklaerung.\nMehrzeilig ok."
-  },
-  "slide3": {
-    "text": "Punchline."
-  }
-}
-```
-
-**Farb-Palette:**
-
-| Hex | Einsatz |
-|-----|---------|
-| `#FACC15` | Standard, energetisch |
-| `#EF4444` | Alarm, Kritik |
-| `#3B82F6` | Tech/KI, sachlich |
-| `#F0EDE8` | Ruhig, emotional |
-
-**Text-Laengen beachten:**
-- slide2 (fontSize 78): ~18 Zeichen/Zeile
-- slide3.text (fontSize 84): ~15 Zeichen/Zeile
-- slide3.button (fontSize 48): ~30 Zeichen/Zeile
-
-### 3. In Root.tsx registrieren
-
-Datei: `wiai-social/src/Root.tsx`
-
-1. Import oben ergaenzen:
-
-```tsx
-import survivorshipBiasPost from "../posts/2026-03-27-survivorship-bias.json";
-```
-
-2. Composition in der `<>...</>` registrieren:
-
-```tsx
-{cp("WiaiPost-survivorship-bias", survivorshipBiasPost as unknown as Post)}
-```
-
-### 4. Preview im Studio
+### 2. Exportieren
 
 ```bash
-./studio.sh
+node export-post.mjs --list    # zeigt alle exportierbaren Posts
+node export-post.mjs <post-id> # erzeugt JSON, setzt status=ready
 ```
 
-- Composition im Dropdown links auswaehlen (`WiaiPost-survivorship-bias`)
-- Alle 3 Slides durchscrubben
-- Safe-Zone-Overlay pruefen (nur im Studio sichtbar)
+Das Script erstellt `wiai-social/posts/<id>.json` aus den plan.json-Daten. Root.tsx wird automatisch beim Preview/Render aktualisiert (via `sync-root.mjs`).
+
+### 3. Preview im Studio
+
+```bash
+cd wiai-social && npm run preview
+```
+
+- Composition im Dropdown links auswaehlen (`WiaiPost-<id>`)
+- Alle Slides durchscrubben
 - Textlaengen kontrollieren: kein Abschneiden, kein Ueberlauf
 
-### 5. plan.json aktualisieren
+### 4. Rendern
 
-Neuen Eintrag in `pipeline/plan.json` unter `"posts"` ergaenzen:
-
-```json
-{
-  "id": "2026-03-27-survivorship-bias",
-  "type": "contrarian",
-  "design": "pixel-wall",
-  "status": "ready",
-  "json": "wiai-social/posts/2026-03-27-survivorship-bias.json",
-  "source": "pipeline/entwuerfe/ertappt.md#Post-35-Variante-B",
-  "targetWeek": "2026-W14",
-  "publishedDate": null,
-  "platforms": {},
-  "notes": ""
-}
+```bash
+cd wiai-social && ./render.sh posts/<id>.json
 ```
 
 ## Checkliste
 
-- [ ] Idee mit #ok/#ja in `pipeline/entwuerfe/` gefunden
-- [ ] JSON unter `wiai-social/posts/` angelegt
-- [ ] `id` im JSON ist eindeutig
-- [ ] Import + `cp()` in `Root.tsx` eingetragen
-- [ ] Studio-Preview: alle 3 Slides ok, Text lesbar, Safe Zones frei
-- [ ] `plan.json` aktualisiert (status: `"ready"`, source-Verweis gesetzt)
+- [ ] Content in plan.json vollstaendig (act1Setup, act2, act3, aside)
+- [ ] `export-post.mjs` erfolgreich (JSON in posts/)
+- [ ] Studio-Preview: alle Slides ok, Text lesbar
+- [ ] `plan.json`: status=ready, json-Pfad gesetzt
 
 ## Haeufige Fehler
 
-- **JSON-Syntaxfehler**: Komma nach letztem Feld in einem Block vergessen oder zu viel. Studio zeigt dann nichts an.
-- **id-Mismatch**: `id` im JSON muss zum Dateinamen und zur Composition-ID passen.
-- **Zeilenumbrueche**: `\n` im JSON, nicht echte Zeilenumbrueche im String.
-- **Import vergessen**: Composition taucht nicht im Studio-Dropdown auf, wenn der Import in Root.tsx fehlt.
-- **Textlaenge**: slide2 mit mehr als 6 Zeilen wird zu lang. Kuerzen oder `\n\n`-Pausen reduzieren.
-- **Falsche Farbe**: `accentColor` muss ein gueltiger Hex-Wert aus der Palette sein.
+- **JSON-Syntaxfehler**: Studio zeigt nichts an. Fehlermeldung im Terminal lesen.
+- **id-Mismatch**: `id` im JSON muss zum Dateinamen passen.
+- **Textlaenge**: Zu langer Text in act2/act3 wird abgeschnitten. In der Preview pruefen.

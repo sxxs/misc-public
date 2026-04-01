@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// @herdom.bamberg — Pipeline Digest
+// @echt.bamberg — Pipeline Digest
 // Reads plan.json, JSON posts, and idea files to produce a compact status summary.
 // Usage:
 //   node digest.mjs               -> counts + planned posts (text)
@@ -193,7 +193,7 @@ if (jsonOutput) {
 const now = new Date().toISOString().split("T")[0];
 const currentWeek = "KW " + getWeekNumber(new Date());
 
-console.log(`@herdom digest | date=${now} | week=${currentWeek} | plan_mtime=${planMtime}`);
+console.log(`@echt.bamberg digest | date=${now} | week=${currentWeek} | plan_mtime=${planMtime}`);
 console.log(
   `counts | posts=${posts.length} | prod_json=${prodJsons.length} | test_json=${testJsons.length} | eingeplant=${plannedActive.length} | ready=${statusCounts.ready || 0} | draft=${statusCounts.draft || 0} | idea=${statusCounts.idea || 0} | published=${statusCounts.published || 0}`
 );

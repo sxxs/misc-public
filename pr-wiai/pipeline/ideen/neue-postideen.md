@@ -1,4 +1,4 @@
-# @herdom.bamberg — Neue Post-Ideen aus der Strategiediskussion
+# @echt.bamberg — Neue Post-Ideen aus der Strategiediskussion
 
 Stand: März 2026. Ergänzung zum bestehenden Backlog (47 Konzepte, 376 Varianten).
 

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "WIAI social video generator",
   "scripts": {
-    "preview": "remotion preview src/index.ts",
+    "preview": "node ../sync-root.mjs --quiet && remotion preview src/index.ts",
     "render": "remotion render src/index.ts"
   },
   "dependencies": {

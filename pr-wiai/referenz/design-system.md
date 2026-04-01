@@ -139,7 +139,7 @@ Akzentfarbe          -- variiert nach Design und Thema
 
 | Element | Regel |
 |---------|-------|
-| `@herdom.bamberg` | SpaceMono 400, 28px, `rgba(255,255,255,0.25)`, unten zentriert |
+| `@echt.bamberg` | SpaceMono 400, 28px, `rgba(255,255,255,0.25)`, unten zentriert |
 | Position | 180px vom unteren Rand (über TikTok-UI-Bar) |
 | Sichtbarkeit | Immer sichtbar, extrem dezent |
 | Billboard S1/S2 | Kein Footer |

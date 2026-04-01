@@ -12,10 +12,13 @@ import {
   computeSlideshowDuration,
 } from "./utils/timing";
 
-// ── Post imports ──────────────────────────────────────────────────────────────
+// ── Fixed imports (samples, not managed by sync-root) ────────────────────────
 import samplePost from "../posts/archive/prelaunch/2026-mathe3.json";
+
+// ── Active post imports (auto-managed by sync-root.mjs) ─────────────────────
+// @sync-root:imports-start
 import post_2026_informatik_trocken from "../posts/2026-informatik-trocken.json";
-// @export-post:imports-end
+// @sync-root:imports-end
 
 // ── Duration helpers ──────────────────────────────────────────────────────────
 const TRACK_DURATION = 520; // track.mp3 ~17.3s at 30fps
@@ -61,10 +64,13 @@ const cp = (id: string, post: Post) => (
 );
 
 // ══════════════════════════════════════════════════════════════════════════════
-// To add a new post:
-//   1. node export-post.mjs <post-id>   (creates JSON + adds import/cp below)
-//   2. npm run preview                  (check in Remotion Studio)
-//   3. ./render.sh posts/<id>.json      (render video + stills + carousel)
+// Workflow:
+//   1. node export-post.mjs <post-id>   (creates JSON in posts/)
+//   2. node sync-root.mjs               (auto-updates imports + compositions)
+//   3. npm run preview                  (check in Remotion Studio)
+//   4. ./render.sh posts/<id>.json      (sync + render video + stills + carousel)
+//
+// To archive: move JSON from posts/ to posts/archive/ → next sync removes it
 // ══════════════════════════════════════════════════════════════════════════════
 
 export const Root: React.FC = () => (
@@ -73,9 +79,12 @@ export const Root: React.FC = () => (
     <Composition id="WiaiPost" component={C} durationInFrames={450} {...S}
       defaultProps={samplePost as unknown as Post} />
 
-    {/* ── Active posts ──────────────────────────────────────────────────── */}
+    {/* ── Fixed compositions ─────────────────────────────────────────── */}
     {cp("WiaiPost-sample", samplePost as unknown as Post)}
+
+    {/* ── Active posts (auto-managed by sync-root.mjs) ─────────────── */}
+    {/* @sync-root:compositions-start */}
     {cp("WiaiPost-2026-informatik-trocken", post_2026_informatik_trocken as unknown as Post)}
-    {/* @export-post:compositions-end */}
+    {/* @sync-root:compositions-end */}
   </>
 );
