@@ -233,9 +233,10 @@ Frame  5+     Punchline-Text baut sich auf (TypewriterText)
 Frame 52–68   Button + URL faden ein (subtextOpacity)
 Frame 82–112  Absender faded ein (langsam, letzte Schicht)
 Frame dur-16  Glitch beginnt: Text shiftet + Chromatic Aberration
-Frame dur-12  Fade-out beginnt + LED-Flash
-Frame dur-6   Flash/Fade fertig, nur noch volle LED-Wall
-Frame dur     Ende
+Frame dur-12  Fade-out beginnt + LED-Flash (brightness 7x, blur 55px, bloom 85%)
+Frame dur-8   Burn-to-yellow Overlay startet (accentColor, 0→100% Opacity)
+Frame dur-6   Flash/Overpower auf Maximum
+Frame dur-1   Letzter Frame: solides Gelb (voller Burn-Overlay)
 ```
 
 ---

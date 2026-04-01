@@ -275,7 +275,7 @@
       "id": "2026-informatik-trocken",
       "type": "contrarian",
       "design": "pixel-wall",
-      "status": "ready",
+      "status": "published",
       "json": "wiai-social/posts/2026-informatik-trocken.json",
       "source": null,
       "targetWeek": "2026-KW14",
@@ -309,6 +309,17 @@
       },
       "timing": {
         "variant": "through"
+      },
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-01"
+        },
+        "youtube": {
+          "video": "2026-04-01"
+        },
+        "instagram": {
+          "carousel": "2026-04-01"
+        }
       }
     },
     {
