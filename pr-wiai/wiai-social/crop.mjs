@@ -12,7 +12,7 @@ if (!inputPath || !outputPath) {
 const INPUT_HEIGHT = 1920;
 const OUTPUT_HEIGHT = 1350;
 const INPUT_WIDTH = 1080;
-const topOffset = Math.floor((INPUT_HEIGHT - OUTPUT_HEIGHT) / 2); // 285px
+const topOffset = 200; // shifted up vs centered (285) — S3 text sits high due to 400px bottom padding
 
 await sharp(resolve(inputPath))
   .extract({ left: 0, top: topOffset, width: INPUT_WIDTH, height: OUTPUT_HEIGHT })

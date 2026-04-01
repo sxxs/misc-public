@@ -75,7 +75,7 @@ export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", pattern, en
     : "none";
   // Overpower phase: combine existing glitch with brightness boost
   const ledFilter = overpowerProgress > 0
-    ? (glitchFilter !== "none" ? `${glitchFilter} ` : "") + `brightness(${(1 + overpowerProgress * 3.5).toFixed(2)})`
+    ? (glitchFilter !== "none" ? `${glitchFilter} ` : "") + `brightness(${(1 + overpowerProgress * 6).toFixed(2)})`
     : glitchFilter;
 
   // ── Entrance overdrive: LEDs briefly brighter than target, then settle ──
@@ -165,7 +165,7 @@ export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", pattern, en
         <svg width={1080} height={1920} style={{ position: "absolute", inset: 0 }}>
           <defs>
             <filter id="lw-glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation={5 + overpowerProgress * 30} result="blur" />
+              <feGaussianBlur stdDeviation={5 + overpowerProgress * 50} result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -182,7 +182,7 @@ export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", pattern, en
           style={{
             position: "absolute",
             inset: 0,
-            background: `rgba(255, 248, 200, ${(overpowerProgress * 0.7).toFixed(2)})`,
+            background: `rgba(255, 248, 200, ${(overpowerProgress * 0.85).toFixed(2)})`,
             pointerEvents: "none",
           }}
         />

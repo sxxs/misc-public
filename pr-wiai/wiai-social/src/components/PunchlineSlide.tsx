@@ -185,6 +185,21 @@ export const PunchlineSlide: React.FC<Props> = ({
         )}
 
       </div>
+
+      {/* LED burn-out: overdrive washes to solid bright yellow at the very end */}
+      {frame >= flashStart + 4 && (
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 20,
+          background: accentColor,
+          opacity: interpolate(frame, [flashStart + 4, dur - 1], [0, 1], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+          }),
+          pointerEvents: "none",
+        }} />
+      )}
     </div>
   );
 };

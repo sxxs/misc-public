@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-POST_JSON="${1:?Usage: ./render.sh posts/post-id.json}"
-POST_ID=$(basename "$POST_JSON" .json)
+INPUT="${1:?Usage: ./render.sh posts/post-id.json  (or just the post ID)}"
+# Normalize: accept bare ID, ID.json, or posts/ID.json
+POST_ID=$(basename "$INPUT" .json)
+POST_JSON="posts/$POST_ID.json"
+if [[ ! -f "$POST_JSON" ]]; then
+  echo "Error: $POST_JSON not found" >&2
+  exit 1
+fi
 OUT_DIR="./out"
 mkdir -p "$OUT_DIR"
 
