@@ -328,7 +328,7 @@ function createCalCard(post) {
   const isDimmed = searchQuery && !isMatch;
   const statusColor = STATUS_COLORS[post.status] || STATUS_COLORS.idea;
 
-  const cls = "cal-card cal-card-zoomed" + (needsWork ? " needs-work" : "") + (isMatch ? " search-match" : "") + (isDimmed ? " search-dim" : "");
+  const cls = "cal-card cal-card-zoomed" + (needsWork ? " needs-work" : "") + (post.status === "published" ? " cal-published" : "") + (isMatch ? " search-match" : "") + (isDimmed ? " search-dim" : "");
   const children = [
     el("span", { className: "cal-card-type", style: { color: t.color } }, t.short),
     el("span", { className: "cal-card-status", style: { background: statusColor } }),
@@ -436,7 +436,7 @@ function renderMixGrid() {
         const t = typeOf(post.type);
         const c = post.content || {};
         const title = c.act1Setup || c.act1Reveal || post.notes || post.id;
-        const statusChar = post.status === "idea" ? "I" : post.status === "draft" ? "D" : null;
+        const statusChar = post.status === "idea" ? "I" : post.status === "draft" ? "D" : post.status === "published" ? "✓" : null;
         const tipText = t.short + " · " + title.replace(/\n/g, " ").substring(0, 60);
         typeRow.appendChild(mixSq(t.color, tipText, statusChar));
       } else {
@@ -546,6 +546,9 @@ function openWeekTimeline(wkObj, posts) {
       const lineChildren = [
         el("span", { className: "tl-type", style: { color: t.color } }, t.short),
       ];
+      if (post.status === "published") {
+        lineChildren.push(el("span", { className: "tl-published" }, "✓"));
+      }
       if (post.tag) {
         lineChildren.push(el("span", { className: "tl-type", style: { color: "#888" } }, "#" + post.tag + " "));
       }
@@ -1341,6 +1344,9 @@ function renderTimeline() {
         const lineChildren = [
           el("span", { className: "tl-type", style: { color: t.color } }, t.short),
         ];
+        if (post.status === "published") {
+          lineChildren.push(el("span", { className: "tl-published" }, "✓"));
+        }
         if (post.tag) {
           lineChildren.push(el("span", { className: "tl-type", style: { color: "#888" } }, "#" + post.tag + " "));
         }
