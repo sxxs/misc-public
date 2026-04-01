@@ -226,13 +226,13 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
     <SlideFrame accentColor={accent}>
       <LedWall accentColor={accent} mode="s2" pattern={resolvePattern(post.ledPattern)} />
       <div style={{
-        flex: 1, display: "flex", alignItems: "center", padding: "0 108px",
+        flex: 1, display: "flex", alignItems: "flex-start", padding: "350px 108px 0",
         position: "relative", zIndex: 5,
         opacity: exitOpacity,
         ...(exitGlitch > 0.01 ? { filter: exitFilter, transform: `translateX(${exitShiftX.toFixed(1)}px)` } : {}),
       }}>
         <DirtyCutout accentColor={accent} enterProgress={enterProgress}>
-          <TypewriterText text={post.content.act2} startFrame={10} blinkLastPeriod />
+          <TypewriterText text={post.content.act2} startFrame={0} framesPerLine={26} blinkLastPeriod />
         </DirtyCutout>
       </div>
     </SlideFrame>

@@ -136,7 +136,7 @@ export type SlideshowEffect =
   | "beat";
 
 export interface SlideshowEndCard {
-  text?: string;     // default: "@herdom.bamberg"
+  text?: string;     // default: "echt.bamberg"
   duration?: number; // frames (default: 60)
   effect?: SlideshowEffect;
 }

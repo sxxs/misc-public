@@ -179,7 +179,7 @@ export const PunchlineSlide: React.FC<Props> = ({
               fontWeight: 400,
               letterSpacing: "0.06em",
             }}>
-              WIAI · Uni Bamberg · @herdom.bamberg
+              WIAI · Uni Bamberg · echt.bamberg
             </div>
           </div>
         )}

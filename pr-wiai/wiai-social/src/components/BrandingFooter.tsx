@@ -53,7 +53,7 @@ export const BrandingFooter: React.FC<Props> = ({ accentColor, currentSlide }) =
           fontFamily: spaceMonoFamily,
         }}
       >
-        @herdom
+        echt.bamberg
       </span>
     </div>
   </div>

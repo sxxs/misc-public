@@ -14,6 +14,7 @@ import {
 
 // ── Post imports ──────────────────────────────────────────────────────────────
 import samplePost from "../posts/archive/prelaunch/2026-mathe3.json";
+import post_2026_informatik_trocken from "../posts/2026-informatik-trocken.json";
 // @export-post:imports-end
 
 // ── Duration helpers ──────────────────────────────────────────────────────────
@@ -74,6 +75,7 @@ export const Root: React.FC = () => (
 
     {/* ── Active posts ──────────────────────────────────────────────────── */}
     {cp("WiaiPost-sample", samplePost as unknown as Post)}
+    {cp("WiaiPost-2026-informatik-trocken", post_2026_informatik_trocken as unknown as Post)}
     {/* @export-post:compositions-end */}
   </>
 );

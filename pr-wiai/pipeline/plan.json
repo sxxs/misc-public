@@ -287,8 +287,8 @@
       "content": {
         "act1Setup": "Es wird ja immer gesagt: Informatik ist trocken.",
         "act1Reveal": "Ja.",
-        "act2": "Da lernt man, wie man Passwörter knackt, Wahlen manipuliert und Krankenhäuser lahmlegt. Auf Folie 47 von 93.",
-        "act3": "Die Informatik ist nicht trocken. Viele Vorlesungen aber schon.",
+        "act2": "Da lernt man, wie man Passwörter knackt, Wahlen manipuliert und Krankenhäuser lahmlegt.\n\nAuf Folie 47 von 93.",
+        "act3": "Die Informatik ist\nnicht trocken.\n\nViele Vorlesungen\naber schon.",
         "aside": "Ich spreche aus Erfahrung. Leider eigener."
       },
       "slotIndex": 0,
@@ -306,6 +306,9 @@
           "caption": "Informatik ist trocken? Da lernt man, wie man Passwörter knackt und Krankenhäuser lahmlegt. Aber keine Sorge — steht auf einer Folie. Ist also langweilig.",
           "hashtags": "#informatik #studium #itsicherheit #bamberg"
         }
+      },
+      "timing": {
+        "variant": "through"
       }
     },
     {

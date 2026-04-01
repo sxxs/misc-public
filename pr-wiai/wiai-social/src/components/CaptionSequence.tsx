@@ -124,7 +124,7 @@ export const CaptionSequence: React.FC<{ captions: BillboardCaption[] }> = ({ ca
         />
       )}
 
-      {/* Footer: @herdom.bamberg */}
+      {/* Footer: echt.bamberg */}
       <div
         style={{
           position: "absolute",
@@ -139,7 +139,7 @@ export const CaptionSequence: React.FC<{ captions: BillboardCaption[] }> = ({ ca
           letterSpacing: "0.04em",
         }}
       >
-        @herdom.bamberg
+        echt.bamberg
       </div>
     </div>
   );

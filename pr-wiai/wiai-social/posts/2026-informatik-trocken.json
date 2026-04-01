@@ -1,0 +1,15 @@
+{
+  "id": "2026-informatik-trocken",
+  "type": "led-wall",
+  "design": "pixel-wall",
+  "timing": {
+    "variant": "through"
+  },
+  "content": {
+    "act1Setup": "Es wird ja immer gesagt: Informatik ist trocken.",
+    "act1Reveal": "Ja.",
+    "act2": "Da lernt man, wie man Passwörter knackt, Wahlen manipuliert und Krankenhäuser lahmlegt.\n\nAuf Folie 47 von 93.",
+    "act3": "Die Informatik ist\nnicht trocken.\n\nViele Vorlesungen\naber schon.",
+    "aside": "Ich spreche aus Erfahrung. Leider eigener."
+  }
+}

@@ -125,7 +125,9 @@ const IMPORT_MARKER = "// @export-post:imports-end";
 const CP_MARKER = "{/* @export-post:compositions-end */}";
 
 const rootContent = readFileSync(ROOT_TSX, "utf8");
-const importName = post.id.replace(/[^a-zA-Z0-9]/g, "_") + "Post";
+let importName = post.id.replace(/[^a-zA-Z0-9]/g, "_");
+if (/^\d/.test(importName)) importName = "post_" + importName;
+else importName += "Post";
 const importLine = 'import ' + importName + ' from "../posts/' + jsonFilename + '";';
 const cpLine = '{cp("WiaiPost-' + post.id + '", ' + importName + ' as unknown as Post)}';
 

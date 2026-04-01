@@ -185,7 +185,7 @@ const BillboardAct3: React.FC<{ post: Post }> = ({ post }) => {
         </div>
       )}
 
-      {/* Footer: @herdom.bamberg — always visible, bottom-anchored */}
+      {/* Footer: echt.bamberg — always visible, bottom-anchored */}
       <div
         style={{
           position: "absolute",
@@ -200,7 +200,7 @@ const BillboardAct3: React.FC<{ post: Post }> = ({ post }) => {
           letterSpacing: "0.04em",
         }}
       >
-        @herdom.bamberg
+        echt.bamberg
       </div>
     </BillboardFrame>
   );

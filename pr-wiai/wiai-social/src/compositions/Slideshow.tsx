@@ -47,7 +47,7 @@ export const Slideshow: React.FC<{ post: Post }> = ({ post }) => {
 
   const images = config.images;
   const endCard = config.endCard;
-  const endCardText = endCard?.text ?? "@herdom.bamberg";
+  const endCardText = endCard?.text ?? "echt.bamberg";
   const endCardDuration = endCard?.duration ?? 60;
 
   // Build timeline: accumulate frame offsets for each image
