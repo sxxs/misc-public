@@ -1,0 +1,12 @@
+{
+  "id": "2026-merkste-netflix",
+  "type": "led-wall",
+  "design": "pixel-wall",
+  "musicFile": "music/merkste-netflix.mp3",
+  "timing": { "variant": "through", "totalDuration": 360, "absenderStartFrame": 50 },
+  "content": {
+    "act1Setup": "Netflix fragt:\n\n“Schaust\n  du noch?”",
+    "act2": "TikTok fragt\ndas nicht.",
+    "act3": "Merkste selber, oder?"
+  }
+}

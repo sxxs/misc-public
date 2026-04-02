@@ -501,8 +501,8 @@
       "topic": "social-media",
       "slotIndex": 2,
       "content": {
-        "act1Setup": "Netflix fragt: 'Schaust du noch?'",
-        "act2": "TikTok fragt das nicht.",
+        "act1Setup": "Netflix fragt:\n\n“Schaust\n  du noch?”",
+        "act2": "TikTok fragt\ndas nicht.",
         "act3": "Merkste selber, oder?"
       },
       "social": {
@@ -4799,7 +4799,7 @@
       "id": "idea-neue-handy-vs-freund",
       "type": "stimmt-eigentlich",
       "design": "billboard",
-      "status": "ready",
+      "status": "published",
       "json": "wiai-social/posts/idea-neue-handy-vs-freund.json",
       "source": "pipeline/ideen/neue-postideen.md",
       "targetWeek": "2026-KW14",
@@ -4810,10 +4810,10 @@
       "topic": "datenschutz",
       "slotIndex": 1,
       "content": {
-        "act1Setup": "Wo du gestern\\nwarst. Und wie\\nlange du ge-\\nschlafen hast.",
+        "act1Setup": "Wo du gestern\nwarst. Und wie\nlange du ge-\nschlafen hast.",
         "act1Reveal": "Dein Handy weiß das.",
-        "act2": "Dein\\nbester\\nFreund\\nweiß\\ndas\\nnicht.\\n\\n– Ok.",
-        "act3": "Wem von beiden\\nvertraust\\ndu mehr?",
+        "act2": "Dein\nbester\nFreund\nweiß\ndas\nnicht.\n\n– Ok.",
+        "act3": "Wem von beiden\nvertraust\ndu mehr?",
         "aside": "– Oh."
       },
       "social": {
@@ -4829,6 +4829,17 @@
         "instagram": {
           "caption": "Dein Handy weiß, was du gegessen hast. Wie lange du geschlafen hast. Wo du gestern warst. Dein bester Freund weiß das nicht. Wem vertraust du mehr?",
           "hashtags": "#datenschutz #handy #tracking #privatsphäre #informatik"
+        }
+      },
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-02"
+        },
+        "youtube": {
+          "video": "2026-04-02"
+        },
+        "instagram": {
+          "video": "2026-04-02"
         }
       }
     },

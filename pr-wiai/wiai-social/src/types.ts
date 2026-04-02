@@ -83,6 +83,7 @@ export interface PostContent {
 // ── Contrarian timing config ────────────────────────────────────────────────
 export interface ContrarianTiming {
   variant?: "scratch" | "through" | "through-scratch"; // scratch: fade+vinyl+beat-sync (default); through: straight; through-scratch: full volume then vinyl+beat-sync
+  totalDuration?: number;            // override total frames (e.g. 360 = 12s); useful for muted renders
   act1Duration?: number;           // frames for Act1 slide (default: 150)
   act3Track?: string;              // through-scratch only: key into ACT3_ALT_TRACKS, omit for default track.mp3
   scratchOffset?: number;          // frames before act3Start where scratch starts (default: 15; 0 = at act3Start)

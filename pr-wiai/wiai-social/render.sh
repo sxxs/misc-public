@@ -33,7 +33,7 @@ const act2 = Math.max(90, 10 + twF + 130);
 
 const act3Start = act1 + act2;
 const variant = t.variant || "scratch";
-const total = variant === "through" ? 520 : act3Start + 295;
+const total = t.totalDuration ? t.totalDuration : variant === "through" ? 520 : act3Start + 295;
 const act3Dur = total - act3Start;
 const absStart = t.absenderStartFrame ?? (act3Dur < 250 ? Math.min(120, act3Dur - 70) : 155);
 

@@ -99,9 +99,23 @@ Wenn du etwas anpassen willst, fuege `timing` zum JSON hinzu:
 | Feld | Default | Beschreibung |
 |---|---|---|
 | `act1Duration` | 150/100 | Frames fuer Act1. 225 = 7.5s fuer lange Zitate. |
+| `totalDuration` | — | Override Gesamtdauer in Frames (z.B. 360 = 12s). Ueberschreibt track-basierte Berechnung. |
 | `act3Track` | — | Alt-Musik fuer Act3: `"a"` bis `"f"`. Nur mit through-scratch. |
 | `act3MusicDelay` | 0 | Frames Verzoegerung fuer Act3-Musik (halb-Overlap mit Scratch). |
 | `scratchOffset` | 15 | Frames vor Act3-Start wo Scratch beginnt. 0 = genau bei Act3. |
+
+### Eigener Musik-Track (`musicFile`)
+
+Top-Level-Feld (nicht in `timing`). Ueberschreibt den Default-Track `music/track.mp3`.
+
+```json
+{
+  "musicFile": "music/merkste-netflix.mp3",
+  "timing": { "variant": "through", "totalDuration": 360 }
+}
+```
+
+Datei muss in `assets/music/` liegen. Funktioniert mit allen Varianten, aktuell nur fuer `through` implementiert.
 
 ---
 

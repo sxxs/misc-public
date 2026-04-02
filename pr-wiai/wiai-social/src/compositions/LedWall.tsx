@@ -88,12 +88,12 @@ const ContrarianMusicScratch: React.FC<{ act1Duration: number; act2Duration: num
 
 // variant="through": music plays straight from start, no beat-sync complexity
 // Act3 duration is set externally (durationInFrames) so video ends exactly with music
-const ContrarianMusicThrough: React.FC<{ totalDuration: number }> = ({ totalDuration }) => {
+const ContrarianMusicThrough: React.FC<{ totalDuration: number; musicFile?: string }> = ({ totalDuration, musicFile }) => {
   const frame = useCurrentFrame();
   const vol = interpolate(frame, [totalDuration - 3, totalDuration], [1, 0], {
     extrapolateLeft: "clamp", extrapolateRight: "clamp",
   });
-  return <Audio src={staticFile("music/track.mp3")} volume={vol * 0.65} />;
+  return <Audio src={staticFile(musicFile ?? "music/track.mp3")} volume={vol * 0.65} />;
 };
 
 // variant="through-scratch": full volume Act1+Act2, scratch near Act2/Act3 boundary, Act3 music
@@ -287,7 +287,7 @@ export const LedWallComposition: React.FC<{ post: Post }> = ({ post }) => {
   return (
     <>
       {variant === "through"
-        ? <ContrarianMusicThrough totalDuration={totalDuration} />
+        ? <ContrarianMusicThrough totalDuration={totalDuration} musicFile={post.musicFile} />
         : variant === "through-scratch"
           ? <ContrarianMusicThroughScratch act1Duration={act1Duration} act2Duration={act2Duration} act3Duration={act3Duration}
               altTrack={altTrack} scratchOffset={t?.scratchOffset} musicDelay={musicDelay} />
