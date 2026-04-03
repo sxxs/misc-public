@@ -160,5 +160,6 @@ export interface Post {
   billboard?: BillboardConfig; // billboard captions mode
   slideshow?: SlideshowConfig; // slideshow-only
   ledPattern?: string;   // pattern name for LedWall sprite overlay (e.g. "maze")
+  ledScroll?: number;    // rows/sec vertical scroll for LedWall (bright bands sweep upward)
   content: PostContent;
 }

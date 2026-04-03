@@ -141,7 +141,7 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
 
   return (
     <SlideFrame accentColor={accent}>
-      <LedWall accentColor={accent} exitAtFrame={act1Duration - 20} pattern={resolvePattern(post.ledPattern)} />
+      <LedWall accentColor={accent} exitAtFrame={act1Duration - 20} pattern={resolvePattern(post.ledPattern)} scrollSpeed={post.ledScroll} />
       <div
         style={{
           flex: 1,
@@ -224,7 +224,7 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
 
   return (
     <SlideFrame accentColor={accent}>
-      <LedWall accentColor={accent} mode="s2" pattern={resolvePattern(post.ledPattern)} />
+      <LedWall accentColor={accent} mode="s2" pattern={resolvePattern(post.ledPattern)} scrollSpeed={post.ledScroll} />
       <div style={{
         flex: 1, display: "flex", alignItems: "flex-start", padding: "350px 108px 0",
         position: "relative", zIndex: 5,
@@ -256,6 +256,7 @@ const Act3: React.FC<{ post: Post; dur: number; subtextStart?: number; absenderS
         subtextStartFrame={subtextStart}
         absenderStartFrame={absenderStart}
         pattern={resolvePattern(post.ledPattern)}
+        scrollSpeed={post.ledScroll}
       />
     </SlideFrame>
   );

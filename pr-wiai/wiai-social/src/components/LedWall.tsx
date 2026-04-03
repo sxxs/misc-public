@@ -14,6 +14,7 @@ interface Props {
   enterFrames?: number;     // staggered LED power-up at scene start (each LED at hash-based offset)
   enterOverdrive?: boolean; // brief brightness overshoot at entrance (1.0→1.5→1.0 over ~12f)
   exitAtFrame?: number;     // staggered LED power-down starting at this frame (18f total, hash-based)
+  scrollSpeed?: number;     // rows/sec vertical scroll — bright bands sweep upward (0 or undefined = off)
 }
 
 const COLS = 24;
@@ -23,7 +24,67 @@ const CELL_H = 40;
 const LED_W = 38;
 const LED_H = 33;
 
-export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", pattern, endFlashAtFrame, enterFrames, enterOverdrive, exitAtFrame }) => {
+// ── Scroll blocks: 9:16 "video thumbnails" drifting upward ──────────────────
+// cols = rows/2 → true 9:16 on screen (cell 45×40).  S=3×6, M=4×8, L=5×10.
+// All blocks travel at the same scrollSpeed.  Flick blocks accelerate 8× when
+// they reach FLICK_ROW (~30 % from bottom).  Dense layout for homogeneous fill.
+const VIRTUAL_ROWS = 90;
+const FLICK_ROW = 34;    // trigger row (30 % from bottom of 48)
+const FLICK_ACCEL = 8;
+
+interface ScrollBlock {
+  col: number; row0: number; w: number; h: number;
+  flick?: boolean;
+}
+
+const SCROLL_BLOCKS: ScrollBlock[] = [
+  // lane 1 — cols 0-3
+  { col: 0,  row0: 2,   w: 4, h: 8 },
+  { col: 1,  row0: 22,  w: 3, h: 6 },
+  { col: 0,  row0: 44,  w: 4, h: 8 },
+  { col: 1,  row0: 64,  w: 3, h: 6 },
+  { col: 0,  row0: 80,  w: 4, h: 8 },
+  // lane 2 — cols 5-9
+  { col: 5,  row0: 8,   w: 5, h: 10 },
+  { col: 6,  row0: 30,  w: 3, h: 6 },
+  { col: 5,  row0: 50,  w: 4, h: 8 },
+  { col: 6,  row0: 70,  w: 3, h: 6 },
+  // lane 3 — cols 10-14
+  { col: 10, row0: 0,   w: 4, h: 8 },
+  { col: 11, row0: 18,  w: 3, h: 6 },
+  { col: 10, row0: 36,  w: 5, h: 10, flick: true },
+  { col: 11, row0: 58,  w: 3, h: 6 },
+  { col: 10, row0: 76,  w: 4, h: 8 },
+  // lane 4 — cols 15-19
+  { col: 15, row0: 6,   w: 3, h: 6 },
+  { col: 15, row0: 24,  w: 5, h: 10 },
+  { col: 16, row0: 46,  w: 4, h: 8 },
+  { col: 15, row0: 66,  w: 3, h: 6,  flick: true },
+  { col: 16, row0: 84,  w: 4, h: 8 },
+  // lane 5 — cols 20-23
+  { col: 20, row0: 12,  w: 4, h: 8 },
+  { col: 21, row0: 32,  w: 3, h: 6 },
+  { col: 20, row0: 52,  w: 4, h: 8 },
+  { col: 21, row0: 72,  w: 3, h: 6 },
+];
+
+/** Compute block top-row for a given frame (stateless, wrapping). */
+function blockTopRow(blk: ScrollBlock, f: number, spd: number): number {
+  const rps = spd / 30; // rows per frame
+  if (!blk.flick) {
+    return ((blk.row0 - f * rps) % VIRTUAL_ROWS + VIRTUAL_ROWS) % VIRTUAL_ROWS;
+  }
+  // Per-cycle: normal scroll until FLICK_ROW, then accelerate
+  const cycleLen = VIRTUAL_ROWS / rps;
+  const cf = f % cycleLen;
+  const triggerCf = ((blk.row0 - FLICK_ROW) % VIRTUAL_ROWS + VIRTUAL_ROWS) % VIRTUAL_ROWS / rps;
+  if (cf < triggerCf) {
+    return ((blk.row0 - cf * rps) % VIRTUAL_ROWS + VIRTUAL_ROWS) % VIRTUAL_ROWS;
+  }
+  return FLICK_ROW - (cf - triggerCf) * rps * FLICK_ACCEL;
+}
+
+export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", pattern, endFlashAtFrame, enterFrames, enterOverdrive, exitAtFrame, scrollSpeed }) => {
   const frame = useCurrentFrame();
 
   // ── Pattern frame selection (animated patterns cycle at pattern.fps) ──
@@ -115,20 +176,22 @@ export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", pattern, en
       if (isSpriteLed) {
         opacity = 0.45;
       } else if (hasPattern && mode === "s1") {
-        // Pattern active in s1: background LEDs nearly off so sprite stands out
         opacity = 0.02;
-      } else if (mode === "s2") {
-        opacity = 0.03;
       } else if (mode === "s3") {
-        // ~92% on, ~8% blinking high
+        // s3: bright wall (scroll blocks add subtle variation below)
         if (hash < 0.08) {
           const phase = (Math.sin(row * 7.11 + col * 3.17) * 43758.5) % (Math.PI * 2);
           opacity = ((Math.sin(frame * 0.1 + phase) + 1) / 2) * 0.30 + 0.62;
         } else {
           opacity = 0.78;
         }
+      } else if (scrollSpeed) {
+        // s1 + s2 with scroll: near-black background so blocks pop
+        opacity = 0.01;
+      } else if (mode === "s2") {
+        opacity = 0.03;
       } else {
-        // s1: ~65% off, ~15% blinking, ~20% on
+        // s1 normal (no scroll)
         if (hash < 0.65) {
           opacity = 0.03;
         } else if (hash < 0.80) {
@@ -136,6 +199,31 @@ export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", pattern, en
           opacity = ((Math.sin(frame * 0.08 + phase) + 1) / 2) * 0.48 + 0.04;
         } else {
           opacity = 0.55;
+        }
+      }
+
+      // Scroll blocks: light up LEDs inside visible 9:16 thumbnails
+      if (scrollSpeed) {
+        for (const blk of SCROLL_BLOCKS) {
+          let top = blockTopRow(blk, frame, scrollSpeed);
+          // Unwrap: block partially above viewport wraps to high value — map back to negative
+          if (top > VIRTUAL_ROWS - blk.h) top -= VIRTUAL_ROWS;
+          if (top < -blk.h || top > ROWS) continue;
+          if (col >= blk.col && col < blk.col + blk.w
+            && row >= top && row < top + blk.h) {
+            // All modes: soft clip at top edge, fade in from bottom
+            const fadeOut = Math.min(1, row / 6);            // rows 0–6 dissolve
+            const fadeIn  = Math.min(1, (ROWS - row) / 3);  // rows 45–48 ramp up
+            if (mode === "s2") {
+              opacity = (0.10 + hash * 0.05) * fadeIn * fadeOut;
+            } else if (mode === "s3") {
+              opacity = 0.78 + (0.06 + hash * 0.04) * fadeOut;
+            } else {
+              // s1
+              opacity = (0.06 + hash * 0.04) * fadeOut;
+            }
+            break;
+          }
         }
       }
 
