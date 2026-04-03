@@ -132,10 +132,25 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
   const accent = post.accentColor ?? WIAI_YELLOW;
   const { act1Setup, act1Reveal, textAlign } = post.content;
 
-  // Quote appears right away — this is what draws the eye
-  const quoteOpacity = interpolate(frame, [0, 12], [0, 1], { extrapolateRight: "clamp" });
-  // act1Reveal enters at local frame 75, punchline moment
-  const bigOpacity = interpolate(frame, [75, 90], [0, 1], { extrapolateRight: "clamp" });
+  // Quote snaps in with brief glitch, not a fade
+  const hasScroll = !!post.ledScroll;
+  const revealAt = post.timing?.act1RevealFrame ?? 75;
+  const quoteOpacity = hasScroll
+    ? interpolate(frame, [2, 4], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+    : interpolate(frame, [0, 12], [0, 1], { extrapolateRight: "clamp" });
+  // act1Reveal pops in at revealAt
+  const bigOpacity = hasScroll
+    ? interpolate(frame, [revealAt, revealAt + 2], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+    : interpolate(frame, [revealAt, revealAt + 15], [0, 1], { extrapolateRight: "clamp" });
+  // Entrance glitch on quote (chromatic aberration burst, 6 frames)
+  const entryGlitch = hasScroll
+    ? interpolate(frame, [2, 8], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+    : 0;
+  const egx = Math.sin(frame * 17.3) * entryGlitch * 30;
+  const entryGlitchFilter = entryGlitch > 0.01
+    ? `drop-shadow(${egx.toFixed(1)}px 0 0 rgba(255,30,30,${(entryGlitch * 0.8).toFixed(2)})) ` +
+      `drop-shadow(${(-egx * 0.7).toFixed(1)}px 0 0 rgba(30,255,255,${(entryGlitch * 0.7).toFixed(2)}))`
+    : "none";
   // Text fade-out: last 11 frames of Act1 (dynamic, works for any act1Duration)
   const textFadeOut = interpolate(frame, [act1Duration - 11, act1Duration - 1], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
@@ -156,6 +171,7 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
           position: "relative",
           zIndex: 5,
           opacity: textFadeOut,
+          ...(entryGlitch > 0.01 ? { filter: entryGlitchFilter, transform: `translateX(${(egx * 0.4).toFixed(1)}px)` } : {}),
         }}
       >
         {/* Setup quote — per-line bounding boxes, content-width */}
@@ -192,8 +208,8 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
               <GlitchText
                 text={act1Reveal}
                 fontSize={bigFontSize}
-                glitchStartFrame={46}
-                glitchEndFrame={58}
+                glitchStartFrame={revealAt - 4}
+                glitchEndFrame={revealAt + 8}
               />
             </div>
           );

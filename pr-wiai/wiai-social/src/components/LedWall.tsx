@@ -217,14 +217,20 @@ export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", pattern, en
             if (mode === "s2") {
               opacity = (0.10 + hash * 0.05) * fadeIn * fadeOut;
             } else if (mode === "s3") {
-              opacity = 0.78 + (0.06 + hash * 0.04) * fadeOut;
+              opacity = 0.78 + (0.10 + hash * 0.06) * fadeOut;
             } else {
               // s1
-              opacity = (0.06 + hash * 0.04) * fadeOut;
+              opacity = (0.12 + hash * 0.06) * fadeOut;
             }
             break;
           }
         }
+      }
+
+      // Scroll intro: bright wall → fades to reveal boxes (~150ms = 5 frames)
+      if (scrollSpeed && mode === "s1") {
+        const introBlend = Math.min(1, frame / 5);
+        opacity = opacity * introBlend + 0.55 * (1 - introBlend);
       }
 
       // End flash / scene-in / scene-exit / overdrive combined

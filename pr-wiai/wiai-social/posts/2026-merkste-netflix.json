@@ -5,9 +5,10 @@
   "accentColor": "#EF4444",
   "ledScroll": 10,
   "musicFile": "music/merkste-netflix.mp3",
-  "timing": { "variant": "through", "totalDuration": 360, "absenderStartFrame": 50 },
+  "timing": { "variant": "through", "totalDuration": 360, "act1Duration": 100, "act1RevealFrame": 45, "absenderStartFrame": 50 },
   "content": {
-    "act1Setup": "Netflix fragt:\n\n\u201cSchaust\n  du noch?\u201d\n\n\n\n– Ja und?",
+    "act1Setup": "Netflix fragt:\n\n\u201cSchaust\n  du noch?\u201d",
+    "act1Reveal": "– Ja und?",
     "act2": "TikTok fragt                       das nicht.",
     "act3": "Merkste selber, oder?"
   }
