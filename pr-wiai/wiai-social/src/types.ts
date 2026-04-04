@@ -97,6 +97,12 @@ export interface TerminalConfig {
   color?: "green" | "amber" | "white"; // default: "green"
   mode?: "classic" | "flow";           // classic: 3-act (default); flow: continuous with pauses
   blocks?: TerminalFlowBlock[];        // flow mode only
+  act1Duration?: number;               // override default 75
+  act2Duration?: number;               // override computed act2 duration
+  act3Duration?: number;               // override default 150
+  charsPerFrame?: number;              // typing speed override (default: 0.5 = 2 frames/char)
+  hookFlash?: "pdf-form";             // brief visual flash in Act1 before prompt text
+  act2Style?: "escalate";            // split act2 by \n\n, each paragraph bigger + brighter
 }
 
 export type TerminalFlowBlock =

@@ -22,7 +22,26 @@ read S1A S1B S2A S2B S3F <<< $(node -e '
 const post = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
 const c = post.content || {};
 const t = post.timing || {};
+const term = post.terminal || {};
 
+// ── Terminal posts use terminal.* for timing ────────────────────────────
+if (post.type === "terminal") {
+  const act1 = term.act1Duration ?? 75;
+  const chars = (c.act2 || "").replace(/\n/g, "").length;
+  const cpf = term.charsPerFrame ?? 0.5;
+  const act2 = term.act2Duration ?? Math.max(90, 6 + Math.ceil(chars / cpf) + Math.floor(chars / 8) + 60);
+  const act3 = term.act3Duration ?? 150;
+  const total = act1 + act2 + act3;
+  const s1a = Math.min(Math.floor(act1 * 0.3), act1 - 5);
+  const s1b = Math.min(act1 - 5, act1 - 1);
+  const s2a = act1 + Math.floor(act2 * 0.4);
+  const s2b = act1 + act2 - 5;
+  const s3  = Math.min(act1 + act2 + act3 - 10, total - 5);
+  process.stdout.write([s1a, s1b, s2a, s2b, s3].join(" "));
+  process.exit(0);
+}
+
+// ── LED-wall / billboard (default) ──────────────────────────────────────
 const act1 = t.act1Duration ?? (c.act1Reveal ? 150 : 100);
 
 // replicate computeAct2Duration (timing.ts defaults: startFrame=10, fpl=3, buffer=130)

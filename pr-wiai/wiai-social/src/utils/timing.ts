@@ -220,10 +220,10 @@ export const TERMINAL_ACT3_DURATION = 150;
 
 export function computeTerminalDuration(post: {
   content: { act2: string };
+  terminal?: { act1Duration?: number; act2Duration?: number; act3Duration?: number; charsPerFrame?: number };
 }): number {
-  return (
-    TERMINAL_ACT1_DURATION +
-    computeTerminalAct2Duration(post.content.act2) +
-    TERMINAL_ACT3_DURATION
-  );
+  const act1 = post.terminal?.act1Duration ?? TERMINAL_ACT1_DURATION;
+  const act2 = post.terminal?.act2Duration ?? computeTerminalAct2Duration(post.content.act2, post.terminal?.charsPerFrame);
+  const act3 = post.terminal?.act3Duration ?? TERMINAL_ACT3_DURATION;
+  return act1 + act2 + act3;
 }

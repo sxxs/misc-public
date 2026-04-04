@@ -5018,7 +5018,7 @@
     {
       "id": "idea-neue-das-pdfformular",
       "type": "aphorismus",
-      "design": "billboard",
+      "design": "terminal",
       "status": "ready",
       "json": "wiai-social/posts/idea-neue-das-pdfformular.json",
       "source": "pipeline/ideen/neue-postideen.md",
