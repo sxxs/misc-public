@@ -1,0 +1,11 @@
+{
+  "id": "idea-neue-das-pdfformular",
+  "type": "billboard",
+  "design": "billboard",
+  "content": {
+    "act1Setup": "PDF-Formular.\nKann man nicht digital ausfüllen.",
+    "act1Reveal": "45 Minuten.",
+    "act2": "Ausgedruckt.\nUnterschrieben.\nEingescannt.\nPer Mail geschickt.",
+    "act3": "An jemanden\nder es wieder ausdruckt."
+  }
+}

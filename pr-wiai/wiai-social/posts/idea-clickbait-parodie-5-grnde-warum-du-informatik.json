@@ -1,0 +1,12 @@
+{
+  "id": "idea-clickbait-parodie-5-grnde-warum-du-informatik",
+  "type": "billboard",
+  "design": "billboard",
+  "content": {
+    "act1Setup": "5 Gründe für ein Informatik-Studium in Bamberg.",
+    "act1Reveal": "Über Nr. 3 wird zu wenig gesprochen.",
+    "act2": "1. Zukunftssicher.\n2. Gut bezahlt.\n3. Du wolltest einfach wissen, was Nr. 3 ist.",
+    "act3": "Das war Clickbait. Du weißt das. Es funktioniert trotzdem.",
+    "aside": "Theorie stark. Praxis schwach."
+  }
+}
