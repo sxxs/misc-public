@@ -1,0 +1,19 @@
+{
+  "id": "idea-neue-das-pdfformular",
+  "type": "terminal",
+  "musicFile": "music/pdf-formular.mp3",
+  "terminal": {
+    "color": "amber",
+    "act1Duration": 60,
+    "act2Duration": 145,
+    "act3Duration": 95,
+    "act2Style": "escalate",
+    "hookFlash": "pdf-form"
+  },
+  "content": {
+    "act1Setup": "45 Minuten\nfür ein\nPDF-Formular.",
+    "act2": "Kann man nicht\ndigital ausfüllen.\n\nAlso ausgedruckt.\n\nUnterschrieben.\n\nUnd wieder eingescannt.\n\nPer Mail verschickt.",
+    "act3": "An jemanden\nder es wieder\nausdruckt.",
+    "aside": "Digitalisierung."
+  }
+}

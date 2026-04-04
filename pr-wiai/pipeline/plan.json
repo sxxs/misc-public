@@ -5019,7 +5019,7 @@
       "id": "idea-neue-das-pdfformular",
       "type": "aphorismus",
       "design": "terminal",
-      "status": "ready",
+      "status": "published",
       "json": "wiai-social/posts/idea-neue-das-pdfformular.json",
       "source": "pipeline/ideen/neue-postideen.md",
       "targetWeek": "2026-KW14",
@@ -5037,17 +5037,28 @@
       },
       "social": {
         "tiktok": {
-          "caption": "Digitalisierung in Deutschland in 45 Minuten erklärt.",
+          "caption": "45 Minuten. Für ein PDF-Formular.",
           "hashtags": "#digitalisierung #bürokratie #informatik #studium #deutschland"
         },
         "youtube": {
-          "title": "So funktioniert Bürokratie im Studium",
-          "description": "Ein PDF, das man nicht digital ausfüllen kann. Der Rest ist Ausdrucken, Einscannen und Hoffen.",
+          "title": "45 Minuten für ein PDF-Formular",
+          "description": "Ein PDF, das man nicht digital ausfüllen kann. Ausdrucken. Unterschreiben. Einscannen. Per Mail verschicken. An jemanden, der es wieder ausdruckt.",
           "hashtags": "#Shorts #Digitalisierung #Bürokratie #Studium #Informatik"
         },
         "instagram": {
-          "caption": "Digitalisierung in Deutschland: Ein PDF-Formular, das man nicht digital ausfüllen kann. Der Workflow dahinter hat mehr Schritte als die meisten Algorithmen.",
+          "caption": "PDF-Formular. Kann man nicht digital ausfüllen. Der Rest ist Bürokratie.",
           "hashtags": "#digitalisierung #bürokratie #informatik #studium #deutschland"
+        }
+      },
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-04"
+        },
+        "youtube": {
+          "video": "2026-04-04"
+        },
+        "instagram": {
+          "video": "2026-04-04"
         }
       }
     },
