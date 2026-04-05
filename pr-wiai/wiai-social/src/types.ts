@@ -109,6 +109,14 @@ export type TerminalFlowBlock =
   | { text: string; color?: "green" | "amber" | "white"; pause?: never }
   | { pause: number; text?: never; color?: never };
 
+// Billboard beat: one element in an Act2 beat sequence
+export interface BillboardBeat {
+  text: string;
+  at: number;                    // frame within Act2 when this beat fades in
+  style?: "dim" | "heckle";     // default: main text (white, bold); dim: 70% white; heckle: accent + monospace
+  size?: number;                 // fontSize override (default: 96, heckle: 54, dim: 72)
+}
+
 // Billboard config — captions mode for rapid-cut lyric-video style
 export interface BillboardConfig {
   mode?: "classic" | "captions"; // classic: 3-act (default); captions: rapid cuts
@@ -117,6 +125,7 @@ export interface BillboardConfig {
   act2Duration?: number;         // override computed act2 duration (for beat-sync)
   act3Duration?: number;         // override default 160
   revealAtFrame?: number;        // frame when act1Reveal appears (default: 14)
+  beats?: BillboardBeat[];       // Explicit Act2 beat sequence — overrides \n\n splitting
 }
 
 export interface BillboardCaption {

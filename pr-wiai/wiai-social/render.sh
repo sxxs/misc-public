@@ -41,7 +41,29 @@ if (post.type === "terminal") {
   process.exit(0);
 }
 
-// ── LED-wall / billboard (default) ──────────────────────────────────────
+// ── Billboard posts use billboard.* for timing ─────────────────────────
+if (post.type === "billboard") {
+  const bb = post.billboard || {};
+  const act1 = bb.act1Duration ?? 120;
+  let act2;
+  if (bb.act2Duration) { act2 = bb.act2Duration; }
+  else {
+    const ls2 = (c.act2 || "").split("\\n");
+    const f2 = 3;
+    act2 = Math.max(90, 10 + ls2.reduce((s, l) => s + (l.trim() === "" ? f2*2 : f2), 0) + 130);
+  }
+  const act3 = bb.act3Duration ?? 160;
+  const total = act1 + act2 + act3;
+  const s1a = Math.min(30, act1 - 5);
+  const s1b = Math.min(act1 - 10, act1 - 1);
+  const s2a = act1 + Math.min(30, Math.floor(act2 * 0.3));
+  const s2b = act1 + act2 - 10;
+  const s3  = Math.min(act1 + act2 + Math.floor(act3 * 0.6), total - 5);
+  process.stdout.write([s1a, s1b, s2a, s2b, s3].join(" "));
+  process.exit(0);
+}
+
+// ── LED-wall (default) ─────────────────────────────────────────────────
 const act1 = t.act1Duration ?? (c.act1Reveal ? 150 : 100);
 
 // replicate computeAct2Duration (timing.ts defaults: startFrame=10, fpl=3, buffer=130)

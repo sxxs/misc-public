@@ -5218,7 +5218,7 @@
       "id": "idea-clickbait-parodie-5-grnde-warum-du-informatik",
       "type": "parodie",
       "design": "billboard",
-      "status": "ready",
+      "status": "published",
       "json": "wiai-social/posts/idea-clickbait-parodie-5-grnde-warum-du-informatik.json",
       "source": "pipeline/ideen/stoffsammlung-clickbait-parodie.md",
       "targetWeek": "2026-KW14",
@@ -5232,9 +5232,9 @@
       "content": {
         "act1Setup": "5 Gründe für ein Informatik-Studium in Bamberg.",
         "act1Reveal": "Über Nr. 3 wird zu wenig gesprochen.",
-        "act2": "1. Zukunftssicher.\n2. Gut bezahlt.\n3. Du wolltest einfach wissen, was Nr. 3 ist.",
-        "act3": "Das war Clickbait. Du weißt das. Es funktioniert trotzdem.",
-        "aside": "Theorie stark. Praxis schwach."
+        "act2": "1. Zukunft. 2. Malerische Stadt. 3. Du wolltest einfach wissen, was Nr. 3 ist.",
+        "act3": "Du bist noch hier – wegen einer Zahl.",
+        "aside": "Clickbait: kennst du. Funktioniert trotzdem."
       },
       "social": {
         "tiktok": {
@@ -5249,6 +5249,17 @@
         "instagram": {
           "caption": "5 Gründe für ein Informatik-Studium in Bamberg. Über Nr. 3 wird zu wenig gesprochen.",
           "hashtags": "#informatik #studium #clickbait #manipulation #marketing"
+        }
+      },
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-05"
+        },
+        "youtube": {
+          "video": "2026-04-05"
+        },
+        "instagram": {
+          "video": "2026-04-05"
         }
       }
     },
