@@ -1846,20 +1846,22 @@
       "type": "nachtgedanke",
       "design": "terminal",
       "status": "ready",
-      "json": null,
+      "json": "wiai-social/posts/draft-gehalt-karriere-p56b.json",
       "source": "pipeline/entwuerfe/gehalt-karriere.md#Post-56-—-Variante-B",
       "targetWeek": "2026-KW15",
       "publishedDate": null,
       "platforms": {},
-      "notes": "",
+      "notes": "Terminal config bei Export: act1Duration=45, act2Duration=170, act3Duration=85, charsPerFrame=0.85, color=amber. Ziel: 300f = 10.0s.",
       "tag": "ok",
-      "slotIndex": 0,
+      "slotIndex": 2,
       "topic": "karriere",
       "content": {
         "act1Setup": "02:47",
-        "act2": "Alle deine Freunde wissen was sie werden wollen. Du nicht.",
-        "act3": "Sie lügen. Du bist nur ehrlicher."
-      }
+        "act2": "Alle wissen, was sie\\nwerden wollen.\\nDu nicht.\\n\\nDu googelst um 02:47\\n\"Informatik Berufschancen\"",
+        "act3": "Sie haben es auch gegoogelt.",
+        "aside": "Sagen es nur nicht."
+      },
+      "terminalColor": "amber"
     },
     {
       "id": "draft-informatik-angst-p06a",
@@ -6622,7 +6624,7 @@
       "notes": "",
       "tag": "stark",
       "tagComment": null,
-      "slotIndex": 2,
+      "slotIndex": 0,
       "topic": "manipulation",
       "content": {
         "act1Setup": "Airbnb-Fotos werden damit gemacht\ndamit das Zimmer größer aussieht.",
