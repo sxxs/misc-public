@@ -187,6 +187,15 @@ export const STILL_FRAMES = {
   slide3: 390,
 } as const;
 
+// ── Nachtgedanke phone duration ─────────────────────────────────────────────
+import type { NachtgedankeConfig } from "../types";
+
+export function computeNachtgedankeDuration(config: NachtgedankeConfig): number {
+  const lastBlock = config.blocks[config.blocks.length - 1];
+  const blocksEnd = lastBlock ? lastBlock.at + lastBlock.hold : (config.phoneInDuration ?? 50);
+  return blocksEnd + 5 + (config.punchlineDuration ?? 95);
+}
+
 // ── Billboard duration ──────────────────────────────────────────────────────
 export const BILLBOARD_ACT1_DURATION = 120;
 export const BILLBOARD_ACT3_DURATION = 160;

@@ -1,0 +1,18 @@
+{
+  "id": "2026-fake-statistik",
+  "type": "billboard",
+  "design": "billboard",
+  "musicFile": "music/track-fake-statistik.mp3",
+  "billboard": {
+    "act1Duration": 69,
+    "act2Duration": 104,
+    "act3Duration": 215,
+    "wiggleFrames": [35, 43, 49, 57]
+  },
+  "content": {
+    "act1Setup": "Informatik\nin Bamberg studiert?\n\nUm 23% höheres Gehalt!\n\n— Gehalts-Check\n  Deutschland 2026",
+    "act2": "Frei erfunden.\n\nVon einem Informatik-\nProfessor aus Bamberg.",
+    "act3": "Man sollte mir nicht glauben.",
+    "aside": "Im nächsten Gespräch sagst du\ndann: 23% mehr Gehalt, hat so\nein Professor geschrieben."
+  }
+}

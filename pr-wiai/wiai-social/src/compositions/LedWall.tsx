@@ -248,7 +248,7 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
         ...(exitGlitch > 0.01 ? { filter: exitFilter, transform: `translateX(${exitShiftX.toFixed(1)}px)` } : {}),
       }}>
         <DirtyCutout accentColor={accent} enterProgress={enterProgress}>
-          <TypewriterText text={post.content.act2} startFrame={0} framesPerLine={26} blinkLastPeriod />
+          <TypewriterText text={post.content.act2} startFrame={0} framesPerLine={post.timing?.framesPerLine ?? 26} blinkLastPeriod />
         </DirtyCutout>
       </div>
     </SlideFrame>
@@ -290,7 +290,7 @@ export const LedWallComposition: React.FC<{ post: Post }> = ({ post }) => {
   const altTrack     = t?.act3Track ? ACT3_ALT_TRACKS[t.act3Track] : null;
   const musicDelay   = t?.act3MusicDelay ?? 0;
 
-  const act2Duration = computeAct2Duration(post.content.act2);
+  const act2Duration = t?.act2Duration ?? computeAct2Duration(post.content.act2);
   const act3Start    = act1Duration + act2Duration;
   const act3Duration = variant === "through"
     ? durationInFrames - act3Start
@@ -303,13 +303,13 @@ export const LedWallComposition: React.FC<{ post: Post }> = ({ post }) => {
 
   return (
     <>
-      {variant === "through"
+      {post.music !== false && (variant === "through"
         ? <ContrarianMusicThrough totalDuration={totalDuration} musicFile={post.musicFile} />
         : variant === "through-scratch"
           ? <ContrarianMusicThroughScratch act1Duration={act1Duration} act2Duration={act2Duration} act3Duration={act3Duration}
               altTrack={altTrack} scratchOffset={t?.scratchOffset} musicDelay={musicDelay} />
           : <ContrarianMusicScratch act1Duration={act1Duration} act2Duration={act2Duration} act3Duration={act3Duration} />
-      }
+      )}
       <Sequence from={0}            durationInFrames={act1Duration}><Act1 post={post} act1Duration={act1Duration} /></Sequence>
       <Sequence from={act1Duration}  durationInFrames={act2Duration}><Act2 post={post} /></Sequence>
       <Sequence from={act3Start}    durationInFrames={act3Duration}>

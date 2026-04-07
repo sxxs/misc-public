@@ -1,0 +1,20 @@
+{
+  "id": "draft-gehalt-karriere-p56b",
+  "type": "nachtgedanke",
+  "music": false,
+  "nachtgedanke": {
+    "time": "02:47",
+    "batteryPercent": 12,
+    "phoneInDuration": 50,
+    "blocks": [
+      { "text": "Alle Kumpels wissen\nschon ganz genau,\nwas sie studieren\nwollen.\n\nNur ich nicht.", "at": 65, "hold": 80 },
+      { "text": "Du googelst um 02:47", "italicText": "lohnt sich informatik\nheute noch", "at": 150, "hold": 55 }
+    ],
+    "punchlineDuration": 100
+  },
+  "content": {
+    "act2": "",
+    "act3": "Sie haben es\nauch gegoogelt.",
+    "aside": "Sagen es nur nicht."
+  }
+}

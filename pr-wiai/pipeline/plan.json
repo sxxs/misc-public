@@ -6615,8 +6615,8 @@
       "id": "idea-overselling-s1-airbnbfotos-werden-mit-weitwinkel",
       "type": "overselling",
       "design": "pixel-wall",
-      "status": "ready",
-      "json": null,
+      "status": "published",
+      "json": "wiai-social/posts/idea-overselling-s1-airbnbfotos-werden-mit-weitwinkel.json",
       "source": "pipeline/ideen/stoffsammlung-overselling.md",
       "targetWeek": "2026-KW15",
       "publishedDate": null,
@@ -6627,10 +6627,37 @@
       "slotIndex": 0,
       "topic": "manipulation",
       "content": {
-        "act1Setup": "Airbnb-Fotos werden damit gemacht\ndamit das Zimmer größer aussieht.",
-        "act1Reveal": "Weitwinkel.",
-        "act2": "Uni-Fotos werden an dem einen Tag\ngemacht an dem der Campus grün ist\nund die Sonne scheint\nund zufällig drei diverse Studierende\nauf einer Bank sitzen und lachen.",
-        "act3": "Beide Fotos zeigen einen Ort\nder so existiert.\n\nEinmal im Jahr.\nFür 20 Minuten."
+        "act1Setup": "Airbnb:\\nLichtdurchflutet.\\nWeitwinkel.",
+        "act1Reveal": "Toll!",
+        "act2": "Uni-Fotos:\\nSonne. Grün.\\nMenschen liegen in der Wiese.\\nLachen.\\nLernen macht ihnen Spaß.",
+        "act3": "Beide Orte existieren.\\n\\nFür etwa\\n20 Minuten\\nim Jahr.",
+        "aside": "Auch in Bamberg. Beide."
+      },
+      "social": {
+        "tiktok": {
+          "caption": "Airbnb-Fotos: Weitwinkel. Uni-Fotos: Sonniger Tag, lachende Studierende.",
+          "hashtags": "#uni #marketing #manipulation #studium"
+        },
+        "youtube": {
+          "title": "Airbnb-Fotos vs. Uni-Fotos — derselbe Trick",
+          "description": "Lichtdurchflutet und Weitwinkel. Sonniger Tag und lachende Studierende. Beide Orte existieren. Für etwa 20 Minuten im Jahr.",
+          "hashtags": "#Shorts #Airbnb #UniMarketing #Overselling #Manipulation"
+        },
+        "instagram": {
+          "caption": "Airbnb: Lichtdurchflutet. Weitwinkel. Uni-Fotos: Sonne, Grün, lachende Studierende auf der Wiese. Beide Orte existieren. Für etwa 20 Minuten im Jahr.",
+          "hashtags": "#airbnb #uni #marketing #overselling #manipulation #studium"
+        }
+      },
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-06"
+        },
+        "youtube": {
+          "video": "2026-04-06"
+        },
+        "instagram": {
+          "video": "2026-04-06"
+        }
       }
     },
     {

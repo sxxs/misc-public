@@ -140,23 +140,62 @@ const BillboardAct1: React.FC<{ post: Post; duration: number }> = ({ post, durat
             {act1Reveal}
           </div>
         </div>
-      ) : (
-        <div
-          style={{
-            opacity,
-            color: "#ffffff",
-            fontSize: 108,
-            fontFamily: spaceGroteskFamily,
-            fontWeight: 700,
-            lineHeight: 1.15,
-            maxWidth: 730,
-            whiteSpace: "pre-wrap",
-            transform: `translateY(${drift}px)`,
-          }}
-        >
-          {act1Reveal || act1Setup || ""}
-        </div>
-      )}
+      ) : (() => {
+        const raw = act1Reveal || act1Setup || "";
+        const parts = raw.split("\n\n");
+        // 1 part: hero only. 2 parts: hero + source. 3+ parts: eyebrow + hero + source.
+        const eyebrowText = parts.length >= 3 ? parts[0] : null;
+        const heroText = parts.length >= 3 ? parts[1] : parts[0];
+        const sourceText = parts.length >= 3 ? parts.slice(2).join("\n\n") : parts.length >= 2 ? parts.slice(1).join("\n\n") : null;
+        return (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 32, maxWidth: 730, transform: `translateY(${drift}px)` }}>
+            {eyebrowText && (
+              <div
+                style={{
+                  opacity: opacity * 0.7,
+                  color: "#ffffff",
+                  fontSize: 54,
+                  fontFamily: spaceGroteskFamily,
+                  fontWeight: 700,
+                  lineHeight: 1.25,
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                {eyebrowText}
+              </div>
+            )}
+            <div
+              style={{
+                opacity,
+                color: "#ffffff",
+                fontSize: 108,
+                fontFamily: spaceGroteskFamily,
+                fontWeight: 700,
+                lineHeight: 1.15,
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {heroText}
+            </div>
+            {sourceText && (
+              <div
+                style={{
+                  opacity: opacity * 0.6,
+                  color: "#ffffff",
+                  fontSize: 42,
+                  fontFamily: spaceMonoFamily,
+                  fontWeight: 400,
+                  lineHeight: 1.3,
+                  whiteSpace: "pre-wrap",
+                  letterSpacing: "0.02em",
+                }}
+              >
+                {sourceText}
+              </div>
+            )}
+          </div>
+        );
+      })()}
     </BillboardFrame>
   );
 };
@@ -278,30 +317,74 @@ const BillboardAct2: React.FC<{ post: Post; duration: number }> = ({ post, durat
   );
 };
 
+// ── Punchline flicker: brief opacity dips on each bling hit ──────────────────
+function punchlineFlicker(localFrame: number, flickerFrames: number[]): number {
+  for (const ff of flickerFrames) {
+    const t = localFrame - ff;
+    if (t === 0) return 0.35;
+    if (t === 1) return 0.65;
+    if (t === 2) return 0.9;
+  }
+  return 1;
+}
+
 // ── Act3: Punch — breathing glow, drift, aside + footer simultaneous ────────
 const BillboardAct3: React.FC<{ post: Post; duration: number }> = ({ post, duration }) => {
   const frame = useCurrentFrame();
   const hum = mainsHum(frame);
   const glowOpacity = interpolate(frame, [10, 30], [0, 1], { extrapolateRight: "clamp" });
-  const asideStart = Math.floor(duration * 0.4);
-  const buttonOpacity = interpolate(frame, [asideStart, asideStart + 16], [0, 1], { extrapolateRight: "clamp" });
-  // Footer fades in simultaneously with aside (slightly longer ramp)
-  const footerOpacity = interpolate(frame, [asideStart, asideStart + 20], [0, 1], { extrapolateRight: "clamp" });
+  const { act3, aside } = post.content;
+  const wiggleFrames = post.billboard?.wiggleFrames ?? [];
 
-  // Breathing glow: visible pulse on the yellow shadow
+  // Aside timing: visible from first bling hit, tusch flash after last
+  const asideStart = wiggleFrames.length > 0
+    ? wiggleFrames[0]
+    : Math.floor(duration * 0.4);
+  const tuschFrame = wiggleFrames.length > 0
+    ? wiggleFrames[wiggleFrames.length - 1] + 6
+    : -1;
+  // Aside: snap in, then settle
+  const asideIn = interpolate(frame, [asideStart, asideStart + 2], [0, 1], {
+    extrapolateLeft: "clamp", extrapolateRight: "clamp",
+  });
+  const asideSettle = interpolate(frame, [asideStart, asideStart + 12], [1, 0.65], {
+    extrapolateLeft: "clamp", extrapolateRight: "clamp",
+  });
+  // Tusch: brief brightness spike on aside
+  const tuschPulse = tuschFrame > 0
+    ? interpolate(frame, [tuschFrame, tuschFrame + 1, tuschFrame + 4], [0, 1, 0], {
+        extrapolateLeft: "clamp", extrapolateRight: "clamp",
+      })
+    : 0;
+  const asideOpacity = asideIn * Math.min(1, asideSettle + tuschPulse * 0.5);
+  // Footer fades in with aside
+  const footerOpacity = interpolate(frame, [asideStart + 2, asideStart + 14], [0, 1], {
+    extrapolateLeft: "clamp", extrapolateRight: "clamp",
+  });
+
+  // Breathing glow
   const glowPulse = 0.18 + Math.sin(frame * 0.1) * 0.10;
   const glowShadow = `0 0 60px rgba(250, 204, 21, ${(glowPulse * glowOpacity).toFixed(3)})`;
-  const { act3, aside } = post.content;
 
-  // Subtle upward drift — visual interest during hold
+  // Subtle upward drift
   const drift = interpolate(frame, [10, duration], [0, -12], {
     extrapolateLeft: "clamp", extrapolateRight: "clamp",
   });
 
-  // Neon glitch: brief window before aside appears
+  // Neon glitch: brief window before aside
   const glitchStart = Math.max(10, Math.floor(asideStart * 0.5));
   const glitchEnd = Math.max(glitchStart + 8, asideStart - 8);
   const glitch = neonGlitch(frame, glitchStart, glitchEnd);
+
+  // Flicker on bling hits
+  const flicker = punchlineFlicker(frame, wiggleFrames);
+
+  // Mic drop exit: brief white flash, then lights out
+  const micDropStart = duration - 15;
+  const micDropWhite = frame >= micDropStart && frame < micDropStart + 3
+    ? interpolate(frame, [micDropStart, micDropStart + 1, micDropStart + 3], [0, 0.9, 0], { extrapolateRight: "clamp" })
+    : 0;
+  const micDropBlack = frame >= micDropStart + 3 ? 1 : 0;
 
   return (
     <BillboardFrame>
@@ -309,10 +392,10 @@ const BillboardAct3: React.FC<{ post: Post; duration: number }> = ({ post, durat
         display: "flex", flexDirection: "column", alignItems: "flex-start",
         transform: `translateY(${drift}px)`,
       }}>
-        {/* Main punchline text with breathing glow + neon glitch */}
+        {/* Main punchline text with breathing glow + glitch + flicker */}
         <div
           style={{
-            opacity: glitch.opacity * hum,
+            opacity: glitch.opacity * hum * flicker,
             color: "#ffffff",
             fontSize: 108,
             fontFamily: spaceGroteskFamily,
@@ -328,28 +411,33 @@ const BillboardAct3: React.FC<{ post: Post; duration: number }> = ({ post, durat
           {act3}
         </div>
 
-        {/* Aside — left-aligned */}
+        {/* Aside — flash-in after bling, smaller mono */}
         {aside && (
           <div
             style={{
-              opacity: buttonOpacity * hum,
-              marginTop: 72,
-              color: "rgba(255,255,255,0.70)",
-              fontSize: 72,
-              fontFamily: spaceGroteskFamily,
-              fontWeight: 700,
+              opacity: asideOpacity * hum,
+              marginTop: 80,
+              color: "#ffffff",
+              fontSize: 40,
+              fontFamily: spaceMonoFamily,
+              fontWeight: 400,
+              lineHeight: 1.4,
               whiteSpace: "pre-wrap",
+              letterSpacing: "0.01em",
+              textShadow: tuschPulse > 0
+                ? `0 0 20px rgba(255,255,255,${(tuschPulse * 0.8).toFixed(2)}), 0 0 50px rgba(255,255,255,${(tuschPulse * 0.3).toFixed(2)})`
+                : "none",
             }}
           >
             {aside}
           </div>
         )}
 
-        {/* Footer: WIAI · Uni Bamberg · echt.bamberg */}
+        {/* Footer */}
         <div
           style={{
             opacity: footerOpacity,
-            marginTop: aside ? 36 : 100,
+            marginTop: aside ? 56 : 100,
             color: "rgba(255,255,255,0.50)",
             fontSize: 34,
             fontFamily: spaceMonoFamily,
@@ -361,6 +449,22 @@ const BillboardAct3: React.FC<{ post: Post; duration: number }> = ({ post, durat
           {"WIAI · Uni Bamberg\necht.bamberg"}
         </div>
       </div>
+
+      {/* Mic drop: white flash → lights out */}
+      {micDropWhite > 0 && (
+        <div style={{
+          position: "absolute", inset: 0,
+          background: `rgba(255,255,255,${micDropWhite.toFixed(2)})`,
+          pointerEvents: "none",
+        }} />
+      )}
+      {micDropBlack > 0 && (
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "#000",
+          pointerEvents: "none",
+        }} />
+      )}
     </BillboardFrame>
   );
 };
@@ -406,12 +510,49 @@ const BillboardScrollPanel: React.FC<{
   );
 };
 
+// ── Billboard zoom: Ken Burns for Act 1+2, staccato for Act 3 bling ────────
+function billboardZoom(
+  absFrame: number,
+  act3Start: number,
+  wiggleFrames: number[],
+): number {
+  // Act 1+2: slow Ken Burns zoom in
+  if (absFrame < act3Start) {
+    return interpolate(absFrame, [0, act3Start], [1.0, 1.06], {
+      extrapolateLeft: "clamp", extrapolateRight: "clamp",
+    });
+  }
+
+  // Scroll transition: ease back to 1.0
+  if (absFrame < act3Start + SCROLL_FRAMES) {
+    return interpolate(absFrame, [act3Start, act3Start + SCROLL_FRAMES], [1.06, 1.0], {
+      extrapolateLeft: "clamp", extrapolateRight: "clamp",
+    });
+  }
+
+  // Act 3: staccato zoom on bling hits, snap back at tusch
+  const localFrame = absFrame - act3Start;
+  if (wiggleFrames.length === 0) return 1.0;
+
+  const tuschFrame = wiggleFrames[wiggleFrames.length - 1] + 6;
+  if (localFrame >= tuschFrame) return 1.0; // snap back
+
+  // Count passed bling hits → step zoom
+  let steps = 0;
+  for (const wf of wiggleFrames) {
+    if (localFrame >= wf) steps++;
+  }
+  return 1.0 + steps * 0.015;
+}
+
 // ── Billboard composition ───────────────────────────────────────────────────
 export const Billboard: React.FC<{ post: Post }> = ({ post }) => {
   // Captions mode: rapid-cut lyric-video style
   if (post.billboard?.mode === "captions" && post.billboard.captions) {
     return <CaptionSequence captions={post.billboard.captions} />;
   }
+
+  const frame = useCurrentFrame();
 
   // Classic mode: 3-act with scroll transitions between acts
   const act1Duration = post.billboard?.act1Duration ?? BILLBOARD_ACT1_DURATION;
@@ -425,8 +566,16 @@ export const Billboard: React.FC<{ post: Post }> = ({ post }) => {
   const act1Dur = act1Duration + SCROLL_FRAMES;
   const act2Dur = act2Duration + SCROLL_FRAMES;
 
+  // Zoom: Ken Burns (Act 1+2) → staccato (Act 3 bling) → snap back (aside)
+  const wiggleFrames = post.billboard?.wiggleFrames ?? [];
+  const scale = billboardZoom(frame, act3Start, wiggleFrames);
+
   return (
-    <>
+    <div style={{
+      position: "absolute", inset: 0,
+      transform: scale !== 1 ? `scale(${scale.toFixed(4)})` : undefined,
+      transformOrigin: "center center",
+    }}>
       <Sequence from={0} durationInFrames={act1Dur}>
         <BillboardScrollPanel scrollOut duration={act1Dur}>
           <BillboardAct1 post={post} duration={act1Duration} />
@@ -442,6 +591,6 @@ export const Billboard: React.FC<{ post: Post }> = ({ post }) => {
           <BillboardAct3 post={post} duration={act3Duration} />
         </BillboardScrollPanel>
       </Sequence>
-    </>
+    </div>
   );
 };

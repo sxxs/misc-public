@@ -35,11 +35,10 @@ export type PostType =
 //    act3        → punchline (instant reveal)
 //    aside       → note/button after punchline (was missing from export before)
 //
-//  nachtgedanke:
-//    act1Setup   → timestamp displayed in Act1 (e.g. "23:47")
-//    act2        → typewriter text
-//    act3        → punchline
-//    aside       → button after punchline
+//  nachtgedanke (phone format):
+//    act3        → punchline (below phone, Space Grotesk)
+//    aside       → dimmed aside below punchline
+//    act1Setup, act1Reveal, act2 → unused (searches come from nachtgedanke.searches)
 //
 //  selbstironie:
 //    act1Setup   → label displayed in Act1 (e.g. "Selbstironie")
@@ -85,6 +84,8 @@ export interface ContrarianTiming {
   variant?: "scratch" | "through" | "through-scratch"; // scratch: fade+vinyl+beat-sync (default); through: straight; through-scratch: full volume then vinyl+beat-sync
   totalDuration?: number;            // override total frames (e.g. 360 = 12s); useful for muted renders
   act1Duration?: number;           // frames for Act1 slide (default: 150 with reveal, 100 without)
+  act2Duration?: number;           // override computed act2 duration (short texts get over-buffered)
+  framesPerLine?: number;          // typewriter speed in Act2 (default: 26; lower = faster reveals)
   act1RevealFrame?: number;        // frame when act1Reveal appears (default: 75)
   act3Track?: string;              // through-scratch only: key into ACT3_ALT_TRACKS, omit for default track.mp3
   scratchOffset?: number;          // frames before act3Start where scratch starts (default: 15; 0 = at act3Start)
@@ -126,12 +127,29 @@ export interface BillboardConfig {
   act3Duration?: number;         // override default 160
   revealAtFrame?: number;        // frame when act1Reveal appears (default: 14)
   beats?: BillboardBeat[];       // Explicit Act2 beat sequence — overrides \n\n splitting
+  wiggleFrames?: number[];       // Act3-local frames: punchline text wiggles on each hit
 }
 
 export interface BillboardCaption {
   text: string;
   style?: "white" | "cutout"; // white: white-on-black (default); cutout: black-on-white box
   hold?: number;              // frames to hold (default: 25)
+}
+
+// Nachtgedanke phone config — phone as atmospheric backdrop, text overlays
+export interface NachtgedankeBlock {
+  text: string;
+  italicText?: string;             // rendered italic below text with gap
+  at: number;                      // frame when block appears
+  hold: number;                    // frames visible
+}
+
+export interface NachtgedankeConfig {
+  time: string;                    // status bar clock ("02:47")
+  batteryPercent?: number;         // status bar battery level (default: 15)
+  phoneInDuration?: number;        // phone entrance + zoom-to-time (default: 50)
+  blocks: NachtgedankeBlock[];     // text overlay sequence
+  punchlineDuration?: number;      // hold for act3 + aside (default: 95)
 }
 
 // Slideshow config — photo/image-based posts
@@ -175,6 +193,7 @@ export interface Post {
   terminal?: TerminalConfig; // terminal-only (color, mode, blocks — NOT prompt)
   billboard?: BillboardConfig; // billboard captions mode
   slideshow?: SlideshowConfig; // slideshow-only
+  nachtgedanke?: NachtgedankeConfig; // phone-format nachtgedanke
   ledPattern?: string;   // pattern name for LedWall sprite overlay (e.g. "maze")
   ledScroll?: number;    // rows/sec vertical scroll for LedWall (bright bands sweep upward)
   content: PostContent;

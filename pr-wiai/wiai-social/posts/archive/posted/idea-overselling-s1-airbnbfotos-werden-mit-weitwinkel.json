@@ -1,0 +1,23 @@
+{
+  "id": "idea-overselling-s1-airbnbfotos-werden-mit-weitwinkel",
+  "type": "led-wall",
+  "accentColor": "#EF4444",
+  "music": false,
+  "timing": {
+    "act1Duration": 69,
+    "act1RevealFrame": 25,
+    "act2Duration": 121,
+    "framesPerLine": 14,
+    "variant": "through",
+    "totalDuration": 300,
+    "subtextStartFrame": 40,
+    "absenderStartFrame": 55
+  },
+  "content": {
+    "act1Setup": "Airbnb:\nLichtdurchflutet.\nWeitwinkel.",
+    "act1Reveal": "Toll!",
+    "act2": "Uni-Fotos:\nSonne. Grün.\nMenschen liegen in der Wiese.\nLachen.\nLernen macht ihnen Spaß.",
+    "act3": "Beide Orte existieren.\n\nFür etwa\n20 Minuten\nim Jahr.",
+    "aside": "Auch in Bamberg. Beide."
+  }
+}

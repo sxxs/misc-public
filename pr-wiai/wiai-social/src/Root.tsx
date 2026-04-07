@@ -10,6 +10,7 @@ import {
   computeBillboardCaptionDuration,
   computeTerminalFlowDuration,
   computeSlideshowDuration,
+  computeNachtgedankeDuration,
 } from "./utils/timing";
 
 // ── Fixed imports (samples, not managed by sync-root) ────────────────────────
@@ -17,7 +18,8 @@ import samplePost from "../posts/archive/prelaunch/2026-mathe3.json";
 
 // ── Active post imports (auto-managed by sync-root.mjs) ─────────────────────
 // @sync-root:imports-start
-import idea_clickbait_parodie_5_grnde_warum_du_informatik from "../posts/idea-clickbait-parodie-5-grnde-warum-du-informatik.json";
+import post_2026_fake_statistik from "../posts/2026-fake-statistik.json";
+import draft_gehalt_karriere_p56b from "../posts/draft-gehalt-karriere-p56b.json";
 // @sync-root:imports-end
 
 // ── Duration helpers ──────────────────────────────────────────────────────────
@@ -44,6 +46,10 @@ const selectDuration = (post: Post): number => {
       return computeBillboardCaptionDuration(post.billboard.captions);
     }
     return computeBillboardDuration(post);
+  }
+  if (post.type === "nachtgedanke") {
+    if (post.nachtgedanke) return computeNachtgedankeDuration(post.nachtgedanke);
+    return computeTerminalDuration(post); // fallback for old-format posts
   }
   if (post.type === "terminal") {
     if (post.terminal?.mode === "flow" && post.terminal.blocks) {
@@ -85,7 +91,8 @@ export const Root: React.FC = () => (
 
     {/* ── Active posts (auto-managed by sync-root.mjs) ─────────────── */}
     {/* @sync-root:compositions-start */}
-    {cp("WiaiPost-idea-clickbait-parodie-5-grnde-warum-du-informatik", idea_clickbait_parodie_5_grnde_warum_du_informatik as unknown as Post)}
+    {cp("WiaiPost-2026-fake-statistik", post_2026_fake_statistik as unknown as Post)}
+    {cp("WiaiPost-draft-gehalt-karriere-p56b", draft_gehalt_karriere_p56b as unknown as Post)}
     {/* @sync-root:compositions-end */}
   </>
 );
