@@ -514,6 +514,7 @@ const BillboardScrollPanel: React.FC<{
 function billboardZoom(
   absFrame: number,
   act3Start: number,
+  act3Duration: number,
   wiggleFrames: number[],
 ): number {
   // Act 1+2: slow Ken Burns zoom in
@@ -535,7 +536,13 @@ function billboardZoom(
   if (wiggleFrames.length === 0) return 1.0;
 
   const tuschFrame = wiggleFrames[wiggleFrames.length - 1] + 6;
-  if (localFrame >= tuschFrame) return 1.0; // snap back
+  if (localFrame >= tuschFrame) {
+    // Subtle Ken Burns drift after tusch until mic drop
+    const micDropStart = act3Duration - 15;
+    return interpolate(localFrame, [tuschFrame, micDropStart], [1.0, 1.06], {
+      extrapolateLeft: "clamp", extrapolateRight: "clamp",
+    });
+  }
 
   // Count passed bling hits → step zoom
   let steps = 0;
@@ -568,7 +575,7 @@ export const Billboard: React.FC<{ post: Post }> = ({ post }) => {
 
   // Zoom: Ken Burns (Act 1+2) → staccato (Act 3 bling) → snap back (aside)
   const wiggleFrames = post.billboard?.wiggleFrames ?? [];
-  const scale = billboardZoom(frame, act3Start, wiggleFrames);
+  const scale = billboardZoom(frame, act3Start, act3Duration, wiggleFrames);
 
   return (
     <div style={{
