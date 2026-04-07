@@ -172,7 +172,7 @@
       "id": "2026-fake-statistik",
       "type": "selbstironie",
       "design": "billboard",
-      "status": "ready",
+      "status": "published",
       "json": "wiai-social/posts/2026-fake-statistik.json",
       "source": null,
       "targetWeek": "2026-KW15",
@@ -186,6 +186,32 @@
         "act1Setup": "Wenn ein Bamberger Professor sagt, Informatik-Absolvent:innen verdienen 23% mehr, klingt das erstmal plausibel.",
         "act2": "War erfunden. Autorität plus Prozentzeichen reicht oft schon.",
         "act3": "Deshalb sollte man Leuten wie mir nicht blind glauben."
+      },
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-07"
+        },
+        "youtube": {
+          "video": "2026-04-07"
+        },
+        "instagram": {
+          "video": "2026-04-07"
+        }
+      },
+      "social": {
+        "tiktok": {
+          "caption": "23% mehr Gehalt. Sagt ein Professor.",
+          "hashtags": "#informatik #studium #gehalt #uni #autorität"
+        },
+        "youtube": {
+          "title": "23% mehr Gehalt — sagt ein Professor",
+          "description": "Informatik in Bamberg studiert? Um 23% höheres Gehalt. Steht in einer Studie. Die Studie gibt es nicht.",
+          "hashtags": "#Shorts #Informatik #Gehalt #Studium #Faktencheck"
+        },
+        "instagram": {
+          "caption": "23% mehr Gehalt. Steht in einer Studie. Sagt ein Professor. Stimmt alles nicht.",
+          "hashtags": "#informatik #studium #gehalt #uni #faktencheck #manipulation #autorität"
+        }
       }
     },
     {

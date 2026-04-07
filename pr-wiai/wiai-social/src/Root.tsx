@@ -18,7 +18,6 @@ import samplePost from "../posts/archive/prelaunch/2026-mathe3.json";
 
 // ── Active post imports (auto-managed by sync-root.mjs) ─────────────────────
 // @sync-root:imports-start
-import post_2026_fake_statistik from "../posts/2026-fake-statistik.json";
 import draft_gehalt_karriere_p56b from "../posts/draft-gehalt-karriere-p56b.json";
 // @sync-root:imports-end
 
@@ -91,7 +90,6 @@ export const Root: React.FC = () => (
 
     {/* ── Active posts (auto-managed by sync-root.mjs) ─────────────── */}
     {/* @sync-root:compositions-start */}
-    {cp("WiaiPost-2026-fake-statistik", post_2026_fake_statistik as unknown as Post)}
     {cp("WiaiPost-draft-gehalt-karriere-p56b", draft_gehalt_karriere_p56b as unknown as Post)}
     {/* @sync-root:compositions-end */}
   </>
