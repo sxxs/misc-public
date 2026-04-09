@@ -18,7 +18,7 @@ import samplePost from "../posts/archive/prelaunch/2026-mathe3.json";
 
 // ── Active post imports (auto-managed by sync-root.mjs) ─────────────────────
 // @sync-root:imports-start
-import draft_gehalt_karriere_p56b from "../posts/draft-gehalt-karriere-p56b.json";
+import draft_social_engineering_p51b from "../posts/draft-social-engineering-p51b.json";
 // @sync-root:imports-end
 
 // ── Duration helpers ──────────────────────────────────────────────────────────
@@ -90,7 +90,7 @@ export const Root: React.FC = () => (
 
     {/* ── Active posts (auto-managed by sync-root.mjs) ─────────────── */}
     {/* @sync-root:compositions-start */}
-    {cp("WiaiPost-draft-gehalt-karriere-p56b", draft_gehalt_karriere_p56b as unknown as Post)}
+    {cp("WiaiPost-draft-social-engineering-p51b", draft_social_engineering_p51b as unknown as Post)}
     {/* @sync-root:compositions-end */}
   </>
 );

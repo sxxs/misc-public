@@ -1871,7 +1871,7 @@
       "id": "draft-gehalt-karriere-p56b",
       "type": "nachtgedanke",
       "design": "terminal",
-      "status": "ready",
+      "status": "published",
       "json": "wiai-social/posts/draft-gehalt-karriere-p56b.json",
       "source": "pipeline/entwuerfe/gehalt-karriere.md#Post-56-—-Variante-B",
       "targetWeek": "2026-KW15",
@@ -1901,6 +1901,17 @@
         "instagram": {
           "caption": "02:47. 12% Akku. Alle Kumpels wissen ganz genau, was sie studieren wollen. Du googelst 'Lohnt sich Informatik noch'. Plot Twist: Sie haben es auch gegoogelt.",
           "hashtags": "#studienwahl #informatik #overthinking #studium #unsicherheit"
+        }
+      },
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-08"
+        },
+        "youtube": {
+          "video": "2026-04-08"
+        },
+        "instagram": {
+          "video": "2026-04-08"
         }
       }
     },
@@ -3988,7 +3999,7 @@
       "type": "stimmt-eigentlich",
       "design": "terminal",
       "status": "ready",
-      "json": null,
+      "json": "wiai-social/posts/draft-social-engineering-p51b.json",
       "source": "pipeline/entwuerfe/social-engineering.md#Post-51-—-Variante-B",
       "targetWeek": "2026-KW15",
       "publishedDate": null,

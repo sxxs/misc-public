@@ -103,6 +103,8 @@ export interface TerminalConfig {
   act3Duration?: number;               // override default 150
   charsPerFrame?: number;              // typing speed override (default: 0.5 = 2 frames/char)
   hookFlash?: "pdf-form";             // brief visual flash in Act1 before prompt text
+  act1Style?: "lineByLine";          // lines pop in sequentially, left-aligned (default: static centered)
+  lineByLineDelay?: number;          // frames between lines in lineByLine mode (default: 16)
   act2Style?: "escalate";            // split act2 by \n\n, each paragraph bigger + brighter
 }
 

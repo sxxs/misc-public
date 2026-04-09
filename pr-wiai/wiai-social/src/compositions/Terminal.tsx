@@ -1,15 +1,16 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Sequence, useCurrentFrame, interpolate } from "remotion";
 import { Post } from "../types";
 import { BLACK, TERMINAL_GREEN, TERMINAL_AMBER } from "../styles/colors";
 import { spaceMonoFamily, spaceGroteskFamily } from "../styles/fonts";
 import { scanlineGradient } from "../styles/textures";
-import { TerminalText } from "../components/TerminalText";
 import { TerminalFlow } from "../components/TerminalFlow";
 import {
   TERMINAL_ACT1_DURATION,
   TERMINAL_ACT3_DURATION,
-  computeTerminalAct2Duration,
+  buildTypingSchedule,
+  scheduleFrames,
+  TypingAction,
 } from "../utils/timing";
 
 // ── Color resolver ──────────────────────────────────────────────────────────
@@ -85,8 +86,104 @@ const PdfFormFlash: React.FC<{ frame: number; color: string }> = ({ frame, color
 // ── Slow cursor — ~1s cycle (30f) ──────────────────────────────────────────
 const useSlowCursor = (frame: number) => frame % 30 < 15;
 
+// ── Act1: Line-by-line mode — lines pop in sequentially, left-aligned ──────
+const TerminalAct1LineByLine: React.FC<{ post: Post; color: string }> = ({ post, color }) => {
+  const frame = useCurrentFrame();
+  const text = post.content.act1Setup ?? "$";
+  const delay = post.terminal?.lineByLineDelay ?? 16;
+
+  // Split by \n, collapse empty-string groups into visual spacing
+  const rawLines = text.split("\n");
+
+  // Build line entries: { text, isBlank, lineIndex (counting only non-blank) }
+  let contentIndex = 0;
+  const entries = rawLines.map((line) => {
+    const isBlank = line.trim() === "";
+    const idx = isBlank ? -1 : contentIndex++;
+    return { text: line, isBlank, idx };
+  });
+
+  // Each content line appears at: idx * delay frames
+  const cursorOn = useSlowCursor(frame);
+  // Find the latest visible content line for cursor placement
+  let latestVisibleIdx = -1;
+  for (const e of entries) {
+    if (!e.isBlank && frame >= e.idx * delay) latestVisibleIdx = e.idx;
+  }
+
+  return (
+    <TerminalFrame>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          padding: "300px 108px 400px 108px",
+        }}
+      >
+        {entries.map((entry, i) => {
+          if (entry.isBlank) {
+            // Blank line = spacer, visible only when next content line is visible
+            const nextContent = entries.find((e, j) => j > i && !e.isBlank);
+            if (nextContent && frame < nextContent.idx * delay) return null;
+            return <div key={i} style={{ height: 46 }} />;
+          }
+
+          // Not yet visible
+          if (frame < entry.idx * delay) return null;
+
+          // Pop-in: instant appearance with 2-frame brightness flash
+          const localFrame = frame - entry.idx * delay;
+          const flash = interpolate(localFrame, [0, 2, 6], [1.3, 1.1, 1], { extrapolateRight: "clamp" });
+          const isPrompt = entry.idx === 0 && entry.text.startsWith(">");
+          const isAlert = entry.text.startsWith("!");
+          const displayText = isAlert ? entry.text.slice(1) : entry.text;
+
+          // Alert lines: red, pulsing glow
+          const alertColor = "#EF4444";
+          const alertPulse = isAlert
+            ? 0.7 + 0.3 * Math.sin(frame * 0.2)
+            : 1;
+          const lineColor = isAlert ? alertColor : color;
+          const lineGlow = isAlert
+            ? `0 0 ${Math.round(30 + 15 * Math.sin(frame * 0.2))}px ${alertColor}80`
+            : `0 0 ${Math.round(20 * flash)}px ${color}50`;
+
+          return (
+            <div
+              key={i}
+              style={{
+                fontFamily: spaceMonoFamily,
+                fontSize: isPrompt ? 50 : 62,
+                fontWeight: isPrompt ? 400 : 700,
+                color: lineColor,
+                lineHeight: 1.5,
+                opacity: isPrompt ? 0.6 : Math.min(1, flash) * alertPulse,
+                textShadow: lineGlow,
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {displayText}
+              {entry.idx === latestVisibleIdx && (
+                <span style={{ color, opacity: cursorOn ? 1 : 0 }}>{"\u2588"}</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </TerminalFrame>
+  );
+};
+
 // ── Act1: Form appears → text fades in OVER the form → form glitches away ──
 const TerminalAct1: React.FC<{ post: Post; color: string }> = ({ post, color }) => {
+  // Line-by-line mode: delegate to dedicated component
+  if (post.terminal?.act1Style === "lineByLine") {
+    return <TerminalAct1LineByLine post={post} color={color} />;
+  }
+
   const frame = useCurrentFrame();
   const prompt = post.content.act1Setup ?? "$";
   const hasFlash = post.terminal?.hookFlash === "pdf-form";
@@ -250,7 +347,38 @@ const TerminalAct2Escalate: React.FC<{ post: Post; color: string; duration: numb
   );
 };
 
-// ── Act2: Char-by-char text typing (default) ──────────────────────────────
+// ── Replay a typing schedule up to `elapsed` frames → visible text ────────
+function replayTypingSchedule(actions: TypingAction[], elapsed: number): { text: string; done: boolean } {
+  let text = "";
+  let t = 0;
+  for (const a of actions) {
+    if (t >= elapsed) return { text, done: false };
+    switch (a.t) {
+      case "c":
+        if (t + a.dur > elapsed) { text += a.ch; return { text, done: false }; }
+        text += a.ch;
+        t += a.dur;
+        break;
+      case "w":
+        if (t + a.dur > elapsed) { text += a.ch; return { text, done: false }; }
+        text += a.ch;
+        t += a.dur;
+        break;
+      case "b":
+        text = text.slice(0, -1);
+        if (t + a.dur > elapsed) return { text, done: false };
+        t += a.dur;
+        break;
+      case "p":
+        if (t + a.dur > elapsed) return { text, done: false };
+        t += a.dur;
+        break;
+    }
+  }
+  return { text, done: true };
+}
+
+// ── Act2: Typing with typos + irregular speed (default) ──────────────────
 const TerminalAct2: React.FC<{ post: Post; color: string; duration: number }> = ({ post, color, duration }) => {
   const frame = useCurrentFrame();
   const containerFadeIn = interpolate(frame, [0, 8], [0, 1], { extrapolateRight: "clamp" });
@@ -258,6 +386,14 @@ const TerminalAct2: React.FC<{ post: Post; color: string; duration: number }> = 
   if (post.terminal?.act2Style === "escalate") {
     return <TerminalAct2Escalate post={post} color={color} duration={duration} />;
   }
+
+  const schedule = useMemo(
+    () => buildTypingSchedule(post.content.act2, 73, 5.0),
+    [post.content.act2],
+  );
+  const startFrame = 6;
+  const { text: visibleText, done } = replayTypingSchedule(schedule, Math.max(0, frame - startFrame));
+  const cursorOn = done ? true : frame % 16 < 8;
 
   return (
     <TerminalFrame>
@@ -267,17 +403,25 @@ const TerminalAct2: React.FC<{ post: Post; color: string; duration: number }> = 
           inset: 0,
           display: "flex",
           alignItems: "center",
-          padding: "0 240px 400px 108px",
+          padding: "0 200px 300px 108px",
           opacity: containerFadeIn,
         }}
       >
-        <TerminalText
-          text={post.content.act2}
-          color={color}
-          startFrame={6}
-          charsPerFrame={post.terminal?.charsPerFrame ?? 0.5}
-          fontSize={56}
-        />
+        <div
+          style={{
+            fontFamily: spaceMonoFamily,
+            fontSize: 62,
+            fontWeight: 400,
+            color,
+            lineHeight: 1.6,
+            letterSpacing: "-0.01em",
+            whiteSpace: "pre-wrap",
+            textShadow: `0 0 20px ${color}26`,
+          }}
+        >
+          {visibleText}
+          <span style={{ opacity: cursorOn ? 1 : 0 }}>{"\u2588"}</span>
+        </div>
       </div>
     </TerminalFrame>
   );
@@ -350,38 +494,92 @@ const TerminalAct3: React.FC<{ post: Post; color: string; duration: number }> = 
 
   return (
     <TerminalFrame>
-      {/* Punchline — fixed pixel position, doesn't move when aside appears */}
-      <div
-        style={{
+      {/* Punchline — split by \n\n: first part instant, second part delayed */}
+      {(() => {
+        const parts = act3.split("\n\n");
+        const part1 = parts[0];
+        const part2 = parts.length > 1 ? parts.slice(1).join("\n\n") : null;
+        const part2Delay = 40;
+        const part2Opacity = part2
+          ? interpolate(frame, [part2Delay, part2Delay + 10], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+          : 0;
+        // Cursor on latest visible part
+        const showCursorOnPart2 = part2 && frame >= part2Delay;
+
+        return (
+          <>
+            <div
+              style={{
+                position: "absolute",
+                left: 108,
+                right: 108,
+                top: 280,
+                opacity: textFadeIn,
+                fontFamily: spaceMonoFamily,
+                fontSize: 62,
+                fontWeight: 700,
+                color,
+                lineHeight: 1.6,
+                textShadow: `0 0 20px ${color}26`,
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {part1}
+              {!showCursorOnPart2 && (
+                <span style={{ opacity: cursorOn ? 1 : 0 }}>{"\u2588"}</span>
+              )}
+            </div>
+            {part2 && (
+              <div
+                style={{
+                  position: "absolute",
+                  left: 108,
+                  right: 108,
+                  top: 620,
+                  opacity: part2Opacity,
+                  fontFamily: spaceMonoFamily,
+                  fontSize: 62,
+                  fontWeight: 700,
+                  color,
+                  lineHeight: 1.6,
+                  textShadow: `0 0 20px ${color}26`,
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                {part2}
+                {showCursorOnPart2 && (
+                  <span style={{ opacity: cursorOn ? 1 : 0 }}>{"\u2588"}</span>
+                )}
+              </div>
+            )}
+          </>
+        );
+      })()}
+
+      {/* Aside — below punchline, fade in */}
+      {aside && frame >= 60 && (
+        <div style={{
           position: "absolute",
           left: 108,
           right: 108,
-          top: 380,
-          opacity: textFadeIn,
+          top: 980,
+          opacity: interpolate(frame, [80, 95], [0, 0.7], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
           fontFamily: spaceMonoFamily,
-          fontSize: 62,
+          fontSize: 52,
           fontWeight: 700,
           color,
-          lineHeight: 1.6,
-          textShadow: `0 0 20px ${color}26`,
+          lineHeight: 1.5,
+          textShadow: `0 0 12px ${color}20`,
           whiteSpace: "pre-wrap",
-        }}
-      >
-        {act3}
-        <span style={{ opacity: cursorOn ? 1 : 0 }}>{"\u2588"}</span>
-      </div>
-
-      {/* Aside — fixed position, generous gap below punchline */}
-      {aside && frame >= 50 && (
-        <div style={{ position: "absolute", left: 108, right: 108, top: 750 }}>
-          <TerminalAsideTyped text={aside} color={color} frame={frame} startFrame={50} />
+        }}>
+          {aside}
         </div>
       )}
 
       {/* Absender — two lines, larger font, higher position */}
       <div style={{
         position: "absolute",
-        bottom: 540,
+        bottom: 520,
         left: 108,
         opacity: absenderOpacity * 0.6,
         fontFamily: spaceMonoFamily,
@@ -418,7 +616,7 @@ export const Terminal: React.FC<{ post: Post }> = ({ post }) => {
 
   // Classic mode: 3-act structure (with per-post overrides)
   const act1Dur = post.terminal?.act1Duration ?? TERMINAL_ACT1_DURATION;
-  const act2Dur = post.terminal?.act2Duration ?? computeTerminalAct2Duration(post.content.act2, post.terminal?.charsPerFrame);
+  const act2Dur = post.terminal?.act2Duration ?? (scheduleFrames(buildTypingSchedule(post.content.act2, 73, 5.0)) + 6 + 35);
   const act3Dur = post.terminal?.act3Duration ?? TERMINAL_ACT3_DURATION;
   const act2Start = act1Dur;
   const act3Start = act2Start + act2Dur;

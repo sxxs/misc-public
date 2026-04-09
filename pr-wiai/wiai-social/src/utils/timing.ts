@@ -111,39 +111,41 @@ export type TypingAction =
 
 // Build a deterministic typing schedule for a text string.
 // Includes irregular timing, micro-pauses, and occasional typos.
-export function buildTypingSchedule(text: string, seed = 42): TypingAction[] {
+// speed: 1.0 = default, 1.5 = 50% faster, 2.0 = double speed
+export function buildTypingSchedule(text: string, seed = 42, speed = 1.0): TypingAction[] {
   const actions: TypingAction[] = [];
   let charIdx = 0; // non-newline char counter
+  const s = (d: number) => Math.max(1, Math.round(d / speed)); // scale duration
 
   for (let i = 0; i < text.length; i++) {
     const ch = text[i];
 
     if (ch === "\n") {
       actions.push({ t: "c", ch, dur: 0 });
-      actions.push({ t: "p", dur: 4 + thash(i, seed + 99) % 5 });
+      actions.push({ t: "p", dur: s(4 + thash(i, seed + 99) % 5) });
       continue;
     }
 
-    // Irregular base speed: 2-4 frames per char
-    const baseDelay = 2 + thash(charIdx, seed) % 3;
+    // Irregular base speed: 2-4 frames per char (scaled)
+    const baseDelay = s(2 + thash(charIdx, seed) % 3);
 
     // Typo: ~1 in 30 chars, not at start/end, not on spaces
     if (ch !== " " && charIdx > 4 && i < text.length - 3 && thash(charIdx, seed + 1000) % 30 === 0) {
-      actions.push({ t: "w", ch: typoChar(ch, thash(charIdx, seed + 2000)), dur: 4 });
-      actions.push({ t: "p", dur: 3 }); // realize mistake
-      actions.push({ t: "b", dur: 2 }); // backspace
+      actions.push({ t: "w", ch: typoChar(ch, thash(charIdx, seed + 2000)), dur: s(4) });
+      actions.push({ t: "p", dur: s(3) }); // realize mistake
+      actions.push({ t: "b", dur: s(2) }); // backspace
     }
 
     actions.push({ t: "c", ch, dur: baseDelay });
 
     // Micro-pause after punctuation
     if (".!?:".includes(ch)) {
-      actions.push({ t: "p", dur: 4 + thash(charIdx, seed + 3000) % 5 });
+      actions.push({ t: "p", dur: s(4 + thash(charIdx, seed + 3000) % 5) });
     } else if (ch === ",") {
-      actions.push({ t: "p", dur: 2 + thash(charIdx, seed + 3500) % 3 });
+      actions.push({ t: "p", dur: s(2 + thash(charIdx, seed + 3500) % 3) });
     } else if (ch === " " && thash(charIdx, seed + 4000) % 5 === 0) {
       // occasional brief pause after space (~20%)
-      actions.push({ t: "p", dur: 2 + thash(charIdx, seed + 5000) % 3 });
+      actions.push({ t: "p", dur: s(2 + thash(charIdx, seed + 5000) % 3) });
     }
 
     charIdx++;
@@ -232,7 +234,8 @@ export function computeTerminalDuration(post: {
   terminal?: { act1Duration?: number; act2Duration?: number; act3Duration?: number; charsPerFrame?: number };
 }): number {
   const act1 = post.terminal?.act1Duration ?? TERMINAL_ACT1_DURATION;
-  const act2 = post.terminal?.act2Duration ?? computeTerminalAct2Duration(post.content.act2, post.terminal?.charsPerFrame);
+  // Schedule-based duration: buildTypingSchedule (speed 1.5) + startFrame + reading buffer
+  const act2 = post.terminal?.act2Duration ?? (scheduleFrames(buildTypingSchedule(post.content.act2, 73, 5.0)) + 6 + 35);
   const act3 = post.terminal?.act3Duration ?? TERMINAL_ACT3_DURATION;
   return act1 + act2 + act3;
 }

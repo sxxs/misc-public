@@ -1,0 +1,17 @@
+{
+  "id": "draft-social-engineering-p51b",
+  "type": "terminal",
+  "design": "terminal",
+  "terminal": {
+    "color": "green",
+    "act1Style": "lineByLine",
+    "act1Duration": 140,
+    "act3Duration": 190
+  },
+  "content": {
+    "act1Setup": "> inbox\n\n!Achtung:\nIhr Konto wurde\ngehackt.\n\nKlick hier!\nSonst Sperrung\nin 30 Minuten!",
+    "act2": "Das muss nicht\nmal stimmen.\n\nEs reicht, wenn du\nes kurz glaubst.",
+    "act3": "Ab da arbeitest\ndu mit und\nklickst \u201Ehier\u201C.\n\nKurz darauf ist\ndein Konto dann\nwirklich gehackt.",
+    "aside": "Mir kannst du\nvertrauen."
+  }
+}
