@@ -1887,7 +1887,22 @@
         "act3": "Sie haben es auch gegoogelt.",
         "aside": "Sagen es nur nicht."
       },
-      "terminalColor": "amber"
+      "terminalColor": "amber",
+      "social": {
+        "tiktok": {
+          "caption": "\"Lohnt sich Informatik noch\" — 02:47, 12% Akku.",
+          "hashtags": "#studienwahl #informatik #overthinking #studium #unsicherheit"
+        },
+        "youtube": {
+          "title": "Alle wissen was sie studieren wollen — nur du nicht",
+          "description": "02:47. Du googelst 'Lohnt sich Informatik noch'. Deine Kumpels auch. Sagen es nur nicht.",
+          "hashtags": "#Shorts #Informatik #Studienwahl #Overthinking"
+        },
+        "instagram": {
+          "caption": "02:47. 12% Akku. Alle Kumpels wissen ganz genau, was sie studieren wollen. Du googelst 'Lohnt sich Informatik noch'. Plot Twist: Sie haben es auch gegoogelt.",
+          "hashtags": "#studienwahl #informatik #overthinking #studium #unsicherheit"
+        }
+      }
     },
     {
       "id": "draft-informatik-angst-p06a",
@@ -8423,6 +8438,25 @@
       "content": {
         "act1Reveal": "Ich unterrichte IT-Sicherheit."
       }
+    },
+    {
+      "id": "draft-doomscrolling-entscheidung",
+      "type": "nachtgedanke",
+      "design": "terminal",
+      "status": "idea",
+      "json": null,
+      "source": null,
+      "targetWeek": null,
+      "publishedDate": null,
+      "platforms": {},
+      "posted": {},
+      "notes": "Doomscrolling hilft nicht beim Entscheiden. Variante: nächtliches Scrollen statt Schlafen, aber keine Antwort kommt dabei raus.",
+      "tag": null,
+      "tagComment": null,
+      "slotIndex": null,
+      "topic": "studium",
+      "format": "both",
+      "content": {}
     }
   ]
 }

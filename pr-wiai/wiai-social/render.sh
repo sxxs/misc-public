@@ -63,6 +63,28 @@ if (post.type === "billboard") {
   process.exit(0);
 }
 
+// ── Nachtgedanke posts use nachtgedanke.* for timing ──────────────────
+if (post.nachtgedanke) {
+  const nk = post.nachtgedanke;
+  const blocks = nk.blocks || [];
+  const lastBlock = blocks[blocks.length - 1];
+  const punchlineStart = lastBlock ? lastBlock.at + lastBlock.hold + 5 : 80;
+  const total = punchlineStart + (nk.punchlineDuration ?? 95);
+  // S1a: zoom hold phase (phone + overthinking label)
+  const s1a = 30;
+  // S1b: first block with reveal visible
+  const b0 = blocks[0];
+  const s1b = b0 ? b0.at + (b0.revealDelay ? b0.revealDelay + 12 : Math.floor(b0.hold * 0.6)) : 80;
+  // S2a/S2b: second block (or late first block)
+  const b1 = blocks.length > 1 ? blocks[1] : null;
+  const s2a = b1 ? b1.at + Math.min(15, Math.floor(b1.hold * 0.3)) : punchlineStart + 10;
+  const s2b = b1 ? b1.at + b1.hold - 5 : punchlineStart + 20;
+  // S3: punchline
+  const s3 = Math.min(punchlineStart + Math.floor((nk.punchlineDuration ?? 95) * 0.6), total - 5);
+  process.stdout.write([s1a, s1b, s2a, s2b, s3].join(" "));
+  process.exit(0);
+}
+
 // ── LED-wall (default) ─────────────────────────────────────────────────
 const act1 = t.act1Duration ?? (c.act1Reveal ? 150 : 100);
 

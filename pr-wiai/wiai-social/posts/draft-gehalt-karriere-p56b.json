@@ -1,16 +1,19 @@
 {
   "id": "draft-gehalt-karriere-p56b",
   "type": "nachtgedanke",
-  "music": false,
+  "musicFile": "music/track-nachtgedanke-spooked.mp3",
+  "sfxFile": "music/sfx-nachtgedanke-spooked.mp3",
   "nachtgedanke": {
     "time": "02:47",
     "batteryPercent": 12,
-    "phoneInDuration": 50,
+    "overthinkingLabel": "#Overthinking\nstatt Schlafen",
+    "zoomAt": 41,
+    "zoomOutAt": 76,
     "blocks": [
-      { "text": "Alle Kumpels wissen\nschon ganz genau,\nwas sie studieren\nwollen.\n\nNur ich nicht.", "at": 65, "hold": 80 },
-      { "text": "Du googelst um 02:47", "italicText": "lohnt sich informatik\nheute noch", "at": 150, "hold": 55 }
+      { "text": "Alle Kumpels wissen\nschon ganz genau,\nwas sie studieren\nwollen.", "revealText": "Nur ich nicht.", "revealDelay": 30, "at": 83, "hold": 66 },
+      { "text": "Du googelst um 02:47", "italicText": "lohnt sich informatik\nheute noch", "at": 154, "hold": 52 }
     ],
-    "punchlineDuration": 100
+    "punchlineDuration": 163
   },
   "content": {
     "act2": "",

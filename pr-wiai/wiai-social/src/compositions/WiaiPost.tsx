@@ -29,7 +29,13 @@ const BackgroundMusic: React.FC<{ file?: string }> = ({ file }) => {
 
 export const WiaiPost: React.FC<Post> = (post) => {
   const withMusic = (node: React.ReactNode) =>
-    post.music !== false ? <><BackgroundMusic file={post.musicFile} />{node}</> : <>{node}</>;
+    post.music !== false ? (
+      <>
+        <BackgroundMusic file={post.musicFile} />
+        {post.sfxFile && <BackgroundMusic file={post.sfxFile} />}
+        {node}
+      </>
+    ) : <>{node}</>;
 
   const content = (() => {
     switch (post.type) {

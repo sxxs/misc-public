@@ -140,6 +140,8 @@ export interface BillboardCaption {
 export interface NachtgedankeBlock {
   text: string;
   italicText?: string;             // rendered italic below text with gap
+  revealText?: string;             // extra line that fades in after revealDelay
+  revealDelay?: number;            // frames after block start before reveal (default: 30)
   at: number;                      // frame when block appears
   hold: number;                    // frames visible
 }
@@ -148,6 +150,9 @@ export interface NachtgedankeConfig {
   time: string;                    // status bar clock ("02:47")
   batteryPercent?: number;         // status bar battery level (default: 15)
   phoneInDuration?: number;        // phone entrance + zoom-to-time (default: 50)
+  overthinkingLabel?: string;      // text during zoom phase (default: "#overthinking")
+  zoomAt?: number;                 // frame of hard-cut zoom (default: 10)
+  zoomOutAt?: number;              // frame when zoom-out begins (default: 55)
   blocks: NachtgedankeBlock[];     // text overlay sequence
   punchlineDuration?: number;      // hold for act3 + aside (default: 95)
 }
@@ -189,6 +194,7 @@ export interface Post {
   isAd?: boolean;        // opt-in: shows absender/footer on S3 (default: hidden)
   music?: false;         // opt-out of BackgroundMusic (undefined = music on)
   musicFile?: string;    // custom track (default: music/track.mp3)
+  sfxFile?: string;      // additional SFX audio layer (plays full duration, same fade-out)
   timing?: ContrarianTiming; // led-wall only
   terminal?: TerminalConfig; // terminal-only (color, mode, blocks — NOT prompt)
   billboard?: BillboardConfig; // billboard captions mode

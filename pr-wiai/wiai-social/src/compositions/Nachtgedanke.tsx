@@ -10,46 +10,38 @@ export const Nachtgedanke: React.FC<{ post: Post }> = ({ post }) => {
   const config = post.nachtgedanke!;
 
   // ── Phase 1: Phone entrance + hard-cut zoom to time ───────────────────
-  //  0→10:  phone fades in from black (totale — full phone visible)
-  // 10:     HARD CUT — instant jump to extreme close-up on "02:47"
-  // 10→13:  slight overshoot zoom (8.0 → 8.8, 3f)
-  // 13→18:  settle back (8.8 → 8.2, 5f easeOut)
-  // 10→18:  simultaneous blur 6px → 0 (camera focuses)
-  // 18→40:  hold on time, colon blinks, #overthinking
-  // 40→44:  snap back to 1.0 (fast)
-  // 44→60:  phone dims to backdrop
+  // Configurable via zoomAt / zoomOutAt (defaults: 10 / 55)
+  const zoomAt = config.zoomAt ?? 10;
+  const zoomOutAt = config.zoomOutAt ?? 55;
 
-  const phoneOpacity = interpolate(frame, [0, 10], [0, 1], {
+  const phoneOpacity = interpolate(frame, [0, Math.min(20, zoomAt)], [0, 1], {
     extrapolateRight: "clamp",
   });
 
-  // Hard-cut zoom: instant jump at frame 10, then overshoot + settle
+  // Hard-cut zoom: instant jump at zoomAt, then overshoot + settle
   let phoneZoom: number;
-  if (frame < 10) {
+  if (frame < zoomAt) {
     phoneZoom = 1.0;
-  } else if (frame < 13) {
-    // Overshoot: 8.0 → 8.8 in 3 frames
-    phoneZoom = interpolate(frame, [10, 13], [8.0, 8.8], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  } else if (frame < 18) {
-    // Settle: 8.8 → 8.2 in 5 frames
-    phoneZoom = interpolate(frame, [13, 18], [8.8, 8.2], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  } else if (frame < 55) {
-    phoneZoom = 8.2; // hold on time (longer)
-  } else if (frame < 59) {
-    // Snap back to totale
-    phoneZoom = interpolate(frame, [55, 59], [8.2, 1.0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  } else if (frame < zoomAt + 3) {
+    phoneZoom = interpolate(frame, [zoomAt, zoomAt + 3], [8.0, 8.8], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  } else if (frame < zoomAt + 8) {
+    phoneZoom = interpolate(frame, [zoomAt + 3, zoomAt + 8], [8.8, 8.2], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  } else if (frame < zoomOutAt) {
+    phoneZoom = 8.2;
+  } else if (frame < zoomOutAt + 4) {
+    phoneZoom = interpolate(frame, [zoomOutAt, zoomOutAt + 4], [8.2, 1.0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   } else {
     phoneZoom = 1.0;
   }
 
   // Camera-focus blur: appears on hard cut, resolves quickly
-  const blurPx = frame < 10 ? 0 : interpolate(frame, [10, 18], [6, 0], {
+  const blurPx = frame < zoomAt ? 0 : interpolate(frame, [zoomAt, zoomAt + 8], [6, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
   // Phone dims after zoom-out → backdrop at 25%
-  const phoneDim = interpolate(frame, [59, 75], [1.0, 0.25], {
+  const phoneDim = interpolate(frame, [zoomOutAt + 4, zoomOutAt + 20], [1.0, 0.25], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -72,10 +64,12 @@ export const Nachtgedanke: React.FC<{ post: Post }> = ({ post }) => {
   const colonVisible = frame % 45 < 23;
 
   // ── #overthinking overlay (during zoomed-on-time hold) ────────────────
-  const overthinkingOpacity = interpolate(frame, [22, 28, 52, 56], [0, 1, 1, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const overthinkingOpacity = interpolate(
+    frame,
+    [zoomAt + 12, zoomAt + 18, zoomOutAt - 3, zoomOutAt + 1],
+    [0, 1, 1, 0],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+  );
 
   // ── Text blocks ───────────────────────────────────────────────────────
   let activeBlockIdx = -1;
@@ -126,7 +120,7 @@ export const Nachtgedanke: React.FC<{ post: Post }> = ({ post }) => {
         <div
           style={{
             position: "absolute",
-            top: 240,
+            top: 310,
             left: 0,
             right: 0,
             display: "flex",
@@ -134,17 +128,19 @@ export const Nachtgedanke: React.FC<{ post: Post }> = ({ post }) => {
             opacity: overthinkingOpacity,
           }}
         >
-          <span
+          <div
             style={{
               color: "rgba(255,255,255,0.7)",
               fontSize: 56,
               fontFamily: spaceGroteskFamily,
               fontWeight: 700,
               letterSpacing: "0.02em",
+              textAlign: "center",
+              whiteSpace: "pre-wrap",
             }}
           >
-            #overthinking
-          </span>
+            {config.overthinkingLabel ?? "#overthinking"}
+          </div>
         </div>
       )}
 
@@ -201,6 +197,30 @@ export const Nachtgedanke: React.FC<{ post: Post }> = ({ post }) => {
                   {b.italicText}
                 </div>
               )}
+              {b.revealText && (() => {
+                const revealDelay = b.revealDelay ?? 30;
+                const revealLocal = localFrame - revealDelay;
+                if (revealLocal < 0) return null;
+                const revealOpacity = interpolate(revealLocal, [0, 8], [0, 1], {
+                  extrapolateRight: "clamp",
+                });
+                return (
+                  <div
+                    style={{
+                      color: "#ffffff",
+                      fontSize: 62,
+                      fontFamily: spaceGroteskFamily,
+                      fontWeight: 700,
+                      lineHeight: 1.3,
+                      whiteSpace: "pre-wrap",
+                      marginTop: 32,
+                      opacity: revealOpacity,
+                    }}
+                  >
+                    {b.revealText}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         );
