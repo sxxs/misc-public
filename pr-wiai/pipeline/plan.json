@@ -3998,7 +3998,7 @@
       "id": "draft-social-engineering-p51b",
       "type": "stimmt-eigentlich",
       "design": "terminal",
-      "status": "ready",
+      "status": "published",
       "json": "wiai-social/posts/draft-social-engineering-p51b.json",
       "source": "pipeline/entwuerfe/social-engineering.md#Post-51-—-Variante-B",
       "targetWeek": "2026-KW15",
@@ -4026,6 +4026,17 @@
         "instagram": {
           "caption": "Du weißt, dass es Scam ist. Aber für eine Sekunde glaubst du es trotzdem.",
           "hashtags": "#phishing #hacking #cybersecurity #datenschutz #socialmedia #digitaleliteratur"
+        }
+      },
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-09"
+        },
+        "youtube": {
+          "video": "2026-04-09"
+        },
+        "instagram": {
+          "video": "2026-04-09"
         }
       }
     },
