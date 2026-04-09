@@ -8,6 +8,10 @@
     "act1Duration": 140,
     "act3Duration": 190
   },
+  "musicFile": "music/track-frozen-thunder.mp3",
+  "timing": {
+    "variant": "through"
+  },
   "content": {
     "act1Setup": "> inbox\n\n!Achtung:\nIhr Konto wurde\ngehackt.\n\nKlick hier!\nSonst Sperrung\nin 30 Minuten!",
     "act2": "Das muss nicht\nmal stimmen.\n\nEs reicht, wenn du\nes kurz glaubst.",

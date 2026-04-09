@@ -4012,6 +4012,21 @@
         "act1Setup": "> inbox",
         "act2": "Achtung: Ihr Konto wurde kompromittiert.\nEs wird in 30 Min. gesperrt.\n\nDas muss nicht mal stimmen. Es reicht, wenn du es kurz glaubst.",
         "act3": "Ab da arbeitest du mit. Kurz darauf ist dein Konto wirklich kompromittiert."
+      },
+      "social": {
+        "tiktok": {
+          "caption": "Klick hier, sonst Sperrung. Kennst du, oder?",
+          "hashtags": "#phishing #hacking #cybersecurity #socialmedia #datenschutz"
+        },
+        "youtube": {
+          "title": "Klick hier, sonst Sperrung in 30 Min",
+          "description": "Du weißt, dass es Phishing ist. Aber für eine Sekunde hast du es geglaubt. Und genau diese Sekunde reicht.",
+          "hashtags": "#Shorts #Phishing #Hacking #Cybersecurity #Datenschutz"
+        },
+        "instagram": {
+          "caption": "Du weißt, dass es Scam ist. Aber für eine Sekunde glaubst du es trotzdem.",
+          "hashtags": "#phishing #hacking #cybersecurity #datenschutz #socialmedia #digitaleliteratur"
+        }
       }
     },
     {
