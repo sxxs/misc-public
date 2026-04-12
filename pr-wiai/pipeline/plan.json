@@ -28,7 +28,7 @@
       "status": "draft",
       "json": "wiai-social/posts/2026-akinator.json",
       "source": null,
-      "targetWeek": null,
+      "targetWeek": "2026-KW17",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -40,7 +40,8 @@
         "act2": "Weil jede Frage die Hälfte der Möglichkeiten eliminiert. 20 Ja/Nein-Fragen reichen für über eine Million Personen. Das Prinzip heißt Entscheidungsbaum.",
         "act3": "Informatik ist nicht Magie. Es ist Logik, die sich wie Magie anfühlt.",
         "aside": "Das lernst du in Woche 3 des Informatikstudiums. Ab Woche 4 wird es noch besser."
-      }
+      },
+      "slotIndex": 3
     },
     {
       "id": "2026-bambirds",
@@ -281,7 +282,7 @@
       "id": "2026-ikea",
       "type": "contrarian",
       "design": "billboard",
-      "status": "ready",
+      "status": "published",
       "json": "wiai-social/posts/2026-ikea.json",
       "source": null,
       "targetWeek": "2026-KW15",
@@ -289,12 +290,39 @@
       "platforms": {},
       "notes": "",
       "tag": null,
-      "slotIndex": 4,
+      "slotIndex": 5,
       "topic": "studium",
       "content": {
-        "act1Setup": "Beste Voraussetzung für ein Informatikstudium?",
-        "act2": "Nicht Mathe-LK. Nicht Programmier-AG. Sondern: Du hast schon mal 3 Stunden lang versucht ein IKEA-Regal aufzubauen und nicht aufgegeben.",
-        "act3": "Frustrationstoleranz ist die wichtigste Kompetenz in der Informatik."
+        "act1Setup": "Was hat IKEA\\nmit Informatik\\nzu tun?",
+        "act2": "3 Stunden.\\nKeine Anleitung.\\n\\nViele Fragen.",
+        "act3": "Das gilt für\\nInformatik –\\nund für IKEA.",
+        "act1Reveal": "Viel.",
+        "aside": "Das I steht für\\nFrustrationstoleranz."
+      },
+      "social": {
+        "tiktok": {
+          "caption": "Was IKEA-Regale mit Informatik gemeinsam haben.",
+          "hashtags": "#informatik #studium #ikea #frustrationstoleranz #uni"
+        },
+        "youtube": {
+          "title": "IKEA und Informatik — mehr gemeinsam als du denkst",
+          "hashtags": "#Shorts #Informatik #Studium #IKEA #Frustrationstoleranz"
+        },
+        "instagram": {
+          "caption": "3 Stunden. Keine Anleitung. Viele Fragen. IKEA-Regal oder Informatikstudium? Ja.",
+          "hashtags": "#informatik #studium #ikea #frustrationstoleranz #unibamberg"
+        }
+      },
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-10"
+        },
+        "youtube": {
+          "video": "2026-04-10"
+        },
+        "instagram": {
+          "video": "2026-04-10"
+        }
       }
     },
     {
@@ -355,12 +383,10 @@
       "status": "ready",
       "json": "wiai-social/posts/2026-intro-alter.json",
       "source": null,
-      "targetWeek": "2026-KW17",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
       "tag": null,
-      "slotIndex": 1,
       "topic": "meta",
       "content": {
         "act1Setup": "Durchschnittsalter der Person, die dieses Video gemacht hat.",
@@ -773,7 +799,7 @@
       "status": "draft",
       "json": "wiai-social/posts/2026-work-life.json",
       "source": null,
-      "targetWeek": null,
+      "targetWeek": "2026-KW17",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -785,7 +811,8 @@
         "act2": "Großstadt: verdienst gut, zahlst alles für Miete.\n\nBamberg: verdienst auch gut, zahlst die Hälfte, wohnst im UNESCO-Welterbe.",
         "act3": "Work-Life-Balance:\nFängt beim Studienort an.",
         "aside": "Und beim Rauchbier.\nAber das ist eine persönliche Meinung."
-      }
+      },
+      "slotIndex": 1
     },
     {
       "id": "contrarian-vorhange",
@@ -1483,7 +1510,7 @@
       "status": "draft",
       "json": null,
       "source": "pipeline/entwuerfe/ertappt.md#Post-39-—-Variante-E",
-      "targetWeek": null,
+      "targetWeek": "2026-KW17",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -1494,7 +1521,8 @@
         "act2": "Jede wollte Zugriff auf irgendwas. Du hast jedes Mal 'Ja' getippt. Weil die Alternative war: die Datenschutzrichtlinie lesen. 14.000 Wörter.",
         "act3": "Das System ist so gebaut dass Aufgeben die rationale Entscheidung ist.",
         "aside": "Hast du's gemerkt? Oder einfach akzeptiert?"
-      }
+      },
+      "slotIndex": 4
     },
     {
       "id": "draft-ertappt-p39f",
@@ -2369,20 +2397,50 @@
       "id": "draft-merkste-selber-p41a",
       "type": "merkste-selber",
       "design": "pixel-wall",
-      "status": "draft",
-      "json": null,
+      "status": "published",
+      "json": "wiai-social/posts/draft-merkste-selber-p41a.json",
       "source": "pipeline/entwuerfe/merkste-selber.md#Post-41-—-Variante-A",
-      "targetWeek": null,
+      "targetWeek": "2026-KW15",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
       "tag": "ok",
       "topic": "karriere",
       "content": {
-        "act1Reveal": "Deutschland hat 109.000 offene IT-Stellen.",
-        "act2": "Deutschland hat 30.000 Informatik-Absolvent:innen pro Jahr.",
+        "act1Reveal": "ÜBERFLÜSSIG?",
+        "act2": "39.012 Informatik-Abschlüsse.\n(Destatis 2024)\n\n109.000 offene IT-Stellen.\n(Bitkom 2026)",
         "act3": "Merkste selber, oder?",
-        "aside": "Die Rechnung ist einfach. Die Konsequenz auch."
+        "aside": "Und das war nur Deutschland.",
+        "act1Setup": "Informatik-Studium"
+      },
+      "slotIndex": 7,
+      "accentColor": "#22C55E",
+      "ledPattern": "exclamation",
+      "social": {
+        "tiktok": {
+          "caption": "Informatik-Studium bald überflüssig? 39.012 Abschlüsse. 109.000 offene Stellen.",
+          "hashtags": "#informatik #studium #karriere #fachkräftemangel #it #überflüssig"
+        },
+        "youtube": {
+          "title": "Informatik-Studium bald überflüssig?",
+          "description": "39.012 Informatik-Abschlüsse pro Jahr (Destatis 2024). 109.000 offene IT-Stellen (Bitkom 2026). Merkste selber.",
+          "hashtags": "#Shorts #Informatik #Karriere #Fachkräftemangel #ITJobs #Studium"
+        },
+        "instagram": {
+          "caption": "39.012 Informatik-Abschlüsse. 109.000 offene IT-Stellen. Und das war nur Deutschland.",
+          "hashtags": "#informatik #studium #karriere #fachkräftemangel #itjobs #mint #unibamberg"
+        }
+      },
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-12"
+        },
+        "youtube": {
+          "video": "2026-04-12"
+        },
+        "instagram": {
+          "video": "2026-04-12"
+        }
       }
     },
     {
@@ -3961,7 +4019,7 @@
       "status": "draft",
       "json": null,
       "source": "pipeline/entwuerfe/selbstzerstoerung.md#Post-02-—-Variante-G",
-      "targetWeek": null,
+      "targetWeek": "2026-KW17",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -3973,7 +4031,8 @@
         "act3": "Die ehrliche Antwort: Wir müssen besser werden. An der WIAI arbeiten wir dran.",
         "aside": "Übrigens: Unsere Einführungsvorlesung ist kostenlos auf YouTube. inf.zone. Besser als ChatGPT? Manchmal.",
         "asideStyle": "uebrigens"
-      }
+      },
+      "slotIndex": 6
     },
     {
       "id": "draft-social-engineering-p51a",
@@ -5511,13 +5570,13 @@
       "status": "ready",
       "json": null,
       "source": "pipeline/ideen/stoffsammlung-clickbait-parodie.md",
-      "targetWeek": "2026-KW15",
+      "targetWeek": "2026-KW17",
       "publishedDate": null,
       "platforms": {},
       "notes": "Original before rewrite:\nS1: SCHREIB JA.\nS1 smallText: Wenn du auch findest dass Mathe\\nim Studium zu schwer ist. 💪\nS2: Das ist kein Gespräch.\\nDas ist ein Knopf den du drückst\\ndamit der Algorithmus\\nmich belohnt.\\n\\nDu bist kein Teil einer Community.\\nDu bist ein Datenpunkt.\nS3: Aber es fühlt sich gut an, oder?\\n\\nGenau das ist das Problem.",
       "tag": "stark",
       "tagComment": null,
-      "slotIndex": 6,
+      "slotIndex": 5,
       "topic": "manipulation",
       "content": {
         "act1Setup": "100k in 3 Tagen mit Faceless TikTok. Schreib KI, dann DM ich dir mein Erfolgsframework.",
@@ -8042,24 +8101,50 @@
       "id": "foto-pruefungstag-0630",
       "type": "aphorismus",
       "design": "raw-photo",
-      "status": "draft",
+      "status": "published",
       "json": null,
       "source": null,
       "targetWeek": "2026-KW15",
       "publishedDate": null,
       "platforms": {},
-      "notes": "Foto: 300 aufgebaute Rechner in der Kapellenstraße, leerer Raum, Morgenlicht. Foto vorhanden. Effekt: depixelate → hält → Text-Overlay.",
+      "notes": "Slideshow-Post (3 Bilder, Ton). Dramaturgie: (1) Powerbank-Detail mit Laptops im Hintergrund, depixelate-blur ~50f — Mystery-Einstieg. (2) Leerer Raum Foto 1 (Wide, von der Seite/oben), beat ~15f. (3) Leerer Raum Foto 2 (Fluchtpunkt/Totale) + Text-Overlay, autofocus ~70f. Text nur Slide 3: '250 Laptops. 08:30. Keiner da.' Zeitkohaerenz: NUR Vor-Pruefungs-Material verwenden (geschlossene oder pre-boot Laptops). Offene Laptops mit gruenen Screens gehoeren zu foto-abgabe-screens.",
       "tag": "stark",
       "tagComment": null,
-      "slotIndex": 5,
+      "slotIndex": 6,
       "topic": "studium",
       "format": "both",
       "content": {
-        "act1Reveal": "300 Laptops. 06:30. Keiner da.",
+        "act1Reveal": "250 Laptops. 08:30. Keiner da.",
         "act2": "",
         "act3": ""
       },
-      "photoReveal": "simultaneous"
+      "photoReveal": "simultaneous",
+      "social": {
+        "tiktok": {
+          "caption": "250 Laptops. 250 Powerbanks. Gleich Klausur. Noch ist es ruhig.",
+          "hashtags": "#informatik #klausur #uni #studium #bamberg"
+        },
+        "youtube": {
+          "title": "Informatik-Prüfung. 250 Menschen. Noch ist es ruhig.",
+          "description": "Eine E-Klausur im Informatik-Studium: 250 Laptops, 250 Powerbanks, ein leerer Raum. Gleich kommen die Studierenden. WIAI, Uni Bamberg.",
+          "hashtags": "#Shorts #Informatik #Klausur #Uni #Bamberg"
+        },
+        "instagram": {
+          "caption": "Was ist das? 250 Laptops. 250 Powerbanks. 250 Plätze. Gleich schreiben hier 250 Menschen ihre Informatik-Prüfung. Jeder Laptop wartet. Noch ist es ruhig. In zehn Minuten nicht mehr.",
+          "hashtags": "#informatik #studium #klausur #pruefung #uni #bamberg #wiai #unialltag"
+        }
+      },
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-11"
+        },
+        "youtube": {
+          "video": "2026-04-11"
+        },
+        "instagram": {
+          "video": "2026-04-11"
+        }
+      }
     },
     {
       "id": "foto-desktop-professor",
@@ -8134,13 +8219,13 @@
       "status": "idea",
       "json": null,
       "source": null,
-      "targetWeek": null,
+      "targetWeek": "2026-KW17",
       "publishedDate": null,
       "platforms": {},
       "notes": "Foto: Hörsaal, Beamer-Fehlermeldung auf Leinwand (\"No Signal\" / blauer Bildschirm). 300 leere Stühle. Effekt: tint in Terminal-Amber → Text. Universal Kat. B.",
       "tag": "stark",
       "tagComment": null,
-      "slotIndex": null,
+      "slotIndex": 2,
       "topic": "alltag",
       "format": "both",
       "content": {
@@ -8494,6 +8579,48 @@
       "topic": "studium",
       "format": "both",
       "content": {}
+    },
+    {
+      "id": "foto-access-point-spof",
+      "type": "aphorismus",
+      "design": "raw-photo",
+      "status": "idea",
+      "json": null,
+      "source": null,
+      "targetWeek": null,
+      "publishedDate": null,
+      "platforms": {},
+      "posted": {},
+      "notes": "Foto: einzelner Access Point an der Decke, der das WLAN fuer den gesamten Pruefungsraum liefert. IT-Security trifft Pruefungslogistik — Single Point of Failure. Foto vorhanden (Pruefungstag 2026-04-10).",
+      "tag": "stark",
+      "tagComment": null,
+      "slotIndex": null,
+      "topic": "studium",
+      "format": "both",
+      "content": {
+        "act1Reveal": "Ein Gerät. 250 Verbindungen.\\nWenn das ausfällt, fällt die Prüfung aus."
+      }
+    },
+    {
+      "id": "foto-abgabe-screens",
+      "type": "stimmt-eigentlich",
+      "design": "raw-photo",
+      "status": "idea",
+      "json": null,
+      "source": null,
+      "targetWeek": null,
+      "publishedDate": null,
+      "platforms": {},
+      "posted": {},
+      "notes": "Slideshow-Post, Gegenstueck zu foto-pruefungstag-0630 (gleicher Klausurtag, anderer Moment: Abgabe statt Setup). Material: offene Laptops mit identischen gruenen Abgabe-Bestaetigungs-Screens, Fotos vom Pruefungstag 2026-04-10. Dramaturgie-Idee: (1) Detail ein einzelner Screen (depixelate-blur, man erkennt erst den Text nicht), (2) Reihe von Screens (beat-cut, Masse), (3) Totale Fluchtpunkt viele Reihen gruener Screens + Text-Overlay. Text: '250 Bildschirme.\\nAlle zeigen dasselbe.' Visuell lebt der Post von der monochromen gruenen Flaeche — je dichter das Grun, desto staerker die Gleichschaltungs-Lesung. Kandidat fuer KW16/17.",
+      "tag": "stark",
+      "tagComment": null,
+      "slotIndex": null,
+      "topic": "studium",
+      "format": "both",
+      "content": {
+        "act1Reveal": "250 Bildschirme.\\nAlle zeigen dasselbe."
+      }
     }
   ]
 }

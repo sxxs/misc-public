@@ -135,9 +135,10 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
   // Quote snaps in with brief glitch, not a fade
   const hasScroll = !!post.ledScroll;
   const revealAt = post.timing?.act1RevealFrame ?? 75;
+  const setupAt = post.timing?.act1SetupFrame ?? 0;
   const quoteOpacity = hasScroll
     ? interpolate(frame, [2, 4], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
-    : interpolate(frame, [0, 12], [0, 1], { extrapolateRight: "clamp" });
+    : interpolate(frame, [setupAt, setupAt + 12], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   // act1Reveal pops in at revealAt
   const bigOpacity = hasScroll
     ? interpolate(frame, [revealAt, revealAt + 2], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
@@ -156,7 +157,7 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
 
   return (
     <SlideFrame accentColor={accent}>
-      <LedWall accentColor={accent} exitAtFrame={act1Duration - 20} pattern={resolvePattern(post.ledPattern)} scrollSpeed={post.ledScroll} />
+      <LedWall accentColor={accent} exitAtFrame={act1Duration - 20} pattern={resolvePattern(post.ledPattern)} scrollSpeed={post.ledScroll} fadeFromBright={post.timing?.ledFadeFromBright} beatFrames={post.ledBeatFrames} />
       <div
         style={{
           flex: 1,
@@ -166,7 +167,7 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
             : textAlign === "bottom" ? "flex-end" : "center",
           padding: textAlign === "bottom"
             ? "180px 240px 420px 108px"  // push text down, above safe zone
-            : "180px 240px 500px 108px", // default: slightly above center
+            : "180px 240px 240px 108px", // default: near true center
           gap: 44,
           position: "relative",
           zIndex: 5,
@@ -248,7 +249,7 @@ const Act2: React.FC<{ post: Post }> = ({ post }) => {
         ...(exitGlitch > 0.01 ? { filter: exitFilter, transform: `translateX(${exitShiftX.toFixed(1)}px)` } : {}),
       }}>
         <DirtyCutout accentColor={accent} enterProgress={enterProgress}>
-          <TypewriterText text={post.content.act2} startFrame={0} framesPerLine={post.timing?.framesPerLine ?? 26} blinkLastPeriod />
+          <TypewriterText text={post.content.act2} startFrame={post.timing?.act2TypewriterStart ?? 0} framesPerLine={post.timing?.framesPerLine ?? 26} blinkLastPeriod />
         </DirtyCutout>
       </div>
     </SlideFrame>

@@ -15,6 +15,8 @@ interface Props {
   enterOverdrive?: boolean; // brief brightness overshoot at entrance (1.0→1.5→1.0 over ~12f)
   exitAtFrame?: number;     // staggered LED power-down starting at this frame (18f total, hash-based)
   scrollSpeed?: number;     // rows/sec vertical scroll — bright bands sweep upward (0 or undefined = off)
+  fadeFromBright?: number;  // LEDs start at full brightness and fade to target over N frames (reverse of enterFrames)
+  beatFrames?: number[];    // beat-sync: pattern flashes for 7f at each beat frame (overrides fps cycling)
 }
 
 const COLS = 24;
@@ -84,16 +86,23 @@ function blockTopRow(blk: ScrollBlock, f: number, spd: number): number {
   return FLICK_ROW - (cf - triggerCf) * rps * FLICK_ACCEL;
 }
 
-export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", pattern, endFlashAtFrame, enterFrames, enterOverdrive, exitAtFrame, scrollSpeed }) => {
+export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", pattern, endFlashAtFrame, enterFrames, enterOverdrive, exitAtFrame, scrollSpeed, fadeFromBright, beatFrames }) => {
   const frame = useCurrentFrame();
 
   // ── Pattern frame selection (animated patterns cycle at pattern.fps) ──
   const hasPattern = !!pattern;
-  const patternFrame = pattern
-    ? pattern.frames.length > 1
+  const patternFrame = (() => {
+    if (!pattern) return -1;
+    // Beat-sync mode: pattern visible for 7 frames at each beat, hidden otherwise
+    if (beatFrames && beatFrames.length > 0) {
+      const isOn = beatFrames.some(bf => frame >= bf && frame < bf + 7);
+      return isOn ? 0 : (pattern.frames.length > 1 ? 1 : -1);
+    }
+    // Default: fps-based cycling
+    return pattern.frames.length > 1
       ? Math.floor((frame / 30) * (pattern.fps ?? 4)) % pattern.frames.length
-      : 0
-    : -1;
+      : 0;
+  })();
 
   // ── Mic-drop end flash ─────────────────────────────────────
   // Over 6 frames: all LEDs → opacity 1.0, overlay → 0
@@ -233,10 +242,17 @@ export const LedWall: React.FC<Props> = ({ accentColor, mode = "s1", pattern, en
         opacity = opacity * introBlend + 0.55 * (1 - introBlend);
       }
 
+      // fadeFromBright: LEDs start at 1.0 and fade to target over N frames
+      // Sprite LEDs (pattern) keep their target opacity, non-sprite LEDs blend from bright
+      const fadeFromBrightFactor = fadeFromBright && !isSpriteLed
+        ? interpolate(frame, [0, fadeFromBright], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+        : 0;
+      const fadedOpacity = opacity + (1.0 - opacity) * fadeFromBrightFactor;
+
       // End flash / scene-in / scene-exit / overdrive combined
       const finalOpacity = Math.min(1, (flashProgress > 0
-        ? opacity + (1.0 - opacity) * flashProgress
-        : opacity) * sceneInFactor * exitFactor * overdriveBoost);
+        ? fadedOpacity + (1.0 - fadedOpacity) * flashProgress
+        : fadedOpacity) * sceneInFactor * exitFactor * overdriveBoost);
 
       const x = col * CELL_W + (CELL_W - LED_W) / 2;
       const y = row * CELL_H + (CELL_H - LED_H) / 2;

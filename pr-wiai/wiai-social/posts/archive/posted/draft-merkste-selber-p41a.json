@@ -1,0 +1,30 @@
+{
+  "id": "draft-merkste-selber-p41a",
+  "type": "led-wall",
+  "design": "pixel-wall",
+  "accentColor": "#22C55E",
+  "ledPattern": "question",
+  "ledBeatFrames": [0, 32, 82],
+  "musicFile": "music/track-mango-fizz.mp3",
+  "timing": {
+    "variant": "through",
+    "totalDuration": 632,
+    "act1Duration": 120,
+    "act2Duration": 283,
+    "act1SetupFrame": 20,
+    "act1RevealFrame": 58,
+    "ledFadeFromBright": 30,
+    "framesPerLine": 20,
+    "act2TypewriterStart": 10,
+    "subtextStartFrame": 80,
+    "absenderStartFrame": 139
+  },
+  "content": {
+    "act1Setup": "Informatik-Studium",
+    "act1Reveal": "ÜBERFLÜSSIG?",
+    "act2": "39.012 Informatik-Abschlüsse.\n(Destatis 2024)\n\n109.000 offene\nIT-Stellen.\n(Bitkom 2026)",
+    "act3": "Merkste selber, oder?",
+    "aside": "Und das war nur Deutschland.",
+    "textAlign": "center"
+  }
+}

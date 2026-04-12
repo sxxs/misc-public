@@ -1,0 +1,17 @@
+{
+  "id": "2026-ikea",
+  "type": "billboard",
+  "billboard": {
+    "hookFlash": "ikea-manual",
+    "act1Duration": 130,
+    "act2Duration": 90,
+    "act3Duration": 200
+  },
+  "content": {
+    "act1Setup": "Was hat IKEA\nmit Informatik\nzu tun?",
+    "act1Reveal": "Viel.",
+    "act2": "3 Stunden.\nKeine Anleitung.\n\nViele Fragen.",
+    "act3": "Das gilt für\nInformatik –\nund für IKEA.",
+    "aside": "Das I steht für\nFrustrationstoleranz."
+  }
+}

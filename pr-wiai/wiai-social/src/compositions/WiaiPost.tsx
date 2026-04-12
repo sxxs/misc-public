@@ -56,7 +56,7 @@ export const WiaiPost: React.FC<Post> = (post) => {
       case "billboard":
         return withMusic(<Billboard post={post} />);
       case "slideshow":
-        return <Slideshow post={post} />;
+        return withMusic(<Slideshow post={post} />);
       default: {
         const _exhaustive: never = post.type;
         return null;

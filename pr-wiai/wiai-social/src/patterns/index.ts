@@ -6,6 +6,8 @@ import { lockPattern } from "./lock";
 import { eyePattern } from "./eye";
 import { binaryRainPattern } from "./binary-rain";
 import { heartbeatPattern } from "./heartbeat";
+import { exclamationPattern } from "./exclamation";
+import { questionPattern } from "./question";
 
 // Pattern registry — post JSON references patterns by name string
 export const PATTERNS: Record<string, LedPattern> = {
@@ -16,6 +18,8 @@ export const PATTERNS: Record<string, LedPattern> = {
   eye: eyePattern,
   "binary-rain": binaryRainPattern,
   heartbeat: heartbeatPattern,
+  exclamation: exclamationPattern,
+  question: questionPattern,
 };
 
 export function resolvePattern(name?: string): LedPattern | undefined {

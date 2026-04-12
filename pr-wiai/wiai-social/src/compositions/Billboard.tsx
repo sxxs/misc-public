@@ -37,6 +37,116 @@ const BillboardFrame: React.FC<{ children: React.ReactNode }> = ({ children }) =
   </div>
 );
 
+// ── IKEA manual — stylized shelf exploded view, parts appear step by step ─────
+const IkeaManualFlash: React.FC<{ frame: number }> = ({ frame }) => {
+  const c = "rgba(80,160,255,"; // neon blue
+  const S = 4; // stroke width — bold, confident
+
+  // Step-by-step reveal: alternates with text (text at 0, reveal at ~48)
+  // Text → Panel → Shelf1 → "Viel." → Shelf2 → Wrench
+  const partOpacity = (startFrame: number) =>
+    interpolate(frame, [startFrame, startFrame + 10], [0, 1], {
+      extrapolateLeft: "clamp", extrapolateRight: "clamp",
+    });
+
+  const o1 = partOpacity(18);  // side panel (after setup text settles)
+  const o2 = partOpacity(34);  // shelf 1 + arrow
+  const o3 = partOpacity(58);  // shelf 2 + arrow (after "Viel." reveal)
+  const o4 = partOpacity(75);  // Allen wrench + step number
+
+  if (o1 <= 0) return null;
+
+  return (
+    <div style={{
+      position: "absolute", inset: 0,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      paddingTop: 320,
+      zIndex: 1,
+      filter: "drop-shadow(0 0 8px rgba(80,160,255,0.4))",
+    }}>
+      <div style={{ width: 520, height: 420, position: "relative" }}>
+        {/* Step 1: Side panel — tall board */}
+        <div style={{
+          opacity: o1,
+          position: "absolute", left: 20, top: 20,
+          width: 110, height: 360,
+          border: `${S}px solid ${c}0.90)`,
+          borderRadius: 4,
+        }}>
+          {/* Dowel holes */}
+          {[90, 210].map((y) => (
+            <div key={y} style={{
+              position: "absolute", right: 18, top: y,
+              width: 14, height: 14, borderRadius: "50%",
+              border: `${S - 1}px solid ${c}0.60)`,
+            }} />
+          ))}
+        </div>
+
+        {/* Step 2: Shelf 1 + arrow */}
+        <div style={{ opacity: o2 }}>
+          <div style={{
+            position: "absolute", left: 220, top: 100,
+            width: 240, height: 30,
+            border: `${S}px solid ${c}0.70)`,
+            borderRadius: 3,
+          }} />
+          <div style={{
+            position: "absolute", left: 145, top: 113,
+            width: 60, height: S,
+            background: `${c}0.55)`,
+          }} />
+          <div style={{
+            position: "absolute", left: 138, top: 107,
+            width: 0, height: 0,
+            borderRight: `11px solid ${c}0.55)`,
+            borderTop: "7px solid transparent",
+            borderBottom: "7px solid transparent",
+          }} />
+        </div>
+
+        {/* Step 3: Shelf 2 + arrow */}
+        <div style={{ opacity: o3 }}>
+          <div style={{
+            position: "absolute", left: 220, top: 220,
+            width: 240, height: 30,
+            border: `${S}px solid ${c}0.65)`,
+            borderRadius: 3,
+          }} />
+          <div style={{
+            position: "absolute", left: 145, top: 233,
+            width: 60, height: S,
+            background: `${c}0.50)`,
+          }} />
+          <div style={{
+            position: "absolute", left: 138, top: 227,
+            width: 0, height: 0,
+            borderRight: `11px solid ${c}0.50)`,
+            borderTop: "7px solid transparent",
+            borderBottom: "7px solid transparent",
+          }} />
+        </div>
+
+        {/* Step 4: Allen wrench + step number */}
+        <div style={{ opacity: o4 }}>
+          <div style={{
+            position: "absolute", top: -8, right: 10,
+            fontSize: 30, fontFamily: spaceMonoFamily, color: `${c}0.45)`,
+            letterSpacing: "0.08em",
+          }}>3 / 7</div>
+          <div style={{
+            position: "absolute", left: 260, top: 320,
+            transform: "rotate(-15deg)", transformOrigin: "0 0",
+          }}>
+            <div style={{ width: 70, height: S, background: `${c}0.50)`, borderRadius: 2 }} />
+            <div style={{ width: S, height: 30, background: `${c}0.50)`, borderRadius: 2, marginTop: -S }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── Neon tube on: brief flicker — billboard was already warmed up ─────────────
 function neonTubeOn(frame: number, startFrame: number): number {
   const t = frame - startFrame;
@@ -90,9 +200,11 @@ const BillboardAct1: React.FC<{ post: Post; duration: number }> = ({ post, durat
   const { act1Setup, act1Reveal } = post.content;
   const hasSetup = !!act1Setup;
   const hasReveal = !!act1Reveal;
-  const revealAt = post.billboard?.revealAtFrame ?? 14;
+  const hasFlash = post.billboard?.hookFlash === "ikea-manual";
+  const revealAt = post.billboard?.revealAtFrame ?? (hasFlash ? 48 : 14);
 
-  const fadeIn = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp" });
+  const textDelay = 0; // text always first, diagram follows
+  const fadeIn = interpolate(frame, [textDelay, textDelay + 20], [0, 1], { extrapolateRight: "clamp" });
   const hum = mainsHum(frame);
   const opacity = fadeIn * hum;
 
@@ -103,15 +215,16 @@ const BillboardAct1: React.FC<{ post: Post; duration: number }> = ({ post, durat
   const glowIntensity = revealBase > 0 ? tubeOn * interpolate(frame, [revealAt, revealAt + 20], [1, 0.15], { extrapolateRight: "clamp" }) : 0;
 
   // Mechanical nudges: quick upward snaps at content events — "Zurechtrücken"
-  const nudge1 = snapNudge(frame, 10, 6, -8);               // setup settles
+  const nudge1 = snapNudge(frame, hasFlash ? textDelay : 10, 6, -8);  // setup settles
   const nudge2 = snapNudge(frame, revealAt, 6, -10);         // reveal snaps in
   const nudge3 = snapNudge(frame, duration - 18, 5, -6);     // pre-exit tease: "pulling away"
   const drift = nudge1 + nudge2 + nudge3;
 
   return (
     <BillboardFrame>
+      {hasFlash && <IkeaManualFlash frame={frame} />}
       {hasSetup && hasReveal ? (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 36, maxWidth: 730, transform: `translateY(${drift}px)` }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 36, maxWidth: 730, transform: `translateY(${drift + (hasFlash ? -220 : 0)}px)` }}>
           <div
             style={{
               opacity,

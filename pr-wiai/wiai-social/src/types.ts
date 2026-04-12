@@ -87,6 +87,9 @@ export interface ContrarianTiming {
   act2Duration?: number;           // override computed act2 duration (short texts get over-buffered)
   framesPerLine?: number;          // typewriter speed in Act2 (default: 26; lower = faster reveals)
   act1RevealFrame?: number;        // frame when act1Reveal appears (default: 75)
+  act1SetupFrame?: number;         // frame when act1Setup text appears (default: 0 = immediate)
+  act2TypewriterStart?: number;    // local frame offset before first Act2 line appears (default: 0)
+  ledFadeFromBright?: number;      // Act1: LED wall starts fully bright, fades to normal over N frames
   act3Track?: string;              // through-scratch only: key into ACT3_ALT_TRACKS, omit for default track.mp3
   scratchOffset?: number;          // frames before act3Start where scratch starts (default: 15; 0 = at act3Start)
   act3MusicDelay?: number;         // delay Act3 music start by N frames after act3Start (default: 0)
@@ -130,6 +133,7 @@ export interface BillboardConfig {
   revealAtFrame?: number;        // frame when act1Reveal appears (default: 14)
   beats?: BillboardBeat[];       // Explicit Act2 beat sequence — overrides \n\n splitting
   wiggleFrames?: number[];       // Act3-local frames: punchline text wiggles on each hit
+  hookFlash?: "ikea-manual";     // brief visual flash in Act1 before text appears
 }
 
 export interface BillboardCaption {
@@ -170,9 +174,25 @@ export interface SlideshowImage {
   duration?: number;                    // total visible frames (default: 35)
   effect?: SlideshowEffect | SlideshowEffect[];
   text?: string;                        // optional text overlay
+  textPosition?: "top" | "center" | "bottom"; // vertical placement (default: center)
+  textLineFrames?: number[];            // per-line pop-in frame offsets (beat-sync); default: all 0 (fade in together)
+  textSizes?: number[];                 // per-line font size override (default: 72)
+  flashToWhite?: number;                // last N frames ramp up to white (peak on last frame)
+  flashFromWhite?: number;              // first N frames fade from white (peak on frame 0)
   direction?: "h" | "v";               // for pixel-strips
   hold?: number;                        // frames to hold at effect START state before animating
   effectDuration?: number;              // frames for effect animation (rest = hold at END state)
+  effectSteps?: number[];               // beat-sync: discrete frame thresholds; progress snaps to N levels (last → fully sharp)
+  imageScale?: number;                  // extra zoom on the photo (default 1)
+  imageTranslateY?: number;             // vertical crop offset in px; + = crop bottom, - = crop top
+  imageScaleEnd?: number;               // animate zoom over duration (default = imageScale)
+  imageTranslateYEnd?: number;          // animate translateY over duration (default = imageTranslateY)
+  stack?: string[];                     // triptych: 2-3 images stacked vertically (replaces src)
+  zoomTo?: number;                      // stack panel index to zoom into during animation (0-based)
+  stackRevealOrder?: number[];          // panel indices in appear order (e.g. [1,0,2] = middle, top, bottom)
+  stackTints?: string[];                // CSS filter per panel (e.g. ["grayscale(0.6)", "", "sepia(0.3) saturate(1.4)"])
+  stackBackdrop?: string;               // backdrop color (e.g. "#FACC15") — rendered as big blurred blob behind panels
+  stackPanelGap?: number;               // px gap between panels (default 0)
 }
 
 export type SlideshowEffect =
@@ -182,7 +202,8 @@ export type SlideshowEffect =
   | "beat";
 
 export interface SlideshowEndCard {
-  text?: string;     // default: "echt.bamberg"
+  text?: string;     // main line (default: "@echt.bamberg")
+  subtitle?: string; // sub-line (default: "WIAI · Uni Bamberg")
   duration?: number; // frames (default: 60)
   effect?: SlideshowEffect;
 }
@@ -203,6 +224,7 @@ export interface Post {
   slideshow?: SlideshowConfig; // slideshow-only
   nachtgedanke?: NachtgedankeConfig; // phone-format nachtgedanke
   ledPattern?: string;   // pattern name for LedWall sprite overlay (e.g. "maze")
+  ledBeatFrames?: number[]; // beat-sync: pattern flashes at these absolute frames (7f on, then off)
   ledScroll?: number;    // rows/sec vertical scroll for LedWall (bright bands sweep upward)
   content: PostContent;
 }

@@ -1,0 +1,56 @@
+{
+  "id": "foto-pruefungstag-0630",
+  "type": "slideshow",
+  "musicFile": "music/track-bonkers-beat.mp3",
+  "slideshow": {
+    "images": [
+      {
+        "src": "media/pruefungstag/IMG_8707.JPG",
+        "duration": 190,
+        "effect": "depixelate-blur",
+        "effectSteps": [18, 52, 72, 86, 104, 122],
+        "imageScale": 1.0,
+        "imageScaleEnd": 1.08,
+        "flashFromWhite": 5,
+        "text": "Was ist das?",
+        "textLineFrames": [18]
+      },
+      {
+        "src": "media/pruefungstag/IMG_8697.JPG",
+        "stack": [
+          "media/pruefungstag/IMG_8696.JPG",
+          "media/pruefungstag/IMG_8697.JPG",
+          "media/pruefungstag/IMG_8695.JPG"
+        ],
+        "zoomTo": 1,
+        "stackRevealOrder": [1, 0, 2],
+        "stackTints": [
+          "grayscale(1) contrast(1.5) brightness(0.55)",
+          "contrast(1.12) brightness(1.06)",
+          "sepia(1) saturate(2.6) brightness(1.18) hue-rotate(-18deg)"
+        ],
+        "stackPanelGap": 14,
+        "duration": 70,
+        "hold": 51,
+        "effectDuration": 18
+      },
+      {
+        "src": "media/pruefungstag/IMG_8718.JPG",
+        "duration": 156,
+        "imageScale": 1.65,
+        "imageTranslateY": 420,
+        "imageScaleEnd": 1.4,
+        "imageTranslateYEnd": 260,
+        "text": "Informatik Prüfung.\n250 Laptops.\nNoch ist es ruhig.\n@echt.bamberg\nWIAI Uni Bamberg",
+        "textPosition": "top",
+        "textLineFrames": [0, 69, 86, 103, 121],
+        "textSizes": [72, 72, 72, 44, 32],
+        "flashToWhite": 5
+      }
+    ]
+  },
+  "content": {
+    "act2": "",
+    "act3": "Informatik Prüfung. 250 Laptops. Noch ist es ruhig."
+  }
+}

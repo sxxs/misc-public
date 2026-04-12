@@ -1,7 +1,7 @@
 import React from "react";
 import { useCurrentFrame, staticFile, Img, interpolate } from "remotion";
 import { SlideshowImage, SlideshowEffect } from "../types";
-import { WIAI_YELLOW } from "../styles/colors";
+import { WIAI_YELLOW, BLACK } from "../styles/colors";
 import { spaceGroteskFamily } from "../styles/fonts";
 import { MosaicImage } from "./MosaicImage";
 
@@ -23,8 +23,18 @@ function normalizeEffects(
 //   [hold, hold+fxDur)     → 0→1      (effect animates)
 //   [hold+fxDur, duration) → 1        (hold at end state, image visible)
 // If effectDuration is omitted, effect spans all remaining frames after hold.
-function useEffectProgress(duration: number, hold: number, effectDuration?: number): number {
+//
+// Beat-sync mode: when `steps` is provided (list of frame thresholds), progress
+// snaps to discrete levels — one per step. Last step crosses into "fully sharp".
+function useEffectProgress(duration: number, hold: number, effectDuration?: number, steps?: number[]): number {
   const frame = useCurrentFrame();
+  if (steps && steps.length > 0) {
+    let level = 0;
+    for (let i = 0; i < steps.length; i++) {
+      if (frame >= steps[i]) level = i + 1;
+    }
+    return level / steps.length;
+  }
   if (frame < hold) return 0;
   const fxDur = effectDuration ?? (duration - hold);
   if (fxDur <= 0) return 1;
@@ -299,23 +309,173 @@ const PixelStrips: React.FC<{
   );
 };
 
-// ── Text overlay ────────────────────────────────────────────────────────────
-const TextOverlay: React.FC<{ text: string }> = ({ text }) => {
+// ── Stack Zoom: triptych with progressive reveal → zoom-in on one panel ─────
+// Renders 2-3 images stacked vertically with optional per-panel tints,
+// a backdrop color blob, panel gaps, progressive reveal, and a match-cut
+// zoom into a target panel.
+const StackZoom: React.FC<{
+  sources: string[];
+  zoomTo?: number;
+  progress: number;
+  revealOrder?: number[];
+  tints?: string[];
+  backdrop?: string;
+  panelGap?: number;
+  holdFrames: number;
+}> = ({ sources, zoomTo, progress, revealOrder, tints, backdrop, panelGap = 0, holdFrames }) => {
   const frame = useCurrentFrame();
-  const opacity = interpolate(frame, [8, 20], [0, 1], { extrapolateRight: "clamp" });
+  const n = sources.length;
+  const gap = panelGap;
+  const panelH = (HEIGHT - gap * (n - 1)) / n;
+
+  // Zoom math with gap awareness
+  // Max scale: panel height → full viewport height
+  const maxScale = HEIGHT / panelH;
+  const easedProgress = progress < 0.5
+    ? 2 * progress * progress
+    : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+  const targetCenterY = zoomTo !== undefined
+    ? zoomTo * (panelH + gap) + panelH / 2
+    : HEIGHT / 2;
+  const scale = zoomTo !== undefined ? 1 + easedProgress * (maxScale - 1) : 1;
+  const scaleAtProgress = 1 + easedProgress * (maxScale - 1);
+  const deltaY = zoomTo !== undefined
+    ? scaleAtProgress * (HEIGHT / 2 - targetCenterY)
+    : 0;
+
+  // Beat-sync reveal: instant pop + per-panel snap-in scale (1.05 → 1.0 over 12f)
+  const SNAP_FRAMES = 12;
+  const SNAP_START_SCALE = 1.05;
+  const panelState = sources.map((_, i) => {
+    if (!revealOrder || holdFrames <= 0) return { opacity: 1, scale: 1 };
+    const slotIdx = revealOrder.indexOf(i);
+    if (slotIdx < 0) return { opacity: 1, scale: 1 };
+    const slotDur = holdFrames / revealOrder.length;
+    const slotStart = slotIdx * slotDur;
+    if (frame < slotStart) return { opacity: 0, scale: SNAP_START_SCALE };
+    const elapsed = frame - slotStart;
+    const snapT = Math.min(1, elapsed / SNAP_FRAMES);
+    const eased = 1 - Math.pow(1 - snapT, 3);
+    return { opacity: 1, scale: SNAP_START_SCALE - eased * (SNAP_START_SCALE - 1) };
+  });
+
+  return (
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: BLACK }}>
+      {/* Backdrop: big blurred blob in accent color */}
+      {backdrop && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: `radial-gradient(ellipse 130% 80% at 28% 38%, ${backdrop} 0%, ${backdrop} 18%, rgba(0,0,0,0) 62%)`,
+            filter: "blur(60px)",
+            transform: `scale(${1 + easedProgress * 0.3})`,
+            transformOrigin: "center center",
+            opacity: 1 - easedProgress * 0.6,
+          }}
+        />
+      )}
+      <div
+        style={{
+          position: "absolute", inset: 0,
+          transform: `translateY(${deltaY}px) scale(${scale})`,
+          transformOrigin: "center center",
+        }}
+      >
+        {sources.map((src, i) => (
+          <div
+            key={i}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: i * (panelH + gap),
+              width: WIDTH,
+              height: panelH,
+              overflow: "hidden",
+              opacity: panelState[i].opacity,
+              filter: tints?.[i] || undefined,
+              transform: `scale(${panelState[i].scale})`,
+              transformOrigin: "center center",
+              transition: "none",
+            }}
+          >
+            <Img
+              src={staticFile(src)}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ── Text overlay: newspaper-cutout style, one black box per line ────────────
+// Per-line pop-in via lineFrames (beat-sync). Per-line font sizes via sizes.
+// When a line is smaller than the previous one, extra gap is inserted to
+// visually separate hierarchy (e.g., main text → absender).
+const TextOverlay: React.FC<{
+  text: string;
+  position?: "top" | "center" | "bottom";
+  lineFrames?: number[];
+  sizes?: number[];
+}> = ({ text, position = "center", lineFrames, sizes }) => {
+  const frame = useCurrentFrame();
+
+  const alignItems = position === "top" ? "flex-start" : position === "bottom" ? "flex-end" : "center";
+  const paddingTop = position === "top" ? 260 : 180;
+  const paddingBottom = position === "bottom" ? 420 : 400;
+
+  const lines = text.split("\n");
+  const groupOpacity = lineFrames
+    ? 1
+    : interpolate(frame, [8, 20], [0, 1], { extrapolateRight: "clamp" });
+
   return (
     <div style={{
       position: "absolute", inset: 0,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: "180px 108px 400px", zIndex: 10,
+      display: "flex", alignItems, justifyContent: "center",
+      padding: `${paddingTop}px 80px ${paddingBottom}px`, zIndex: 10,
     }}>
       <div style={{
-        opacity, color: "#ffffff", fontSize: 72, fontWeight: 700,
-        fontFamily: spaceGroteskFamily, lineHeight: 1.2, textAlign: "center",
-        textShadow: "0 4px 40px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.6)",
-        maxWidth: 900, whiteSpace: "pre-wrap",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", opacity: groupOpacity,
       }}>
-        {text}
+        {lines.map((line, i) => {
+          const lineStart = lineFrames?.[i] ?? 0;
+          const lineOpacity = lineFrames
+            ? (frame >= lineStart ? 1 : 0)
+            : 1;
+          const size = sizes?.[i] ?? 72;
+          const prevSize = i > 0 ? (sizes?.[i - 1] ?? 72) : size;
+          // Extra gap when transitioning to a smaller size (hierarchy break)
+          const marginTop = i === 0 ? 0 : (size < prevSize - 8 ? 34 : 8);
+          const padH = Math.round(size * 0.36);
+          const padV1 = Math.round(size * 0.2);
+          const padV2 = Math.round(size * 0.25);
+          return (
+            <span key={i} style={{
+              background: "#000",
+              color: "#fff",
+              padding: `${padV1}px ${padH}px ${padV2}px`,
+              fontSize: size,
+              fontWeight: 700,
+              fontFamily: spaceGroteskFamily,
+              lineHeight: 1.0,
+              letterSpacing: size > 50 ? "-0.01em" : "0.02em",
+              whiteSpace: "nowrap",
+              opacity: lineOpacity,
+              marginTop,
+            }}>
+              {line}
+            </span>
+          );
+        })}
       </div>
     </div>
   );
@@ -356,12 +516,13 @@ export const PhotoFrame: React.FC<{
 }> = ({ image, accentColor = WIAI_YELLOW }) => {
   const duration = image.duration ?? 35;
   const hold = image.hold ?? 0;
-  const progress = useEffectProgress(duration, hold, image.effectDuration);
+  const progress = useEffectProgress(duration, hold, image.effectDuration, image.effectSteps);
   const effects = normalizeEffects(image.effect);
   const mosaicBlock = getMosaicBlockSize(effects, progress);
   const mosaicBlur = getMosaicBlur(effects, mosaicBlock);
   const transform = getDriftTransform(effects, progress);
 
+  const hasStack = Array.isArray(image.stack) && image.stack.length > 0;
   const hasPixelStrips = effects.includes("pixel-strips");
   const hasBlockReveal = effects.includes("block-reveal");
   const hasMosaic = mosaicBlock !== null;
@@ -378,14 +539,58 @@ export const PhotoFrame: React.FC<{
   const beatScale = hasBeat ? getBeatScale(frame) : 1;
   const beatTransform = beatScale !== 1 ? `scale(${beatScale})` : "";
 
+  // Per-image base scale + translate (for cropping / framing)
+  // Linear interpolation — zoom is already in motion at frame 0, continues at
+  // constant velocity, cut interrupts (no ease-in/ease-out).
+  const baseScaleStart = image.imageScale ?? 1;
+  const baseScaleEnd = image.imageScaleEnd ?? baseScaleStart;
+  const baseTranslateYStart = image.imageTranslateY ?? 0;
+  const baseTranslateYEnd = image.imageTranslateYEnd ?? baseTranslateYStart;
+  const tProgress = duration > 0 ? Math.max(0, Math.min(1, frame / duration)) : 0;
+  const curScale = baseScaleStart + (baseScaleEnd - baseScaleStart) * tProgress;
+  const curTranslateY = baseTranslateYStart + (baseTranslateYEnd - baseTranslateYStart) * tProgress;
+  const baseTransform = (curScale !== 1 || curTranslateY !== 0)
+    ? `translateY(${curTranslateY}px) scale(${curScale})`
+    : "";
+  const cleanImgTransform = [baseTransform, transform].filter(Boolean).join(" ");
+
+  // Combined outer transform: base image motion + beat bounce — applied to all
+  // effect paths (including mosaic) so imageScale animates through depixelate.
+  const outerTransform = [beatTransform, cleanImgTransform].filter(Boolean).join(" ");
+
+  // Flash-to-white: ramps UP to pure white at the last frame (peak = duration-1).
+  // When the video loops, the last-frame peak seamlessly hands off to a
+  // flashFromWhite on the first slide (peak = frame 0, fading out).
+  const flashToFrames = image.flashToWhite ?? 0;
+  const flashToLocal = flashToFrames > 0 ? frame - (duration - flashToFrames) : -1;
+  const flashToOpacity = flashToLocal >= 0 && flashToFrames > 1
+    ? Math.min(1, flashToLocal / (flashToFrames - 1))
+    : 0;
+  const flashFromFrames = image.flashFromWhite ?? 0;
+  const flashFromOpacity = flashFromFrames > 1 && frame < flashFromFrames
+    ? Math.max(0, 1 - frame / (flashFromFrames - 1))
+    : 0;
+  const flashOpacity = Math.max(flashToOpacity, flashFromOpacity);
+
   return (
     <div style={{ position: "absolute", inset: 0, background: "#0A0A0A" }}>
       <div style={{
         position: "absolute", inset: 0,
-        transform: beatTransform || undefined,
+        transform: outerTransform || undefined,
         transformOrigin: "center center",
       }}>
-        {hasBlockReveal ? (
+        {hasStack ? (
+          <StackZoom
+            sources={image.stack!}
+            zoomTo={image.zoomTo}
+            progress={progress}
+            revealOrder={image.stackRevealOrder}
+            tints={image.stackTints}
+            backdrop={image.stackBackdrop}
+            panelGap={image.stackPanelGap}
+            holdFrames={hold}
+          />
+        ) : hasBlockReveal ? (
           <BlockReveal src={image.src} progress={progress} />
         ) : hasPixelStrips ? (
           <PixelStrips src={image.src} direction={image.direction ?? "h"} progress={progress} />
@@ -396,7 +601,7 @@ export const PhotoFrame: React.FC<{
         ) : (
           <div style={{
             position: "absolute", inset: 0, overflow: "hidden",
-            filter: blurFilter, transform, transformOrigin: "center center",
+            filter: blurFilter,
           }}>
             <Img
               src={staticFile(image.src)}
@@ -407,7 +612,13 @@ export const PhotoFrame: React.FC<{
       </div>
 
       {hasBeat && <BeatOverlay />}
-      {image.text && <TextOverlay text={image.text} />}
+      {image.text && <TextOverlay text={image.text} position={image.textPosition} lineFrames={image.textLineFrames} sizes={image.textSizes} />}
+      {flashOpacity > 0.01 && (
+        <div style={{
+          position: "absolute", inset: 0, background: "#ffffff",
+          opacity: flashOpacity, zIndex: 30,
+        }} />
+      )}
     </div>
   );
 };

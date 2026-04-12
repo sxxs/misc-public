@@ -7,10 +7,12 @@ import { PhotoFrame } from "../components/PhotoFrame";
 
 const DEFAULT_IMAGE_DURATION = 35;
 
-// ── End Card: last image pixelates → watermark on blurred BG ────────────────
-const EndCard: React.FC<{ text: string; duration: number }> = ({ text, duration }) => {
+// ── End Card: Absender with two lines (main + subtitle) ────────────────────
+const EndCard: React.FC<{ text: string; subtitle: string; duration: number }> = ({ text, subtitle, duration }) => {
   const frame = useCurrentFrame();
-  const textOpacity = interpolate(frame, [20, 35], [0, 1], { extrapolateRight: "clamp" });
+  // Instant pop-in for beat-aligned cut from slide 3
+  const textOpacity = frame >= 0 ? 1 : 0;
+  const subOpacity = frame >= 2 ? 1 : 0;
 
   return (
     <div
@@ -21,20 +23,35 @@ const EndCard: React.FC<{ text: string; duration: number }> = ({ text, duration 
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        flexDirection: "column",
+        gap: 18,
       }}
     >
       <div
         style={{
           opacity: textOpacity,
-          color: "rgba(255,255,255,0.40)",
-          fontSize: 42,
+          color: "rgba(255,255,255,0.72)",
+          fontSize: 56,
           fontFamily: spaceMonoFamily,
-          fontWeight: 400,
-          letterSpacing: "0.06em",
+          fontWeight: 500,
+          letterSpacing: "0.04em",
           textAlign: "center",
         }}
       >
         {text}
+      </div>
+      <div
+        style={{
+          opacity: subOpacity,
+          color: "rgba(255,255,255,0.36)",
+          fontSize: 32,
+          fontFamily: spaceMonoFamily,
+          fontWeight: 400,
+          letterSpacing: "0.08em",
+          textAlign: "center",
+        }}
+      >
+        {subtitle}
       </div>
     </div>
   );
@@ -47,8 +64,10 @@ export const Slideshow: React.FC<{ post: Post }> = ({ post }) => {
 
   const images = config.images;
   const endCard = config.endCard;
-  const endCardText = endCard?.text ?? "echt.bamberg";
+  const endCardText = endCard?.text ?? "@echt.bamberg";
+  const endCardSubtitle = endCard?.subtitle ?? "WIAI · Uni Bamberg";
   const endCardDuration = endCard?.duration ?? 60;
+  const showEndCard = !!endCard;
 
   // Build timeline: accumulate frame offsets for each image
   let frameOffset = 0;
@@ -66,9 +85,11 @@ export const Slideshow: React.FC<{ post: Post }> = ({ post }) => {
   return (
     <>
       {imageSequences}
-      <Sequence from={frameOffset} durationInFrames={endCardDuration}>
-        <EndCard text={endCardText} duration={endCardDuration} />
-      </Sequence>
+      {showEndCard && (
+        <Sequence from={frameOffset} durationInFrames={endCardDuration}>
+          <EndCard text={endCardText} subtitle={endCardSubtitle} duration={endCardDuration} />
+        </Sequence>
+      )}
     </>
   );
 };

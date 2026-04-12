@@ -65,6 +65,27 @@ if (post.type === "billboard") {
   process.exit(0);
 }
 
+// ── Slideshow posts: still frames per image ───────────────────────────
+if (post.type === "slideshow" && post.slideshow) {
+  const imgs = post.slideshow.images || [];
+  const DEF = 35;
+  const offsets = [];
+  let off = 0;
+  for (const img of imgs) {
+    offsets.push({ from: off, dur: img.duration ?? DEF });
+    off += img.duration ?? DEF;
+  }
+  const pick = (i, f) => offsets[i] ? offsets[i].from + Math.floor(offsets[i].dur * f) : off - 5;
+  const n = offsets.length;
+  const s1a = pick(0, 0.4);
+  const s1b = pick(0, 0.85);
+  const s2a = n > 1 ? pick(1, 0.4) : pick(0, 0.9);
+  const s2b = n > 1 ? pick(1, 0.85) : pick(0, 0.95);
+  const s3  = n > 2 ? pick(2, 0.7) : (n > 1 ? pick(1, 0.9) : pick(0, 0.95));
+  process.stdout.write([s1a, s1b, s2a, s2b, s3].join(" "));
+  process.exit(0);
+}
+
 // ── Nachtgedanke posts use nachtgedanke.* for timing ──────────────────
 if (post.nachtgedanke) {
   const nk = post.nachtgedanke;

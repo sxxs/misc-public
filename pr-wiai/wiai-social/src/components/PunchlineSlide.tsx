@@ -164,23 +164,39 @@ export const PunchlineSlide: React.FC<Props> = ({
         {showAbsender && (
           <div style={{
             position: "absolute",
-            bottom: 400,
+            bottom: 460,
             left: 108,
             zIndex: 6,
             pointerEvents: "none",
             opacity: absenderOpacity,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            gap: 0,
           }}>
             <div style={{
               display: "inline-block",
               background: "rgba(10,10,10,0.95)",
-              padding: "8px 18px",
+              padding: "8px 18px 6px",
               color: "rgba(255,255,255,0.80)",
-              fontSize: 30,
+              fontSize: 36,
               fontFamily: spaceMonoFamily,
               fontWeight: 400,
               letterSpacing: "0.06em",
             }}>
-              WIAI · Uni Bamberg · echt.bamberg
+              WIAI · Uni Bamberg
+            </div>
+            <div style={{
+              display: "inline-block",
+              background: "rgba(10,10,10,0.95)",
+              padding: "6px 18px 8px",
+              color: "rgba(255,255,255,0.80)",
+              fontSize: 36,
+              fontFamily: spaceMonoFamily,
+              fontWeight: 400,
+              letterSpacing: "0.06em",
+            }}>
+              @echt.bamberg
             </div>
           </div>
         )}

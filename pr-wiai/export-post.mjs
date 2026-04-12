@@ -67,6 +67,7 @@ const remotionPost = {
 if (post.design) remotionPost.design = post.design;
 if (post.tag === "ad") remotionPost.isAd = true;
 if (post.accentColor) remotionPost.accentColor = post.accentColor;
+if (post.ledPattern) remotionPost.ledPattern = post.ledPattern;
 if (post.ledScroll) remotionPost.ledScroll = post.ledScroll;
 
 // timing (led-wall only)

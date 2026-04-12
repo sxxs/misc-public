@@ -179,7 +179,7 @@ export function computeSlideshowDuration(config: SlideshowConfig): number {
     (sum, img) => sum + (img.duration ?? SLIDESHOW_DEFAULT_IMAGE_DURATION),
     0
   );
-  const endCardDur = config.endCard?.duration ?? 60;
+  const endCardDur = config.endCard ? (config.endCard.duration ?? 60) : 0;
   return imageDur + endCardDur;
 }
 
