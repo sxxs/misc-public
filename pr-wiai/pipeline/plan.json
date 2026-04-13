@@ -5138,8 +5138,8 @@
       "id": "idea-neue-passwort-zu-lang",
       "type": "nahkastchen",
       "design": "terminal",
-      "status": "ready",
-      "json": null,
+      "status": "published",
+      "json": "wiai-social/posts/idea-neue-passwort-zu-lang.json",
       "source": "pipeline/ideen/neue-postideen.md",
       "targetWeek": "2026-KW16",
       "publishedDate": null,
@@ -5149,9 +5149,44 @@
       "topic": "datenschutz",
       "slotIndex": 0,
       "content": {
-        "act1Setup": "Passwort:",
-        "act2": "Ich bin Professor für IT-Sicherheit.\nIch empfehle lange Passwörter.\n\nEin System hat meins abgelehnt.\nZu lang.\n\nSie müssten eine Datenbanktabelle\nerweitern.",
+        "act1Setup": "POV: Ich will\n+mich anmelden.\n\n> Passwort:\n~**************************\n\n|25\n!Fehler:\n+!Zu lang.\n+!Maximum: 23 Zeichen.",
+        "act2": "26 Zeichen.\n\nAntwort (2021):\nWir müssten eine\nDatenbanktabelle\nanpassen.\nMachen wir bald!\n\nStatus (2026):\nDauert noch.",
         "act3": "Ich habe Fragen."
+      },
+      "terminal": {
+        "act1Style": "lineByLine",
+        "lineByLineDelay": 18,
+        "act1Duration": 210,
+        "act3Top": 550,
+        "absenderBottom": 700,
+        "act3Duration": 152
+      },
+      "musicFile": "music/passwort-zu-lang.mp3",
+      "social": {
+        "tiktok": {
+          "caption": "Mein Passwort ist zu sicher für das System. Seit 2021.",
+          "hashtags": "#passwort #itsicherheit #cybersecurity #informatik #digitalisierung #bürokratie"
+        },
+        "youtube": {
+          "title": "Passwort abgelehnt — zu lang. Maximum: 23 Zeichen.",
+          "description": "Ein System lehnt mein Passwort ab. Zu lang. Maximum: 23 Zeichen. Gemeldet 2021. Die müssten eine Datenbanktabelle anpassen. Status: Dauert noch.",
+          "hashtags": "#Shorts #Passwort #ITSicherheit #Cybersecurity #Informatik #Digitalisierung"
+        },
+        "instagram": {
+          "caption": "23 Zeichen. Maximum. Im Jahr 2026. Gemeldet seit 2021. Status: Dauert noch.",
+          "hashtags": "#passwort #itsicherheit #cybersecurity #informatik #datenschutz #digitalisierung #bürokratie #deutschland"
+        }
+      },
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-13"
+        },
+        "youtube": {
+          "video": "2026-04-13"
+        },
+        "instagram": {
+          "video": "2026-04-13"
+        }
       }
     },
     {

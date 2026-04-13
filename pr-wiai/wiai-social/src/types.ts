@@ -109,6 +109,8 @@ export interface TerminalConfig {
   act1Style?: "lineByLine";          // lines pop in sequentially, left-aligned (default: static centered)
   lineByLineDelay?: number;          // frames between lines in lineByLine mode (default: 16)
   act2Style?: "escalate";            // split act2 by \n\n, each paragraph bigger + brighter
+  act3Top?: number;                  // punchline top position in Act3 (default: 280)
+  absenderBottom?: number;           // absender bottom position in Act3 (default: 520)
 }
 
 export type TerminalFlowBlock =

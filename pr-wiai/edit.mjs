@@ -285,7 +285,8 @@ function parseValue(s) {
   if (s === "true") return true;
   if (s === "false") return false;
   if (/^\d+$/.test(s)) return parseInt(s, 10);
-  return s;
+  // Interpret \n and \t as real newlines/tabs (plan.json stores actual newlines)
+  return s.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
 }
 
 function fmt(v) {

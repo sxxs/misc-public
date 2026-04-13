@@ -67,16 +67,17 @@ const remotionPost = {
 if (post.design) remotionPost.design = post.design;
 if (post.tag === "ad") remotionPost.isAd = true;
 if (post.accentColor) remotionPost.accentColor = post.accentColor;
+if (post.musicFile) remotionPost.musicFile = post.musicFile;
 if (post.ledPattern) remotionPost.ledPattern = post.ledPattern;
 if (post.ledScroll) remotionPost.ledScroll = post.ledScroll;
 
 // timing (led-wall only)
 if (post.timing) remotionPost.timing = post.timing;
 
-// terminal config — color only (prompt is now in content.act1Setup)
+// terminal config — merge plan.json terminal fields into Remotion JSON
 if (remotionType === "terminal") {
-  const termColor = post.terminalColor || "green";
-  remotionPost.terminal = { color: termColor };
+  const base = { color: post.terminalColor || "green" };
+  remotionPost.terminal = post.terminal ? { ...base, ...post.terminal } : base;
 }
 
 // Copy content directly — same structure in plan.json and Remotion JSON

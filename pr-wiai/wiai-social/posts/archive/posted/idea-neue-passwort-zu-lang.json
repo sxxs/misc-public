@@ -1,0 +1,20 @@
+{
+  "id": "idea-neue-passwort-zu-lang",
+  "type": "terminal",
+  "design": "terminal",
+  "musicFile": "music/passwort-zu-lang.mp3",
+  "terminal": {
+    "color": "green",
+    "act1Style": "lineByLine",
+    "lineByLineDelay": 18,
+    "act1Duration": 210,
+    "act3Top": 550,
+    "absenderBottom": 700,
+    "act3Duration": 152
+  },
+  "content": {
+    "act1Setup": "POV: Ich will\n+mich anmelden.\n\n> Passwort:\n~**************************\n\n|25\n!Fehler:\n+!Zu lang.\n+!Maximum: 23 Zeichen.",
+    "act2": "26 Zeichen.\n\nAntwort (2021):\nWir müssten eine\nDatenbanktabelle\nanpassen.\nMachen wir bald!\n\nStatus (2026):\nDauert noch.",
+    "act3": "Ich habe Fragen."
+  }
+}

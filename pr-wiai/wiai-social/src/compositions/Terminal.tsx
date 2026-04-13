@@ -87,28 +87,68 @@ const PdfFormFlash: React.FC<{ frame: number; color: string }> = ({ frame, color
 const useSlowCursor = (frame: number) => frame % 30 < 15;
 
 // ── Act1: Line-by-line mode — lines pop in sequentially, left-aligned ──────
+// Supports pause markers: "|" pauses for lineByLineDelay frames,
+// "|30" pauses for exactly 30 frames. Use to control reveal timing.
+// Lines starting with "+" appear at the same time as the previous line (grouping).
+// Lines starting with "~" type out character by character (2 frames/char).
+const TYPING_FRAMES_PER_CHAR = 2;
+
 const TerminalAct1LineByLine: React.FC<{ post: Post; color: string }> = ({ post, color }) => {
   const frame = useCurrentFrame();
   const text = post.content.act1Setup ?? "$";
   const delay = post.terminal?.lineByLineDelay ?? 16;
 
-  // Split by \n, collapse empty-string groups into visual spacing
+  // Split by \n, build entries with cumulative timing
   const rawLines = text.split("\n");
 
-  // Build line entries: { text, isBlank, lineIndex (counting only non-blank) }
-  let contentIndex = 0;
+  let cumFrame = 0;
+  let lastAppearAt = 0;
   const entries = rawLines.map((line) => {
-    const isBlank = line.trim() === "";
-    const idx = isBlank ? -1 : contentIndex++;
-    return { text: line, isBlank, idx };
+    const trimmed = line.trim();
+    const pauseMatch = trimmed.match(/^\|(\d+)?$/);
+
+    if (pauseMatch) {
+      // Pause marker: |30 = 30 frames, | = default delay
+      const pauseDur = pauseMatch[1] ? parseInt(pauseMatch[1], 10) : delay;
+      cumFrame += pauseDur;
+      return { text: "", isBlank: false, isPause: true, isTyped: false, appearAt: -1 };
+    }
+
+    const isBlank = trimmed === "";
+    if (isBlank) {
+      return { text: line, isBlank: true, isPause: false, isTyped: false, appearAt: -1 };
+    }
+
+    // + prefix: appear at same time as previous content line (grouping)
+    const isGrouped = trimmed.startsWith("+");
+    if (isGrouped) {
+      const gText = line.replace(/^\+/, "");
+      return { text: gText, isBlank: false, isPause: false, isTyped: false, appearAt: lastAppearAt };
+    }
+
+    // ~ prefix: type out character by character
+    const isTyped = trimmed.startsWith("~");
+    if (isTyped) {
+      const tText = line.replace(/^~/, "");
+      const typingDur = tText.length * TYPING_FRAMES_PER_CHAR;
+      const appearAt = cumFrame;
+      lastAppearAt = appearAt;
+      cumFrame += typingDur;
+      return { text: tText, isBlank: false, isPause: false, isTyped: true, appearAt };
+    }
+
+    const appearAt = cumFrame;
+    lastAppearAt = appearAt;
+    cumFrame += delay;
+    return { text: line, isBlank: false, isPause: false, isTyped: false, appearAt };
   });
 
-  // Each content line appears at: idx * delay frames
   const cursorOn = useSlowCursor(frame);
-  // Find the latest visible content line for cursor placement
+  // Find the last visible content entry (by array index) for cursor placement
   let latestVisibleIdx = -1;
-  for (const e of entries) {
-    if (!e.isBlank && frame >= e.idx * delay) latestVisibleIdx = e.idx;
+  for (let idx = 0; idx < entries.length; idx++) {
+    const e = entries[idx];
+    if (!e.isBlank && !e.isPause && frame >= e.appearAt) latestVisibleIdx = idx;
   }
 
   return (
@@ -124,22 +164,30 @@ const TerminalAct1LineByLine: React.FC<{ post: Post; color: string }> = ({ post,
         }}
       >
         {entries.map((entry, i) => {
+          if (entry.isPause) return null;
+
           if (entry.isBlank) {
             // Blank line = spacer, visible only when next content line is visible
-            const nextContent = entries.find((e, j) => j > i && !e.isBlank);
-            if (nextContent && frame < nextContent.idx * delay) return null;
+            const nextContent = entries.find((e, j) => j > i && !e.isBlank && !e.isPause);
+            if (nextContent && frame < nextContent.appearAt) return null;
             return <div key={i} style={{ height: 46 }} />;
           }
 
           // Not yet visible
-          if (frame < entry.idx * delay) return null;
+          if (frame < entry.appearAt) return null;
 
-          // Pop-in: instant appearance with 2-frame brightness flash
-          const localFrame = frame - entry.idx * delay;
-          const flash = interpolate(localFrame, [0, 2, 6], [1.3, 1.1, 1], { extrapolateRight: "clamp" });
-          const isPrompt = entry.idx === 0 && entry.text.startsWith(">");
+          const localFrame = frame - entry.appearAt;
+          const isPrompt = !entry.isTyped && entry.appearAt === 0 && entry.text.startsWith(">");
           const isAlert = entry.text.startsWith("!");
-          const displayText = isAlert ? entry.text.slice(1) : entry.text;
+          const rawText = isAlert ? entry.text.slice(1) : entry.text;
+
+          // Typed lines: reveal characters progressively
+          const displayText = entry.isTyped
+            ? rawText.substring(0, Math.min(rawText.length, Math.floor(localFrame / TYPING_FRAMES_PER_CHAR)))
+            : rawText;
+
+          // Pop-in flash (only for non-typed lines)
+          const flash = entry.isTyped ? 1 : interpolate(localFrame, [0, 2, 6], [1.3, 1.1, 1], { extrapolateRight: "clamp" });
 
           // Alert lines: red, pulsing glow
           const alertColor = "#EF4444";
@@ -166,7 +214,7 @@ const TerminalAct1LineByLine: React.FC<{ post: Post; color: string }> = ({ post,
               }}
             >
               {displayText}
-              {entry.idx === latestVisibleIdx && (
+              {i === latestVisibleIdx && (
                 <span style={{ color, opacity: cursorOn ? 1 : 0 }}>{"\u2588"}</span>
               )}
             </div>
@@ -484,6 +532,8 @@ const TerminalAsideTyped: React.FC<{ text: string; color: string; frame: number;
 // ── Act3: Punchline — instant reveal, cursor stops, absender fades in ───────
 const TerminalAct3: React.FC<{ post: Post; color: string; duration: number }> = ({ post, color, duration }) => {
   const frame = useCurrentFrame();
+  const act3Top = post.terminal?.act3Top ?? 280;
+  const absenderBottom = post.terminal?.absenderBottom ?? 520;
   const textFadeIn = interpolate(frame, [0, 6], [0, 1], { extrapolateRight: "clamp" });
   // Slow cursor, stops solid 15f before end
   const cursorOn = frame < duration - 15 ? useSlowCursor(frame) : true;
@@ -513,7 +563,7 @@ const TerminalAct3: React.FC<{ post: Post; color: string; duration: number }> = 
                 position: "absolute",
                 left: 108,
                 right: 108,
-                top: 280,
+                top: act3Top,
                 opacity: textFadeIn,
                 fontFamily: spaceMonoFamily,
                 fontSize: 62,
@@ -535,7 +585,7 @@ const TerminalAct3: React.FC<{ post: Post; color: string; duration: number }> = 
                   position: "absolute",
                   left: 108,
                   right: 108,
-                  top: 620,
+                  top: act3Top + 340,
                   opacity: part2Opacity,
                   fontFamily: spaceMonoFamily,
                   fontSize: 62,
@@ -562,7 +612,7 @@ const TerminalAct3: React.FC<{ post: Post; color: string; duration: number }> = 
           position: "absolute",
           left: 108,
           right: 108,
-          top: 980,
+          top: act3Top + 700,
           opacity: interpolate(frame, [80, 95], [0, 0.7], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
           fontFamily: spaceMonoFamily,
           fontSize: 52,
@@ -576,10 +626,10 @@ const TerminalAct3: React.FC<{ post: Post; color: string; duration: number }> = 
         </div>
       )}
 
-      {/* Absender — two lines, larger font, higher position */}
+      {/* Absender — two lines, larger font */}
       <div style={{
         position: "absolute",
-        bottom: 520,
+        bottom: absenderBottom,
         left: 108,
         opacity: absenderOpacity * 0.6,
         fontFamily: spaceMonoFamily,
