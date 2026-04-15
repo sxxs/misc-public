@@ -69,6 +69,7 @@ export type PostType =
 //    aside       → button
 export interface PostContent {
   act1Setup?: string;   // First element in Act1 (setup/quote/prompt/time/label)
+  act1SetupReveal?: string; // Optional second setup-line (same 72px box style, delayed fade-in)
   act1Reveal?: string;  // Second element in Act1 (reaction/reveal/bigtext) — optional
   act2: string;         // Act2 body
   act3: string;         // Act3 punchline
@@ -88,6 +89,7 @@ export interface ContrarianTiming {
   framesPerLine?: number;          // typewriter speed in Act2 (default: 26; lower = faster reveals)
   act1RevealFrame?: number;        // frame when act1Reveal appears (default: 75)
   act1SetupFrame?: number;         // frame when act1Setup text appears (default: 0 = immediate)
+  act1SetupRevealFrame?: number;   // frame when act1SetupReveal appears (default: 45)
   act2TypewriterStart?: number;    // local frame offset before first Act2 line appears (default: 0)
   ledFadeFromBright?: number;      // Act1: LED wall starts fully bright, fades to normal over N frames
   act3Track?: string;              // through-scratch only: key into ACT3_ALT_TRACKS, omit for default track.mp3
@@ -136,6 +138,7 @@ export interface BillboardConfig {
   beats?: BillboardBeat[];       // Explicit Act2 beat sequence — overrides \n\n splitting
   wiggleFrames?: number[];       // Act3-local frames: punchline text wiggles on each hit
   hookFlash?: "ikea-manual";     // brief visual flash in Act1 before text appears
+  act1Flicker?: boolean;         // subtle fluorescent-tube flicker on Act1 text (power fluctuations)
 }
 
 export interface BillboardCaption {
@@ -220,6 +223,7 @@ export interface Post {
   music?: false;         // opt-out of BackgroundMusic (undefined = music on)
   musicFile?: string;    // custom track (default: music/track.mp3)
   sfxFile?: string;      // additional SFX audio layer (plays full duration, same fade-out)
+  musicFadeOut?: number; // fadeout frames at video end (default: 3)
   timing?: ContrarianTiming; // led-wall only
   terminal?: TerminalConfig; // terminal-only (color, mode, blocks — NOT prompt)
   billboard?: BillboardConfig; // billboard captions mode

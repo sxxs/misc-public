@@ -168,6 +168,15 @@ function mainsHum(frame: number): number {
   return 1 - Math.abs(Math.sin(frame * 0.35)) * 0.04; // 0.96–1.0 range, slower cycle
 }
 
+// ── Power-flicker: rare brief brightness dips, like a lamp with voltage drops ─
+function powerFlicker(frame: number): number {
+  const n = Math.sin(frame * 0.43) * Math.sin(frame * 0.17) * Math.sin(frame * 1.21);
+  if (n < -0.80) return 0.42;
+  if (n < -0.68) return 0.72;
+  if (n > 0.86)  return 0.88; // ghost dip
+  return 1;
+}
+
 // Neon glow shadow: white core + cool tint bloom
 function neonGlow(intensity: number): string {
   if (intensity <= 0) return "none";
@@ -206,12 +215,13 @@ const BillboardAct1: React.FC<{ post: Post; duration: number }> = ({ post, durat
   const textDelay = 0; // text always first, diagram follows
   const fadeIn = interpolate(frame, [textDelay, textDelay + 20], [0, 1], { extrapolateRight: "clamp" });
   const hum = mainsHum(frame);
-  const opacity = fadeIn * hum;
+  const flicker = post.billboard?.act1Flicker ? powerFlicker(frame) : 1;
+  const opacity = fadeIn * hum * flicker;
 
   // Neon tube-on for reveal
   const tubeOn = neonTubeOn(frame, revealAt);
   const revealBase = interpolate(frame, [revealAt, revealAt + 16], [0, 1], { extrapolateRight: "clamp" });
-  const revealOpacity = (revealBase > 0 ? tubeOn : 0) * hum;
+  const revealOpacity = (revealBase > 0 ? tubeOn : 0) * hum * flicker;
   const glowIntensity = revealBase > 0 ? tubeOn * interpolate(frame, [revealAt, revealAt + 20], [1, 0.15], { extrapolateRight: "clamp" }) : 0;
 
   // Mechanical nudges: quick upward snaps at content events — "Zurechtrücken"

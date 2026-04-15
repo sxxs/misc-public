@@ -636,7 +636,7 @@
       "id": "2026-passt-nicht",
       "type": "contrarian",
       "design": "pixel-wall",
-      "status": "ready",
+      "status": "published",
       "json": "wiai-social/posts/2026-passt-nicht.json",
       "source": null,
       "targetWeek": "2026-KW16",
@@ -648,9 +648,48 @@
       "slotIndex": 1,
       "content": {
         "act1Setup": "Informatik passt nicht zu dir wenn …",
-        "act2": "… du immer sofort die richtige Antwort willst.\n\nInformatik ist: 90% der Zeit läuft es nicht.\n1% der Zeit läufts. Der Rest ist Lernen.",
+        "act2": "Informatik ist: 90% der Zeit läuft es nicht.\n\n1% der Zeit läufts. Der Rest ist Lernen.",
         "act3": "Dieses eine Prozent ist es wert.",
-        "aside": "Die anderen 99% auch."
+        "aside": "Die anderen 99% auch.",
+        "act1SetupReveal": "… du immer sofort die richtige Antwort willst."
+      },
+      "timing": {
+        "act1Duration": 160,
+        "act2Duration": 140,
+        "variant": "through",
+        "totalDuration": 408,
+        "subtextStartFrame": 25,
+        "absenderStartFrame": 45
+      },
+      "accentColor": "#38BDF8",
+      "musicFile": "music/es-droplets.mp3",
+      "social": {
+        "tiktok": {
+          "caption": "Die ehrlichste Info über ein Informatikstudium, die wir dir geben können.",
+          "hashtags": "#informatikstudium #informatik #studienwahl #wiai #unibamberg #coding #debugging #studium"
+        },
+        "youtube": {
+          "title": "Informatik passt nicht zu dir, wenn…",
+          "description": "Informatik ist nicht, was in der Schule darüber erzählt wird. Es geht nicht um schnelle richtige Antworten. Es geht darum, mit Fehlermeldungen zu leben — und irgendwann zu mögen, dass sie da sind. Für alle, die zweifeln, ob sie 'passen'.",
+          "hashtags": "#Shorts #Informatikstudium #Studienwahl #WIAI #UniBamberg #Informatik"
+        },
+        "instagram": {
+          "caption": "Die ehrlichste Info über ein Informatikstudium, die wir dir geben können: Es läuft selten sofort. Fehlermeldungen sind Alltag. Wenn aber etwas läuft — dieses eine Prozent — ist alles Vorherige plötzlich Weg, nicht Hindernis.\n\nFalls du zweifelst, ob Informatik zu dir passt: Es ist nicht die Intelligenz, die entscheidet. Es ist, ob du das Suchen magst.",
+          "hashtags": "#informatikstudium #informatik #studienwahl #unibamberg #wiai #coding #debugging #studentlife #bamberg #studium"
+        }
+      },
+      "posted": {
+        "tiktok": {
+          "carousel": "2026-04-15",
+          "video": "2026-04-15"
+        },
+        "youtube": {
+          "video": "2026-04-15"
+        },
+        "instagram": {
+          "carousel": "2026-04-15",
+          "video": "2026-04-15"
+        }
       }
     },
     {
@@ -756,20 +795,59 @@
       "id": "2026-vorlesung-netflix",
       "type": "aphorismus",
       "design": "billboard",
-      "status": "draft",
+      "status": "published",
       "json": "wiai-social/posts/2026-vorlesung-netflix.json",
       "source": null,
-      "targetWeek": null,
+      "targetWeek": "2026-KW16",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
       "tag": null,
       "topic": "studium",
       "content": {
-        "act1Setup": "Montag, 8:15. Hörsaal. 300 Leute. PowerPoint. Folie 47 von 93.",
-        "act2": "Das ist wie Netflix schauen nur jemand anderes hält die Fernbedienung und du darfst nicht aufs Klo.",
-        "act3": "In einer meiner Vorlesungen entscheidest du als Cybersecurity-Analystin, ob du den Server patchen oder das Lösegeld zahlen willst.",
-        "aside": "Server patchen. Immer."
+        "act2": "Ein Unternehmen wird erpresst.\n\nPatchen oder zahlen – was machst du?",
+        "act3": "Das ist keine Netflix-Serie.\n\nDas ist eine Vorlesung.",
+        "aside": "Okay, nicht jede.",
+        "act1Reveal": "Du bist Cybersecurity-Analystin."
+      },
+      "slotIndex": 2,
+      "billboard": {
+        "act1Duration": 80,
+        "act2Duration": 88,
+        "beats": "[{\"text\":\"Ein Unternehmen wird erpresst.\",\"at\":0},{\"text\":\"Patchen oder zahlen – was machst du?\",\"at\":30}]",
+        "act3Duration": 167,
+        "act1Flicker": true
+      },
+      "musicFile": "music/es-dreams.mp3",
+      "sfxFile": "music/vorlesung-netflix-sfx.mp3",
+      "musicFadeOut": 2,
+      "social": {
+        "tiktok": {
+          "caption": "Du bist Cybersecurity-Analystin. Ein Unternehmen wird erpresst. Was machst du?",
+          "hashtags": "#cybersecurity #informatikstudium #informatik #wiai #unibamberg #ransomware #studienwahl"
+        },
+        "youtube": {
+          "title": "Cybersecurity-Vorlesung oder Netflix-Serie?",
+          "description": "Was wäre, wenn in einer Vorlesung nicht 93 Folien laufen, sondern du als Cybersecurity-Analystin entscheidest, ob ein Unternehmen zahlt oder patcht? Vorlesungen verändern sich. Nicht überall. Aber an manchen Stellen.",
+          "hashtags": "#Shorts #Cybersecurity #Informatikstudium #WIAI #UniBamberg #Studienwahl"
+        },
+        "instagram": {
+          "caption": "Du bist Cybersecurity-Analystin. Ein Unternehmen wird erpresst. Patchen oder zahlen — was machst du?\n\nSolche Szenen sind heute Vorlesung. Nicht jede. Aber an ein paar Orten wird Informatik so gemacht: nicht mehr 300 Leute, PowerPoint, Folie 47 — sondern eine Entscheidung, die du treffen musst.",
+          "hashtags": "#cybersecurity #informatikstudium #studienwahl #wiai #unibamberg #bamberg #studentlife #ransomware #infosec #studium"
+        }
+      },
+      "posted": {
+        "tiktok": {
+          "carousel": "2026-04-15",
+          "video": "2026-04-15"
+        },
+        "youtube": {
+          "video": "2026-04-15"
+        },
+        "instagram": {
+          "carousel": "2026-04-15",
+          "video": "2026-04-15"
+        }
       }
     },
     {
@@ -4765,12 +4843,10 @@
       "status": "ready",
       "json": null,
       "source": "pipeline/ideen/neue-postideen.md",
-      "targetWeek": "2026-KW16",
       "publishedDate": null,
       "platforms": {},
       "notes": "Original before rewrite:\nS1: Es ist 2026.\nS1 smallText: Die meistgesuchte Frage unter\\nStudierenden:\nS2: Wie beginnt man in Word die\\nSeitenzahlen ab Seite 3?\nS3: Das ist kein Studierenden-Problem.\\nDas ist ein Software-Problem.\\n\\nUnd trotzdem steht es in\\nkeinem Curriculum.",
       "tag": "stark",
-      "slotIndex": 2,
       "topic": "studium",
       "content": {
         "act1Reveal": "Die meistgesuchte Frage im Studium",

@@ -130,7 +130,9 @@ const ContrarianMusicThroughScratch: React.FC<{
 const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Duration }) => {
   const frame = useCurrentFrame();
   const accent = post.accentColor ?? WIAI_YELLOW;
-  const { act1Setup, act1Reveal, textAlign } = post.content;
+  const { act1Setup, act1SetupReveal, act1Reveal, textAlign } = post.content;
+  const setupRevealAt = post.timing?.act1SetupRevealFrame ?? 45;
+  const setupRevealOpacity = interpolate(frame, [setupRevealAt, setupRevealAt + 12], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
   // Quote snaps in with brief glitch, not a fade
   const hasScroll = !!post.ledScroll;
@@ -179,6 +181,31 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
         {act1Setup && (
           <div style={{ opacity: quoteOpacity, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 0, marginLeft: -26 }}>
             {act1Setup.split("\n").map((line, i) => (
+              <div
+                key={i}
+                style={{
+                  background: "rgba(10,10,10,0.85)",
+                  padding: "12px 26px 14px",
+                  color: "rgba(255,255,255,0.90)",
+                  fontSize: 72,
+                  fontWeight: 700,
+                  fontFamily: spaceGroteskFamily,
+                  lineHeight: 1.2,
+                  width: "fit-content",
+                  maxWidth: 700,
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                {line}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* act1SetupReveal — second setup-style line, delayed fade-in */}
+        {act1SetupReveal && (
+          <div style={{ opacity: setupRevealOpacity, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 0, marginLeft: -26 }}>
+            {act1SetupReveal.split("\n").map((line, i) => (
               <div
                 key={i}
                 style={{

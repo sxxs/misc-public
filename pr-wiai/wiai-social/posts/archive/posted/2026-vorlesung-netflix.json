@@ -1,0 +1,24 @@
+{
+  "id": "2026-vorlesung-netflix",
+  "type": "billboard",
+  "design": "billboard",
+  "musicFile": "music/es-dreams.mp3",
+  "sfxFile": "music/vorlesung-netflix-sfx.mp3",
+  "musicFadeOut": 2,
+  "billboard": {
+    "act1Duration": 80,
+    "act2Duration": 88,
+    "act3Duration": 167,
+    "act1Flicker": true,
+    "beats": [
+      { "text": "Ein Unternehmen wird erpresst.", "at": 0 },
+      { "text": "Patchen oder zahlen – was machst du?", "at": 30 }
+    ]
+  },
+  "content": {
+    "act1Reveal": "Du bist Cybersecurity-Analystin.",
+    "act2": "Ein Unternehmen wird erpresst.\n\nPatchen oder zahlen – was machst du?",
+    "act3": "Das ist keine Netflix-Serie.\n\nDas ist eine Vorlesung.",
+    "aside": "Okay, nicht jede."
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "2026-passt-nicht",
+  "type": "led-wall",
+  "design": "pixel-wall",
+  "accentColor": "#38BDF8",
+  "musicFile": "music/es-droplets.mp3",
+  "timing": {
+    "act1Duration": 160,
+    "act2Duration": 140,
+    "variant": "through",
+    "totalDuration": 408,
+    "subtextStartFrame": 25,
+    "absenderStartFrame": 45
+  },
+  "content": {
+    "act1Setup": "Informatik passt nicht zu dir wenn …",
+    "act1SetupReveal": "… du immer sofort die richtige Antwort willst.",
+    "act2": "Informatik ist: 90% der Zeit läuft es nicht.\n\n1% der Zeit läufts. Der Rest ist Lernen.",
+    "act3": "Dieses eine Prozent ist es wert.",
+    "aside": "Die anderen 99% auch."
+  }
+}
