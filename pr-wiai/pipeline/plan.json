@@ -152,21 +152,48 @@
       "id": "2026-ehrliche-apps",
       "type": "stimmt-eigentlich",
       "design": "pixel-wall",
-      "status": "ready",
+      "status": "published",
       "json": "wiai-social/posts/2026-ehrliche-apps.json",
       "source": null,
-      "targetWeek": null,
+      "targetWeek": "2026-KW16",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
       "tag": null,
-      "slotIndex": null,
+      "slotIndex": 3,
       "topic": "social-media",
       "content": {
         "act1Setup": "Was wäre wenn jede App ehrlich wäre?",
-        "act2": "Instagram: 'Wir zeigen dir Dinge die dich süchtig machen.' TikTok: 'Wir wissen nach 3 Videos was du willst.' Google: 'Die ersten 3 Ergebnisse sind Werbung.'",
-        "act3": "Klingt dystopisch. Ist aber einfach nur der Status quo.",
-        "aside": "Digital Literacy ist kein Schulfach. Sollte es sein."
+        "act2": "Instagram:\nmacht süchtig.\n\nTikTok:\ndurchschaut dich.\n\nGoogle:\nverkauft Werbung.",
+        "act3": "Wenn es Spaß macht,\nhat es funktioniert."
+      },
+      "posted": {
+        "tiktok": {
+          "carousel": "2026-04-16",
+          "video": "2026-04-16"
+        },
+        "youtube": {
+          "video": "2026-04-16"
+        },
+        "instagram": {
+          "carousel": "2026-04-16",
+          "video": "2026-04-16"
+        }
+      },
+      "social": {
+        "tiktok": {
+          "caption": "Spaß ist das Werkzeug. Nicht der Nebeneffekt.",
+          "hashtags": "#socialmedia #medienkompetenz #algorithmen #digitalliteracy #tracking #datenschutz #wiai #unibamberg #informatik"
+        },
+        "youtube": {
+          "title": "Was wäre, wenn jede App ehrlich wäre?",
+          "description": "Instagram, TikTok, Google — die ehrlichen Versionen ihrer Geschäftsmodelle. Das eigentliche Thema ist nicht das Modell. Das eigentliche Thema ist, warum wir es in Kauf nehmen.",
+          "hashtags": "#Shorts #SocialMedia #Medienkompetenz #Algorithmen #Datenschutz #DigitalLiteracy #WIAI #UniBamberg"
+        },
+        "instagram": {
+          "caption": "Apps sind nicht unfair. Sie sind nur nicht ehrlich mit dir.\n\nInstagram: Du sollst nicht weggehen.\nTikTok: Drei Videos reichen, um dich einzuordnen.\nGoogle: Erste Treffer sind verkauft.\n\nDas sind keine Verschwörungen — das sind Produktentscheidungen.\n\nDer Haken: Wir nehmen's in Kauf, weil es Spaß macht.\nWenn es Spaß macht, hat's funktioniert.",
+          "hashtags": "#socialmedia #medienkompetenz #digitalliteracy #algorithmen #datenschutz #tracking #informatikstudium #wiai #unibamberg #bamberg #informatik #studium"
+        }
       }
     },
     {
@@ -403,12 +430,10 @@
       "status": "ready",
       "json": "wiai-social/posts/2026-intro-homemade.json",
       "source": null,
-      "targetWeek": "2026-KW16",
       "publishedDate": null,
       "platforms": {},
       "notes": "Original before rewrite:\nS1 bigText: Haben\\nandere\\nUnis.\nS1 smallText: Redaktionsplan, Agentur, Content-Strategie.\nS2: Was wir haben:\\nEinen Dekan mit Handy und dem Gefühl, dass diese Fakultät mehr Sichtbarkeit verdient.\nS3: Made in Bamberg.\\nSince … äh, heute.\nButton: Folgt uns.\\n\\nFür Takes, die niemand bestellt hat.",
       "tag": null,
-      "slotIndex": 3,
       "topic": "meta",
       "content": {
         "act1Setup": "Das hier ist keine Uni-Kampagne.",

@@ -1,0 +1,19 @@
+{
+  "id": "2026-ehrliche-apps",
+  "type": "led-wall",
+  "design": "pixel-wall",
+  "ledPattern": "eye",
+  "musicFile": "music/es-surreal-dreem.mp3",
+  "timing": {
+    "variant": "through",
+    "totalDuration": 374,
+    "ledFadeFromBright": 20,
+    "framesPerLine": 10,
+    "act2Duration": 155
+  },
+  "content": {
+    "act1Setup": "Was wäre wenn jede App ehrlich wäre?",
+    "act2": "Instagram:\nmacht süchtig.\n\nTikTok:\ndurchschaut dich.\n\nGoogle:\nverkauft Werbung.",
+    "act3": "Wenn es Spaß macht,\nhat es funktioniert."
+  }
+}

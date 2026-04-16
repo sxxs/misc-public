@@ -71,11 +71,12 @@ function makeFrame(state: "open" | "half" | "closed"): boolean[][] {
   return grid;
 }
 
-// Blink cycle: open × 12 frames, half × 1, closed × 1, half × 1
-// At fps=4: 12 open = 3s, blink = 0.75s
+// Blink cycle: open × 6 frames, half × 1, closed × 1, half × 1
+// At fps=4: 6 open = 1.5s, blink = 0.75s, total cycle = 2.25s
+// Fits inside a 100-frame Act1 (~2.67s visible) with one visible blink.
 export const eyePattern: LedPattern = {
   frames: [
-    ...Array(12).fill(null).map(() => makeFrame("open")),
+    ...Array(6).fill(null).map(() => makeFrame("open")),
     makeFrame("half"),
     makeFrame("closed"),
     makeFrame("half"),
