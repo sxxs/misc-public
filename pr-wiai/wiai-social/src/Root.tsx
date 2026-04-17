@@ -18,7 +18,6 @@ import samplePost from "../posts/archive/prelaunch/2026-mathe3.json";
 
 // ── Active post imports (auto-managed by sync-root.mjs) ─────────────────────
 // @sync-root:imports-start
-import post_2026_ehrliche_apps from "../posts/2026-ehrliche-apps.json";
 // @sync-root:imports-end
 
 // ── Duration helpers ──────────────────────────────────────────────────────────
@@ -90,7 +89,6 @@ export const Root: React.FC = () => (
 
     {/* ── Active posts (auto-managed by sync-root.mjs) ─────────────── */}
     {/* @sync-root:compositions-start */}
-    {cp("WiaiPost-2026-ehrliche-apps", post_2026_ehrliche_apps as unknown as Post)}
     {/* @sync-root:compositions-end */}
   </>
 );
