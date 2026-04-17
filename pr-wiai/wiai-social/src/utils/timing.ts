@@ -198,6 +198,14 @@ export function computeNachtgedankeDuration(config: NachtgedankeConfig): number 
   return blocksEnd + 5 + (config.punchlineDuration ?? 95);
 }
 
+// ── Terminal-Doku duration ──────────────────────────────────────────────────
+import type { DokuConfig } from "../types";
+
+export function computeTerminalDokuDuration(doku: DokuConfig): number {
+  if (doku.totalDuration) return doku.totalDuration;
+  return doku.scenes.reduce((sum, s) => sum + s.durationFrames, 0);
+}
+
 // ── Billboard duration ──────────────────────────────────────────────────────
 export const BILLBOARD_ACT1_DURATION = 120;
 export const BILLBOARD_ACT3_DURATION = 160;

@@ -1613,7 +1613,7 @@
       "status": "draft",
       "json": null,
       "source": "pipeline/entwuerfe/ertappt.md#Post-39-—-Variante-E",
-      "targetWeek": "2026-KW17",
+      "targetWeek": "2026-KW18",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -8756,6 +8756,50 @@
       "format": "both",
       "content": {
         "act1Reveal": "250 Bildschirme.\\nAlle zeigen dasselbe."
+      }
+    },
+    {
+      "id": "2026-ariane-5-int16",
+      "type": "terminal-doku",
+      "design": "terminal-doku",
+      "status": "published",
+      "json": "wiai-social/posts/2026-ariane-5-int16.json",
+      "source": null,
+      "targetWeek": "2026-KW17",
+      "publishedDate": null,
+      "platforms": {},
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-17"
+        },
+        "youtube": {
+          "video": "2026-04-17"
+        },
+        "instagram": {
+          "video": "2026-04-17"
+        }
+      },
+      "notes": "Pilotfolge Doku-Format. Int16-Overflow Ariane 5, 27s, 9 Szenen. JSON in posts/, Audio Phase 2 offen.",
+      "tag": null,
+      "tagComment": null,
+      "slotIndex": 4,
+      "topic": "tech",
+      "format": "both",
+      "content": {},
+      "social": {
+        "tiktok": {
+          "caption": "37 Sekunden nach Zündung. Rakete weg. Wegen einer Zahl.",
+          "hashtags": "#softwareentwicklung #informatik #ariane5 #programmierung #techfail #raumfahrt #coding"
+        },
+        "youtube": {
+          "title": "Eine Zahl. Eine Rakete. Ein Softwarefehler.",
+          "description": "1996. Ariane 5, Erstflug. 37 Sekunden nach der Zündung zerstört sich die Rakete selbst. Ursache: Ein Softwaremodul, das jahrelang fehlerfrei lief — auf einer anderen Rakete. Der INT16-Overflow, der 500 Millionen Dollar vernichtete.",
+          "hashtags": "#Shorts #Informatik #Softwarefehler #Raumfahrt #Ariane5 #Programmierung #WIAI #UniBamberg"
+        },
+        "instagram": {
+          "caption": "1996. Ariane 5. Erstflug.\n\n37 Sekunden nach der Zündung zerstört sich die Rakete selbst.\n\nUrsache: Ein Softwaremodul aus dem Vorgängermodell — unverändert übernommen.\n\nBei Ariane 4 passte ein Messwert ins INT16-Format.\nBei Ariane 5 nicht. Die Rakete fliegt schneller.\nDie Zahl läuft über. Das Steuerungssystem stürzt ab.\nDie Rakete auch.\n\nDer Code lief jahrelang fehlerfrei.\nFür eine andere Rakete.",
+          "hashtags": "#softwareentwicklung #informatik #ariane5 #softwarefehler #raumfahrt #programmierung #techfail #coding #wiai #unibamberg #studium #informatikstudium"
+        }
       }
     }
   ]

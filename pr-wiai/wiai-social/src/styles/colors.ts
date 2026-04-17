@@ -13,3 +13,4 @@ export const GLITCH_CYAN = "#00E5FF";
 
 export const TERMINAL_GREEN = "#33FF33";
 export const TERMINAL_AMBER = "#FFB000";
+export const TERMINAL_RED   = "#FF3333"; // doku alert / overflow state

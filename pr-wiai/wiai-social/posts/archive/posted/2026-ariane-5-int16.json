@@ -1,0 +1,129 @@
+{
+  "id": "2026-ariane-5-int16",
+  "type": "terminal-doku",
+  "design": "terminal-doku",
+  "doku": {
+    "flickerBetweenScenes": true,
+    "narrationFile": "media/ariane-5-narration.wav",
+    "musicFile": "music/ariane-5-drone.mp3",
+    "wordCaptions": [
+      { "frame":   0, "text": "30 Sekunden" },
+      { "frame":  31, "text": "nach dem Start." },
+      { "frame":  65, "text": "Rakete stürzt ab." },
+      { "frame": 122, "text": "Wegen einer Zahl," },
+      { "frame": 150, "text": "die nicht mehr passte." },
+      { "frame": 211, "text": "1996." },
+      { "frame": 268, "text": "Ariane 5 hebt ab." },
+      { "frame": 335, "text": "Ein Softwaremodul" },
+      { "frame": 363, "text": "wurde unverändert" },
+      { "frame": 385, "text": "aus dem Vorgängermodell" },
+      { "frame": 413, "text": "übernommen." },
+      { "frame": 458, "text": "Bei Ariane 4 passte" },
+      { "frame": 491, "text": "ein bestimmter Messwert" },
+      { "frame": 517, "text": "ins vorgesehene Format." },
+      { "frame": 575, "text": "Ariane 5 fliegt schneller." },
+      { "frame": 643, "text": "Die Zahl passt nicht mehr." },
+      { "frame": 701, "text": "Das Modul stürzt ab." },
+      { "frame": 758, "text": "Die Rakete auch." },
+      { "frame": 804, "text": "Der Code lief" },
+      { "frame": 838, "text": "jahrelang fehlerfrei." },
+      { "frame": 893, "text": "Für eine andere Rakete." }
+    ],
+    "scenes": [
+      {
+        "kind": "text-screen",
+        "durationFrames": 122,
+        "lines": ["TRUE STORY", "", "37 SEKUNDEN", "NACH ZUENDUNG", "", "RAKETE WEG"],
+        "enter": "instant",
+        "align": "center",
+        "subtitleLines": [0],
+        "emphasisLines": [5],
+        "perLineReveal": [0, 0, 0, 0, 0, 70],
+        "glitchBeforeEnd": 10,
+        "caption": "30 Sekunden nach dem Start. Rakete stuerzt ab."
+      },
+      {
+        "kind": "text-screen",
+        "durationFrames": 89,
+        "lines": ["WEGEN EINER ZAHL", "DIE NICHT MEHR", "PASSTE"],
+        "enter": "slide-left",
+        "align": "left",
+        "appearDelay": 7,
+        "caption": "Wegen einer Zahl, die nicht mehr passte."
+      },
+      {
+        "kind": "timeline",
+        "durationFrames": 217,
+        "header": ["ARIANE 5 / FLUG 501", "04.06.1996  ERSTFLUG"],
+        "connectorLabel": "37 SEKUNDEN",
+        "entries": [
+          { "time": "T+00", "label": "TRIEBWERKSZUENDUNG" },
+          { "time": "T+37", "label": "REFERENZSYSTEM: ____", "glitchTo": "REFERENZSYSTEM: FEHLER", "glitchAt": 130, "alert": true }
+        ],
+        "caption": "1996. Ariane 5 hebt ab. Ein Softwaremodul unveraendert aus dem Vorgaenger uebernommen."
+      },
+      {
+        "kind": "dual-box",
+        "durationFrames": 145,
+        "left":  {
+          "title": "ARIANE 4",
+          "lines": ["NAV: D2-LEO", "ACCEL: NIEDRIG", "SRI v1.2", "BH_DTYPE: INT16", "REF: A4-SPEC"]
+        },
+        "right": {
+          "title": "ARIANE 5",
+          "lines": ["NAV: CLUSTER-GTO", "ACCEL: HOCH", "SRI v1.2", "BH_DTYPE: INT16", "REF: A5-SPEC"]
+        },
+        "matchLines": [2, 3],
+        "matchLabel": "SELBER CODE",
+        "caption": "Bei Ariane 4 passte ein bestimmter Messwert ins vorgesehene Format."
+      },
+      {
+        "kind": "int-counter",
+        "durationFrames": 126,
+        "boxTitle": "MODUL SRI",
+        "format": "INT16 (SIGNED)",
+        "maxValue": 32767,
+        "startValue": 28000,
+        "peakValue": 32767,
+        "overflowValue": -32768,
+        "countSpeed": "slow-to-fast",
+        "pauseAtPeak": 20,
+        "postOverflowExtras": ["STATUS: EXCEPTION"],
+        "caption": "Ariane 5 fliegt schneller. Die Zahl passt nicht mehr."
+      },
+      {
+        "kind": "aftermath",
+        "durationFrames": 103,
+        "lines": ["> STEUERUNG VERLOREN", "> RAKETE ZERSTOERT"],
+        "caption": "Das Modul stuerzt ab. Die Rakete auch."
+      },
+      {
+        "kind": "text-screen",
+        "durationFrames": 116,
+        "lines": [
+          "DER CODE LIEF",
+          "JAHRELANG",
+          "FEHLERFREI",
+          "",
+          "",
+          "FUER EINE",
+          "ANDERE RAKETE"
+        ],
+        "enter": "typed",
+        "align": "left",
+        "appearDelay": 8,
+        "caption": "Der Code lief jahrelang fehlerfrei. Fuer eine andere Rakete."
+      },
+      {
+        "kind": "outro-card",
+        "durationFrames": 60,
+        "title": "@echt.bamberg",
+        "subtitle": "WIAI · UNI BAMBERG"
+      }
+    ]
+  },
+  "content": {
+    "act2": "",
+    "act3": ""
+  }
+}

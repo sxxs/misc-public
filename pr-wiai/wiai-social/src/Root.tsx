@@ -9,6 +9,7 @@ import {
   computeTerminalDuration,
   computeBillboardCaptionDuration,
   computeTerminalFlowDuration,
+  computeTerminalDokuDuration,
   computeSlideshowDuration,
   computeNachtgedankeDuration,
 } from "./utils/timing";
@@ -54,6 +55,9 @@ const selectDuration = (post: Post): number => {
       return computeTerminalFlowDuration(post.terminal.blocks);
     }
     return computeTerminalDuration(post);
+  }
+  if (post.type === "terminal-doku" && post.doku) {
+    return computeTerminalDokuDuration(post.doku);
   }
   if (post.type === "slideshow" && post.slideshow) {
     return computeSlideshowDuration(post.slideshow);

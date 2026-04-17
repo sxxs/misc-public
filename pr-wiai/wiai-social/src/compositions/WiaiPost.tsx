@@ -8,6 +8,7 @@ import { LedWallComposition as LedWall } from "./LedWall";
 import { Selbstironie } from "./Selbstironie";
 import { Witz } from "./Witz";
 import { Terminal } from "./Terminal";
+import { TerminalDoku } from "./TerminalDoku";
 import { Billboard } from "./Billboard";
 import { Slideshow } from "./Slideshow";
 import { SafeZoneOverlay } from "../components/SafeZoneOverlay";
@@ -53,6 +54,9 @@ export const WiaiPost: React.FC<Post> = (post) => {
         return withMusic(<Witz post={post} />);
       case "terminal":
         return withMusic(<Terminal post={post} />);
+      case "terminal-doku":
+        // Phase 1: silent. Audio hook reserved for Phase 2 via post.doku.narrationFile.
+        return <TerminalDoku post={post} />;
       case "billboard":
         return withMusic(<Billboard post={post} />);
       case "slideshow":

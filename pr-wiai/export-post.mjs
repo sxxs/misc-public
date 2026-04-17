@@ -48,8 +48,14 @@ if (!post) {
   process.exit(1);
 }
 
-if (!post.content || !(post.content.act2 || post.content.act3)) {
+// terminal-doku stores all content under doku.scenes — content can be empty.
+const isDoku = post.design === "terminal-doku" || post.type === "terminal-doku";
+if (!isDoku && (!post.content || !(post.content.act2 || post.content.act3))) {
   console.error("Post has no content. Edit content fields first in the UI.");
+  process.exit(1);
+}
+if (isDoku && !post.doku) {
+  console.error("Doku post has no doku.scenes. Add scenes to plan.json first.");
   process.exit(1);
 }
 
@@ -80,8 +86,13 @@ if (remotionType === "terminal") {
   remotionPost.terminal = post.terminal ? { ...base, ...post.terminal } : base;
 }
 
+// terminal-doku config — pass scene sequence through verbatim
+if (remotionType === "terminal-doku") {
+  remotionPost.doku = post.doku;
+}
+
 // Copy content directly — same structure in plan.json and Remotion JSON
-remotionPost.content = buildContent(c, remotionType);
+remotionPost.content = buildContent(c || {}, remotionType);
 
 // ── Output ───────────────────────────────────────────────────────────────────
 
@@ -170,6 +181,7 @@ function mapDesignToRemotionType(post) {
     "pixel-wall": "led-wall",
     billboard: "billboard",
     terminal: "terminal",
+    "terminal-doku": "terminal-doku",
     newsjacking: "newsjacking",
   };
   if (post.design && designMap[post.design]) return designMap[post.design];

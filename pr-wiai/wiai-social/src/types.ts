@@ -6,6 +6,7 @@ export type PostType =
   | "selbstironie"
   | "witz"
   | "terminal"
+  | "terminal-doku"
   | "billboard"
   | "slideshow";
 
@@ -119,6 +120,133 @@ export type TerminalFlowBlock =
   | { text: string; color?: "green" | "amber" | "white"; pause?: never }
   | { pause: number; text?: never; color?: never };
 
+// ── Terminal-Doku (narrative, multi-scene format) ───────────────────────────
+export type DokuColor = "green" | "amber" | "white" | "red";
+
+interface DokuSceneBase {
+  durationFrames: number;
+  color?: DokuColor;
+  caption?: string;       // burn-in narration caption (bottom of screen)
+}
+
+export type DokuTextEnter = "instant" | "slide-left" | "typed";
+
+export interface DokuTextScreen extends DokuSceneBase {
+  kind: "text-screen";
+  lines: string[];                // each entry = one rendered line
+  enter?: DokuTextEnter;          // default: "instant"
+  emphasisLines?: number[];       // line indices to render larger + brighter
+  subtitleLines?: number[];       // line indices rendered smaller + dimmed (e.g. "TRUE STORY")
+  appearDelay?: number;           // delay between lines in typed/slide mode (default: 8f)
+  perLineReveal?: number[];       // explicit appear frame per line index (overrides appearDelay)
+  glitchBeforeEnd?: number;       // frames before scene end: brief CRT flicker on emphasisLines
+  align?: "center" | "left";      // default: "center"
+}
+
+export interface DokuStatusLogEntry {
+  label: string;
+  value: string;
+  glow?: boolean;                 // pulse the value in green
+}
+
+export interface DokuStatusLog extends DokuSceneBase {
+  kind: "status-log";
+  entries: DokuStatusLogEntry[];
+}
+
+export interface DokuLogCrawlLine {
+  text: string;
+  glitchAt?: number;              // local frame where the glitch hits this line
+  replaceWith?: string;           // text after glitch (alert state)
+  alert?: boolean;                // if true, post-glitch line is rendered red
+}
+
+export interface DokuLogCrawl extends DokuSceneBase {
+  kind: "log-crawl";
+  lines: DokuLogCrawlLine[];
+  lineDelay?: number;             // frames between line reveals (default: 18)
+}
+
+export interface DokuTimelineEntry {
+  time: string;                   // e.g. "T+00"
+  label: string;                  // e.g. "TRIEBWERKSZUENDUNG"
+  glitchTo?: string;              // text to flip to after glitch
+  glitchAt?: number;              // local frame to trigger the glitch
+  alert?: boolean;                // post-glitch rendered in red
+}
+
+export interface DokuTimeline extends DokuSceneBase {
+  kind: "timeline";
+  header?: string[];              // lines shown in a box above the timeline
+  connectorLabel?: string;        // label on the vertical connector line
+  entries: DokuTimelineEntry[];
+}
+
+export interface DokuDualBoxSide {
+  title: string;
+  lines: string[];
+}
+
+export interface DokuDualBox extends DokuSceneBase {
+  kind: "dual-box";
+  left: DokuDualBoxSide;
+  right: DokuDualBoxSide;
+  glowWords?: string[];           // words inside boxes that pulse (e.g. "NEIN")
+  subline?: string;               // small line under the boxes
+  matchLines?: number[];          // line indices (0-based) that are identical in both boxes → blink red, others dimmed
+  matchLabel?: string;            // label shown between boxes pointing at the match region
+}
+
+export interface DokuIntCounter extends DokuSceneBase {
+  kind: "int-counter";
+  boxTitle: string;
+  format: "INT16 (SIGNED)";
+  maxValue: number;               // typically 32767
+  startValue: number;             // e.g. 28000
+  peakValue: number;              // last value before overflow (e.g. 32767)
+  overflowValue: number;          // wrap-around target (e.g. -32768)
+  countSpeed?: "slow-to-fast" | "linear"; // default: slow-to-fast
+  pauseAtPeak?: number;           // frames the counter sits on peak before flipping (default: 8)
+  postOverflowExtras?: string[];  // extra status lines below the value, e.g. ["STATUS: EXCEPTION"]
+}
+
+export interface DokuAftermath extends DokuSceneBase {
+  kind: "aftermath";
+  lines: string[];
+  silent?: boolean;               // intentional reminder marker (no audio cue)
+}
+
+export interface DokuOutroCard extends DokuSceneBase {
+  kind: "outro-card";
+  title: string;                  // big line, e.g. "@echt.bamberg"
+  subtitle?: string;              // smaller line below, e.g. "WIAI · UNI BAMBERG"
+}
+
+export type DokuScene =
+  | DokuTextScreen
+  | DokuStatusLog
+  | DokuLogCrawl
+  | DokuTimeline
+  | DokuDualBox
+  | DokuIntCounter
+  | DokuAftermath
+  | DokuOutroCard;
+
+export interface DokuWordCaption {
+  frame: number;    // absolute frame (at 30fps) when this chunk appears
+  text: string;     // 2–4 words shown together
+}
+
+export interface DokuConfig {
+  scenes: DokuScene[];
+  narrationFile?: string;         // relative to public/ — narration voice-over
+  musicFile?: string;             // relative to public/ — background drone/music (looped, ducked during speech)
+  wordCaptions?: DokuWordCaption[]; // word-chunk captions synced to narration frames
+  totalDuration?: number;         // override; default = sum of scene durations
+  flickerBetweenScenes?: boolean; // default: true — CRT flicker on cuts
+  channelTag?: string;            // tiny "@echt.bamberg" tag bottom-right (default: shown on last scene)
+}
+
 // Billboard beat: one element in an Act2 beat sequence
 export interface BillboardBeat {
   text: string;
@@ -216,7 +344,7 @@ export interface SlideshowEndCard {
 export interface Post {
   id: string;
   type: PostType;
-  design?: "pixel-wall" | "terminal" | "billboard"; // visual-layer override (future use)
+  design?: "pixel-wall" | "terminal" | "terminal-doku" | "billboard"; // visual-layer override (future use)
   category?: string;
   accentColor?: string;
   isAd?: boolean;        // opt-in: shows absender/footer on S3 (default: hidden)
@@ -226,6 +354,7 @@ export interface Post {
   musicFadeOut?: number; // fadeout frames at video end (default: 3)
   timing?: ContrarianTiming; // led-wall only
   terminal?: TerminalConfig; // terminal-only (color, mode, blocks — NOT prompt)
+  doku?: DokuConfig;          // terminal-doku narrative format (multi-scene)
   billboard?: BillboardConfig; // billboard captions mode
   slideshow?: SlideshowConfig; // slideshow-only
   nachtgedanke?: NachtgedankeConfig; // phone-format nachtgedanke
