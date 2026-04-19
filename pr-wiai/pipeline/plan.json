@@ -41,7 +41,7 @@
         "act3": "Informatik ist nicht Magie. Es ist Logik, die sich wie Magie anfühlt.",
         "aside": "Das lernst du in Woche 3 des Informatikstudiums. Ab Woche 4 wird es noch besser."
       },
-      "slotIndex": 3
+      "slotIndex": 0
     },
     {
       "id": "2026-bambirds",
@@ -138,7 +138,7 @@
       "platforms": {},
       "notes": "",
       "tag": null,
-      "slotIndex": 0,
+      "slotIndex": 1,
       "topic": "tech",
       "content": {
         "act1Setup": "ChatGPT besteht unsere alte Klausur.",
@@ -601,21 +601,46 @@
     {
       "id": "2026-merkste-schule",
       "type": "merkste-selber",
-      "design": "pixel-wall",
-      "status": "ready",
-      "json": "wiai-social/posts/2026-merkste-schule.json",
+      "design": "raw-photo",
+      "status": "published",
       "source": null,
       "targetWeek": "2026-KW16",
-      "publishedDate": null,
+      "publishedDate": "2026-04-18",
       "platforms": {},
-      "notes": "",
+      "notes": "Stadtspaziergang-Format: Bamberg-Footage (Veo) + TTS Voiceover + Musik. Produktion in Hyperframes (hyperframes/archive/stadtspaziergang/).",
       "tag": null,
       "topic": "ertappt",
-      "slotIndex": 6,
+      "slotIndex": 5,
       "content": {
         "act1Setup": "Du lernst in der Schule wie der Dreißigjährige Krieg verlief.",
         "act2": "Du lernst in der Schule nicht, wie das Internet funktioniert das du 6 Stunden am Tag nutzt.",
         "act3": "Merkste selber, oder?"
+      },
+      "social": {
+        "tiktok": {
+          "caption": "Die Schule erklärt dir den Dreißigjährigen Krieg. Das Internet nicht.",
+          "hashtags": "#informatik #schule #internet #bildung #digitalebildung #medienkompetenz #informatikstudium #wiai #unibamberg #studium #bildungssystem"
+        },
+        "youtube": {
+          "title": "Schule erklärt den Dreißigjährigen Krieg. Das Internet nicht.",
+          "description": "In der Schule lernst du den Ablauf des Dreißigjährigen Kriegs. Wie das Internet funktioniert — das Medium in dem du 6 Stunden am Tag lebst — wird nicht erklärt. Keine Anklage, nur eine Beobachtung. Und eine leise Empfehlung, die Lehrpläne mal zu überprüfen.\n\n@echt.bamberg · Fakultät WIAI, Universität Bamberg",
+          "hashtags": "#Shorts #Informatik #Internet #DigitaleBildung #Medienkompetenz #Schule #Bildung #WIAI #UniBamberg #Informatikstudium"
+        },
+        "instagram": {
+          "caption": "In der Schule:\nDreißigjähriger Krieg. Ausführlich.\n\nWas nicht erklärt wird:\nWie das Internet funktioniert.\nDas Medium in dem du 6 Stunden am Tag lebst.\n\nMerkste selbst, oder?",
+          "hashtags": "#informatik #internet #digitalebildung #medienkompetenz #schule #bildung #informatikstudium #wiai #unibamberg #studium #bildungssystem #digital"
+        }
+      },
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-18"
+        },
+        "youtube": {
+          "video": "2026-04-18"
+        },
+        "instagram": {
+          "video": "2026-04-18"
+        }
       }
     },
     {
@@ -915,7 +940,7 @@
         "act3": "Work-Life-Balance:\nFängt beim Studienort an.",
         "aside": "Und beim Rauchbier.\nAber das ist eine persönliche Meinung."
       },
-      "slotIndex": 1
+      "slotIndex": 2
     },
     {
       "id": "contrarian-vorhange",
@@ -1625,7 +1650,7 @@
         "act3": "Das System ist so gebaut dass Aufgeben die rationale Entscheidung ist.",
         "aside": "Hast du's gemerkt? Oder einfach akzeptiert?"
       },
-      "slotIndex": 4
+      "slotIndex": 0
     },
     {
       "id": "draft-ertappt-p39f",
@@ -4135,7 +4160,7 @@
         "aside": "Übrigens: Unsere Einführungsvorlesung ist kostenlos auf YouTube. inf.zone. Besser als ChatGPT? Manchmal.",
         "asideStyle": "uebrigens"
       },
-      "slotIndex": 6
+      "slotIndex": 3
     },
     {
       "id": "draft-social-engineering-p51a",
@@ -5706,13 +5731,11 @@
       "status": "ready",
       "json": null,
       "source": "pipeline/ideen/stoffsammlung-clickbait-parodie.md",
-      "targetWeek": "2026-KW17",
       "publishedDate": null,
       "platforms": {},
       "notes": "Original before rewrite:\nS1: SCHREIB JA.\nS1 smallText: Wenn du auch findest dass Mathe\\nim Studium zu schwer ist. 💪\nS2: Das ist kein Gespräch.\\nDas ist ein Knopf den du drückst\\ndamit der Algorithmus\\nmich belohnt.\\n\\nDu bist kein Teil einer Community.\\nDu bist ein Datenpunkt.\nS3: Aber es fühlt sich gut an, oder?\\n\\nGenau das ist das Problem.",
       "tag": "stark",
       "tagComment": null,
-      "slotIndex": 5,
       "topic": "manipulation",
       "content": {
         "act1Setup": "100k in 3 Tagen mit Faceless TikTok. Schreib KI, dann DM ich dir mein Erfolgsframework.",
@@ -5869,14 +5892,14 @@
       "status": "ready",
       "json": null,
       "source": "pipeline/ideen/stoffsammlung-clickbait-parodie.md",
-      "targetWeek": "2026-KW16",
+      "targetWeek": "2026-KW18",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
       "tag": "stark",
       "tagComment": null,
       "topic": "manipulation",
-      "slotIndex": 4,
+      "slotIndex": 1,
       "content": {
         "act1Setup": "> informatik studieren",
         "act2": "30 Uni-Webseiten offen.\nUnd auf allen steht,\ndass du im Mittelpunkt stehst.",
@@ -8289,13 +8312,13 @@
       "status": "draft",
       "json": null,
       "source": null,
-      "targetWeek": "2026-KW16",
+      "targetWeek": "2026-KW19",
       "publishedDate": null,
       "platforms": {},
       "notes": "Screenshot: Echter Desktop mit 920 Dateien. Wo-ist-Waldo-Vibes. User macht den Screenshot. Effekt: drift/zoom + Text-Overlay am Ende.",
       "tag": "stark",
       "tagComment": null,
-      "slotIndex": 5,
+      "slotIndex": 4,
       "topic": "meta",
       "format": "both",
       "content": {
@@ -8361,7 +8384,7 @@
       "notes": "Foto: Hörsaal, Beamer-Fehlermeldung auf Leinwand (\"No Signal\" / blauer Bildschirm). 300 leere Stühle. Effekt: tint in Terminal-Amber → Text. Universal Kat. B.",
       "tag": "stark",
       "tagComment": null,
-      "slotIndex": 2,
+      "slotIndex": 4,
       "topic": "alltag",
       "format": "both",
       "content": {
@@ -8765,7 +8788,7 @@
       "status": "published",
       "json": "wiai-social/posts/2026-ariane-5-int16.json",
       "source": null,
-      "targetWeek": "2026-KW17",
+      "targetWeek": "2026-KW16",
       "publishedDate": null,
       "platforms": {},
       "posted": {
@@ -8799,6 +8822,95 @@
         "instagram": {
           "caption": "1996. Ariane 5. Erstflug.\n\n37 Sekunden nach der Zündung zerstört sich die Rakete selbst.\n\nUrsache: Ein Softwaremodul aus dem Vorgängermodell — unverändert übernommen.\n\nBei Ariane 4 passte ein Messwert ins INT16-Format.\nBei Ariane 5 nicht. Die Rakete fliegt schneller.\nDie Zahl läuft über. Das Steuerungssystem stürzt ab.\nDie Rakete auch.\n\nDer Code lief jahrelang fehlerfrei.\nFür eine andere Rakete.",
           "hashtags": "#softwareentwicklung #informatik #ariane5 #softwarefehler #raumfahrt #programmierung #techfail #coding #wiai #unibamberg #studium #informatikstudium"
+        }
+      }
+    },
+    {
+      "id": "2026-mehr-informatik",
+      "type": "stimmt-eigentlich",
+      "design": "terminal",
+      "status": "idea",
+      "json": null,
+      "source": null,
+      "targetWeek": null,
+      "publishedDate": null,
+      "platforms": {},
+      "posted": {},
+      "notes": "Enttaeuschungskette: S1 Schule lehrt was vor 300-1000 Jahren passierte → Forderung: Mehr Informatikunterricht! S2 Informatik: Sortieralgorithmen die kaum jemand spaeter selbst implementiert. S3 offen. Format/Laenge wie ariane (terminal-doku oder aehnlich). Design TBD wenn S3 klar.",
+      "tag": null,
+      "tagComment": null,
+      "slotIndex": null,
+      "topic": "studium",
+      "format": "both",
+      "content": {}
+    },
+    {
+      "id": "2026-schule-selbstironie",
+      "type": "selbstironie",
+      "design": "pixel-wall",
+      "status": "idea",
+      "json": null,
+      "source": null,
+      "targetWeek": null,
+      "publishedDate": null,
+      "platforms": {},
+      "posted": {},
+      "notes": null,
+      "tag": null,
+      "tagComment": null,
+      "slotIndex": null,
+      "topic": "studium",
+      "format": "both",
+      "content": {
+        "act1Setup": "Du lernst in der Schule wie der Dreißigjährige Krieg verlief.",
+        "act2": "Du lernst im Informatikstudium Algorithmen, die du wahrscheinlich nie anwendest.",
+        "act3": "Ich weiß das, weil ich Informatik unterrichte."
+      }
+    },
+    {
+      "id": "2026-pendulum-buero",
+      "type": "nahkastchen",
+      "design": "raw-photo",
+      "status": "published",
+      "json": null,
+      "source": null,
+      "targetWeek": "2026-KW16",
+      "publishedDate": null,
+      "platforms": {},
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-19"
+        },
+        "youtube": {
+          "video": "2026-04-19"
+        },
+        "instagram": {
+          "reel": "2026-04-19"
+        }
+      },
+      "notes": "Pendulum-Wave Animation, 15s perfect loop. 16 Pendel in pentatonischer Stimmung, Drone (A1+detuned+E2) mit 15s-Swell, Ticks auf Nulldurchgängen.\n\nRENDERING: One-off Composition, KEIN JSON-Export. Composition heisst \"2026-pendulum-buero\", direkt registriert in wiai-social/src/Root.tsx. Audio pre-rendered via scripts/render-pendulum-audio.mjs → assets/music/pendulum-ticks.wav.\n\nRENDER: cd wiai-social && npx remotion render src/index.ts \"2026-pendulum-buero\" --output=./out/2026-pendulum-buero.mp4 --codec=h264 --crf=18 --pixel-format=yuv420p\n\nVisuelles: schwarz-navy Hintergrund mit atmendem Radial-Glow (peakt am Sync). Punch \"Ordnung.\" (140px) + \"Zumindest kurz.\" (58px). Wordmark \"WIAI · UNI BAMBERG / @echt.bamberg\" zentriert, innerhalb Safe Zone bei y=1570.",
+      "tag": null,
+      "tagComment": null,
+      "slotIndex": 6,
+      "topic": "alltag",
+      "format": "both",
+      "content": {
+        "act1Setup": "POV: Ich räume mein Büro auf.",
+        "act3": "Ordnung. Zumindest kurz."
+      },
+      "social": {
+        "tiktok": {
+          "caption": "16 Pendel, 16 Frequenzen. Alle 15 Sekunden kippen sie kurz in Ordnung. Mein Schreibtisch auch — so ungefähr.",
+          "hashtags": "#oddlysatisfying #pendulumwave #physik #mathematik #ordnung #schreibtisch #pov #wiai #unibamberg #informatik #bamberg"
+        },
+        "youtube": {
+          "title": "Ordnung. Zumindest kurz.",
+          "description": "16 Pendel. Jedes schwingt mit einer anderen Frequenz. Alle 15 Sekunden fallen sie für einen Moment in dieselbe Konfiguration — nicht durch Absprache, sondern durch Zahlentheorie.\n\nMuster brauchen keinen Anführer. Nur die richtigen Zahlen.\n\nMein Schreibtisch hält ungefähr genauso lang.",
+          "hashtags": "#Shorts #Physik #Mathematik #Pendulum #OddlySatisfying #Informatik #WIAI #UniBamberg"
+        },
+        "instagram": {
+          "caption": "POV: Ich räume mein Büro auf.\n\n16 Pendel. 16 Frequenzen. Keine Absprache. Trotzdem kippen sie alle 15 Sekunden für einen Moment in perfekte Ordnung — und sofort wieder raus.\n\nDas ist kein Zufall. Das ist Zahlentheorie.\n\n(Mein Schreibtisch hält ungefähr genauso lang.)",
+          "hashtags": "#pendulumwave #oddlysatisfying #physik #mathematik #pendel #chaos #ordnung #schreibtisch #informatik #informatikstudium #wiai #unibamberg #bamberg #studium"
         }
       }
     }
