@@ -41,7 +41,7 @@
         "act3": "Informatik ist nicht Magie. Es ist Logik, die sich wie Magie anfühlt.",
         "aside": "Das lernst du in Woche 3 des Informatikstudiums. Ab Woche 4 wird es noch besser."
       },
-      "slotIndex": 0
+      "slotIndex": 1
     },
     {
       "id": "2026-bambirds",
@@ -129,8 +129,8 @@
     {
       "id": "2026-chatgpt-klausur",
       "type": "selbstironie",
-      "design": "billboard",
-      "status": "ready",
+      "design": "apocalypse",
+      "status": "published",
       "json": "wiai-social/posts/2026-chatgpt-klausur.json",
       "source": null,
       "targetWeek": "2026-KW17",
@@ -138,14 +138,40 @@
       "platforms": {},
       "notes": "",
       "tag": null,
-      "slotIndex": 1,
+      "slotIndex": 0,
       "topic": "tech",
       "content": {
-        "act1Setup": "ChatGPT besteht unsere alte Klausur.",
-        "act2": "Also haben wir eine neue gebaur.\nDie prüft nicht Wissen sondern Können.\nUnd Können kann man nicht prompten.",
-        "act3": "380 Laptops. VS Code. Debugger. Das besteht kein Chatbot.",
-        "aside": "Noch nicht.",
-        "act1Reveal": "Locker."
+        "act1Setup": "ChatGPT besteht alle unsere Prüfungen.",
+        "act2": "Macht nichts. Die Prüfung bestehen ist einfach.",
+        "act3": "Der Mensch werden, der sie besteht, nicht.",
+        "aside": "Der braucht kurz."
+      },
+      "musicFile": "music/on-the-run.mp3",
+      "social": {
+        "tiktok": {
+          "caption": "Prüfungen bestehen ist einfach. Ein Mensch werden nicht.",
+          "hashtags": "#ki #chatgpt #prüfung #studium #informatik #uni #bamberg #wiai #unibamberg"
+        },
+        "youtube": {
+          "title": "Prüfungen bestehen ist einfach. Menschwerdung nicht.",
+          "description": "Die Aufregung um KI in der Uni hat einen kleinen Denkfehler. Die Prüfung war nie das Ziel. Das Ziel war der Mensch, der sie besteht. Der braucht kurz.",
+          "hashtags": "#Shorts #KI #ChatGPT #Prüfung #Studium #Informatik #UniBamberg #WIAI"
+        },
+        "instagram": {
+          "hashtags": "#ki #chatgpt #prüfung #studium #informatik #bamberg #unibamberg #wiai #echtbamberg #informatikstudium",
+          "caption": "'ChatGPT besteht unsere Prüfungen.' Ja.\n\nPrüfungen bestehen ist einfach.\nEin Mensch werden, der sie besteht, nicht.\n\nDas war nie, was die Uni macht.\nDas war immer, wofür die Prüfung nur der Anlass war.\n\nDer braucht kurz."
+        }
+      },
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-20"
+        },
+        "youtube": {
+          "video": "2026-04-20"
+        },
+        "instagram": {
+          "video": "2026-04-20"
+        }
       }
     },
     {

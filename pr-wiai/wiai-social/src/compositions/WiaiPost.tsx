@@ -11,6 +11,7 @@ import { Terminal } from "./Terminal";
 import { TerminalDoku } from "./TerminalDoku";
 import { Billboard } from "./Billboard";
 import { Slideshow } from "./Slideshow";
+import { ApocalypseBillboard } from "./ApocalypseBillboard";
 import { SafeZoneOverlay } from "../components/SafeZoneOverlay";
 
 const BackgroundMusic: React.FC<{ file?: string; fadeOutFrames?: number }> = ({ file, fadeOutFrames = 3 }) => {
@@ -61,6 +62,8 @@ export const WiaiPost: React.FC<Post> = (post) => {
         return withMusic(<Billboard post={post} />);
       case "slideshow":
         return withMusic(<Slideshow post={post} />);
+      case "apocalypse-billboard":
+        return withMusic(<ApocalypseBillboard post={post} />);
       default: {
         const _exhaustive: never = post.type;
         return null;

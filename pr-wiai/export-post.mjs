@@ -183,6 +183,7 @@ function mapDesignToRemotionType(post) {
     terminal: "terminal",
     "terminal-doku": "terminal-doku",
     newsjacking: "newsjacking",
+    apocalypse: "apocalypse-billboard",
   };
   if (post.design && designMap[post.design]) return designMap[post.design];
 

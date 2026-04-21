@@ -62,6 +62,9 @@ const selectDuration = (post: Post): number => {
   if (post.type === "slideshow" && post.slideshow) {
     return computeSlideshowDuration(post.slideshow);
   }
+  if (post.type === "apocalypse-billboard") {
+    return 450; // 15s at 30fps: Act1 90 + Act2 180 + Act3 180
+  }
   return ledWallDuration(post); // led-wall + all legacy types
 };
 

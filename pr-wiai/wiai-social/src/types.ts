@@ -8,7 +8,8 @@ export type PostType =
   | "terminal"
   | "terminal-doku"
   | "billboard"
-  | "slideshow";
+  | "slideshow"
+  | "apocalypse-billboard";
 
 // ── Semantic content model — design-independent ─────────────────────────────
 // All compositions map these fields into their visual presentation.

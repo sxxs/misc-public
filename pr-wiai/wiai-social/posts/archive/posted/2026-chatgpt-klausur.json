@@ -1,0 +1,12 @@
+{
+  "id": "2026-chatgpt-klausur",
+  "type": "apocalypse-billboard",
+  "design": "apocalypse",
+  "musicFile": "music/on-the-run.mp3",
+  "content": {
+    "act1Setup": "ChatGPT besteht alle unsere Prüfungen.",
+    "act2": "Macht nichts. Die Prüfung bestehen ist einfach.",
+    "act3": "Der Mensch werden, der sie besteht, nicht.",
+    "aside": "Der braucht kurz."
+  }
+}

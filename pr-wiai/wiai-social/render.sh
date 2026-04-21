@@ -86,6 +86,17 @@ if (post.type === "slideshow" && post.slideshow) {
   process.exit(0);
 }
 
+// ── Apocalypse-billboard: fixed Act1=90 Act2=180 Act3=180 (total 450) ─
+if (post.type === "apocalypse-billboard") {
+  const s1a = 30;
+  const s1b = 85;
+  const s2a = 150;
+  const s2b = 260;
+  const s3  = 410;
+  process.stdout.write([s1a, s1b, s2a, s2b, s3].join(" "));
+  process.exit(0);
+}
+
 // ── Nachtgedanke posts use nachtgedanke.* for timing ──────────────────
 if (post.nachtgedanke) {
   const nk = post.nachtgedanke;
