@@ -1,0 +1,18 @@
+{
+  "id": "2026-word-seitenzahlen",
+  "type": "billboard",
+  "design": "billboard",
+  "musicFile": "music/track-seitenzahlen.mp3",
+  "billboard": {
+    "hookFlash": "page-stack",
+    "act1Duration": 90,
+    "act3Duration": 190
+  },
+  "content": {
+    "act1Setup": "Notfall!\nWord-Seitenzahlen\nab Seite 3.",
+    "act1Reveal": "Wie???",
+    "act2": "Meistgesuchte\nFrage im Studium.\n\nNicht Statistik.\nNicht Algorithmen.\nNicht Logik.",
+    "act3": "Studieren ist\nleichter als\nFormatieren.",
+    "aside": "Hier ein neues Video\nzu posten ist ein\nKlacks dagegen."
+  }
+}

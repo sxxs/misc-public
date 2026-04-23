@@ -37,6 +37,12 @@ const BillboardFrame: React.FC<{ children: React.ReactNode }> = ({ children }) =
   </div>
 );
 
+// 10-frame fade-in starting at startFrame — used by all visual hooks for step-by-step reveals
+const stepOpacity = (frame: number, startFrame: number) =>
+  interpolate(frame, [startFrame, startFrame + 10], [0, 1], {
+    extrapolateLeft: "clamp", extrapolateRight: "clamp",
+  });
+
 // ── IKEA manual — stylized shelf exploded view, parts appear step by step ─────
 const IkeaManualFlash: React.FC<{ frame: number }> = ({ frame }) => {
   const c = "rgba(80,160,255,"; // neon blue
@@ -44,10 +50,7 @@ const IkeaManualFlash: React.FC<{ frame: number }> = ({ frame }) => {
 
   // Step-by-step reveal: alternates with text (text at 0, reveal at ~48)
   // Text → Panel → Shelf1 → "Viel." → Shelf2 → Wrench
-  const partOpacity = (startFrame: number) =>
-    interpolate(frame, [startFrame, startFrame + 10], [0, 1], {
-      extrapolateLeft: "clamp", extrapolateRight: "clamp",
-    });
+  const partOpacity = (startFrame: number) => stepOpacity(frame, startFrame);
 
   const o1 = partOpacity(18);  // side panel (after setup text settles)
   const o2 = partOpacity(34);  // shelf 1 + arrow
@@ -147,6 +150,82 @@ const IkeaManualFlash: React.FC<{ frame: number }> = ({ frame }) => {
   );
 };
 
+// ── Page Stack — 3 stylized document pages, only page 3 numbered ──────────────
+const PageStackHook: React.FC<{ frame: number }> = ({ frame }) => {
+  const partOpacity = (startFrame: number) => stepOpacity(frame, startFrame);
+
+  const o1 = partOpacity(18);  // page 1 (blank corner)
+  const o2 = partOpacity(34);  // page 2 (blank corner)
+  const o3 = partOpacity(58);  // page 3 (numbered)
+
+  // Page 3 number pulse — gentle breath after appear
+  const pulse = 1 + Math.sin(Math.max(0, frame - 70) * 0.18) * 0.04;
+
+  if (o1 <= 0) return null;
+
+  const PAGE_W = 170;
+  const PAGE_H = 240;
+  const cornerSize = 80;
+
+  const Page = ({
+    leftPct, top, rotate, opacity, number,
+  }: { leftPct: number; top: number; rotate: number; opacity: number; number: string | null }) => (
+    <div style={{
+      opacity,
+      position: "absolute", left: `${leftPct}%`, top,
+      width: PAGE_W, height: PAGE_H,
+      background: "rgba(245,245,240,0.96)",
+      border: "2px solid rgba(255,255,255,0.85)",
+      borderRadius: 3,
+      transform: `translateX(-50%) rotate(${rotate}deg)`,
+      boxShadow: "0 8px 24px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,0,0,0.4)",
+    }}>
+      {/* Faux body lines */}
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <div key={i} style={{
+          position: "absolute", left: 16, right: 16,
+          top: 28 + i * 22,
+          height: 6,
+          background: i === 5 ? "rgba(120,120,120,0.25)" : "rgba(120,120,120,0.45)",
+          width: i === 5 ? "55%" : "auto",
+        }} />
+      ))}
+      {/* Page-number corner badge — only visible on numbered page */}
+      {number && (
+        <div style={{
+          position: "absolute", right: 10, bottom: 10,
+          width: cornerSize, height: cornerSize,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 56,
+          fontFamily: spaceGroteskFamily,
+          fontWeight: 700,
+          color: BLACK,
+          background: WIAI_YELLOW,
+          borderRadius: 4,
+          transform: `scale(${pulse.toFixed(3)})`,
+          transformOrigin: "center",
+        }}>
+          {number}
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div style={{
+      position: "absolute", inset: 0,
+      paddingTop: 340,
+      zIndex: 1,
+    }}>
+      <div style={{ width: "100%", height: 280, position: "relative" }}>
+        <Page leftPct={28} top={20} rotate={-7} opacity={o1} number={null} />
+        <Page leftPct={50} top={0}  rotate={2}  opacity={o2} number={null} />
+        <Page leftPct={72} top={20} rotate={6}  opacity={o3} number="3" />
+      </div>
+    </div>
+  );
+};
+
 // ── Neon tube on: brief flicker — billboard was already warmed up ─────────────
 function neonTubeOn(frame: number, startFrame: number): number {
   const t = frame - startFrame;
@@ -209,7 +288,11 @@ const BillboardAct1: React.FC<{ post: Post; duration: number }> = ({ post, durat
   const { act1Setup, act1Reveal } = post.content;
   const hasSetup = !!act1Setup;
   const hasReveal = !!act1Reveal;
-  const hasFlash = post.billboard?.hookFlash === "ikea-manual";
+  const hookKind = post.billboard?.hookFlash;
+  // Negative shifts text UP (hook lives below, e.g. ikea); positive shifts text DOWN (hook lives above, e.g. page-stack)
+  const hookTextShift: Record<string, number> = { "ikea-manual": -220, "page-stack": 180 };
+  const hasFlash = hookKind != null && hookKind in hookTextShift;
+  const textShiftY = hasFlash ? hookTextShift[hookKind] : 0;
   const revealAt = post.billboard?.revealAtFrame ?? (hasFlash ? 48 : 14);
 
   const textDelay = 0; // text always first, diagram follows
@@ -232,9 +315,10 @@ const BillboardAct1: React.FC<{ post: Post; duration: number }> = ({ post, durat
 
   return (
     <BillboardFrame>
-      {hasFlash && <IkeaManualFlash frame={frame} />}
+      {hookKind === "ikea-manual" && <IkeaManualFlash frame={frame} />}
+      {hookKind === "page-stack" && <PageStackHook frame={frame} />}
       {hasSetup && hasReveal ? (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 36, maxWidth: 730, transform: `translateY(${drift + (hasFlash ? -220 : 0)}px)` }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 36, maxWidth: 730, transform: `translateY(${drift + textShiftY}px)` }}>
           <div
             style={{
               opacity,

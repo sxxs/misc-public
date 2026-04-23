@@ -5,13 +5,14 @@ Social-Media-Kanal (TikTok, YouTube Shorts, Instagram Reels) der Fakultaet WIAI,
 ## Schnelleinstieg
 
 ```bash
-bash digest.sh               # Pipeline-Status auf einen Blick
-node edit.mjs --week 2026-KW14  # Posts einer Woche anzeigen
-node edit.mjs netflix            # Post anzeigen (fuzzy ID match)
-node edit.mjs netflix content.act2="Neuer Text"  # Felder setzen
+bash digest.sh                              # Pipeline-Status auf einen Blick
+bash stats.sh                               # YT-Engagement-Refresh + Ranking (siehe Engagement-Metriken)
+node edit.mjs --week 2026-KW14              # Posts einer Woche anzeigen
+node edit.mjs netflix                       # Post anzeigen (fuzzy ID match)
+node edit.mjs netflix content.act2="Neuer Text"   # Felder setzen
 node edit.mjs --new <id> type=T design=D topic=T  # Neuen Post anlegen
-node pipeline/server.mjs     # Swimlane-Kalender → http://localhost:3847
-cd wiai-social && npm run preview  # Remotion Studio
+node pipeline/server.mjs                    # Swimlane-Kalender → http://localhost:3847
+cd wiai-social && npm run preview           # Remotion Studio
 ```
 
 ## Verzeichnisstruktur
@@ -19,9 +20,10 @@ cd wiai-social && npm run preview  # Remotion Studio
 ```
 pr-wiai/
 ├── pipeline/              Redaktionspipeline
-│   ├── plan.json          ZENTRAL: Status aller Posts (ready/published) + Planung (targetWeek)
+│   ├── plan.json          ZENTRAL: Status aller Posts (ready/published) + Planung (targetWeek) + Metrics
 │   ├── server.mjs         Swimlane-Kalender Webserver
 │   ├── ui/                Web-UI Frontend (app.js, index.html)
+│   ├── metrics.mjs        YT-Engagement CLI (sync, analytics, rank, agg)
 │   ├── ideen/             Stufe 1: Stoffsammlungen mit #stark/#geht/#nein Tags
 │   ├── entwuerfe/         Stufe 2: Post-Pool (216 Varianten, Bulk-Editing in MD)
 │   └── media/             Bilder pro Post
@@ -46,6 +48,8 @@ pr-wiai/
 │   └── CONTENT.md         Post-Typen, Farb-Palette, Durations
 ├── edit.mjs               CLI: Posts anzeigen, suchen, editieren (Dot-Notation)
 ├── digest.mjs             CLI: Pipeline-Zusammenfassung
+├── digest.sh              Wrapper: ruft digest.mjs auf
+├── stats.sh               Wrapper: YT-Stats Refresh + Ranking (analytics-all → rank)
 ├── export-post.mjs        Post exportieren: plan.json → Remotion JSON
 ├── sync-root.mjs          Root.tsx aus posts/*.json regenerieren
 ├── import-ideas.mjs       Ideen/Drafts aus Markdown → plan.json importieren
@@ -142,6 +146,119 @@ cd wiai-social && ./archive-post.sh 2026-<id>
 # → JSON nach posts/archive/posted/, Renders nach out/archive/
 # → Zum Restaurieren: cp posts/archive/posted/<id>.json posts/ && node ../sync-root.mjs
 ```
+
+## Engagement-Metriken (YouTube)
+
+Hybrid aus zwei YouTube-APIs:
+- **Data API v3** (API-Key, kein OAuth) — Channel-Uploads abrufen, videoIds matchen
+- **Analytics API v2** (OAuth) — Time-Series Views, Watch Time, Retention, Subscribers Gained
+
+Stats landen in `plan.json` unter `posts[*].metrics.youtube` (siehe Datenmodell unten). TikTok/Instagram noch nicht implementiert.
+
+### Setup (einmalig)
+
+1. **Google Cloud Projekt** anlegen → APIs & Services → Library:
+   - "YouTube Data API v3" enablen (für `yt sync`)
+   - "YouTube Analytics API" enablen (für `yt analytics`)
+2. **Data-API-Key** erstellen (Credentials → Create credentials → API key, kein OAuth):
+   ```bash
+   mkdir -p ~/.config/echt-bamberg
+   echo "AIzaSy..." > ~/.config/echt-bamberg/youtube-api-key
+   chmod 600 ~/.config/echt-bamberg/youtube-api-key
+   ```
+3. **OAuth-Consent-Screen** konfigurieren:
+   - Audience: External, **eigene Email als Test User** eintragen
+   - Scopes: `youtube.readonly` + `yt-analytics.readonly`
+4. **OAuth-Client erstellen** (Credentials → OAuth client ID → Application type: **Desktop app**):
+   ```bash
+   mv ~/Downloads/client_secret_*.json ~/.config/echt-bamberg/youtube-oauth-client.json
+   chmod 600 ~/.config/echt-bamberg/youtube-oauth-client.json
+   ```
+5. **OAuth-Flow durchlaufen**:
+   ```bash
+   node pipeline/metrics.mjs yt setup
+   ```
+   Browser öffnet sich, Account-Picker wählen — **WICHTIG bei Brand-Channel** (siehe unten).
+
+#### Wichtig: Brand-Channel-Gotcha
+
+@echt.bamberg ist ein **Brand-Channel** unter dem Google-Account `herdom@gmail.com`. Im OAuth-Consent-Screen MUSS der Brand-Channel "echt bamberg" gewählt werden — nicht der Personal-Channel "Dominik Herrmann". Sonst liefert `yt analytics-all` nur Nullen, weil der Token an den falschen Channel gebunden ist.
+
+Wenn versehentlich der falsche Channel: Token löschen und nochmal:
+```bash
+rm ~/.config/echt-bamberg/youtube-oauth-token.json
+node pipeline/metrics.mjs yt setup
+```
+Im Browser: vor dem OAuth auf youtube.com auf den richtigen Channel umschalten. Beim Consent: bewusst @echt.bamberg auswählen.
+
+### Daily/Weekly Workflow
+
+```bash
+bash stats.sh                # Refresh + Ranking auf einen Blick
+node pipeline/metrics.mjs yt agg              # Strategische Pivot-Aggregate (type/design/topic)
+node pipeline/metrics.mjs yt show <id>        # Detail-Drilldown für einen Post (Daily-Tabelle + Milestones)
+```
+
+### Nach Posting
+
+```bash
+node pipeline/metrics.mjs yt sync             # Auto-match neuer Channel-Uploads → posts.posted.youtube.videoId
+                                              # Strategien: title-exact > title-fuzzy > title-substring > date-unique
+                                              # Multi-Pass mit Used-Set, kein Doppel-Match möglich
+node pipeline/metrics.mjs yt id <id> <URL>    # Manueller Fallback wenn Title zu stark abweicht
+```
+
+### Backfill (für Posts vor Tool-Einführung)
+
+```bash
+node pipeline/metrics.mjs yt sync             # Versucht Auto-Match für alle published-YT-Posts ohne videoId
+                                              # Listet Unmatched mit Kandidaten-Vorschlägen für Copy-Paste
+node pipeline/metrics.mjs yt analytics-all    # Holt rückwirkend Time-Series für alle tracked Posts
+```
+
+Analytics API liefert auch für historische Posts die täglichen Daten — du kannst also `views@24h` für jeden Post berechnen, auch wenn du erst Wochen später anfängst zu tracken. Das ist der Hauptgrund, Analytics API der Data API vorzuziehen (Data API gibt nur aktuelle Total-Counts zurück).
+
+### Datenmodell
+
+Pro Post in plan.json:
+```json
+{
+  "posted": {
+    "youtube": {
+      "video": "2026-04-21",        // Posting-Datum
+      "videoId": "wYEc1CSpd3c"      // YT-Video-ID (gesetzt von yt sync)
+    }
+  },
+  "metrics": {
+    "youtube": {
+      "videoId": "wYEc1CSpd3c",
+      "lastFetched": "2026-04-23",
+      "daily": [
+        { "date": "2026-04-21", "views": 798, "likes": 21, "comments": 3, "shares": 4,
+          "subsGained": 1, "watchMinutes": 45, "avgDurationSec": 18.4, "avgViewPct": 73.2 }
+      ]
+    }
+  }
+}
+```
+
+Top-Level `plan.config.youtube` cached Channel-Metadaten (handle, channelId, uploadsPlaylistId) für `yt sync`.
+
+### CLI-Referenz
+
+```bash
+node pipeline/metrics.mjs yt setup            # Einmalig: OAuth-Handshake (Browser)
+node pipeline/metrics.mjs yt sync             # Channel-Uploads → videoIds matchen
+node pipeline/metrics.mjs yt id <id> <URL>    # videoId manuell setzen (Fallback)
+node pipeline/metrics.mjs yt list             # Übersicht: tracked / no videoId / no stats
+node pipeline/metrics.mjs yt analytics <id>   # Time-Series für einen Post pullen
+node pipeline/metrics.mjs yt analytics-all    # Time-Series für alle tracked Posts pullen
+node pipeline/metrics.mjs yt rank             # Posts nach v@24h sortiert
+node pipeline/metrics.mjs yt agg [field]      # Aggregate (default: alle 3 + type·design Combo)
+node pipeline/metrics.mjs yt show <id>        # Detail-Drilldown
+```
+
+Faire Vergleichsmetrik ist `views @ 24h` (Erste-Tag-Performance), nicht `total views` (verwässert mit Alter). `yt rank` und `yt agg` filtern Posts ohne 24h-settled Data raus (heutige Posts).
 
 ## Content-Prinzipien (Kurzfassung)
 

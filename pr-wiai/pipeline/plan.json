@@ -25,23 +25,65 @@
       "id": "2026-akinator",
       "type": "wusstest-du",
       "design": "pixel-wall",
-      "status": "draft",
+      "status": "published",
       "json": "wiai-social/posts/2026-akinator.json",
       "source": null,
       "targetWeek": "2026-KW17",
-      "publishedDate": null,
+      "publishedDate": "2026-04-21",
       "platforms": {},
-      "notes": "",
+      "notes": "accentColor=#3B82F6 (WIAI_BLUE, tech), ledPattern=eye (Durchschauen-Motiv passt thematisch)",
       "tag": null,
       "topic": "tech",
       "content": {
-        "act1Setup": "Warum errät Akinator immer welche Person du meinst?",
-        "act1Reveal": "Logik.",
-        "act2": "Weil jede Frage die Hälfte der Möglichkeiten eliminiert. 20 Ja/Nein-Fragen reichen für über eine Million Personen. Das Prinzip heißt Entscheidungsbaum.",
-        "act3": "Informatik ist nicht Magie. Es ist Logik, die sich wie Magie anfühlt.",
-        "aside": "Das lernst du in Woche 3 des Informatikstudiums. Ab Woche 4 wird es noch besser."
+        "act1Setup": "Denk an eine\nbekannte Person.\nIch errate sie.",
+        "act1Reveal": "Wetten?",
+        "act2": "20 Ja/Nein-Fragen.\nJede halbiert\ndie Möglichkeiten.\n\n2 hoch 20 = 1.048.576.\n\n\nMehr bekannte Menschen\ngibt es nicht.",
+        "act3": "Keine Magie.\nSondern ein Entscheidungs­baum.",
+        "aside": "Das Spiel heißt Akinator.\nDas Prinzip:\nInformatik, Woche 3.",
+        "textAlign": "bottom"
       },
-      "slotIndex": 1
+      "slotIndex": 1,
+      "accentColor": "#3B82F6",
+      "ledPattern": "question",
+      "timing": {
+        "ledFadeFromBright": 20,
+        "act2Duration": 230,
+        "framesPerLine": 15,
+        "variant": "through",
+        "totalDuration": 624
+      },
+      "musicFile": "music/track-akinator.mp3",
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-21"
+        },
+        "youtube": {
+          "video": "2026-04-21",
+          "videoId": "wYEc1CSpd3c"
+        },
+        "instagram": {
+          "video": "2026-04-21"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "wYEc1CSpd3c",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-21",
+              "views": 798,
+              "likes": 2,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 44,
+              "avgDurationSec": 15,
+              "avgViewPct": 73.1
+            }
+          ]
+        }
+      }
     },
     {
       "id": "2026-bambirds",
@@ -167,10 +209,41 @@
           "video": "2026-04-20"
         },
         "youtube": {
-          "video": "2026-04-20"
+          "video": "2026-04-20",
+          "videoId": "oN9D5tfsA_o"
         },
         "instagram": {
           "video": "2026-04-20"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "oN9D5tfsA_o",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-20",
+              "views": 1588,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 84,
+              "avgDurationSec": 10,
+              "avgViewPct": 63.8
+            },
+            {
+              "date": "2026-04-21",
+              "views": 8,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 10,
+              "avgViewPct": 63.5
+            }
+          ]
         }
       }
     },
@@ -199,7 +272,8 @@
           "video": "2026-04-16"
         },
         "youtube": {
-          "video": "2026-04-16"
+          "video": "2026-04-16",
+          "videoId": "BnSnkG0B9nk"
         },
         "instagram": {
           "carousel": "2026-04-16",
@@ -219,6 +293,80 @@
         "instagram": {
           "caption": "Apps sind nicht unfair. Sie sind nur nicht ehrlich mit dir.\n\nInstagram: Du sollst nicht weggehen.\nTikTok: Drei Videos reichen, um dich einzuordnen.\nGoogle: Erste Treffer sind verkauft.\n\nDas sind keine Verschwörungen — das sind Produktentscheidungen.\n\nDer Haken: Wir nehmen's in Kauf, weil es Spaß macht.\nWenn es Spaß macht, hat's funktioniert.",
           "hashtags": "#socialmedia #medienkompetenz #digitalliteracy #algorithmen #datenschutz #tracking #informatikstudium #wiai #unibamberg #bamberg #informatik #studium"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "BnSnkG0B9nk",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-16",
+              "views": 255,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 9,
+              "avgDurationSec": 9,
+              "avgViewPct": 75.8
+            },
+            {
+              "date": "2026-04-17",
+              "views": 95,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 4,
+              "avgDurationSec": 9,
+              "avgViewPct": 72.8
+            },
+            {
+              "date": "2026-04-18",
+              "views": 72,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 3,
+              "avgDurationSec": 10,
+              "avgViewPct": 78.9
+            },
+            {
+              "date": "2026-04-19",
+              "views": 144,
+              "likes": 1,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 5,
+              "avgDurationSec": 9,
+              "avgViewPct": 72.7
+            },
+            {
+              "date": "2026-04-20",
+              "views": 2,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 13,
+              "avgViewPct": 101.5
+            },
+            {
+              "date": "2026-04-21",
+              "views": 3,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 9,
+              "avgViewPct": 69.3
+            }
+          ]
         }
       }
     },
@@ -246,7 +394,8 @@
           "video": "2026-04-07"
         },
         "youtube": {
-          "video": "2026-04-07"
+          "video": "2026-04-07",
+          "videoId": "O22FhSBKYiI"
         },
         "instagram": {
           "video": "2026-04-07"
@@ -265,6 +414,179 @@
         "instagram": {
           "caption": "23% mehr Gehalt. Steht in einer Studie. Sagt ein Professor. Stimmt alles nicht.",
           "hashtags": "#informatik #studium #gehalt #uni #faktencheck #manipulation #autorität"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "O22FhSBKYiI",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-07",
+              "views": 1671,
+              "likes": 1,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 42,
+              "avgDurationSec": 9,
+              "avgViewPct": 74.5
+            },
+            {
+              "date": "2026-04-08",
+              "views": 7,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 5,
+              "avgViewPct": 39.4
+            },
+            {
+              "date": "2026-04-09",
+              "views": 4,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 16,
+              "avgViewPct": 128.3
+            },
+            {
+              "date": "2026-04-10",
+              "views": 3,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 13,
+              "avgViewPct": 100.1
+            },
+            {
+              "date": "2026-04-11",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-12",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-13",
+              "views": 2,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-14",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-15",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-16",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-17",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-18",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-19",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-20",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-21",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            }
+          ]
         }
       }
     },
@@ -371,10 +693,151 @@
           "video": "2026-04-10"
         },
         "youtube": {
-          "video": "2026-04-10"
+          "video": "2026-04-10",
+          "videoId": "NgZJnWH0aus"
         },
         "instagram": {
           "video": "2026-04-10"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "NgZJnWH0aus",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-10",
+              "views": 981,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 33,
+              "avgDurationSec": 8,
+              "avgViewPct": 59.7
+            },
+            {
+              "date": "2026-04-11",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-12",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-13",
+              "views": 4,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 15,
+              "avgViewPct": 100
+            },
+            {
+              "date": "2026-04-14",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-15",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-16",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 7,
+              "avgViewPct": 50.7
+            },
+            {
+              "date": "2026-04-17",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-18",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-19",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-20",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-21",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            }
+          ]
         }
       }
     },
@@ -422,10 +885,250 @@
           "video": "2026-04-01"
         },
         "youtube": {
-          "video": "2026-04-01"
+          "video": "2026-04-01",
+          "videoId": "RuhyOL5_2pk"
         },
         "instagram": {
           "carousel": "2026-04-01"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "RuhyOL5_2pk",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-01",
+              "views": 425,
+              "likes": 3,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 1,
+              "watchMinutes": 18,
+              "avgDurationSec": 18,
+              "avgViewPct": 100.8
+            },
+            {
+              "date": "2026-04-02",
+              "views": 4,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 18,
+              "avgViewPct": 100.7
+            },
+            {
+              "date": "2026-04-03",
+              "views": 6,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 12,
+              "avgViewPct": 70.1
+            },
+            {
+              "date": "2026-04-04",
+              "views": 3,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 20,
+              "avgViewPct": 112.8
+            },
+            {
+              "date": "2026-04-05",
+              "views": 3,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 20,
+              "avgViewPct": 116.6
+            },
+            {
+              "date": "2026-04-06",
+              "views": 2,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-07",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-08",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-09",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-10",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-11",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-12",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-13",
+              "views": 2,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 10,
+              "avgViewPct": 56
+            },
+            {
+              "date": "2026-04-14",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-15",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-16",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-17",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-18",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-19",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-20",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-21",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            }
+          ]
         }
       }
     },
@@ -662,10 +1365,63 @@
           "video": "2026-04-18"
         },
         "youtube": {
-          "video": "2026-04-18"
+          "video": "2026-04-18",
+          "videoId": "UB4Ti71YLOs"
         },
         "instagram": {
           "video": "2026-04-18"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "UB4Ti71YLOs",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-18",
+              "views": 1540,
+              "likes": 8,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 1,
+              "watchMinutes": 88,
+              "avgDurationSec": 10,
+              "avgViewPct": 66.4
+            },
+            {
+              "date": "2026-04-19",
+              "views": 28,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 1,
+              "avgDurationSec": 12,
+              "avgViewPct": 75.6
+            },
+            {
+              "date": "2026-04-20",
+              "views": 8,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 10,
+              "avgViewPct": 64
+            },
+            {
+              "date": "2026-04-21",
+              "views": 8,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 10,
+              "avgViewPct": 65.6
+            }
+          ]
         }
       }
     },
@@ -760,11 +1516,97 @@
           "video": "2026-04-15"
         },
         "youtube": {
-          "video": "2026-04-15"
+          "video": "2026-04-15",
+          "videoId": "COZW71IKjq0"
         },
         "instagram": {
           "carousel": "2026-04-15",
           "video": "2026-04-15"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "COZW71IKjq0",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-15",
+              "views": 4,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 11,
+              "avgViewPct": 85.2
+            },
+            {
+              "date": "2026-04-16",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-17",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-18",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-19",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-20",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-21",
+              "views": 2,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 14,
+              "avgViewPct": 101.1
+            }
+          ]
         }
       }
     },
@@ -918,11 +1760,97 @@
           "video": "2026-04-15"
         },
         "youtube": {
-          "video": "2026-04-15"
+          "video": "2026-04-15",
+          "videoId": "OFQwT8q2rqE"
         },
         "instagram": {
           "carousel": "2026-04-15",
           "video": "2026-04-15"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "OFQwT8q2rqE",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-15",
+              "views": 462,
+              "likes": 1,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 20,
+              "avgDurationSec": 9,
+              "avgViewPct": 76.2
+            },
+            {
+              "date": "2026-04-16",
+              "views": 48,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 2,
+              "avgDurationSec": 13,
+              "avgViewPct": 110.6
+            },
+            {
+              "date": "2026-04-17",
+              "views": 10,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 10,
+              "avgViewPct": 85.5
+            },
+            {
+              "date": "2026-04-18",
+              "views": 3,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 8,
+              "avgViewPct": 73.3
+            },
+            {
+              "date": "2026-04-19",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 9,
+              "avgViewPct": 82.5
+            },
+            {
+              "date": "2026-04-20",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-21",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            }
+          ]
         }
       }
     },
@@ -948,25 +1876,58 @@
     },
     {
       "id": "2026-work-life",
-      "type": "contrarian",
-      "design": "pixel-wall",
-      "status": "draft",
+      "type": "stimmt-eigentlich",
+      "design": "raw-photo",
+      "status": "published",
       "json": "wiai-social/posts/2026-work-life.json",
       "source": null,
       "targetWeek": "2026-KW17",
       "publishedDate": null,
       "platforms": {},
-      "notes": "",
+      "notes": "Stadtspaziergang-Format: Bamberg-Footage (Veo) + Text-Overlay + Musik. 2 Video-Clips (bamberg-street-1/2). Produktion in Remotion (Slideshow). Beat-synced Texteinblendungen via aubio.",
       "tag": null,
       "topic": "karriere",
       "content": {
-        "act1Setup": "Es wird ja immer\ngesagt, Infor-\nmatiker:innen\nverdienen gut,\naber leben\nschlecht.",
-        "act1Reveal": "Kommt drauf an\nwo du studierst.",
-        "act2": "Großstadt: verdienst gut, zahlst alles für Miete.\n\nBamberg: verdienst auch gut, zahlst die Hälfte, wohnst im UNESCO-Welterbe.",
-        "act3": "Work-Life-Balance:\nFängt beim Studienort an.",
-        "aside": "Und beim Rauchbier.\nAber das ist eine persönliche Meinung."
+        "act1Setup": "200 Stunden pro Jahr. Du verlierst im Pendeln. Wenn du in einer Großstadt landest.",
+        "act2": "Informatik-Abschluss: überall gleich. Pendelzeit: nicht.",
+        "act3": "Work-Life-Balance fängt beim Studienort an.",
+        "aside": "Und beim Rauchbier. Aber das ist eine persönliche Meinung."
       },
-      "slotIndex": 2
+      "slotIndex": 2,
+      "social": {
+        "tiktok": {
+          "caption": "200 Stunden pro Jahr. Die verlierst du im Pendeln. Wenn du in einer Großstadt landest.",
+          "hashtags": "#informatik #studium #karriere #worklifebalance #studienort #informatikstudium #wiai #unibamberg #bamberg"
+        },
+        "youtube": {
+          "title": "Work-Life-Balance fängt beim Studienort an.",
+          "description": "200 Stunden pro Jahr verbringst du im Pendeln — wenn du in einer Großstadt arbeitest. Der Informatik-Abschluss ist überall gleich. Die Lebenszeit, die du täglich verlierst: nicht.\n\nWork-Life-Balance ist keine Einstellung. Es ist eine Entscheidung darüber, wo du studierst.\n\n@echt.bamberg · Fakultät WIAI, Universität Bamberg",
+          "hashtags": "#Shorts #Informatik #Karriere #WorkLifeBalance #Studienort #Studium #WIAI #UniBamberg #Bamberg"
+        },
+        "instagram": {
+          "caption": "200 Stunden pro Jahr.\nVerloren im Pendeln.\nWenn du in einer Großstadt landest.\n\nInformatik-Abschluss: überall gleich.\nPendelzeit: nicht.\n\nWork-Life-Balance fängt beim Studienort an.\n\nUnd beim Rauchbier. Aber das ist eine persönliche Meinung.",
+          "hashtags": "#informatik #studium #karriere #worklifebalance #studienort #informatikstudium #wiai #unibamberg #bamberg #pendeln #studiumdeutschland"
+        }
+      },
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-22"
+        },
+        "youtube": {
+          "video": "2026-04-22",
+          "videoId": "O0jpfWfX4p4"
+        },
+        "instagram": {
+          "video": "2026-04-22"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "O0jpfWfX4p4",
+          "lastFetched": "2026-04-23",
+          "daily": []
+        }
+      }
     },
     {
       "id": "contrarian-vorhange",
@@ -2090,10 +3051,173 @@
           "video": "2026-04-08"
         },
         "youtube": {
-          "video": "2026-04-08"
+          "video": "2026-04-08",
+          "videoId": "_W-v0A7a6Dk"
         },
         "instagram": {
           "video": "2026-04-08"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "_W-v0A7a6Dk",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-08",
+              "views": 14,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-09",
+              "views": 24,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 6,
+              "avgViewPct": 53.7
+            },
+            {
+              "date": "2026-04-10",
+              "views": 2,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-11",
+              "views": 244,
+              "likes": 1,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 7,
+              "avgDurationSec": 8,
+              "avgViewPct": 68.8
+            },
+            {
+              "date": "2026-04-12",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-13",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 10,
+              "avgViewPct": 81.5
+            },
+            {
+              "date": "2026-04-14",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-15",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-16",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-17",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-18",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-19",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-20",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-21",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            }
+          ]
         }
       }
     },
@@ -2590,10 +3714,129 @@
           "video": "2026-04-12"
         },
         "youtube": {
-          "video": "2026-04-12"
+          "video": "2026-04-12",
+          "videoId": "I4sIyDs3K9M"
         },
         "instagram": {
           "video": "2026-04-12"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "I4sIyDs3K9M",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-12",
+              "views": 243,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 6,
+              "avgDurationSec": 11,
+              "avgViewPct": 50.4
+            },
+            {
+              "date": "2026-04-13",
+              "views": 6,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 4,
+              "avgViewPct": 22.3
+            },
+            {
+              "date": "2026-04-14",
+              "views": 3,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-15",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-16",
+              "views": 2,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 22,
+              "avgViewPct": 103.2
+            },
+            {
+              "date": "2026-04-17",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-18",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-19",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-20",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-21",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            }
+          ]
         }
       }
     },
@@ -4173,7 +5416,6 @@
       "status": "draft",
       "json": null,
       "source": "pipeline/entwuerfe/selbstzerstoerung.md#Post-02-—-Variante-G",
-      "targetWeek": "2026-KW17",
       "publishedDate": null,
       "platforms": {},
       "notes": "",
@@ -4185,8 +5427,7 @@
         "act3": "Die ehrliche Antwort: Wir müssen besser werden. An der WIAI arbeiten wir dran.",
         "aside": "Übrigens: Unsere Einführungsvorlesung ist kostenlos auf YouTube. inf.zone. Besser als ChatGPT? Manchmal.",
         "asideStyle": "uebrigens"
-      },
-      "slotIndex": 3
+      }
     },
     {
       "id": "draft-social-engineering-p51a",
@@ -4246,10 +5487,162 @@
           "video": "2026-04-09"
         },
         "youtube": {
-          "video": "2026-04-09"
+          "video": "2026-04-09",
+          "videoId": "vtdImE8xM88"
         },
         "instagram": {
           "video": "2026-04-09"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "vtdImE8xM88",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-09",
+              "views": 1655,
+              "likes": 1,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 86,
+              "avgDurationSec": 11,
+              "avgViewPct": 74.9
+            },
+            {
+              "date": "2026-04-10",
+              "views": 326,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 23,
+              "avgDurationSec": 11,
+              "avgViewPct": 78.2
+            },
+            {
+              "date": "2026-04-11",
+              "views": 113,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 7,
+              "avgDurationSec": 10,
+              "avgViewPct": 71.1
+            },
+            {
+              "date": "2026-04-12",
+              "views": 67,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 5,
+              "avgDurationSec": 10,
+              "avgViewPct": 69.6
+            },
+            {
+              "date": "2026-04-13",
+              "views": 4,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 15,
+              "avgViewPct": 105.3
+            },
+            {
+              "date": "2026-04-14",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-15",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-16",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-17",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-18",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-19",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-20",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-21",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            }
+          ]
         }
       }
     },
@@ -4913,11 +6306,11 @@
       }
     },
     {
-      "id": "idea-neue-wordseitenzahlen-metakommen",
+      "id": "2026-word-seitenzahlen",
       "type": "aphorismus",
       "design": "billboard",
-      "status": "ready",
-      "json": null,
+      "status": "published",
+      "json": "wiai-social/posts/2026-word-seitenzahlen.json",
       "source": "pipeline/ideen/neue-postideen.md",
       "publishedDate": null,
       "platforms": {},
@@ -4925,9 +6318,52 @@
       "tag": "stark",
       "topic": "studium",
       "content": {
-        "act1Reveal": "Die meistgesuchte Frage im Studium",
-        "act2": "ist nicht Erkenntnistheorie. Nicht Statistik. Nicht Programmierung. Sondern: Wie beginnen Seitenzahlen in Word ab Seite 3?",
-        "act3": "Studieren ist leichter als Formatieren."
+        "act1Reveal": "Wie???",
+        "act2": "Meistgesuchte\nFrage im Studium.\n\nNicht Statistik.\nNicht Algorithmen.\nNicht Logik.",
+        "act3": "Studieren ist\nleichter als\nFormatieren.",
+        "act1Setup": "Notfall!\nWord-Seitenzahlen\nab Seite 3.",
+        "aside": "Hier ein neues Video\nzu posten ist ein\nKlacks dagegen."
+      },
+      "targetWeek": "2026-KW17",
+      "slotIndex": 3,
+      "billboard": {
+        "hookFlash": "page-stack",
+        "act1Duration": 90,
+        "act3Duration": 190
+      },
+      "social": {
+        "tiktok": {
+          "caption": "Studieren ist leichter als Formatieren.",
+          "hashtags": "#studium #word #hausarbeit #seitenzahlen #microsoft #uni #studieren #studierendenleben #bamberg #unibamberg #wiai"
+        },
+        "youtube": {
+          "title": "Word-Seitenzahlen ab Seite 3 – die meistgesuchte Frage im Studium",
+          "description": "Die häufigste Google-Suche von Studierenden ist nicht Statistik, nicht Algorithmen, nicht Logik. Sondern: Wie beginnen Seitenzahlen in Word ab Seite 3? Studieren ist leichter als Formatieren.",
+          "hashtags": "#Shorts #Studium #Word #Hausarbeit #Seitenzahlen #UniBamberg #WIAI"
+        },
+        "instagram": {
+          "caption": "Notfall! Word-Seitenzahlen ab Seite 3. Wie???\n\nMeistgesuchte Frage im Studium.\nNicht Statistik. Nicht Algorithmen. Nicht Logik.\n\nStudieren ist leichter als Formatieren.\n\n(Hier ein neues Video zu posten ist ein Klacks dagegen.)",
+          "hashtags": "#studium #word #hausarbeit #seitenzahlen #microsoft #uni #studieren #studierendenleben #bamberg #unibamberg #wiai #echtbamberg #informatikstudium"
+        }
+      },
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-23"
+        },
+        "youtube": {
+          "video": "2026-04-23",
+          "videoId": "vAHYfbCeedk"
+        },
+        "instagram": {
+          "video": "2026-04-23"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "vAHYfbCeedk",
+          "lastFetched": "2026-04-23",
+          "daily": []
+        }
       }
     },
     {
@@ -5127,10 +6563,239 @@
           "video": "2026-04-02"
         },
         "youtube": {
-          "video": "2026-04-02"
+          "video": "2026-04-02",
+          "videoId": "gw-JzYPqq-k"
         },
         "instagram": {
           "video": "2026-04-02"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "gw-JzYPqq-k",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-02",
+              "views": 1274,
+              "likes": 1,
+              "comments": 1,
+              "shares": 0,
+              "subsGained": 1,
+              "watchMinutes": 75,
+              "avgDurationSec": 14,
+              "avgViewPct": 72.7
+            },
+            {
+              "date": "2026-04-03",
+              "views": 644,
+              "likes": 5,
+              "comments": 0,
+              "shares": 1,
+              "subsGained": 0,
+              "watchMinutes": 35,
+              "avgDurationSec": 10,
+              "avgViewPct": 52.2
+            },
+            {
+              "date": "2026-04-04",
+              "views": 312,
+              "likes": 1,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 18,
+              "avgDurationSec": 9,
+              "avgViewPct": 46.5
+            },
+            {
+              "date": "2026-04-05",
+              "views": 181,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 11,
+              "avgDurationSec": 11,
+              "avgViewPct": 55.2
+            },
+            {
+              "date": "2026-04-06",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-07",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 16,
+              "avgViewPct": 84.4
+            },
+            {
+              "date": "2026-04-08",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-09",
+              "views": 2,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-10",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-11",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-12",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-13",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-14",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-15",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-16",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 4,
+              "avgViewPct": 20.8
+            },
+            {
+              "date": "2026-04-17",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-18",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-19",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-20",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-21",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 6,
+              "avgViewPct": 31.3
+            }
+          ]
         }
       }
     },
@@ -5334,10 +6999,118 @@
           "video": "2026-04-13"
         },
         "youtube": {
-          "video": "2026-04-13"
+          "video": "2026-04-13",
+          "videoId": "jKPB996ewRg"
         },
         "instagram": {
           "video": "2026-04-13"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "jKPB996ewRg",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-13",
+              "views": 1431,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 115,
+              "avgDurationSec": 12,
+              "avgViewPct": 65
+            },
+            {
+              "date": "2026-04-14",
+              "views": 33,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 2,
+              "avgDurationSec": 10,
+              "avgViewPct": 53.1
+            },
+            {
+              "date": "2026-04-15",
+              "views": 17,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 1,
+              "avgDurationSec": 11,
+              "avgViewPct": 62.5
+            },
+            {
+              "date": "2026-04-16",
+              "views": 5,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 9,
+              "avgViewPct": 52
+            },
+            {
+              "date": "2026-04-17",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-18",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-19",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-20",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 4,
+              "avgViewPct": 21.8
+            },
+            {
+              "date": "2026-04-21",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            }
+          ]
         }
       }
     },
@@ -5381,10 +7154,217 @@
           "video": "2026-04-04"
         },
         "youtube": {
-          "video": "2026-04-04"
+          "video": "2026-04-04",
+          "videoId": "N2O2AL0a8TI"
         },
         "instagram": {
           "video": "2026-04-04"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "N2O2AL0a8TI",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-04",
+              "views": 432,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 12,
+              "avgDurationSec": 12,
+              "avgViewPct": 116.2
+            },
+            {
+              "date": "2026-04-05",
+              "views": 6,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 12,
+              "avgViewPct": 109.4
+            },
+            {
+              "date": "2026-04-06",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-07",
+              "views": 2,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 14,
+              "avgViewPct": 131.8
+            },
+            {
+              "date": "2026-04-08",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-09",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-10",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-11",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-12",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-13",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-14",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-15",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-16",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-17",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-18",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-19",
+              "views": 0,
+              "likes": 1,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-20",
+              "views": 0,
+              "likes": -1,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-21",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            }
+          ]
         }
       }
     },
@@ -5582,10 +7562,206 @@
           "video": "2026-04-05"
         },
         "youtube": {
-          "video": "2026-04-05"
+          "video": "2026-04-05",
+          "videoId": "gIRv-qEW5jk"
         },
         "instagram": {
           "video": "2026-04-05"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "gIRv-qEW5jk",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-05",
+              "views": 1698,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 51,
+              "avgDurationSec": 8,
+              "avgViewPct": 84.4
+            },
+            {
+              "date": "2026-04-06",
+              "views": 9,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 5,
+              "avgViewPct": 50.2
+            },
+            {
+              "date": "2026-04-07",
+              "views": 4,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 7,
+              "avgViewPct": 76.5
+            },
+            {
+              "date": "2026-04-08",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-09",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-10",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-11",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-12",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-13",
+              "views": 8,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 1,
+              "avgDurationSec": 40,
+              "avgViewPct": 404
+            },
+            {
+              "date": "2026-04-14",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-15",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-16",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-17",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-18",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-19",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 9,
+              "avgViewPct": 97
+            },
+            {
+              "date": "2026-04-20",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-21",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            }
+          ]
         }
       }
     },
@@ -6975,10 +9151,195 @@
           "video": "2026-04-06"
         },
         "youtube": {
-          "video": "2026-04-06"
+          "video": "2026-04-06",
+          "videoId": "UmlLnNrKnE0"
         },
         "instagram": {
           "video": "2026-04-06"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "UmlLnNrKnE0",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-06",
+              "views": 314,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 8,
+              "avgDurationSec": 12,
+              "avgViewPct": 109.1
+            },
+            {
+              "date": "2026-04-07",
+              "views": 6,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 23,
+              "avgViewPct": 217.5
+            },
+            {
+              "date": "2026-04-08",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-09",
+              "views": 2,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-10",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-11",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-12",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-13",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-14",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 10,
+              "avgViewPct": 91.1
+            },
+            {
+              "date": "2026-04-15",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-16",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-17",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-18",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-19",
+              "views": 2,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 10,
+              "avgViewPct": 99.1
+            },
+            {
+              "date": "2026-04-20",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 5,
+              "avgViewPct": 51.4
+            },
+            {
+              "date": "2026-04-21",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            }
+          ]
         }
       }
     },
@@ -8324,10 +10685,140 @@
           "video": "2026-04-11"
         },
         "youtube": {
-          "video": "2026-04-11"
+          "video": "2026-04-11",
+          "videoId": "rp1LeFoFegc"
         },
         "instagram": {
           "video": "2026-04-11"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "rp1LeFoFegc",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-11",
+              "views": 416,
+              "likes": 1,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 13,
+              "avgDurationSec": 7,
+              "avgViewPct": 56.8
+            },
+            {
+              "date": "2026-04-12",
+              "views": 4,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 6,
+              "avgViewPct": 48.8
+            },
+            {
+              "date": "2026-04-13",
+              "views": 5,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 7,
+              "avgViewPct": 52
+            },
+            {
+              "date": "2026-04-14",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-15",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-16",
+              "views": 1,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 10,
+              "avgViewPct": 74.1
+            },
+            {
+              "date": "2026-04-17",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-18",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-19",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            },
+            {
+              "date": "2026-04-20",
+              "views": 2,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 14,
+              "avgViewPct": 101.4
+            },
+            {
+              "date": "2026-04-21",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            }
+          ]
         }
       }
     },
@@ -8822,7 +11313,8 @@
           "video": "2026-04-17"
         },
         "youtube": {
-          "video": "2026-04-17"
+          "video": "2026-04-17",
+          "videoId": "vlMOZMjPvbI"
         },
         "instagram": {
           "video": "2026-04-17"
@@ -8848,6 +11340,69 @@
         "instagram": {
           "caption": "1996. Ariane 5. Erstflug.\n\n37 Sekunden nach der Zündung zerstört sich die Rakete selbst.\n\nUrsache: Ein Softwaremodul aus dem Vorgängermodell — unverändert übernommen.\n\nBei Ariane 4 passte ein Messwert ins INT16-Format.\nBei Ariane 5 nicht. Die Rakete fliegt schneller.\nDie Zahl läuft über. Das Steuerungssystem stürzt ab.\nDie Rakete auch.\n\nDer Code lief jahrelang fehlerfrei.\nFür eine andere Rakete.",
           "hashtags": "#softwareentwicklung #informatik #ariane5 #softwarefehler #raumfahrt #programmierung #techfail #coding #wiai #unibamberg #studium #informatikstudium"
+        }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "vlMOZMjPvbI",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-17",
+              "views": 1325,
+              "likes": 3,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 2,
+              "watchMinutes": 88,
+              "avgDurationSec": 13,
+              "avgViewPct": 41.6
+            },
+            {
+              "date": "2026-04-18",
+              "views": 52,
+              "likes": 1,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 5,
+              "avgDurationSec": 16,
+              "avgViewPct": 49.1
+            },
+            {
+              "date": "2026-04-19",
+              "views": 101,
+              "likes": 3,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 1,
+              "watchMinutes": 9,
+              "avgDurationSec": 13,
+              "avgViewPct": 41.3
+            },
+            {
+              "date": "2026-04-20",
+              "views": 4,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 7,
+              "avgViewPct": 22.7
+            },
+            {
+              "date": "2026-04-21",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            }
+          ]
         }
       }
     },
@@ -8908,7 +11463,8 @@
           "video": "2026-04-19"
         },
         "youtube": {
-          "video": "2026-04-19"
+          "video": "2026-04-19",
+          "videoId": "aVDoA_S39LQ"
         },
         "instagram": {
           "reel": "2026-04-19"
@@ -8938,7 +11494,54 @@
           "caption": "POV: Ich räume mein Büro auf.\n\n16 Pendel. 16 Frequenzen. Keine Absprache. Trotzdem kippen sie alle 15 Sekunden für einen Moment in perfekte Ordnung — und sofort wieder raus.\n\nDas ist kein Zufall. Das ist Zahlentheorie.\n\n(Mein Schreibtisch hält ungefähr genauso lang.)",
           "hashtags": "#pendulumwave #oddlysatisfying #physik #mathematik #pendel #chaos #ordnung #schreibtisch #informatik #informatikstudium #wiai #unibamberg #bamberg #studium"
         }
+      },
+      "metrics": {
+        "youtube": {
+          "videoId": "aVDoA_S39LQ",
+          "lastFetched": "2026-04-23",
+          "daily": [
+            {
+              "date": "2026-04-19",
+              "views": 780,
+              "likes": 1,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 24,
+              "avgDurationSec": 9,
+              "avgViewPct": 60.9
+            },
+            {
+              "date": "2026-04-20",
+              "views": 2,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 12,
+              "avgViewPct": 77.6
+            },
+            {
+              "date": "2026-04-21",
+              "views": 0,
+              "likes": 0,
+              "comments": 0,
+              "shares": 0,
+              "subsGained": 0,
+              "watchMinutes": 0,
+              "avgDurationSec": 0,
+              "avgViewPct": 0
+            }
+          ]
+        }
       }
     }
-  ]
+  ],
+  "config": {
+    "youtube": {
+      "channelId": "UC-XYKMG1wEgBp5sozdJFmgQ",
+      "uploadsPlaylistId": "UU-XYKMG1wEgBp5sozdJFmgQ"
+    }
+  }
 }
