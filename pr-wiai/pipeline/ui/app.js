@@ -795,7 +795,9 @@ function onDragEnd(e) {
 function applySlotAssignment(post, week, slotIndex) {
   const updates = [];
   if (week) {
-    const weekPosts = plan.posts.filter((p) => p.targetWeek === week && p.id !== post.id);
+    const weekPosts = plan.posts
+      .filter((p) => p.targetWeek === week && p.id !== post.id)
+      .sort((a, b) => (a.slotIndex ?? 99) - (b.slotIndex ?? 99));
     weekPosts.splice(slotIndex, 0, post);
     weekPosts.forEach((p, i) => {
       if (p.slotIndex !== i) {

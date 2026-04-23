@@ -1,5 +1,5 @@
 import React from "react";
-import { useCurrentFrame, staticFile, Img, interpolate } from "remotion";
+import { useCurrentFrame, staticFile, Img, Video, interpolate } from "remotion";
 import { SlideshowImage, SlideshowEffect } from "../types";
 import { WIAI_YELLOW, BLACK } from "../styles/colors";
 import { spaceGroteskFamily } from "../styles/fonts";
@@ -598,6 +598,17 @@ export const PhotoFrame: React.FC<{
           <MosaicImage src={image.src} minBlockSize={mosaicBlock} cssFilter={blurFilter} />
         ) : hasScanlines ? (
           <ScanlineEffect src={image.src} effects={effects} progress={progress} transform={transform} />
+        ) : image.video ? (
+          <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+            <Video
+              src={staticFile(image.video)}
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+            />
+            <div style={{
+              position: "absolute", inset: 0,
+              background: `rgba(0,0,0,${image.videoDim ?? 0.45})`,
+            }} />
+          </div>
         ) : (
           <div style={{
             position: "absolute", inset: 0, overflow: "hidden",

@@ -1,7 +1,8 @@
 import { LedPattern } from "../components/LedWall";
 
 // Blinking question mark — provocative hooks, "merkste selber" posts.
-// 2 frames at 2fps = 1Hz blink (on 0.5s, off 0.5s).
+// Double-strobe: on(6f), off(6f), on(6f), off(18f). Cycle 1.2s at 30fps.
+// Creates nervous "tick-tick...pause" rhythm — more dramatic than metronomic 1Hz.
 function generate(): boolean[][] {
   const rows = 48;
   const cols = 24;
@@ -27,7 +28,7 @@ function generate(): boolean[][] {
   ];
 
   const spriteW = sprite[0].length;
-  const offsetR = 4;
+  const offsetR = 10;
   const offsetC = Math.floor((cols - spriteW) / 2);
 
   for (let sr = 0; sr < sprite.length; sr++) {
@@ -50,6 +51,6 @@ function empty(): boolean[][] {
 }
 
 export const questionPattern: LedPattern = {
-  frames: [generate(), empty()],
-  fps: 2,
+  frames: [generate(), empty(), generate(), empty(), empty(), empty()],
+  fps: 5,
 };

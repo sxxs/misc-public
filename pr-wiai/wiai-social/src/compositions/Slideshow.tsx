@@ -2,56 +2,100 @@ import React from "react";
 import { Sequence, useCurrentFrame, interpolate } from "remotion";
 import { Post } from "../types";
 import { BLACK } from "../styles/colors";
-import { spaceMonoFamily } from "../styles/fonts";
+import { spaceMonoFamily, spaceGroteskFamily } from "../styles/fonts";
 import { PhotoFrame } from "../components/PhotoFrame";
 
 const DEFAULT_IMAGE_DURATION = 35;
 
-// ── End Card: Absender with two lines (main + subtitle) ────────────────────
-const EndCard: React.FC<{ text: string; subtitle: string; duration: number }> = ({ text, subtitle, duration }) => {
+// ── End Card: punchline + aside + WIAI absender ─────────────────────────────
+const EndCard: React.FC<{ text: string; aside?: string; duration: number }> = ({ text, aside, duration }) => {
   const frame = useCurrentFrame();
-  // Instant pop-in for beat-aligned cut from slide 3
-  const textOpacity = frame >= 0 ? 1 : 0;
-  const subOpacity = frame >= 2 ? 1 : 0;
+  const textOpacity = interpolate(frame, [0, 12], [0, 1], { extrapolateRight: "clamp" });
+  const asideOpacity = interpolate(frame, [20, 40], [0, 1], { extrapolateRight: "clamp" });
+  const absenderOpacity = interpolate(frame, [35, 60], [0, 1], { extrapolateRight: "clamp" });
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        background: BLACK,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "column",
-        gap: 18,
-      }}
-    >
-      <div
-        style={{
+    <div style={{ position: "absolute", inset: 0, background: BLACK }}>
+      {/* Content block: punchline + aside in one flow, upper half */}
+      <div style={{
+        position: "absolute", inset: 0,
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "flex-start",
+        paddingTop: 480,
+      }}>
+        {/* Punchline — newspaper cutout */}
+        <div style={{
+          display: "flex", flexDirection: "column",
+          alignItems: "center", gap: 10,
           opacity: textOpacity,
-          color: "rgba(255,255,255,0.72)",
-          fontSize: 56,
-          fontFamily: spaceMonoFamily,
-          fontWeight: 500,
-          letterSpacing: "0.04em",
-          textAlign: "center",
-        }}
-      >
-        {text}
+        }}>
+          {text.split("\n").map((line, i) => (
+            <span key={i} style={{
+              display: "inline-block",
+              background: "#fff",
+              color: "#000",
+              padding: "12px 28px 14px",
+              fontSize: 72,
+              fontWeight: 700,
+              fontFamily: spaceGroteskFamily,
+              letterSpacing: "-0.01em",
+              lineHeight: 1,
+              whiteSpace: "nowrap",
+            }}>
+              {line}
+            </span>
+          ))}
+        </div>
+
+        {/* Aside — larger, brighter, below punchline */}
+        {aside && (
+          <div style={{
+            marginTop: 64,
+            textAlign: "center",
+            color: "rgba(255,255,255,0.68)",
+            fontSize: 42,
+            fontFamily: spaceGroteskFamily,
+            fontWeight: 400,
+            letterSpacing: "0.01em",
+            padding: "0 140px",
+            whiteSpace: "pre-line",
+            opacity: asideOpacity,
+          }}>
+            {aside}
+          </div>
+        )}
       </div>
-      <div
-        style={{
-          opacity: subOpacity,
-          color: "rgba(255,255,255,0.36)",
-          fontSize: 32,
+
+      {/* WIAI Absender — bottom left, standard style */}
+      <div style={{
+        position: "absolute", bottom: 748, left: 108,
+        display: "flex", flexDirection: "column", gap: 0,
+        opacity: absenderOpacity,
+      }}>
+        <div style={{
+          display: "inline-block",
+          background: "rgba(10,10,10,0.95)",
+          padding: "8px 18px 6px",
+          color: "rgba(255,255,255,0.80)",
+          fontSize: 36,
           fontFamily: spaceMonoFamily,
           fontWeight: 400,
-          letterSpacing: "0.08em",
-          textAlign: "center",
-        }}
-      >
-        {subtitle}
+          letterSpacing: "0.06em",
+        }}>
+          WIAI · Uni Bamberg
+        </div>
+        <div style={{
+          display: "inline-block",
+          background: "rgba(10,10,10,0.95)",
+          padding: "6px 18px 8px",
+          color: "rgba(255,255,255,0.80)",
+          fontSize: 36,
+          fontFamily: spaceMonoFamily,
+          fontWeight: 400,
+          letterSpacing: "0.06em",
+        }}>
+          @echt.bamberg
+        </div>
       </div>
     </div>
   );
@@ -87,7 +131,7 @@ export const Slideshow: React.FC<{ post: Post }> = ({ post }) => {
       {imageSequences}
       {showEndCard && (
         <Sequence from={frameOffset} durationInFrames={endCardDuration}>
-          <EndCard text={endCardText} subtitle={endCardSubtitle} duration={endCardDuration} />
+          <EndCard text={endCardText} aside={endCard?.aside} duration={endCardDuration} />
         </Sequence>
       )}
     </>

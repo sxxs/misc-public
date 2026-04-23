@@ -168,7 +168,7 @@ const Act1: React.FC<{ post: Post; act1Duration: number }> = ({ post, act1Durati
           justifyContent: textAlign === "top" ? "flex-start"
             : textAlign === "bottom" ? "flex-end" : "center",
           padding: textAlign === "bottom"
-            ? "180px 240px 420px 108px"  // push text down, above safe zone
+            ? "180px 240px 500px 108px"  // push text down, above safe zone
             : "180px 240px 240px 108px", // default: near true center
           gap: 44,
           position: "relative",

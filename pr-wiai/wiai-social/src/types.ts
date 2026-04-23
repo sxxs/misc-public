@@ -305,6 +305,8 @@ export interface SlideshowConfig {
 
 export interface SlideshowImage {
   src: string;                          // relative to public/, e.g. "media/campus.jpg"
+  video?: string;                       // video clip instead of image (relative to public/)
+  videoDim?: number;                    // dark overlay opacity over video (default 0.45)
   duration?: number;                    // total visible frames (default: 35)
   effect?: SlideshowEffect | SlideshowEffect[];
   text?: string;                        // optional text overlay
@@ -336,8 +338,9 @@ export type SlideshowEffect =
   | "beat";
 
 export interface SlideshowEndCard {
-  text?: string;     // main line (default: "@echt.bamberg")
-  subtitle?: string; // sub-line (default: "WIAI · Uni Bamberg")
+  text?: string;     // punchline (can contain \n for multi-line)
+  aside?: string;    // secondary line below punchline (e.g. Rauchbier joke)
+  subtitle?: string; // deprecated sub-line
   duration?: number; // frames (default: 60)
   effect?: SlideshowEffect;
 }
