@@ -1,0 +1,34 @@
+{
+  "id": "2026-work-life",
+  "type": "slideshow",
+  "musicFile": "music/track-come-out-tonight.mp3",
+  "slideshow": {
+    "images": [
+      {
+        "src": "media/work-life/bamberg-street-1.mp4",
+        "video": "media/work-life/bamberg-street-1.mp4",
+        "duration": 120,
+        "imageScale": 1.15,
+        "text": "200 Stunden pro Jahr.\nDu verlierst im Pendeln.\nWenn du in einer\nGroßstadt landest.",
+        "textPosition": "center",
+        "textLineFrames": [7, 36, 67, 96],
+        "textSizes": [72, 72, 72, 72]
+      },
+      {
+        "src": "media/work-life/bamberg-street-2.mp4",
+        "video": "media/work-life/bamberg-street-2.mp4",
+        "duration": 90,
+        "imageScale": 1.45,
+        "text": "Informatik-Abschluss:\nüberall gleich.\nPendelzeit: nicht.",
+        "textPosition": "center",
+        "textLineFrames": [6, 31, 60],
+        "textSizes": [56, 72, 72]
+      }
+    ],
+    "endCard": {
+      "text": "Work-Life-Balance\nfängt beim\nStudienort an.",
+      "aside": "Und beim Rauchbier. Aber das ist\neine persönliche Meinung.",
+      "duration": 171
+    }
+  }
+}

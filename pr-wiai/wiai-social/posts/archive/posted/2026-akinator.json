@@ -1,0 +1,23 @@
+{
+  "id": "2026-akinator",
+  "type": "led-wall",
+  "design": "pixel-wall",
+  "accentColor": "#3B82F6",
+  "musicFile": "music/track-akinator.mp3",
+  "ledPattern": "question",
+  "timing": {
+    "ledFadeFromBright": 20,
+    "act2Duration": 230,
+    "framesPerLine": 15,
+    "variant": "through",
+    "totalDuration": 624
+  },
+  "content": {
+    "act1Setup": "Denk an eine\nbekannte Person.\nIch errate sie.",
+    "act1Reveal": "Wetten?",
+    "act2": "20 Ja/Nein-Fragen.\nJede halbiert\ndie Möglichkeiten.\n\n2 hoch 20 = 1.048.576.\n\n\nMehr bekannte Menschen\ngibt es nicht.",
+    "act3": "Keine Magie.\nSondern ein Entscheidungs­baum.",
+    "aside": "Das Spiel heißt Akinator.\nDas Prinzip:\nInformatik, Woche 3.",
+    "textAlign": "bottom"
+  }
+}
