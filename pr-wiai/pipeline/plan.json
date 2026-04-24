@@ -10892,22 +10892,50 @@
       "id": "foto-beamer-no-signal",
       "type": "aphorismus",
       "design": "raw-photo",
-      "status": "idea",
-      "json": null,
+      "status": "published",
+      "json": "wiai-social/posts/archive/posted/2026-foto-beamer-no-signal.json",
       "source": null,
       "targetWeek": "2026-KW17",
       "publishedDate": null,
       "platforms": {},
-      "notes": "Foto: Hörsaal, Beamer-Fehlermeldung auf Leinwand (\"No Signal\" / blauer Bildschirm). 300 leere Stühle. Effekt: tint in Terminal-Amber → Text. Universal Kat. B.",
+      "notes": "FINAL VIDEO: wiai-social/out/2026-foto-beamer-no-signal.mp4 (12s, 7.2MB, 1080x1920 h264+aac, Remotion-gerendert)\nPipeline-Kopien: wiai-social/assets/media/beamer-no-signal/final.mp4 + pipeline/media/foto-beamer-no-signal/final.mp4\n\nCOMPOSITION: Remotion type 'raw-photo-video' (neu in src/compositions/RawPhotoVideo.tsx)\nPOST JSON: wiai-social/posts/2026-foto-beamer-no-signal.json\n\nSOURCE-ASSETS in wiai-social/assets/media/beamer-no-signal/:\n  source.mp4        Original 8s Video (stumm, generated)\n  retimed.mp4       Source @ 1.3125x slower (10.5s) + noise=alls=4 + saturation=1.10, contrast=1.04\n  voiceover.mp3     Getrimmt auf 12.0s + 200ms Fade-out (Original 8_52PM.wav, 12.52s, md5=87eff7fa...)\n\nVOICEOVER-TIMINGS (Whisper, Composition-Zeit nach 1.3125x slowdown):\n  [0.00-2.18]  Ich muss einen Vortrag halten. Kein Stress.\n  [2.80-4.02]  KI schreibt mir die Story.\n  [4.52-5.64]  KI macht mir die Folien.\n  [6.18-7.82]  Aber den Beamer...\n  [7.82-10.34] Den Beamer bringt auch sie nicht zum Laufen.\n  [11.24-11.72] Boah ey. (Character-Break, Whisper missed it as 'Bye!')\n\nBEAT-MATCHES (Video-Zeit = Composition-Zeit / 1.3125):\n  Video 0-2s (gebeugt, HDMI 1) <-> composition 0-2.6s ('Ich muss...')\n  Video 2-4s (aufgerichtet)     <-> composition 2.6-5.2s (KI-Lines)\n  Video 4-6s (HDMI-2-Wechsel!) <-> composition 5.2-7.9s (beginnt bei KI-macht, endet bei Aber den Beamer)\n  Video 6-8s (hunched defeat)  <-> composition 7.9-10.5s ('Den Beamer bringt...')\n\nCOMPOSITION-TIMING (30fps, 360 frames = 12.0s):\n  Frame 0      Start\n  Frame 210 (7.0s)   'BEAMER = ENDGEGNER' Overlay fadet ein (18f fade)\n  Frame 270 (9.0s)   Video-Fade-to-Black beginnt\n  Frame 300 (10.0s)  Absender 'WIAI Uni Bamberg / @echt.bamberg' fadet ein (22f fade)\n  Frame 315 (10.5s)  Video fully black\n  Frame 337-352 (11.24-11.72s) 'Boah ey' voiceover beat\n  Frame 360 (12.0s)  End\n\nOVERLAY LAYOUT:\n  BEAMER = ENDGEGNER: overlayTop=340, fontSize=92, Space Grotesk Bold, white, shadow\n  Absender (2 lines): absenderTop=970, Space Grotesk (42) fuer 'WIAI Uni Bamberg', Space Mono (36, WIAI_YELLOW) fuer '@echt.bamberg'\n\nPOST-STATUS: ready. final.mp4 ready zum Hochladen auf TikTok/IG/YT.\n\nREMOTION-WORKFLOW (fuer kuenftige raw-photo-video Posts):\n  1. ffmpeg pre-process (retime + grain + color grade)\n  2. Trim voiceover, ggf. whisper fuer Word-Timings\n  3. Post-JSON mit rawPhotoVideo{src, narrationFile, totalDuration, overlayText/Top/Size, absender, videoFadeStart/End}\n  4. node sync-root.mjs\n  5. npx remotion render src/index.ts 'WiaiPost-<id>' --output=out/<id>.mp4 --codec=h264 --crf=18 --pixel-format=yuv420p",
       "tag": "stark",
       "tagComment": null,
       "slotIndex": 4,
-      "topic": "alltag",
+      "topic": "tech",
       "format": "both",
       "content": {
-        "act1Reveal": "15 Minuten. 300 Studierende. 1 VGA-Kabel.",
+        "act1Reveal": "Aber den Beamer ... den Beamer bringt auch sie nicht zum Laufen.",
         "act2": "",
-        "act3": ""
+        "act3": "",
+        "voiceover": "[Bild, Stille, Fan-Surren] KI schreibt die Story. KI macht die Folien. [Pause] Aber den Beamer ... den Beamer bringt auch sie nicht zum Laufen.",
+        "overlay": "Endgegner."
+      },
+      "posted": {
+        "tiktok": {
+          "video": "2026-04-24"
+        },
+        "youtube": {
+          "video": "2026-04-24"
+        },
+        "instagram": {
+          "video": "2026-04-24"
+        }
+      },
+      "social": {
+        "tiktok": {
+          "caption": "Die KI macht die Folien. Aber den Beamer? Endgegner.",
+          "hashtags": "#ki #chatgpt #beamer #vortrag #uni #hochschule #informatik #studium #bamberg #unibamberg #wiai"
+        },
+        "youtube": {
+          "title": "Die KI kann alles. Außer den Beamer.",
+          "description": "Vortrag halten? Kein Stress. Die KI schreibt die Story, baut die Folien, übt die Stimme. Nur vor dem Beamer sind wir alle gleich.",
+          "hashtags": "#Shorts #KI #Beamer #Vortrag #UniBamberg #WIAI"
+        },
+        "instagram": {
+          "caption": "Vortrag? Kein Stress.\nDie KI schreibt mir die Story.\nDie KI macht mir die Folien.\n\nAber den Beamer …\nden Beamer bringt auch sie nicht zum Laufen.\n\nBoah ey.",
+          "hashtags": "#ki #chatgpt #beamer #vortrag #uni #studium #informatik #bamberg #unibamberg #wiai #echtbamberg #informatikstudium #studentenalltag"
+        }
       }
     },
     {

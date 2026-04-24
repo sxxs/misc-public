@@ -1,0 +1,28 @@
+{
+  "id": "2026-foto-beamer-no-signal",
+  "type": "raw-photo-video",
+  "music": false,
+  "rawPhotoVideo": {
+    "src": "media/beamer-no-signal/retimed.mp4",
+    "narrationFile": "media/beamer-no-signal/voiceover.mp3",
+    "musicFile": "media/beamer-no-signal/music_v1.mp3",
+    "musicVolume": 0.18,
+    "musicFadeOut": 0,
+    "totalDuration": 405,
+    "overlayText": "BEAMER = ENDGEGNER",
+    "overlayInFrame": 210,
+    "overlayFadeFrames": 18,
+    "overlayTop": 340,
+    "overlaySize": 92,
+    "absender": ["WIAI Uni Bamberg", "@echt.bamberg"],
+    "absenderInFrame": 300,
+    "absenderFadeFrames": 22,
+    "absenderTop": 970,
+    "videoFadeStart": 270,
+    "videoFadeEnd": 315
+  },
+  "content": {
+    "act2": "",
+    "act3": "Den Beamer bringt auch sie nicht zum Laufen."
+  }
+}

@@ -65,6 +65,9 @@ const selectDuration = (post: Post): number => {
   if (post.type === "apocalypse-billboard") {
     return 450; // 15s at 30fps: Act1 90 + Act2 180 + Act3 180
   }
+  if (post.type === "raw-photo-video" && post.rawPhotoVideo) {
+    return post.rawPhotoVideo.totalDuration;
+  }
   return ledWallDuration(post); // led-wall + all legacy types
 };
 

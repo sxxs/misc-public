@@ -9,7 +9,8 @@ export type PostType =
   | "terminal-doku"
   | "billboard"
   | "slideshow"
-  | "apocalypse-billboard";
+  | "apocalypse-billboard"
+  | "raw-photo-video";
 
 // ── Semantic content model — design-independent ─────────────────────────────
 // All compositions map these fields into their visual presentation.
@@ -345,6 +346,26 @@ export interface SlideshowEndCard {
   effect?: SlideshowEffect;
 }
 
+export interface RawPhotoVideoConfig {
+  src: string;              // relative to public/ — background video (pre-processed: grain, color grade)
+  narrationFile: string;    // relative to public/ — voiceover mp3/wav
+  totalDuration: number;    // total frames (30fps)
+  overlayText?: string;     // fades in over video (e.g. "BEAMER = ENDGEGNER")
+  overlayInFrame?: number;  // default 205 (just before video fade starts)
+  overlayFadeFrames?: number; // default 18
+  overlayTop?: number;      // y position in px (1920-high frame), default 540
+  overlaySize?: number;     // fontSize px, default 92
+  absender?: [string, string]; // two-line absender, e.g. ["WIAI Uni Bamberg", "@echt.bamberg"]
+  absenderInFrame?: number; // default 252 (after video faded to black)
+  absenderFadeFrames?: number; // default 22
+  absenderTop?: number;     // y position, default 1050
+  videoFadeStart?: number;  // default 210 (~7s @ 30fps)
+  videoFadeEnd?: number;    // default 240 (~8s @ 30fps) — video fully black after this
+  musicFile?: string;       // optional background music (relative to public/)
+  musicVolume?: number;     // default 0.18 (narration dominates)
+  musicFadeOut?: number;    // default 30 frames (1s fade at end)
+}
+
 export interface Post {
   id: string;
   type: PostType;
@@ -362,6 +383,7 @@ export interface Post {
   billboard?: BillboardConfig; // billboard captions mode
   slideshow?: SlideshowConfig; // slideshow-only
   nachtgedanke?: NachtgedankeConfig; // phone-format nachtgedanke
+  rawPhotoVideo?: RawPhotoVideoConfig; // raw-photo-video: single shot + voiceover + endcard
   ledPattern?: string;   // pattern name for LedWall sprite overlay (e.g. "maze")
   ledBeatFrames?: number[]; // beat-sync: pattern flashes at these absolute frames (7f on, then off)
   ledScroll?: number;    // rows/sec vertical scroll for LedWall (bright bands sweep upward)

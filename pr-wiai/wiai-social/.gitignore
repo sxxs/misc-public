@@ -1,3 +1,7 @@
 out/
 node_modules/
 dist/
+
+# Epidemic Sound and other licensed audio — not for public repo
+assets/media/**/music_*.mp3
+assets/media/**/ES_*.mp3
