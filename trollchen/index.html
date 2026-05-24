@@ -1,0 +1,2122 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<title>Trollchen</title>
+<style>
+  :root{
+    --bg:#0b0d10; --fg:#f5f5f0; --accent:#ff3b3b; --door:#ffd43b;
+    --ground:#3a3f47; --spike:#e54848; --hint:#9aa3ad; --panel:#13161b;
+    --fade:#6b5848;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+  html,body{height:100%;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;overflow:hidden;overscroll-behavior:none}
+  #stage{position:fixed;top:calc(env(safe-area-inset-top,0px) + 44px);left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 116px);display:flex;flex-direction:column;align-items:center;justify-content:center}
+  canvas{display:block;background:var(--bg);image-rendering:pixelated;touch-action:none;box-shadow:0 0 0 1px #1a1d22}
+
+  #hud{position:fixed;top:env(safe-area-inset-top,0);left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;font-size:13px;color:var(--hint);pointer-events:none;font-variant-numeric:tabular-nums;z-index:4}
+  #hud b{color:var(--fg);font-weight:600}
+  #hud .right{display:flex;gap:8px;align-items:center;pointer-events:auto}
+  .iconbtn{width:34px;height:34px;border-radius:50%;background:#1a1d22;border:1.5px solid #2a2f37;color:var(--fg);font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .iconbtn.off{color:#5a606a}
+
+  #controls{position:fixed;bottom:env(safe-area-inset-bottom,0);left:0;right:0;display:flex;justify-content:space-between;padding:14px 18px 18px;gap:14px;pointer-events:none;z-index:3}
+  .pad{display:flex;gap:12px;pointer-events:auto}
+  .btn{width:72px;height:72px;border-radius:50%;background:#1a1d22;border:1.5px solid #2a2f37;color:var(--fg);font-size:32px;display:flex;align-items:center;justify-content:center;line-height:1;font-weight:600;transition:transform .05s,background .1s}
+  .btn:active,.btn.pressed{background:#2a2f37;transform:scale(.94)}
+  .btn.jump{width:86px;height:86px;font-size:28px;background:#1f2228}
+  @media (hover:hover){#controls{opacity:.4}}
+
+  .scene{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;background:var(--bg);padding:24px 18px;text-align:center;z-index:10;overflow-y:auto}
+  .scene.hidden{display:none}
+  .scene h1{font-size:38px;font-weight:700;letter-spacing:-.02em;margin:24px 0 6px}
+  .scene h2{font-size:22px;font-weight:600;margin:8px 0 16px}
+  .scene .sub{color:var(--hint);font-size:14px;max-width:320px;margin-bottom:20px;line-height:1.5}
+  .scene .stats{color:var(--hint);font-size:13px;margin-top:14px;font-variant-numeric:tabular-nums}
+  .scene .stats b{color:var(--fg);font-weight:600}
+  .scene button{padding:12px 22px;border-radius:10px;background:var(--fg);color:var(--bg);border:0;font-size:15px;font-weight:600;cursor:pointer;margin:4px;font-family:inherit}
+  .scene button.secondary{background:transparent;color:var(--fg);border:1.5px solid #2a2f37}
+  .scene .credits{margin-top:auto;padding-top:24px;font-size:11px;color:#5a606a}
+
+  /* Level select with stage groups */
+  #levelSelect{align-items:center}
+  #levelSelect h2{margin:6px 0 10px}
+  #levelSelect .stageBlock{width:100%;max-width:340px;margin-bottom:14px}
+  #levelSelect .stageHead{font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:0.06em;text-align:left;margin:0 0 6px 4px;display:flex;justify-content:space-between}
+  #levelSelect .stageHead .name{color:var(--fg);font-weight:600}
+  #levelSelect .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .lvlBtn{background:var(--panel);border:1.5px solid #2a2f37;border-radius:9px;padding:10px 6px;color:var(--fg);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:64px;text-align:center;position:relative;font-family:inherit}
+  .lvlBtn:active{background:#1c2026}
+  .lvlBtn.locked{opacity:.32;cursor:not-allowed}
+  .lvlBtn .num{font-size:19px;font-weight:700;line-height:1}
+  .lvlBtn .meta{font-size:9px;color:var(--hint);margin-top:4px;line-height:1.1}
+  .lvlBtn.done{border-color:#4a5560}
+  .lvlBtn .check{position:absolute;top:4px;right:6px;font-size:10px;color:var(--door)}
+
+  /* Editor */
+  #editor{align-items:stretch;padding:0}
+  #editor .topbar{display:flex;gap:6px;padding:10px 12px;border-bottom:1px solid #1a1d22;align-items:center;flex-wrap:wrap}
+  #editor .topbar button{padding:8px 12px;font-size:13px;margin:0;border-radius:7px}
+  #editor .topbar .spacer{flex:1}
+  #editor .canvasWrap{flex:1;display:flex;align-items:center;justify-content:center;min-height:0}
+  #editor .palette{display:flex;gap:6px;padding:10px 12px;justify-content:center;border-top:1px solid #1a1d22;flex-wrap:wrap}
+  .toolBtn{width:42px;height:42px;border-radius:8px;background:var(--panel);border:2px solid #2a2f37;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--fg);font-family:inherit}
+  .toolBtn.active{border-color:var(--fg)}
+  .toolBtn[data-tile="."]{background:#11141a}
+  .toolBtn[data-tile="1"]{background:var(--ground)}
+  .toolBtn[data-tile="9"]{background:var(--ground);color:var(--door);font-weight:700}
+  .toolBtn[data-tile="2"]{background:var(--spike)}
+  .toolBtn[data-tile="8"]{background:#1a1d22;color:var(--spike);border-color:var(--spike)}
+  .toolBtn[data-tile="3"]{background:var(--door)}
+  .toolBtn[data-tile="4"]{background:var(--fade)}
+
+  #toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);padding:9px 16px;border-radius:18px;font-size:12px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:5}
+  #toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="c"></canvas></div>
+
+<div id="hud" class="hidden">
+  <div>L <b id="lvlNum">1</b> · Tode <b id="deaths">0</b> · <span id="lvlTime">0.0</span>s</div>
+  <div class="right">
+    <button id="mute" class="iconbtn" title="Ton">🔊</button>
+    <button id="pauseBtn" class="iconbtn" title="Pause">≡</button>
+  </div>
+</div>
+
+<div id="controls" class="hidden">
+  <div class="pad">
+    <div class="btn" data-key="left">‹</div>
+    <div class="btn" data-key="right">›</div>
+  </div>
+  <div class="pad">
+    <div class="btn jump" data-key="jump">↑</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div id="menu" class="scene">
+  <h1>Trollchen</h1>
+  <p class="sub">Erreiche die gelbe Tür. Klingt einfach. Ist es nicht.</p>
+  <button id="playBtn">Spielen</button>
+  <button id="editorBtn" class="secondary">Level-Editor</button>
+  <div class="stats"><span id="menuStats"></span></div>
+  <div class="credits">v3 · prototyp</div>
+</div>
+
+<div id="levelSelect" class="scene hidden">
+  <h2>Level wählen</h2>
+  <div id="lvlContainer"></div>
+  <button id="lvlBack" class="secondary">Zurück</button>
+  <div class="stats"><span id="lvlStats"></span></div>
+</div>
+
+<div id="pauseMenu" class="scene hidden">
+  <h2>Pause</h2>
+  <button id="resumeBtn">Weiter</button>
+  <button id="restartBtn" class="secondary">Level neu starten</button>
+  <button id="quitBtn" class="secondary">Zur Auswahl</button>
+</div>
+
+<div id="winScreen" class="scene hidden">
+  <h2 id="winTitle">Geschafft.</h2>
+  <p class="sub" id="winText"></p>
+  <button id="nextLvlBtn">Nächstes Level</button>
+  <button id="winQuitBtn" class="secondary">Zur Auswahl</button>
+</div>
+
+<div id="finalScreen" class="scene hidden">
+  <h1>Durchgespielt.</h1>
+  <p class="sub" id="finalText"></p>
+  <button id="finalBackBtn">Zur Auswahl</button>
+</div>
+
+<!-- Editor scene -->
+<div id="editor" class="scene hidden">
+  <div class="topbar">
+    <button id="edBack" class="secondary" style="padding:8px 10px">←</button>
+    <span style="font-size:13px;color:var(--hint)">Editor</span>
+    <div class="spacer"></div>
+    <button id="edClear" class="secondary">Leer</button>
+    <button id="edLoad" class="secondary">Laden</button>
+    <button id="edSave" class="secondary">Speichern</button>
+    <button id="edPlay">Spielen</button>
+  </div>
+  <div class="canvasWrap">
+    <canvas id="edCanvas"></canvas>
+  </div>
+  <div class="palette">
+    <button class="toolBtn active" data-tile=".">·</button>
+    <button class="toolBtn" data-tile="1">█</button>
+    <button class="toolBtn" data-tile="9">▒</button>
+    <button class="toolBtn" data-tile="2">▲</button>
+    <button class="toolBtn" data-tile="8">△</button>
+    <button class="toolBtn" data-tile="3">▮</button>
+    <button class="toolBtn" data-tile="4">░</button>
+    <button class="toolBtn" data-tile="S" style="background:#1a1d22">S</button>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+// =========================================================================
+// Canvas setup
+// =========================================================================
+const cvs = document.getElementById('c');
+const ctx = cvs.getContext('2d');
+const W = 360, H = 640;
+const TS = 20;
+const COLS = W/TS, ROWS = H/TS;
+// ?debug=1 schaltet alle Level frei (Fortschritt im localStorage bleibt unberührt).
+const DEBUG = new URLSearchParams(location.search).get('debug') === '1';
+let dpr = 1, scale = 1;
+
+function resize(){
+  const stage = document.getElementById('stage');
+  const vw = (stage && stage.clientWidth) || window.innerWidth;
+  const vh = (stage && stage.clientHeight) || (window.innerHeight - 160);
+  const s = Math.min(vw/W, vh/H);
+  scale = s; dpr = window.devicePixelRatio || 1;
+  cvs.style.width  = (W*s) + 'px';
+  cvs.style.height = (H*s) + 'px';
+  cvs.width  = Math.floor(W*s*dpr);
+  cvs.height = Math.floor(H*s*dpr);
+  ctx.setTransform(s*dpr, 0, 0, s*dpr, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+}
+window.addEventListener('resize', resize); resize();
+
+// =========================================================================
+// RNG
+// =========================================================================
+function mulberry32(seed){
+  let s = seed >>> 0;
+  return function(){
+    s |= 0; s = s + 0x6D2B79F5 | 0;
+    let t = Math.imul(s ^ s >>> 15, 1 | s);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function rngRange(rng, lo, hi){ return lo + Math.floor(rng()*(hi-lo+1)); }
+
+// =========================================================================
+// Audio
+// =========================================================================
+// Vertonte Troll-Sprüche (ElevenLabs) pro Spiel-Event. Ersetzen die TTS-Stimme;
+// fehlt eine Kategorie oder schlägt das Laden fehl, fällt speak() auf TTS zurück.
+const VOICE = {
+  teleport: ["speech/teleport-01.mp3","speech/teleport-02.mp3","speech/teleport-03.mp3","speech/teleport-04.mp3","speech/teleport-05.mp3","speech/teleport-06.mp3","speech/teleport-07.mp3","speech/teleport-08.mp3"],
+  spike:    ["speech/spike-01.mp3","speech/spike-02.mp3","speech/spike-03.mp3","speech/spike-04.mp3"],
+  move:     ["speech/move-01.mp3","speech/move-02.mp3"],
+  flip:     ["speech/flip-01.mp3","speech/flip-02.mp3"],
+  fade:     ["speech/fade-01.mp3","speech/fade-02.mp3"],
+  bridge:   ["speech/bridge-01.mp3","speech/bridge-02.mp3","speech/bridge-03.mp3","speech/bridge-04.mp3","speech/bridge-05.mp3","speech/bridge-06.mp3"],
+  death_1:  ["speech/death_1-01.mp3","speech/death_1-02.mp3","speech/death_1-03.mp3","speech/death_1-04.mp3","speech/death_1-05.mp3","speech/death_1-06.mp3","speech/death_1-07.mp3","speech/death_1-08.mp3","speech/death_1-09.mp3","speech/death_1-10.mp3","speech/death_1-11.mp3"],
+  death_2:  ["speech/death_2-01.mp3","speech/death_2-02.mp3","speech/death_2-03.mp3","speech/death_2-04.mp3","speech/death_2-05.mp3","speech/death_2-06.mp3","speech/death_2-07.mp3"],
+  death_3:  ["speech/death_3-01.mp3","speech/death_3-02.mp3","speech/death_3-03.mp3","speech/death_3-04.mp3","speech/death_3-05.mp3","speech/death_3-06.mp3","speech/death_3-07.mp3","speech/death_3-08.mp3","speech/death_3-09.mp3","speech/death_3-10.mp3","speech/death_3-11.mp3"],
+  death_4:  ["speech/death_4-01.mp3","speech/death_4-02.mp3","speech/death_4-03.mp3","speech/death_4-04.mp3","speech/death_4-05.mp3","speech/death_4-06.mp3","speech/death_4-07.mp3"],
+  win:      ["speech/win-01.mp3","speech/win-02.mp3","speech/win-03.mp3","speech/win-04.mp3","speech/win-05.mp3","speech/win-06.mp3","speech/win-07.mp3","speech/win-08.mp3","speech/win-09.mp3","speech/win-10.mp3"],
+  levelStart:["speech/levelStart-01.mp3","speech/levelStart-02.mp3","speech/levelStart-03.mp3","speech/levelStart-04.mp3","speech/levelStart-05.mp3","speech/levelStart-06.mp3","speech/levelStart-07.mp3"],
+};
+const audio = {
+  ctx: null, muted: false, voice: null, lastSpeak: 0,
+  clipCache: {}, clipDecks: {}, currentClip: null,
+  init(){
+    if (this.ctx){
+      // Safari/Chrome starten den Context evtl. 'suspended' (Autoplay-Policy).
+      // resume() muss in einem User-Gesture-Handler laufen — init() wird genau dort gerufen.
+      if (this.ctx.state === 'suspended') this.ctx.resume().catch(()=>{});
+      return;
+    }
+    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume().catch(()=>{});
+    if ('speechSynthesis' in window){
+      const pick = () => {
+        const v = speechSynthesis.getVoices();
+        this.voice = v.find(x => x.lang && x.lang.toLowerCase().startsWith('de'))
+                  || v.find(x => x.default) || v[0] || null;
+      };
+      pick(); speechSynthesis.onvoiceschanged = pick;
+    }
+  },
+  beep(freq, dur, type='square', vol=0.08, slideTo=null){
+    if (!this.ctx || this.muted) return;
+    const t = this.ctx.currentTime;
+    const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (slideTo !== null) o.frequency.exponentialRampToValueAtTime(slideTo, t+dur);
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    o.connect(g); g.connect(this.ctx.destination);
+    o.start(t); o.stop(t+dur+0.02);
+  },
+  jump(){ this.beep(520, 0.08, 'square', 0.05, 760); },
+  death(){ this.beep(220, 0.45, 'sawtooth', 0.13, 55); },
+  spike(){ this.beep(900, 0.05, 'square', 0.07); },
+  teleport(){
+    this.beep(660, 0.08, 'triangle', 0.06, 220);
+    setTimeout(()=>this.beep(220, 0.08, 'triangle', 0.06, 660), 80);
+  },
+  win(){
+    this.beep(523, 0.1, 'square', 0.08);
+    setTimeout(()=>this.beep(659, 0.1, 'square', 0.08), 110);
+    setTimeout(()=>this.beep(784, 0.18, 'square', 0.08), 220);
+  },
+  flip(){ this.beep(150, 0.3, 'sawtooth', 0.1, 600); },
+  fade(){ this.beep(440, 0.15, 'sine', 0.05, 220); },
+  tick(){ this.beep(880, 0.06, 'triangle', 0.05, 660); },
+  crumble(){ this.beep(180, 0.22, 'sawtooth', 0.09, 55); },
+  // Wählt einen Clip aus der Kategorie (Deck-Shuffle: keine Wiederholung bis leer).
+  pickClip(cat){
+    const pool = VOICE[cat];
+    if (!pool || !pool.length) return null;
+    let d = this.clipDecks[cat];
+    if (!d || d.length === 0){
+      d = pool.slice();
+      for (let i=d.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; }
+      this.clipDecks[cat] = d;
+    }
+    return d.pop();
+  },
+  // Primärer Sprach-Trigger: spielt einen vertonten Clip; TTS nur als Fallback.
+  speak(category){
+    if (this.muted) return;
+    const now = performance.now();
+    if (now - this.lastSpeak < 600) return;
+    this.lastSpeak = now;
+    const url = this.pickClip(category);
+    if (!url){ this.say(pickPhrase(category)); return; }
+    let a = this.clipCache[url];
+    if (!a){ a = new Audio(url); a.preload = 'auto'; this.clipCache[url] = a; }
+    try { if (this.currentClip && !this.currentClip.paused){ this.currentClip.pause(); this.currentClip.currentTime = 0; } } catch(e){}
+    a.currentTime = 0; a.volume = 0.9;
+    a.play().catch(()=>{ this.say(pickPhrase(category)); });
+    this.currentClip = a;
+  },
+  say(phrase){
+    if (this.muted || !phrase) return;
+    if (!('speechSynthesis' in window)) return;
+    const now = performance.now();
+    if (now - this.lastSpeak < 700) return;
+    this.lastSpeak = now;
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(phrase);
+      if (this.voice) u.voice = this.voice;
+      u.lang = 'de-DE'; u.rate = 1.05;
+      u.pitch = 0.85 + Math.random()*0.5; u.volume = 0.9;
+      speechSynthesis.speak(u);
+    } catch(e){}
+  },
+  toggleMute(){
+    this.muted = !this.muted;
+    if (this.muted){
+      if ('speechSynthesis' in window) speechSynthesis.cancel();
+      try { if (this.currentClip){ this.currentClip.pause(); this.currentClip.currentTime = 0; } } catch(e){}
+    }
+    const btn = document.getElementById('mute');
+    btn.textContent = this.muted ? '🔇' : '🔊';
+    btn.classList.toggle('off', this.muted);
+  },
+};
+
+// =========================================================================
+// Music — 4 Stages mit eigenem Charakter
+// =========================================================================
+// Frequenzen
+const A2=110, B2=123.47, C3=130.81, Cs3=138.59, D3=146.83, Ds3=155.56,
+      E3=164.81, F3=174.61, Fs3=185, G3=196, Gs3=207.65, A3=220,
+      As3=233.08, B3=246.94, C4=261.63, Cs4=277.18, D4=293.66, Ds4=311.13,
+      E4=329.63, F4=349.23, Fs4=369.99, G4=392, Gs4=415.30, A4=440,
+      As4=466.16, B4=493.88, C5=523.25, Cs5=554.37, D5=587.33, Ds5=622.25,
+      E5=659.25, Fs5=739.99, G5=783.99;
+
+const _ = null;
+const stages = [
+  // Stage 1: Mocking A-Moll (Grundlagen)
+  {
+    name: "Grundlagen", bpm: 112, leadChance: 0.55,
+    bass: [
+      A2,_,_,A2, _,_,E3,_,
+      A2,_,_,A2, _,E3,_,_,
+      A2,_,_,A2, _,_,E3,_,
+      A2,_,_,C3, _,D3,_,E3
+    ],
+    kick:  [1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0],
+    snare: [0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
+    hat:   [0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0],
+    leadMotif: [G4, E4, A4, G4, E4],
+  },
+  // Stage 2: Whole-tone "schwebend" (Vertikal/Schwerkraft)
+  // A whole-tone: A, B, C#, D#, F, G — keine Halbtöne → traumhaft, ohne Auflösung
+  {
+    name: "Vertikal", bpm: 100, leadChance: 0.5,
+    bass: [
+      A2,_,_,_, Cs3,_,_,_,  A2,_,_,Ds3, _,_,Fs3,_,
+      A2,_,_,_, Cs3,_,_,_,  Fs3,_,Ds3,_, Cs3,_,B2,_
+    ],
+    kick:  [1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0],
+    snare: [0,0,0,0, 0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 1,0,0,0],
+    hat:   [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+    leadMotif: [Fs5, Ds5, Cs5, As4, Fs4],  // whole-tone descending
+  },
+  // Stage 3: Phrygisch "hektisch" (Bewegung)
+  // A Phrygisch: A, Bb, C, D, E, F, G — bb2 macht's spannend
+  {
+    name: "Bewegung", bpm: 138, leadChance: 0.65,
+    bass: [
+      A2,_,A2,_, As3,_,_,_,  A2,_,A2,_, As3,_,_,_,
+      A2,_,A2,_, As3,_,_,_,  A2,_,_,A2, _,E3,F3,G3
+    ],
+    kick:  [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],
+    snare: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,1,0],
+    hat:   [0,1,1,1, 0,1,1,1, 0,1,1,1, 0,1,1,1, 0,1,1,1, 0,1,1,1, 0,1,1,1, 0,1,1,1],
+    leadMotif: [C5, B4, F4, B4, C5],  // phrygisch flavor
+  },
+  // Stage 4: Chromatisch absteigender Bass "unheimlich" (Wirr)
+  {
+    name: "Wirr", bpm: 95, leadChance: 0.7,
+    bass: [
+      A2,_,A2,_, _,A2,_,_,  Gs3, _,Gs3,_, _,Gs3,_,_,
+      G3,_,G3,_, _,G3,_,_,  Fs3,_,Fs3,_, _,F3,_,_
+    ],
+    kick:  [1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0],
+    snare: [0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
+    hat:   [0,0,0,0, 0,0,1,0, 0,0,0,0, 0,0,1,0, 0,0,0,0, 0,0,1,0, 0,0,0,0, 0,0,1,0],
+    leadMotif: [C5, B4, G4, A4, F4],  // unaufgelöst
+  },
+];
+
+const music = {
+  enabled: false, step: 0, nextStepTime: 0, intervalId: null,
+  masterVol: 0.55, leadCooldown: 1, currentStage: 0,
+  stingers: [
+    [{f:As4,d:0.18},{f:Gs4,d:0.18},{f:Fs4,d:0.18},{f:Ds4,d:0.45}],   // sad trombone
+    [{f:Gs4,d:0.18},{f:As3,d:0.45}],                                  // womp womp
+    [{f:G4,d:0.13},{f:E4,d:0.13},{f:G4,d:0.13},{f:E4,d:0.13},{f:D4,d:0.35}],  // nyah erweitert
+    [{f:C4,d:0.07},{f:E4,d:0.07},{f:G4,d:0.07},{f:C5,d:0.32}],        // aufsteigend
+    [{f:G4,d:0.18},{f:G4,d:0.18},{f:E5,d:0.4}],                       // bah-bah-baaah
+  ],
+  setStage(n){
+    n = Math.max(0, Math.min(stages.length-1, n));
+    this.currentStage = n;
+  },
+  bpm(){ return stages[this.currentStage].bpm; },
+  start(){
+    if (!audio.ctx || this.enabled) return;
+    if (audio.ctx.state === 'suspended') audio.ctx.resume().catch(()=>{});
+    this.enabled = true; this.step = 0;
+    this.nextStepTime = audio.ctx.currentTime + 0.15;
+    this.intervalId = setInterval(() => this.scheduler(), 25);
+  },
+  stop(){
+    this.enabled = false;
+    if (this.intervalId){ clearInterval(this.intervalId); this.intervalId = null; }
+  },
+  scheduler(){
+    if (!this.enabled || !audio.ctx) return;
+    const stepDur = 60 / this.bpm() / 4;
+    while (this.nextStepTime < audio.ctx.currentTime + 0.1){
+      this.playStep(this.step, this.nextStepTime);
+      this.step = (this.step + 1) % 32;
+      this.nextStepTime += stepDur;
+    }
+  },
+  playStep(s, t){
+    if (audio.muted) return;
+    const st = stages[this.currentStage];
+    const bf = st.bass[s];
+    if (bf) this.bassHit(bf, t);
+    if (st.kick[s])  this.kickHit(t);
+    if (st.snare[s]) this.snareHit(t);
+    if (st.hat[s])   this.hatHit(t);
+    if (s === 0){
+      this.leadCooldown--;
+      if (this.leadCooldown <= 0){
+        if (Math.random() < st.leadChance){
+          const noteDur = 60 / this.bpm() / 2;
+          st.leadMotif.forEach((freq, i) => {
+            this.tone(freq, t + i*noteDur, noteDur*0.7, 'triangle', 0.055*this.masterVol);
+          });
+        }
+        this.leadCooldown = 2 + Math.floor(Math.random()*3);
+      }
+    }
+  },
+  stinger(){
+    if (!audio.ctx || audio.muted) return;
+    const p = this.stingers[Math.floor(Math.random()*this.stingers.length)];
+    let t = audio.ctx.currentTime + 0.02;
+    p.forEach(n => { this.tone(n.f, t, n.d*0.85, 'triangle', 0.09*this.masterVol); t += n.d; });
+  },
+  tone(freq, when, dur, type='square', vol=0.05){
+    const ctx = audio.ctx;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(0, when);
+    g.gain.linearRampToValueAtTime(vol, when + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(when); o.stop(when + dur + 0.02);
+  },
+  bassHit(freq, t){
+    const dur = 60 / this.bpm() / 4 * 0.9, ctx = audio.ctx;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'square'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.07*this.masterVol, t + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    const f = ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=800;
+    o.connect(f); f.connect(g); g.connect(ctx.destination);
+    o.start(t); o.stop(t + dur + 0.02);
+  },
+  kickHit(t){
+    const ctx = audio.ctx;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type='sine';
+    o.frequency.setValueAtTime(130, t);
+    o.frequency.exponentialRampToValueAtTime(45, t + 0.09);
+    g.gain.setValueAtTime(0.18*this.masterVol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(t); o.stop(t + 0.15);
+  },
+  snareHit(t){
+    const ctx = audio.ctx;
+    const bs = Math.floor(ctx.sampleRate * 0.08);
+    const buf = ctx.createBuffer(1, bs, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i=0;i<bs;i++) d[i] = Math.random()*2-1;
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type='highpass'; f.frequency.value=1500;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.09*this.masterVol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    src.connect(f); f.connect(g); g.connect(ctx.destination);
+    src.start(t); src.stop(t + 0.1);
+  },
+  hatHit(t){
+    const ctx = audio.ctx;
+    const bs = Math.floor(ctx.sampleRate * 0.03);
+    const buf = ctx.createBuffer(1, bs, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i=0;i<bs;i++) d[i] = Math.random()*2-1;
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type='highpass'; f.frequency.value=6000;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.035*this.masterVol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+    src.connect(f); f.connect(g); g.connect(ctx.destination);
+    src.start(t); src.stop(t + 0.04);
+  },
+};
+
+// =========================================================================
+// Phrases + deck
+// =========================================================================
+const phrases = {
+  death_1:  ["Hmm.", "Tja.", "Pech.", "Knapp.", "Aua.", "Mhm.", "Schade.", "Ups."],
+  death_2:  ["Schon wieder.", "Echt jetzt?", "Süß.", "Versuch's nochmal.", "Wirklich?", "Klassiker.", "Ach komm.", "Naja."],
+  death_3:  ["Übst du?", "Konzentration.", "Ach Mensch.", "Du übst, ja?", "Ist das schwer?", "Nicht so doll.", "Anstrengend, ne?", "Du machst das wirklich."],
+  death_4:  ["Mach Pause.", "Genug?", "Lass es.", "Ernsthaft?", "Ich helfe nicht.", "Probier morgen.", "Anderes Hobby?", "Du gibst nicht auf, hm."],
+  teleport: ["Nope.", "Nicht hier.", "Andere Tür.", "Da nicht.", "Probier woanders.", "Hihi."],
+  spike:    ["Aua.", "Vorsicht.", "Pieks.", "Igitt.", "Überraschung."],
+  flip:     ["Andersrum.", "Verkehrte Welt.", "Spaß, ne?", "Oh.", "Aufgepasst.", "Wuoh."],
+  fade:     ["Plopp.", "Weg.", "Tschüss.", "Adios.", "Bumm."],
+  move:     ["Pass auf.", "Achtung.", "Da kommt was.", "Vorsicht!"],
+  levelStart:["Auf geht's.", "Mal sehen.", "Diesmal?", "Konzentriert bleiben.", "Du schaffst das. Vielleicht.", "Frisch ans Werk."],
+  win:      ["Geschafft.", "Endlich.", "Na also.", "Doch noch.", "Beim ersten Versuch? Lüge."],
+  bridge:   ["Kein Zurück.", "Tschüss Brücke.", "Hihi.", "Bye."],
+};
+const decks = {};
+function pickPhrase(category){
+  let d = decks[category];
+  if (!d || d.length === 0){
+    const pool = phrases[category]; if (!pool) return null;
+    d = pool.slice();
+    for (let i=d.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [d[i],d[j]] = [d[j],d[i]];
+    }
+    decks[category] = d;
+  }
+  return d.pop();
+}
+function deathCategory(d){
+  return d <= 3 ? 'death_1' : d <= 7 ? 'death_2' : d <= 12 ? 'death_3' : 'death_4';
+}
+function deathPhrase(d){ return pickPhrase(deathCategory(d)); }
+function troll(category, sfx){
+  music.stinger();
+  if (sfx) sfx();
+  audio.speak(category);
+}
+
+// =========================================================================
+// Input
+// =========================================================================
+const keys = { left:false, right:false, jump:false, jumpEdge:false };
+let inputFlip = 1, gravityFlip = 1;
+let lastJumpEdgeMs = 0;   // Debounce gegen Touch-Sampling-Bouncing
+
+function setKey(k, v){
+  if (k==='jump' && v && !keys.jump){
+    const now = performance.now();
+    if (now - lastJumpEdgeMs > 100){
+      keys.jumpEdge = true;
+      lastJumpEdgeMs = now;
+    }
+  }
+  keys[k] = v;
+}
+document.querySelectorAll('.btn').forEach(b=>{
+  const k = b.dataset.key;
+  // touchstart preventDefault unterdrückt vom Browser synthetisierte Mouse-Events.
+  // Sonst feuert ein Tap auf manchen Phones touchstart UND mousedown beide,
+  // was zu doppeltem jumpEdge führt -> Spieler springt nach Landung sofort wieder.
+  b.addEventListener('touchstart', e => e.preventDefault(), {passive:false});
+  const on = e => {
+    b.classList.add('pressed');
+    setKey(k, true);
+    try { b.setPointerCapture(e.pointerId); } catch(_){}
+  };
+  const off = e => {
+    b.classList.remove('pressed');
+    setKey(k, false);
+  };
+  b.addEventListener('pointerdown', on);
+  b.addEventListener('pointerup', off);
+  b.addEventListener('pointercancel', off);
+});
+window.addEventListener('keydown',e=>{
+  if (['ArrowLeft','a','A'].includes(e.key)) setKey('left',true);
+  if (['ArrowRight','d','D'].includes(e.key)) setKey('right',true);
+  if (['ArrowUp','w','W',' ','Spacebar'].includes(e.key)) { setKey('jump',true); e.preventDefault(); }
+  if (e.key === 'Escape' && scene === 'PLAYING') showPause();
+});
+window.addEventListener('keyup',e=>{
+  if (['ArrowLeft','a','A'].includes(e.key)) setKey('left',false);
+  if (['ArrowRight','d','D'].includes(e.key)) setKey('right',false);
+  if (['ArrowUp','w','W',' ','Spacebar'].includes(e.key)) setKey('jump',false);
+});
+
+// =========================================================================
+// Map helpers
+// =========================================================================
+const EMPTY = "..................";
+function placeChar(row, col, ch){ return row.substring(0,col)+ch+row.substring(col+1); }
+function fillFloor(map, fromCol, toCol, row){
+  for (let r=row; r<ROWS; r++){
+    let s = map[r].split('');
+    for (let c=fromCol; c<=toCol; c++) s[c]='1';
+    map[r] = s.join('');
+  }
+}
+function placeFloor(map, fromCol, toCol, atRow, thickness=1){
+  for (let r=atRow; r<atRow+thickness && r<ROWS; r++){
+    let s = map[r].split('');
+    for (let c=fromCol; c<=toCol; c++) s[c]='1';
+    map[r] = s.join('');
+  }
+}
+function placeRow(map, fromCol, toCol, atRow, ch){
+  let s = map[atRow].split('');
+  for (let c=fromCol; c<=toCol; c++) s[c]=ch;
+  map[atRow] = s.join('');
+}
+function blankMap(){ return new Array(ROWS).fill(EMPTY); }
+
+// =========================================================================
+// LEVELS — 24 Level in 4 Stages
+// Tile types:  . empty  1 solid  2 spike  3 door  4 fading platform
+// Entities:    movingSpike, drifting door, etc. (im build() erzeugt)
+// Per-level config keys (in build().config):
+//   gravityTimer: in s — auto-flip gravity periodically
+//   flipOnJump: bool — flip gravity each jump
+//   driftingDoor: bool — door entity instead of tile
+// =========================================================================
+
+const levels = [
+  // ==================== STAGE 1: GRUNDLAGEN ====================
+  {
+    name:"Hallo.", hint:"Geh zur gelben Tür.", stage:0,
+    build:(rng)=>{
+      const m = blankMap(); fillFloor(m,0,COLS-1,28);
+      m[27] = placeChar(m[27], rngRange(rng,13,15), '3');
+      return { map:m, spawn:{x:1,y:26}, meta:{hopped:false} };
+    },
+    trick:(s)=>{
+      // Erster Eindruck: harmloser Schreck. Tür hüpft EINMAL zwei Felder weg,
+      // sobald man fast dran ist. Nicht tödlich, sofort überwindbar.
+      if (s.meta.hopped) return;
+      const dc = s.map[27].indexOf('3');
+      if (dc < 0) return;
+      if (s.player.x > (dc-2)*TS && s.player.x < (dc+1)*TS){
+        const newC = (dc+2 <= COLS-2) ? dc+2 : dc-2;
+        s.map[27] = placeChar(s.map[27], dc, '.');
+        s.map[27] = placeChar(s.map[27], newC, '3');
+        s.meta.hopped = true;
+        troll('teleport', () => audio.teleport());
+      }
+    }
+  },
+  {
+    name:"Lücke", hint:"Spring drüber.", stage:0,
+    build:(rng)=>{
+      const m = blankMap();
+      const gapStart = rngRange(rng,5,7), gapWidth = rngRange(rng,3,4);
+      for (let r=28;r<ROWS;r++){
+        let s=''; for (let c=0;c<COLS;c++) s += (c>=gapStart && c<gapStart+gapWidth) ? '.' : '1';
+        m[r]=s;
+      }
+      m[27] = placeChar(m[27], COLS-2, '3');
+      return { map:m, spawn:{x:1,y:26}, meta:{gapStart} };
+    },
+    trick:(s)=>{
+      const gs = s.meta.gapStart;
+      if (!s.trickDone && s.player.x > (gs+5)*TS && s.onGround){
+        for (let r=28;r<ROWS;r++) s.map[r] = placeChar(s.map[r], gs-1, '.');
+        s.trickDone = true;
+        troll('bridge', () => audio.spike());
+      }
+    }
+  },
+  {
+    name:"Pop-up", hint:"Was ist daran kompliziert?", stage:0,
+    build:(rng)=>{
+      const m = blankMap(); fillFloor(m,0,COLS-1,28);
+      m[27] = placeChar(m[27], rngRange(rng,16,17), '3');
+      return { map:m, spawn:{x:1,y:26}, meta:{spikeStart:rngRange(rng,9,11), triggerCol:rngRange(rng,5,7)} };
+    },
+    trick:(s)=>{
+      if (!s.trickDone && s.player.x > s.meta.triggerCol*TS){
+        let row = s.map[27].split('');
+        for (let c=s.meta.spikeStart; c<=s.meta.spikeStart+2; c++) row[c]='2';
+        s.map[27] = row.join('');
+        s.trickDone = true;
+        troll('spike', () => audio.spike());
+      }
+    }
+  },
+  {
+    name:"Verkehrt", hint:"Etwas fühlt sich falsch an.", stage:0,
+    build:(rng)=>{
+      const m = blankMap(); fillFloor(m,0,COLS-1,28);
+      m[27] = placeChar(m[27], rngRange(rng,15,17), '3');
+      return { map:m, spawn:{x:1,y:26}, meta:{} };
+    },
+    onEnter:()=>{ inputFlip = -1; troll('flip', () => audio.flip()); },
+    onExit:()=>{ inputFlip = 1; }
+  },
+  {
+    name:"Türenlüge", hint:"Tür ist Tür, oder?", stage:0,
+    build:(rng)=>{
+      const m = blankMap(); fillFloor(m,0,COLS-1,28);
+      m[27] = placeChar(m[27], rngRange(rng,15,17), '3');
+      return { map:m, spawn:{x:1,y:26}, meta:{maxMoves:rngRange(rng,3,4)} };
+    },
+    trick:(s,rng)=>{
+      let dr=-1, dc=-1;
+      for (let r=0;r<ROWS;r++){ const i=s.map[r].indexOf('3'); if (i>=0){dr=r;dc=i;break} }
+      if (dr<0) return;
+      const dx=s.player.x-dc*TS, dy=s.player.y-dr*TS;
+      if (Math.hypot(dx,dy)<70 && s.doorMoves<s.meta.maxMoves){
+        let row = s.map[dr].split(''); row[dc]='.'; s.map[dr]=row.join('');
+        let newC; do { newC = 1 + Math.floor(rng()*16); } while (Math.abs(newC-dc)<5);
+        row = s.map[27].split(''); row[newC]='3'; s.map[27]=row.join('');
+        s.doorMoves++;
+        troll('teleport', () => audio.teleport());
+      }
+    }
+  },
+  {
+    name:"Boden weg", hint:"Steh nicht still.", stage:0,
+    build:(rng)=>{
+      const m = blankMap(); fillFloor(m,0,COLS-1,28);
+      m[27] = placeChar(m[27], rngRange(rng,16,17), '3');
+      return { map:m, spawn:{x:1,y:26}, meta:{tickRate:rngRange(rng,25,35)} };
+    },
+    trick:(s)=>{
+      s.crumbleTimer = (s.crumbleTimer||0)+1;
+      if (s.crumbleTimer > s.meta.tickRate){
+        s.crumbleTimer = 0;
+        for (let c=0;c<COLS;c++){
+          if (s.map[28][c]==='1'){
+            const tc = Math.min(c, Math.floor(s.player.x/TS)-2);
+            if (tc>=0 && s.map[28][tc]==='1'){
+              for (let r=28;r<ROWS;r++) s.map[r] = placeChar(s.map[r], tc, '.');
+            }
+            break;
+          }
+        }
+      }
+    }
+  },
+
+  // ==================== STAGE 2: VERTIKAL ====================
+  {
+    name:"Drei Etagen", hint:"Runter. Aber wo?", stage:1,
+    build:(rng)=>{
+      const m = blankMap();
+      fillFloor(m,0,COLS-1,28);
+      m[27] = placeChar(m[27], rngRange(rng,14,17), '3');
+      const midGap = rngRange(rng,2,6);
+      placeFloor(m,0,COLS-1,18);
+      for (let c=midGap; c<midGap+3; c++) m[18] = placeChar(m[18], c, '.');
+      const topGap = rngRange(rng,11,15);
+      placeFloor(m,0,COLS-1,9);
+      for (let c=topGap; c<topGap+3; c++) m[9] = placeChar(m[9], c, '.');
+      return { map:m, spawn:{x:1,y:7}, meta:{midGap, topGap} };
+    },
+    trick:(s)=>{
+      if (!s.upperClosed && s.player.y > 19*TS){
+        const t = s.meta.topGap;
+        for (let c=t; c<t+3; c++) s.map[9] = placeChar(s.map[9], c, '1');
+        s.upperClosed = true;
+        troll('bridge');
+      }
+    }
+  },
+  {
+    name:"Springturm", hint:"Nach oben. Vorsichtig.", stage:1,
+    build:(rng)=>{
+      const m = blankMap(); fillFloor(m,0,COLS-1,28);
+      const rows = [25,22,19,16,13,10];
+      const stepCols = [rngRange(rng,4,7)];
+      for (let i=1;i<rows.length;i++){
+        const dir = (i%2===1) ? 1 : -1;
+        const off = rngRange(rng,4,5);
+        const next = stepCols[i-1] + dir*off;
+        stepCols.push(Math.max(2, Math.min(COLS-5, next)));
+      }
+      stepCols.forEach((c,i)=>{
+        const r = rows[i];
+        for (let cc=c; cc<c+3; cc++) m[r] = placeChar(m[r], cc, '1');
+      });
+      const lastC = stepCols[stepCols.length-1];
+      m[9] = placeChar(m[9], lastC+1, '3');
+      return { map:m, spawn:{x:1,y:26}, meta:{stepCols} };
+    },
+    trick:(s)=>{
+      const pr = Math.floor(s.player.y/TS);
+      if (!s.trickDone && pr < 22 && s.onGround){
+        const c = s.meta.stepCols[0];
+        for (let cc=c; cc<c+3; cc++) s.map[25] = placeChar(s.map[25], cc, '.');
+        s.trickDone = true;
+        troll('bridge');
+      }
+    }
+  },
+  {
+    name:"Fallrohr", hint:"Lass dich fallen.", stage:1,
+    build:(rng)=>{
+      const m = blankMap();
+      const chuteCol = rngRange(rng,6,10);
+      fillFloor(m,0,COLS-1,28);
+      m[27] = placeChar(m[27], chuteCol+1, '3');
+      placeFloor(m, 0, chuteCol-1, 8);
+      placeFloor(m, chuteCol+3, COLS-1, 8);
+      placeFloor(m, 0, chuteCol+1, 15);
+      placeFloor(m, chuteCol+5, COLS-1, 15);
+      placeFloor(m, 0, chuteCol-2, 22);
+      placeFloor(m, chuteCol+2, COLS-1, 22);
+      return { map:m, spawn:{x:chuteCol+0.5,y:2}, meta:{chuteCol} };
+    },
+    trick:(s)=>{
+      if (!s.trickDone && s.player.y > 20*TS){
+        const c = s.meta.chuteCol;
+        s.map[27] = placeChar(s.map[27], c, '2');
+        s.map[27] = placeChar(s.map[27], c+2, '2');
+        s.trickDone = true;
+        troll('spike', () => audio.spike());
+      }
+    }
+  },
+  {
+    name:"Oben unten", hint:"Halb und halb.", stage:1,
+    build:(rng)=>{
+      const m = blankMap();
+      fillFloor(m,0,COLS-1,28);
+      placeFloor(m,0,COLS-1,2);
+      const doorCol = rngRange(rng,14,17);
+      m[27] = placeChar(m[27], doorCol, '3');
+      return { map:m, spawn:{x:1,y:26}, meta:{doorCol, triggerCol:rngRange(rng,8,11)} };
+    },
+    trick:(s)=>{
+      if (!s.gravFlipped && s.player.x > s.meta.triggerCol*TS){
+        gravityFlip = -1;
+        const dc = s.meta.doorCol;
+        s.map[27] = placeChar(s.map[27], dc, '.');
+        s.map[3] = placeChar(s.map[3], dc, '3');
+        s.gravFlipped = true;
+        s.player.vy = -150;
+        troll('flip', () => audio.flip());
+      }
+    },
+    onExit:()=>{ gravityFlip = 1; }
+  },
+  {
+    name:"Zickzack", hint:"Drei Etagen, mehrfach Ärger.", stage:1,
+    build:(rng)=>{
+      const m = blankMap();
+      fillFloor(m,0,COLS-1,28);
+      placeFloor(m,0,COLS-4,19);
+      placeFloor(m,4,COLS-1,11);
+      const doorCol = rngRange(rng,1,4);
+      m[27] = placeChar(m[27], doorCol, '3');
+      return {
+        map:m, spawn:{x:COLS-2,y:8},
+        meta:{
+          midSpikeCol: rngRange(rng, 6, 10),   // 2 Spikes mit 1-Tile-Lücke dazwischen
+          botSpikeCol: rngRange(rng, 6, 12),
+          doorCol,
+        }
+      };
+    },
+    trick:(s,rng)=>{
+      // Trick 1: Zwei Spikes auf der mittleren Etage, sobald sie betreten wird
+      if (!s.trickStep1 && s.player.y > 13*TS && s.player.y < 19*TS){
+        const c = s.meta.midSpikeCol;
+        s.map[18] = placeChar(s.map[18], c, '2');
+        s.map[18] = placeChar(s.map[18], c+2, '2');
+        s.trickStep1 = true;
+        troll('spike', () => audio.spike());
+      }
+      // Trick 2: Spike auf der unteren Etage, sobald Spieler unten ankommt
+      if (!s.trickStep2 && s.player.y > 22*TS){
+        const c = s.meta.botSpikeCol;
+        s.map[27] = placeChar(s.map[27], c, '2');
+        s.trickStep2 = true;
+        troll('spike', () => audio.spike());
+      }
+    }
+  },
+  {
+    name:"Stage-Boss V", hint:"Glaube an den Boden.", stage:1,
+    build:(rng)=>{
+      const m = blankMap();
+      fillFloor(m, 0, COLS-1, 28);
+      // Sichtbare Plattformen auf Reihen 22, 16, 10 (alle 8-10 Cols, 3 Tiles breit)
+      placeFloor(m, 8, 10, 22);
+      placeFloor(m, 8, 10, 16);
+      placeFloor(m, 8, 10, 10);
+      // Unsichtbare Stepping Stones dazwischen — alternieren cols 5-7 / 8-10
+      // Jeder Sprung: 3 Reihen hoch, 3 Spalten seitlich (genau in mein Sprungfenster)
+      placeRow(m, 5, 7, 25, '7');   // Vom Boden Col 1-3 rauf rechts
+      placeRow(m, 5, 7, 19, '7');   // Von Plattform 1 (Col 8-10) rauf links
+      placeRow(m, 5, 7, 13, '7');   // Von Plattform 2 (Col 8-10) rauf links
+      // Tür auf der obersten sichtbaren Plattform
+      m[9] = placeChar(m[9], 9, '3');
+      return { map:m, spawn:{x:1, y:26}, meta:{} };
+    }
+  },
+
+  // ==================== STAGE 3: BEWEGUNG ====================
+  {
+    // 13: Eine bewegte Klinge — Intro
+    name:"Wandernde Klinge", hint:"Beobachte. Spring im Takt.", stage:2,
+    build:(rng)=>{
+      const m = blankMap(); fillFloor(m,0,COLS-1,28);
+      m[27] = placeChar(m[27], COLS-2, '3');
+      const x0 = 5*TS, x1 = 12*TS;
+      return {
+        map:m, spawn:{x:1,y:26}, meta:{},
+        entities:[
+          { type:'movingSpike', x:x0, y:27*TS, vx:50, xMin:x0, xMax:x1, w:16, h:18 }
+        ]
+      };
+    }
+  },
+  {
+    // 14: Zwei Klingen, schneller
+    name:"Zwei Klingen", hint:"Doppelt vorsichtig.", stage:2,
+    build:(rng)=>{
+      const m = blankMap(); fillFloor(m,0,COLS-1,28);
+      m[27] = placeChar(m[27], COLS-2, '3');
+      return {
+        map:m, spawn:{x:1,y:26}, meta:{},
+        entities:[
+          { type:'movingSpike', x:4*TS,  y:27*TS, vx:70,  xMin:3*TS,  xMax:9*TS,  w:16, h:18 },
+          { type:'movingSpike', x:13*TS, y:27*TS, vx:-85, xMin:10*TS, xMax:14*TS, w:16, h:18 },
+        ]
+      };
+    }
+  },
+  {
+    // 15: Verfolger
+    name:"Verfolger", hint:"Sie merkt, wo du bist.", stage:2,
+    build:(rng)=>{
+      const m = blankMap(); fillFloor(m,0,COLS-1,28);
+      m[27] = placeChar(m[27], COLS-2, '3');
+      // kleine Plattformen zum Ausweichen
+      placeFloor(m, 6, 8, 24);
+      placeFloor(m, 11, 13, 22);
+      return {
+        map:m, spawn:{x:1,y:26}, meta:{},
+        entities:[
+          { type:'trackingSpike', x:3*TS, y:27*TS, vx:0, w:16, h:18, maxSpeed:80, accel:200 }
+        ]
+      };
+    }
+  },
+  {
+    // 16: Geisterboden — Einführung
+    name:"Geisterboden", hint:"Sie verschwinden, wenn du sie berührst.", stage:2,
+    build:(rng)=>{
+      const m = blankMap();
+      // Boden links solide, rechts Geister
+      fillFloor(m, 0, 4, 28);
+      placeRow(m, 5, 16, 28, '4');
+      placeFloor(m, 17, 17, 28);
+      m[27] = placeChar(m[27], 17, '3');
+      return { map:m, spawn:{x:1,y:26}, meta:{} };
+    }
+  },
+  {
+    // 17: Geistertreppe — vertikal mit vielen Geisterplattformen
+    name:"Geistertreppe", hint:"Bleib in Bewegung.", stage:2,
+    build:(rng)=>{
+      const m = blankMap(); fillFloor(m,0,COLS-1,28);
+      // 6-Tile-Fade-Stufen, Zickzack mit jeweils 3 Spalten Überlapp zur nächsten —
+      // straight-up Sprung trifft immer (3 cols Überlapp > Spielerbreite + Toleranz).
+      placeRow(m, 3, 8,  25, '4');
+      placeRow(m, 6, 11, 22, '4');
+      placeRow(m, 3, 8,  19, '4');
+      placeRow(m, 6, 11, 16, '4');
+      // Anflug solide, 7 Tiles, deckt beide Zickzack-Bereiche
+      placeRow(m, 4, 10, 13, '1');
+      // Tür-Plateau: 3 Tiles, schmaler als Anflug
+      placeRow(m, 6, 8, 10, '1');
+      m[9] = placeChar(m[9], 7, '3');
+      return { map:m, spawn:{x:3,y:26}, meta:{} };
+    }
+  },
+  {
+    // 18: Stage-Boss B — Klinge + Geister
+    name:"Stage-Boss B", hint:"Spring drüber. Lauf weiter.", stage:2,
+    build:(rng)=>{
+      const m = blankMap();
+      fillFloor(m, 0, 5, 28);
+      placeRow(m, 6, 14, 28, '4');
+      fillFloor(m, 15, 17, 28);
+      m[27] = placeChar(m[27], 17, '3');
+      return {
+        map:m, spawn:{x:1,y:26}, meta:{},
+        entities:[
+          // Klinge cols 7-10 — Sprung aus col 5/6 landet sicher in col 11+
+          { type:'movingSpike', x:8*TS, y:27*TS, vx:90, xMin:7*TS, xMax:10*TS, w:16, h:18 }
+        ]
+      };
+    }
+  },
+
+  // ==================== STAGE 4: WIRR ====================
+  {
+    // 19: Schwerkraftwellen — Timer-Flip
+    name:"Wellen", hint:"Die Welt kippt im Takt.", stage:3,
+    build:(rng)=>{
+      const m = blankMap();
+      fillFloor(m,0,COLS-1,28);
+      placeFloor(m,0,COLS-1,2);
+      const doorCol = rngRange(rng,15,17);
+      m[27] = placeChar(m[27], doorCol, '3');
+      m[3]  = placeChar(m[3],  doorCol, '3');
+      return { map:m, spawn:{x:1,y:26}, meta:{}, config:{gravityTimer:3.0} };
+    }
+  },
+  {
+    // 20: Wellen + Klinge
+    name:"Wellen II", hint:"Schneller. Plus Klinge.", stage:3,
+    build:(rng)=>{
+      const m = blankMap();
+      fillFloor(m,0,COLS-1,28);
+      placeFloor(m,0,COLS-1,2);
+      m[27] = placeChar(m[27], COLS-2, '3');
+      m[3]  = placeChar(m[3],  COLS-2, '3');
+      return {
+        map:m, spawn:{x:1,y:26}, meta:{}, config:{gravityTimer:2.0},
+        entities:[
+          { type:'movingSpike', x:6*TS, y:27*TS, vx:60, xMin:5*TS, xMax:12*TS, w:16, h:18 },
+          { type:'movingSpike', x:6*TS, y:3*TS,  vx:-60, xMin:5*TS, xMax:12*TS, w:16, h:18 },
+        ]
+      };
+    }
+  },
+  {
+    // 21: Schwerkraft kippt beim Sprung
+    name:"Aufzug", hint:"Sprung = Kipp.", stage:3,
+    build:(rng)=>{
+      const m = blankMap();
+      fillFloor(m,0,COLS-1,28);
+      placeFloor(m,0,COLS-1,2);
+      m[27] = placeChar(m[27], rngRange(rng,15,17), '3');
+      m[3]  = placeChar(m[3],  rngRange(rng,2,5),   '3');
+      return { map:m, spawn:{x:1,y:26}, meta:{}, config:{flipOnJump:true} };
+    }
+  },
+  {
+    // 22: Wandernde Tür
+    name:"Wandertür", hint:"Sie geht. Du auch.", stage:3,
+    build:(rng)=>{
+      const m = blankMap();
+      fillFloor(m,0,COLS-1,28);
+      return {
+        map:m, spawn:{x:1,y:26}, meta:{}, config:{driftingDoor:true},
+        entities:[
+          { type:'door', x:14*TS, y:27*TS, vx:40, xMin:6*TS, xMax:16*TS, w:14, h:30 }
+        ]
+      };
+    }
+  },
+  {
+    // 23: Alles tanzt
+    name:"Tanz", hint:"Bewegung überall.", stage:3,
+    build:(rng)=>{
+      const m = blankMap();
+      fillFloor(m, 0, 4, 28);
+      placeRow(m, 5, 12, 28, '4');
+      fillFloor(m, 13, 17, 28);
+      return {
+        map:m, spawn:{x:1,y:26}, meta:{}, config:{gravityTimer:3.5, driftingDoor:true},
+        entities:[
+          { type:'movingSpike', x:6*TS, y:27*TS, vx:70, xMin:5*TS, xMax:12*TS, w:16, h:18 },
+          { type:'door', x:14*TS, y:27*TS, vx:30, xMin:13*TS, xMax:16*TS, w:14, h:30 }
+        ]
+      };
+    }
+  },
+  {
+    // 24: Endgame
+    name:"Endgame", hint:"Viel Glück.", stage:3,
+    build:(rng)=>{
+      const m = blankMap();
+      fillFloor(m, 0, 3, 28);
+      placeRow(m, 4, 13, 28, '4');
+      fillFloor(m, 14, 17, 28);
+      placeFloor(m,0,COLS-1,2);
+      m[3] = placeChar(m[3], rngRange(rng,3,5), '3');
+      return {
+        map:m, spawn:{x:1,y:26}, meta:{},
+        config:{gravityTimer:4.0, flipOnJump:false},
+        entities:[
+          { type:'trackingSpike', x:4*TS,  y:27*TS, vx:0, w:16, h:18, maxSpeed:90, accel:220 },
+          { type:'movingSpike',   x:6*TS,  y:3*TS,  vx:80, xMin:5*TS,  xMax:14*TS, w:16, h:18 },
+        ]
+      };
+    }
+  },
+];
+
+// Stage-Info — Anzahl Stages errechnet sich aus den Level-Daten
+const STAGE_NAMES = ["Grundlagen", "Vertikal", "Bewegung", "Wirr"];
+function stageOf(levelIdx){ return levels[levelIdx].stage; }
+function levelsInStage(s){ return levels.map((L,i)=>({L,i})).filter(x => x.L.stage === s); }
+
+// =========================================================================
+// Highscores
+// =========================================================================
+const HS_KEY = 'trollchen_hs_v3';
+function loadHS(){ try { return JSON.parse(localStorage.getItem(HS_KEY)) || {}; } catch(e){ return {}; } }
+function saveHS(hs){ try { localStorage.setItem(HS_KEY, JSON.stringify(hs)); } catch(e){} }
+let highscores = loadHS();
+function recordRun(levelIdx, deaths, timeSec){
+  const k = String(levelIdx);
+  const prev = highscores[k] || { completed:false, bestDeaths:Infinity, bestTime:Infinity };
+  highscores[k] = {
+    completed: true,
+    bestDeaths: Math.min(prev.bestDeaths, deaths),
+    bestTime: Math.min(prev.bestTime, timeSec),
+  };
+  saveHS(highscores);
+}
+
+// =========================================================================
+// Custom level (Editor)
+// =========================================================================
+const CUSTOM_KEY = 'trollchen_custom_v1';
+function loadCustom(){ try { return JSON.parse(localStorage.getItem(CUSTOM_KEY)); } catch(e){ return null; } }
+function saveCustom(data){ try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(data)); } catch(e){} }
+
+// =========================================================================
+// Game State
+// =========================================================================
+const state = {
+  levelIdx: 0, attempt: 0, rng: Math.random,
+  map: [], meta: {}, config: {},
+  entities: [], fadeTimers: {},
+  player: { x:0, y:0, vx:0, vy:0, w:14, h:18, alive:true },
+  onGround: false,
+  deaths: 0,
+  trickDone: false, doorMoves: 0, crumbleTimer: 0, shake: 0,
+  jumpBufferUntil: 0, coyoteUntil: 0, startTime: 0, pauseStart: 0,
+  upperClosed: false, gravFlipped: false, lastSpike: 0,
+  gravityTimerLeft: 0,
+  touchedInvisible: {},
+  trickStep1: false, trickStep2: false, trickStep3: false,
+  hiddenSpikes: [], didFirstPop: false,
+  disappearStones: [],
+  doorCycle: [], activeDoorIdx: 0, doorCycleCooldown: 0, lastDoorTroll: 0,
+  customLevel: null,   // wenn gesetzt: Custom-Spielmodus
+};
+
+let scene = 'MENU';
+
+// =========================================================================
+// Physics
+// =========================================================================
+const SPEED = 150, JUMP_V = -370, GRAV = 900, FRICTION = 0.70;
+const ACCEL_MULT = 12;
+const JUMP_BUFFER_MS = 130, COYOTE_MS = 100;
+
+function isSolid(ch){ return ch==='1' || ch==='4' || ch==='7' || ch==='9'; }   // '4' fade, '7' unsichtbar, '9' verschwindet bei Annäherung
+function isDeadly(ch){ return ch==='2'; }
+function isDoor(ch){ return ch==='3'; }
+function tileAt(px, py){
+  const c = Math.floor(px/TS), r = Math.floor(py/TS);
+  if (c<0 || c>=COLS || r<0 || r>=ROWS) return '.';
+  return state.map[r][c];
+}
+function aabbVsMap(x,y,w,h){
+  const x1=Math.floor(x/TS), x2=Math.floor((x+w-1)/TS);
+  const y1=Math.floor(y/TS), y2=Math.floor((y+h-1)/TS);
+  for (let r=y1;r<=y2;r++) for (let c=x1;c<=x2;c++){
+    if (r<0 || r>=ROWS || c<0 || c>=COLS) continue;
+    const ch = state.map[r][c];
+    if (isSolid(ch)) return true;
+  }
+  return false;
+}
+function aabbOverlap(ax,ay,aw,ah, bx,by,bw,bh){
+  return ax < bx+bw && ax+aw > bx && ay < by+bh && ay+ah > by;
+}
+
+function loadLevel(i, opts={}){
+  state.levelIdx = i;
+  state.attempt++;
+  const seed = ((i+1)*9973 + state.attempt*131 + (Date.now() & 0xfffff)) >>> 0;
+  state.rng = mulberry32(seed);
+  let L, built;
+  if (state.customLevel){
+    L = state.customLevel;
+    built = { map: L.map.slice(), spawn: L.spawn, meta:{}, entities:[], config:{} };
+  } else {
+    L = levels[i];
+    built = L.build(state.rng);
+  }
+  state.map = built.map.slice();
+  state.meta = built.meta || {};
+  state.config = built.config || {};
+  state.entities = (built.entities || []).map(e => ({...e}));
+  state.fadeTimers = {};
+  const spawnPx = built.spawn.x * TS;
+  // Versteckte Spikes ('8') einsammeln — armed-Flag verhindert sofortigen Pop in Spawn-Nähe
+  state.hiddenSpikes = [];
+  state.didFirstPop = false;
+  for (let r=0;r<ROWS;r++){
+    const row = state.map[r];
+    if (!row || row.indexOf('8') < 0) continue;
+    for (let c=0;c<COLS;c++){
+      if (row[c] === '8'){
+        const dx0 = Math.abs(spawnPx - c * TS);
+        state.hiddenSpikes.push({r, c, triggered:false, armed: dx0 >= 3*TS});
+      }
+    }
+  }
+  // Verschwindende Steine ('9') einsammeln — gleiche armed-Logik
+  state.disappearStones = [];
+  for (let r=0;r<ROWS;r++){
+    const row = state.map[r];
+    if (!row || row.indexOf('9') < 0) continue;
+    for (let c=0;c<COLS;c++){
+      if (row[c] === '9'){
+        const dx0 = Math.abs(spawnPx - c * TS);
+        state.disappearStones.push({r, c, triggered:false, armed: dx0 >= 3*TS});
+      }
+    }
+  }
+  // Tür-Cycle einsammeln — bei mehreren '3' nur das erste behalten, Rest verstecken
+  state.doorCycle = [];
+  state.activeDoorIdx = 0;
+  state.doorCycleCooldown = 0;
+  state.lastDoorTroll = 0;
+  for (let r=0;r<ROWS;r++){
+    const row = state.map[r];
+    if (!row || row.indexOf('3') < 0) continue;
+    for (let c=0;c<COLS;c++){
+      if (row[c] === '3') state.doorCycle.push({r, c});
+    }
+  }
+  // Nur bei explizitem Opt-in (config.cycleDoors) ist die Tür ein Teleport-Troll.
+  // Sonst bleiben mehrere Türen statisch (z.B. Gravitations-Wellen mit Boden- + Deckentür).
+  if (state.config.cycleDoors && state.doorCycle.length > 1){
+    for (let i=1; i<state.doorCycle.length; i++){
+      const d = state.doorCycle[i];
+      state.map[d.r] = placeChar(state.map[d.r], d.c, '.');
+    }
+  }
+  state.player.x = built.spawn.x * TS;
+  state.player.y = built.spawn.y * TS;
+  state.player.vx = 0; state.player.vy = 0; state.player.alive = true;
+  state.trickDone = false; state.doorMoves = 0; state.crumbleTimer = 0;
+  state.trickStep1 = false; state.trickStep2 = false; state.trickStep3 = false;
+  state.lastSpike = 0; state.shake = 0;
+  state.jumpBufferUntil = 0; state.coyoteUntil = 0;
+  state.upperClosed = false; state.gravFlipped = false;
+  state.gravityTimerLeft = state.config.gravityTimer || 0;
+  if (!opts.preserveDiscoveries) state.touchedInvisible = {};
+  inputFlip = 1; gravityFlip = 1;
+  if (L.onEnter) L.onEnter(state);
+  state.startTime = performance.now();
+  if (!state.customLevel){
+    music.setStage(L.stage || 0);
+  }
+  document.getElementById('lvlNum').textContent = state.customLevel ? '★' : (i+1);
+  document.getElementById('deaths').textContent = state.deaths;
+  toast(L.hint || (state.customLevel ? "Eigener Level" : ""));
+  // Beim frischen Betreten (nicht beim Respawn nach Tod) gelegentlich ein Ansage-Clip.
+  if (!opts.preserveDiscoveries && Math.random() < 0.5) audio.speak('levelStart');
+}
+
+function die(){
+  if (!state.player.alive) return;
+  state.player.alive = false;
+  state.deaths++;
+  document.getElementById('deaths').textContent = state.deaths;
+  state.shake = 12;
+  audio.death();
+  music.stinger();
+  if (Math.random() < 0.7) audio.speak(deathCategory(state.deaths));
+  setTimeout(()=>{
+    if (scene === 'PLAYING') loadLevelKeepDeaths(state.levelIdx);
+  }, 380);
+}
+function loadLevelKeepDeaths(i){
+  const d = state.deaths;
+  loadLevel(i, { preserveDiscoveries: true });
+  state.deaths = d;
+  document.getElementById('deaths').textContent = d;
+}
+
+function winLevel(){
+  const time = (performance.now() - state.startTime) / 1000;
+  audio.win();
+  audio.speak('win');
+  if (state.customLevel){
+    showCustomWin(time);
+  } else {
+    recordRun(state.levelIdx, state.deaths, time);
+    if (state.levelIdx + 1 < levels.length){
+      showWin(time, false);
+    } else {
+      showWin(time, true);
+    }
+  }
+}
+
+// =========================================================================
+// Entity updates
+// =========================================================================
+function updateEntities(dt){
+  for (const e of state.entities){
+    if (e.dead) continue;
+    if (e.type === 'movingSpike'){
+      e.x += e.vx * dt;
+      if (e.x < e.xMin){ e.x = e.xMin; e.vx = Math.abs(e.vx); }
+      if (e.x > e.xMax){ e.x = e.xMax; e.vx = -Math.abs(e.vx); }
+    } else if (e.type === 'trackingSpike'){
+      // beschleunigt Richtung Spieler, gedeckelt bei maxSpeed
+      const dir = Math.sign(state.player.x - e.x);
+      e.vx += dir * e.accel * dt;
+      e.vx = Math.max(-e.maxSpeed, Math.min(e.maxSpeed, e.vx));
+      e.x += e.vx * dt;
+      // Bounds: bleibt im Spielfeld
+      e.x = Math.max(0, Math.min(W - e.w, e.x));
+    } else if (e.type === 'door'){
+      e.x += e.vx * dt;
+      if (e.x < e.xMin){ e.x = e.xMin; e.vx = Math.abs(e.vx); }
+      if (e.x > e.xMax){ e.x = e.xMax; e.vx = -Math.abs(e.vx); }
+    }
+  }
+}
+function checkEntityCollisions(){
+  const p = state.player;
+  for (const e of state.entities){
+    if (e.dead) continue;
+    if (e.type === 'movingSpike' || e.type === 'trackingSpike'){
+      // Hitbox des Spikes (etwas kleiner als die volle Tile-Größe)
+      const ex = e.x + 2, ey = e.y + 4, ew = e.w - 4, eh = e.h - 6;
+      if (aabbOverlap(p.x, p.y, p.w, p.h, ex, ey, ew, eh)){
+        die(); return true;
+      }
+    } else if (e.type === 'door'){
+      if (aabbOverlap(p.x, p.y, p.w, p.h, e.x, e.y, e.w, e.h)){
+        winLevel(); return true;
+      }
+    }
+  }
+  return false;
+}
+
+// =========================================================================
+// Update
+// =========================================================================
+function update(dt){
+  if (scene !== 'PLAYING') return;
+  if (!state.player.alive) return;
+  const L = state.customLevel ? null : levels[state.levelIdx];
+  if (L && L.trick) L.trick(state, state.rng);
+
+  const now = performance.now();
+  const p = state.player;
+
+  // Gravity-Timer (Stage 4 Wellen)
+  if (state.config.gravityTimer){
+    state.gravityTimerLeft -= dt;
+    if (state.gravityTimerLeft <= 0){
+      gravityFlip *= -1;
+      state.gravityTimerLeft = state.config.gravityTimer;
+      // kleiner Impuls Richtung neue Schwerkraft
+      p.vy = -120 * gravityFlip;
+      troll('flip', () => audio.flip());
+    }
+  }
+
+  if (keys.jumpEdge){
+    state.jumpBufferUntil = now + JUMP_BUFFER_MS;
+    keys.jumpEdge = false;
+  }
+
+  let ax = 0;
+  if (keys.left)  ax -= 1;
+  if (keys.right) ax += 1;
+  ax *= inputFlip;
+  p.vx += ax * SPEED * dt * ACCEL_MULT;
+  if (state.onGround) p.vx *= Math.pow(FRICTION, dt*60);
+  if (Math.abs(p.vx) > SPEED) p.vx = Math.sign(p.vx)*SPEED;
+
+  const canJump = state.onGround || now < state.coyoteUntil;
+  if (canJump && now < state.jumpBufferUntil && now - (state.lastJumpAt||0) > 200){
+    p.vy = JUMP_V * gravityFlip;
+    state.onGround = false;
+    state.coyoteUntil = 0;
+    state.jumpBufferUntil = 0;
+    state.lastJumpAt = now;
+    audio.jump();
+    if (state.config.flipOnJump){
+      gravityFlip *= -1;
+      // Impuls in neue Schwerkraftrichtung übersteuert den initialen Sprung
+      p.vy = -120 * gravityFlip;
+      troll('flip', () => audio.flip());
+    }
+  }
+
+  p.vy += GRAV * dt * gravityFlip;
+  if (Math.abs(p.vy) > 700) p.vy = Math.sign(p.vy)*700;
+
+  // horizontal
+  let nx = p.x + p.vx*dt;
+  if (aabbVsMap(nx, p.y, p.w, p.h)){
+    if (p.vx>0) nx = Math.floor((p.x+p.w)/TS)*TS - p.w - 0.01;
+    else if (p.vx<0) nx = (Math.floor(p.x/TS)+1)*TS + 0.01;
+    p.vx = 0;
+  }
+  p.x = nx;
+
+  // vertikal
+  const wasGround = state.onGround;
+  let ny = p.y + p.vy*dt;
+  state.onGround = false;
+  if (aabbVsMap(p.x, ny, p.w, p.h)){
+    if (p.vy>0){
+      ny = Math.floor((p.y+p.h)/TS)*TS - p.h - 0.01;
+      if (gravityFlip > 0) state.onGround = true;
+    } else if (p.vy<0){
+      ny = (Math.floor(p.y/TS)+1)*TS + 0.01;
+      if (gravityFlip < 0) state.onGround = true;
+    }
+    p.vy = 0;
+  }
+  p.y = ny;
+
+  if (wasGround && !state.onGround && p.vy*gravityFlip > 0){
+    state.coyoteUntil = now + COYOTE_MS;
+  }
+
+  if (p.x<0) p.x=0;
+  if (p.x>W-p.w) p.x=W-p.w;
+  if (p.y > H - 4) die();
+  if (p.y < -10 && gravityFlip < 0) die();
+
+  // Tiles: Spikes / Tür / Fade-Trigger
+  const pts = [
+    [p.x+2,p.y+2],[p.x+p.w-2,p.y+2],
+    [p.x+2,p.y+p.h-2],[p.x+p.w-2,p.y+p.h-2],
+    [p.x+p.w/2,p.y+p.h-2]
+  ];
+  for (const [px,py] of pts){
+    const t = tileAt(px,py);
+    if (isDeadly(t)){ die(); return; }
+    if (isDoor(t)){ winLevel(); return; }
+  }
+
+  // Fade-Plattformen — Spieler steht auf einer '4' → Timer starten
+  if (state.onGround && gravityFlip > 0){
+    const r = Math.floor((p.y + p.h + 1) / TS);
+    const cL = Math.floor((p.x + 2) / TS);
+    const cR = Math.floor((p.x + p.w - 2) / TS);
+    for (let c = cL; c <= cR; c++){
+      if (state.map[r] && state.map[r][c] === '4'){
+        const k = r + ',' + c;
+        if (!(k in state.fadeTimers)){
+          state.fadeTimers[k] = 0.8;   // Sekunden bis weg
+          audio.fade();
+        }
+      }
+    }
+  }
+  // Fade-Timer tickern
+  for (const k in state.fadeTimers){
+    state.fadeTimers[k] -= dt;
+    if (state.fadeTimers[k] <= 0){
+      const [r, c] = k.split(',').map(Number);
+      state.map[r] = placeChar(state.map[r], c, '.');
+      delete state.fadeTimers[k];
+    }
+  }
+
+  // Unsichtbare Stepping Stones — markieren wenn der Spieler einen berührt
+  {
+    const x1=Math.floor((p.x-1)/TS), x2=Math.floor((p.x+p.w)/TS);
+    const y1=Math.floor((p.y-1)/TS), y2=Math.floor((p.y+p.h)/TS);
+    for (let r=y1;r<=y2;r++) for (let c=x1;c<=x2;c++){
+      if (r<0 || r>=ROWS || c<0 || c>=COLS) continue;
+      if (state.map[r] && state.map[r][c] === '7'){
+        const k = r + ',' + c;
+        if (!state.touchedInvisible[k]){
+          state.touchedInvisible[k] = true;
+          audio.tick();
+        }
+      }
+    }
+  }
+
+  // Versteckte Spikes ('8') — werden zu '2' wenn Spieler horizontal in der Nähe ist (nur wenn armed)
+  if (state.hiddenSpikes.length){
+    let popped = false;
+    for (let i=0; i<state.hiddenSpikes.length; i++){
+      const sp = state.hiddenSpikes[i];
+      if (sp.triggered) continue;
+      const dx = Math.abs(p.x - sp.c * TS);
+      if (!sp.armed){
+        if (dx >= 3 * TS) sp.armed = true;
+        continue;
+      }
+      if (dx < 3 * TS){
+        state.map[sp.r] = placeChar(state.map[sp.r], sp.c, '2');
+        sp.triggered = true;
+        popped = true;
+      }
+    }
+    if (popped){
+      if (!state.didFirstPop){
+        troll('spike', () => audio.spike());
+        state.didFirstPop = true;
+      } else {
+        audio.spike();
+      }
+    }
+  }
+
+  // Verschwindende Steine ('9') — werden zu '.' wenn Spieler horizontal nahe ist
+  if (state.disappearStones.length){
+    let crumbled = false;
+    for (let i=0; i<state.disappearStones.length; i++){
+      const st = state.disappearStones[i];
+      if (st.triggered) continue;
+      const dx = Math.abs(p.x - st.c * TS);
+      if (!st.armed){
+        if (dx >= 3 * TS) st.armed = true;
+        continue;
+      }
+      if (dx < 3 * TS){
+        state.map[st.r] = placeChar(state.map[st.r], st.c, '.');
+        st.triggered = true;
+        crumbled = true;
+      }
+    }
+    if (crumbled) audio.crumble();
+  }
+
+  // Tür-Cycle — bei mehreren Türen wandert die aktive Tür weiter, wenn Spieler nahe kommt
+  if (state.config.cycleDoors && state.doorCycle.length > 1){
+    const now = performance.now();
+    if (now > state.doorCycleCooldown){
+      const active = state.doorCycle[state.activeDoorIdx];
+      const ax = active.c * TS + TS/2;
+      const ay = active.r * TS + TS/2;
+      const ddx = (p.x + p.w/2) - ax;
+      const ddy = (p.y + p.h/2) - ay;
+      const dist = Math.hypot(ddx, ddy);
+      if (dist < 50){
+        // aktuelle Tür entfernen, nächste setzen
+        state.map[active.r] = placeChar(state.map[active.r], active.c, '.');
+        state.activeDoorIdx = (state.activeDoorIdx + 1) % state.doorCycle.length;
+        const next = state.doorCycle[state.activeDoorIdx];
+        state.map[next.r] = placeChar(state.map[next.r], next.c, '3');
+        state.doorCycleCooldown = now + 2500;   // 2.5s bis nächster möglicher Cycle
+        audio.teleport();
+        if (now - state.lastDoorTroll > 2500){
+          troll('teleport');
+          state.lastDoorTroll = now;
+        }
+      }
+    }
+  }
+
+  // Entities updaten & Kollision
+  updateEntities(dt);
+  if (checkEntityCollisions()) return;
+
+  if (state.startTime){
+    const sec = ((now - state.startTime)/1000).toFixed(1);
+    document.getElementById('lvlTime').textContent = sec;
+  }
+  if (state.shake>0) state.shake -= dt*40;
+}
+
+// =========================================================================
+// Render
+// =========================================================================
+function drawSpike(x, y, flipped=false){
+  ctx.fillStyle = '#e54848';
+  ctx.beginPath();
+  if (!flipped){
+    ctx.moveTo(x, y+TS);
+    ctx.lineTo(x+TS/2, y+3);
+    ctx.lineTo(x+TS, y+TS);
+  } else {
+    ctx.moveTo(x, y);
+    ctx.lineTo(x+TS/2, y+TS-3);
+    ctx.lineTo(x+TS, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+function draw(){
+  const sh = state.shake>0 ? (Math.random()-.5)*state.shake : 0;
+  ctx.save();
+  ctx.translate(sh, sh*.7);
+  ctx.fillStyle = '#0b0d10';
+  ctx.fillRect(0,0,W,H);
+
+  ctx.fillStyle = '#11141a';
+  for (let r=0;r<ROWS;r++) if (r%4===0) ctx.fillRect(0,r*TS,W,1);
+
+  // Tiles
+  for (let r=0;r<ROWS;r++){
+    const row = state.map[r]; if (!row) continue;
+    for (let c=0;c<COLS;c++){
+      const ch = row[c]; if (ch==='.' || !ch) continue;
+      const x = c*TS, y = r*TS;
+      if (ch==='1' || ch==='9'){
+        ctx.fillStyle = '#3a3f47';
+        ctx.fillRect(x,y,TS,TS);
+        ctx.fillStyle = '#474d57';
+        ctx.fillRect(x,y,TS,2);
+      } else if (ch==='2'){
+        drawSpike(x, y, gravityFlip < 0);
+      } else if (ch==='3'){
+        ctx.fillStyle = '#ffd43b';
+        if (gravityFlip > 0){
+          ctx.fillRect(x+3, y-TS+4, TS-6, TS+TS-4);
+        } else {
+          ctx.fillRect(x+3, y+TS-4, TS-6, TS+TS-4);
+        }
+        ctx.fillStyle = '#0b0d10';
+        ctx.fillRect(x+TS-7, y+2, 2, 4);
+      } else if (ch==='4'){
+        const k = r+','+c;
+        const t = state.fadeTimers[k];
+        const a = (t !== undefined) ? Math.max(0.1, t/0.8) : 1;
+        ctx.globalAlpha = a;
+        ctx.fillStyle = '#6b5848';
+        ctx.fillRect(x, y, TS, TS);
+        ctx.fillStyle = '#8a7560';
+        ctx.fillRect(x, y, TS, 2);
+        // dezente Risse zur Erkennbarkeit
+        ctx.fillStyle = '#3e2f22';
+        ctx.fillRect(x+4, y+8, 4, 1);
+        ctx.fillRect(x+11, y+13, 5, 1);
+        ctx.globalAlpha = 1;
+      } else if (ch==='7'){
+        // Unsichtbarer Stepping Stone — nur nach Berührung als schwacher Schatten sichtbar
+        const k = r+','+c;
+        if (state.touchedInvisible[k]){
+          ctx.fillStyle = 'rgba(180, 190, 200, 0.20)';
+          ctx.fillRect(x+1, y+TS-3, TS-2, 2);
+          ctx.fillStyle = 'rgba(180, 190, 200, 0.10)';
+          ctx.fillRect(x, y, TS, TS);
+        }
+      }
+    }
+  }
+
+  // Ghost-Vorschau der nächsten Tür im Cycle — gibt dem Spieler Hinweis wo's hingeht
+  if (state.config.cycleDoors && state.doorCycle.length > 1){
+    const next = state.doorCycle[(state.activeDoorIdx + 1) % state.doorCycle.length];
+    const nx = next.c * TS, ny = next.r * TS;
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = '#ffd43b';
+    if (gravityFlip > 0){
+      ctx.fillRect(nx+3, ny-TS+4, TS-6, TS+TS-4);
+    } else {
+      ctx.fillRect(nx+3, ny+TS-4, TS-6, TS+TS-4);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Entities
+  for (const e of state.entities){
+    if (e.dead) continue;
+    if (e.type === 'movingSpike' || e.type === 'trackingSpike'){
+      // Spike als 3-eck, etwas kleiner als Tile
+      ctx.fillStyle = e.type === 'trackingSpike' ? '#ff7070' : '#e54848';
+      ctx.beginPath();
+      ctx.moveTo(e.x, e.y + e.h);
+      ctx.lineTo(e.x + e.w/2, e.y + 2);
+      ctx.lineTo(e.x + e.w, e.y + e.h);
+      ctx.closePath();
+      ctx.fill();
+    } else if (e.type === 'door'){
+      ctx.fillStyle = '#ffd43b';
+      ctx.fillRect(e.x, e.y - 10, e.w, e.h);
+      ctx.fillStyle = '#0b0d10';
+      ctx.fillRect(e.x + e.w - 5, e.y + 4, 2, 4);
+    }
+  }
+
+  // Player
+  const p = state.player;
+  if (p.alive){
+    ctx.fillStyle = '#f5f5f0';
+    ctx.fillRect(Math.round(p.x), Math.round(p.y), p.w, p.h);
+    ctx.fillStyle = '#0b0d10';
+    const ex = p.vx>=0 ? p.w-4 : 1;
+    ctx.fillRect(Math.round(p.x)+ex, Math.round(p.y)+4, 2, 3);
+  }
+
+  // Level-Name unten
+  ctx.fillStyle = '#5a606a';
+  ctx.font = '11px -apple-system, system-ui, sans-serif';
+  const L = state.customLevel ? {name:'eigener Level'} : levels[state.levelIdx];
+  ctx.fillText(L.name, 8, H-6);
+
+  ctx.restore();
+}
+
+// =========================================================================
+// Loop
+// =========================================================================
+let lastT = performance.now();
+function loop(t){
+  const dt = Math.min(0.033, (t-lastT)/1000);
+  lastT = t;
+  if (scene === 'PLAYING') update(dt);
+  if (scene === 'EDITOR'){
+    drawEditor();
+  } else {
+    draw();
+  }
+  requestAnimationFrame(loop);
+}
+
+// =========================================================================
+// Toast
+// =========================================================================
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+function toast(msg){
+  if (!msg) return;
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toastEl.classList.remove('show'), 1800);
+}
+
+// =========================================================================
+// Scene management
+// =========================================================================
+const $menu = document.getElementById('menu');
+const $lvlSel = document.getElementById('levelSelect');
+const $pause = document.getElementById('pauseMenu');
+const $win = document.getElementById('winScreen');
+const $final = document.getElementById('finalScreen');
+const $editor = document.getElementById('editor');
+const $hud = document.getElementById('hud');
+const $controls = document.getElementById('controls');
+const $lvlContainer = document.getElementById('lvlContainer');
+const $mainCanvas = cvs;
+
+function hideAll(){
+  [$menu,$lvlSel,$pause,$win,$final,$editor].forEach(e => e.classList.add('hidden'));
+  $hud.classList.add('hidden');
+  $controls.classList.add('hidden');
+  $mainCanvas.style.display = 'block';
+}
+
+function showMenu(){
+  hideAll(); $menu.classList.remove('hidden'); scene = 'MENU';
+  const completed = Object.values(highscores).filter(x => x.completed).length;
+  document.getElementById('menuStats').textContent =
+    `Geschafft: ${completed}/${levels.length}`;
+}
+
+function showLevelSelect(){
+  hideAll(); $lvlSel.classList.remove('hidden'); scene = 'LEVEL_SELECT';
+  $lvlContainer.innerHTML = '';
+
+  // Pro Stage einen Block
+  const numStages = STAGE_NAMES.length;
+  for (let s = 0; s < numStages; s++){
+    const stageLevels = levelsInStage(s);
+    if (stageLevels.length === 0) continue;
+    const block = document.createElement('div');
+    block.className = 'stageBlock';
+    const completedInStage = stageLevels.filter(({i}) => highscores[String(i)]?.completed).length;
+    block.innerHTML = `<div class="stageHead"><span class="name">Stage ${s+1} — ${STAGE_NAMES[s]}</span><span>${completedInStage}/${stageLevels.length}</span></div>`;
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    stageLevels.forEach(({L, i}) => {
+      const btn = document.createElement('button');
+      btn.className = 'lvlBtn';
+      const hs = highscores[String(i)];
+      const prevHS = highscores[String(i-1)];
+      const unlocked = DEBUG || i === 0 || (prevHS && prevHS.completed);
+      if (!unlocked) btn.classList.add('locked');
+      if (hs && hs.completed) btn.classList.add('done');
+      btn.innerHTML = `
+        <div class="num">${i+1}</div>
+        <div class="meta">${L.name}</div>
+        ${hs && hs.completed ? `<span class="check">✓</span><div class="meta" style="margin-top:2px">${hs.bestDeaths === 0 ? 'perfekt' : hs.bestDeaths+'T'} · ${hs.bestTime.toFixed(1)}s</div>` : ''}
+      `;
+      btn.addEventListener('click', () => {
+        if (!unlocked){ toast("Erst die davor."); return; }
+        startLevel(i);
+      });
+      grid.appendChild(btn);
+    });
+    block.appendChild(grid);
+    $lvlContainer.appendChild(block);
+  }
+  const completed = Object.values(highscores).filter(x => x.completed).length;
+  document.getElementById('lvlStats').textContent = `${completed}/${levels.length} geschafft${DEBUG ? ' · DEBUG: alle frei' : ''}`;
+}
+
+function startLevel(i){
+  hideAll();
+  $hud.classList.remove('hidden');
+  $controls.classList.remove('hidden');
+  scene = 'PLAYING';
+  state.customLevel = null;
+  state.deaths = 0;
+  state.attempt = 0;
+  audio.init();
+  music.start();
+  loadLevel(i);
+}
+
+function startCustom(custom){
+  hideAll();
+  $hud.classList.remove('hidden');
+  $controls.classList.remove('hidden');
+  scene = 'PLAYING';
+  state.customLevel = custom;
+  state.deaths = 0;
+  state.attempt = 0;
+  audio.init();
+  music.setStage(0);
+  music.start();
+  loadLevel(0);   // levelIdx wird ignoriert wenn customLevel gesetzt
+}
+
+function showPause(){
+  if (scene !== 'PLAYING') return;
+  scene = 'PAUSED';
+  state.pauseStart = performance.now();
+  $pause.classList.remove('hidden');
+}
+function resumeFromPause(){
+  if (state.pauseStart){
+    state.startTime += (performance.now() - state.pauseStart);
+    state.pauseStart = 0;
+  }
+  $pause.classList.add('hidden');
+  scene = 'PLAYING';
+}
+
+function showWin(time, allDone){
+  hideAll();
+  scene = 'WON';
+  if (allDone){
+    $final.classList.remove('hidden');
+    const totalBest = Object.values(highscores).filter(v => v.completed).reduce((a,v) => a+v.bestDeaths, 0);
+    document.getElementById('finalText').textContent = `Alle 24 Level. ${totalBest} beste Tode insgesamt.`;
+  } else {
+    $win.classList.remove('hidden');
+    document.getElementById('winText').innerHTML =
+      `${state.deaths === 0 ? 'Beim ersten Versuch!' : state.deaths + ' Tode'} · ${time.toFixed(1)}s`;
+  }
+}
+function showCustomWin(time){
+  hideAll();
+  scene = 'WON';
+  $win.classList.remove('hidden');
+  document.getElementById('winTitle').textContent = "Eigener Level — geschafft.";
+  document.getElementById('winText').innerHTML = `${state.deaths} Tode · ${time.toFixed(1)}s`;
+  document.getElementById('nextLvlBtn').textContent = "Nochmal";
+  document.getElementById('nextLvlBtn').onclick = () => startCustom(state.customLevel);
+}
+
+// =========================================================================
+// Editor
+// =========================================================================
+const editor = {
+  map: null,
+  spawn: { x:1, y:26 },
+  tool: '1',
+  canvas: document.getElementById('edCanvas'),
+  ctx: null,
+
+  init(){
+    this.ctx = this.canvas.getContext('2d');
+    this.resize();
+    this.load();
+    this.bindCanvas();
+    this.bindPalette();
+    window.addEventListener('resize', () => { if (scene === 'EDITOR') this.resize(); });
+  },
+  resize(){
+    const vw = window.innerWidth;
+    const vh = window.innerHeight - 100;  // grob für Topbar+Palette
+    const s = Math.min(vw/W, vh/H);
+    this.scale = s;
+    const dpr = window.devicePixelRatio || 1;
+    this.canvas.style.width = (W*s)+'px';
+    this.canvas.style.height = (H*s)+'px';
+    this.canvas.width = Math.floor(W*s*dpr);
+    this.canvas.height = Math.floor(H*s*dpr);
+    this.ctx.setTransform(s*dpr,0,0,s*dpr,0,0);
+    this.ctx.imageSmoothingEnabled = false;
+  },
+  load(){
+    const saved = loadCustom();
+    if (saved && saved.map && saved.map.length === ROWS){
+      this.map = saved.map.slice();
+      this.spawn = saved.spawn || {x:1,y:26};
+    } else {
+      this.clear();
+    }
+  },
+  clear(){
+    this.map = blankMap();
+    fillFloor(this.map, 0, COLS-1, 28);
+    this.spawn = { x:1, y:26 };
+  },
+  save(){
+    saveCustom({ map: this.map.slice(), spawn: this.spawn });
+    toast("Gespeichert.");
+  },
+  hasDoor(){
+    for (const row of this.map) if (row.indexOf('3') >= 0) return true;
+    return false;
+  },
+  bindCanvas(){
+    const onTap = (e) => {
+      e.preventDefault();
+      const rect = this.canvas.getBoundingClientRect();
+      const t = e.touches ? e.touches[0] : e;
+      if (!t) return;
+      const xPx = t.clientX - rect.left;
+      const yPx = t.clientY - rect.top;
+      const x = xPx / this.scale;
+      const y = yPx / this.scale;
+      const c = Math.floor(x/TS), r = Math.floor(y/TS);
+      if (c<0 || c>=COLS || r<0 || r>=ROWS) return;
+      if (this.tool === 'S'){
+        this.spawn = { x:c, y:r };
+      } else {
+        this.map[r] = placeChar(this.map[r], c, this.tool);
+      }
+    };
+    this.canvas.addEventListener('touchstart', onTap, {passive:false});
+    // Drag-Mal-Funktion auf Touch
+    this.canvas.addEventListener('touchmove', onTap, {passive:false});
+    this.canvas.addEventListener('mousedown', (e) => {
+      this._dragging = true; onTap(e);
+    });
+    this.canvas.addEventListener('mousemove', (e) => {
+      if (this._dragging) onTap(e);
+    });
+    window.addEventListener('mouseup', () => { this._dragging = false; });
+  },
+  bindPalette(){
+    document.querySelectorAll('.toolBtn').forEach(b => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.toolBtn').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        this.tool = b.dataset.tile;
+      });
+    });
+  },
+};
+
+function drawEditor(){
+  if (!editor.ctx || !editor.map) return;
+  const ec = editor.ctx;
+  ec.fillStyle = '#0b0d10';
+  ec.fillRect(0,0,W,H);
+  // Grid sichtbar
+  ec.fillStyle = '#191d24';
+  for (let r=0;r<ROWS;r++) ec.fillRect(0, r*TS, W, 1);
+  for (let c=0;c<COLS;c++) ec.fillRect(c*TS, 0, 1, H);
+  // Tiles
+  for (let r=0;r<ROWS;r++){
+    const row = editor.map[r];
+    for (let c=0;c<COLS;c++){
+      const ch = row[c]; if (ch==='.') continue;
+      const x = c*TS, y = r*TS;
+      if (ch==='1'){
+        ec.fillStyle = '#3a3f47'; ec.fillRect(x,y,TS,TS);
+        ec.fillStyle = '#474d57'; ec.fillRect(x,y,TS,2);
+      } else if (ch==='9'){
+        // Verschwindender Stein — wie '1' aber mit gelbem Eck-Marker
+        ec.fillStyle = '#3a3f47'; ec.fillRect(x,y,TS,TS);
+        ec.fillStyle = '#474d57'; ec.fillRect(x,y,TS,2);
+        ec.fillStyle = '#ffd43b';
+        ec.fillRect(x+TS-5, y+TS-5, 3, 3);
+        ec.fillRect(x+2, y+2, 3, 3);
+      } else if (ch==='2'){
+        ec.fillStyle = '#e54848';
+        ec.beginPath();
+        ec.moveTo(x, y+TS); ec.lineTo(x+TS/2, y+3); ec.lineTo(x+TS, y+TS);
+        ec.closePath(); ec.fill();
+      } else if (ch==='3'){
+        ec.fillStyle = '#ffd43b';
+        ec.fillRect(x+3, y-TS+4, TS-6, TS+TS-4);
+        ec.fillStyle = '#0b0d10';
+        ec.fillRect(x+TS-7, y+2, 2, 4);
+      } else if (ch==='4'){
+        ec.fillStyle = '#6b5848'; ec.fillRect(x,y,TS,TS);
+        ec.fillStyle = '#8a7560'; ec.fillRect(x,y,TS,2);
+      } else if (ch==='8'){
+        // Hidden Spike — outlined Triangle als Hinweis im Editor
+        ec.strokeStyle = '#e54848';
+        ec.lineWidth = 1.5;
+        ec.beginPath();
+        ec.moveTo(x+1, y+TS-1); ec.lineTo(x+TS/2, y+3); ec.lineTo(x+TS-1, y+TS-1);
+        ec.closePath(); ec.stroke();
+        ec.fillStyle = 'rgba(229, 72, 72, 0.18)';
+        ec.fillRect(x+TS/2-3, y+9, 6, 2);
+      }
+    }
+  }
+  // Spawn-Marker
+  const sx = editor.spawn.x * TS, sy = editor.spawn.y * TS;
+  ec.strokeStyle = '#f5f5f0';
+  ec.lineWidth = 1.5;
+  ec.strokeRect(sx+2, sy+1, 14, 18);
+  ec.fillStyle = '#f5f5f0';
+  ec.font = '8px -apple-system, system-ui, sans-serif';
+  ec.fillText('S', sx+5, sy-2);
+}
+
+function showEditor(){
+  hideAll();
+  $editor.classList.remove('hidden');
+  $mainCanvas.style.display = 'none';
+  scene = 'EDITOR';
+  if (!editor.ctx) editor.init();
+  else { editor.resize(); editor.load(); }
+}
+
+// =========================================================================
+// Wire-up
+// =========================================================================
+document.getElementById('playBtn').addEventListener('click', () => {
+  audio.init();
+  showLevelSelect();
+});
+document.getElementById('editorBtn').addEventListener('click', () => {
+  showEditor();
+});
+document.getElementById('lvlBack').addEventListener('click', showMenu);
+document.getElementById('resumeBtn').addEventListener('click', resumeFromPause);
+document.getElementById('restartBtn').addEventListener('click', () => {
+  $pause.classList.add('hidden');
+  scene = 'PLAYING';
+  state.deaths = 0;
+  loadLevel(state.levelIdx);
+});
+document.getElementById('quitBtn').addEventListener('click', () => {
+  music.stop();
+  if (state.customLevel) showEditor(); else showLevelSelect();
+});
+document.getElementById('nextLvlBtn').addEventListener('click', () => {
+  if (state.customLevel){
+    startCustom(state.customLevel);
+    return;
+  }
+  if (state.levelIdx + 1 < levels.length) startLevel(state.levelIdx + 1);
+  else showLevelSelect();
+});
+document.getElementById('winQuitBtn').addEventListener('click', () => {
+  music.stop();
+  if (state.customLevel) showEditor(); else showLevelSelect();
+});
+document.getElementById('finalBackBtn').addEventListener('click', () => {
+  music.stop();
+  showLevelSelect();
+});
+document.getElementById('pauseBtn').addEventListener('click', showPause);
+document.getElementById('mute').addEventListener('click', e => {
+  e.stopPropagation();
+  audio.toggleMute();
+});
+
+// Editor-Buttons
+document.getElementById('edBack').addEventListener('click', () => {
+  editor.save();
+  showMenu();
+});
+document.getElementById('edClear').addEventListener('click', () => {
+  if (confirm("Wirklich alles löschen?")){
+    editor.clear();
+    toast("Geleert.");
+  }
+});
+document.getElementById('edLoad').addEventListener('click', () => { editor.load(); toast("Geladen."); });
+document.getElementById('edSave').addEventListener('click', () => editor.save());
+document.getElementById('edPlay').addEventListener('click', () => {
+  if (!editor.hasDoor()){
+    toast("Du brauchst eine Tür (gelb).");
+    return;
+  }
+  editor.save();
+  startCustom({ map: editor.map.slice(), spawn: { ...editor.spawn } });
+});
+
+showMenu();
+requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>
