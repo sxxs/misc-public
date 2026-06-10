@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Spiralpartitur · Sechs Miniaturen</title>
+<style>
+  :root{
+    --bg:#0f1521; --panel:#151d2c; --panel2:#1a2336;
+    --ink:#f1ece1; --muted:#8d96a8; --line:#26304a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{background:var(--bg); margin:0;}
+  #app{
+    background:var(--bg); color:var(--ink); width:100%; height:100vh; height:100dvh;
+    font-family:-apple-system, "Segoe UI", system-ui, sans-serif;
+    display:flex; overflow:hidden;
+  }
+  main{background:var(--bg);}
+  aside{
+    width:330px; min-width:330px; height:100%; overflow-y:auto;
+    background:var(--panel); border-right:1px solid var(--line);
+    padding:22px 20px; display:flex; flex-direction:column; gap:18px;
+  }
+  h1{
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    font-weight:600; font-size:24px; letter-spacing:.3px; line-height:1.15;
+  }
+  .sub{color:var(--muted); font-size:12.5px; line-height:1.5; margin-top:6px;}
+  .pieces{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .piece{
+    text-align:left; border:1px solid var(--line); border-radius:10px;
+    background:var(--panel2); color:var(--ink); padding:10px 11px;
+    cursor:pointer; transition:border-color .15s, background .15s;
+  }
+  .piece .t{font-family:"Iowan Old Style",Palatino,Georgia,serif; font-size:14.5px;}
+  .piece .m{font-size:10.5px; color:var(--muted); margin-top:3px; letter-spacing:.2px;}
+  .piece .dot{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; vertical-align:1px;}
+  .piece.active{border-color:var(--acc,#fff); background:#1d2740;}
+  .transport{display:flex; align-items:center; gap:12px;}
+  #playBtn{
+    width:54px; height:54px; border-radius:50%; border:1px solid var(--line);
+    background:var(--acc,#f1ece1); color:#10141f; font-size:20px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    transition:transform .1s;
+  }
+  #playBtn:active{transform:scale(.94);}
+  .tempo{flex:1;}
+  .tempo label{font-size:11px; color:var(--muted); display:flex; justify-content:space-between;}
+  input[type=range]{width:100%; accent-color:var(--acc,#f1ece1);}
+  .ticker{
+    border:1px solid var(--line); border-radius:10px; background:var(--panel2);
+    padding:12px 13px; min-height:96px;
+  }
+  .ticker h3{font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:1.2px; font-weight:600; margin-bottom:8px;}
+  .hand{display:flex; gap:8px; align-items:baseline; margin-bottom:7px; min-height:24px;}
+  .hand .lbl{font-size:10px; color:var(--muted); width:24px; flex-shrink:0;}
+  .hand .notes{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:15px; display:flex; gap:10px; flex-wrap:wrap;}
+  .note-chip{display:inline-flex; align-items:baseline; gap:4px;}
+  .note-chip .dur{font-size:10px; color:var(--muted);}
+  .pos{font-size:11px; color:var(--muted); font-family:ui-monospace,Menlo,monospace; margin-top:4px;}
+  .legend{font-size:11px; color:var(--muted); line-height:1.65; border-top:1px solid var(--line); padding-top:12px;}
+  .legend b{color:var(--ink); font-weight:600;}
+  main{flex:1; position:relative; min-width:0;}
+  canvas{position:absolute; inset:0; width:100%; height:100%; display:block;}
+  .hint{
+    position:absolute; bottom:14px; left:0; right:0; text-align:center;
+    font-size:11px; color:var(--muted); pointer-events:none; letter-spacing:.3px;
+  }
+  @media (max-width:860px){
+    #app{flex-direction:column; overflow:auto; height:auto; min-height:100vh;}
+    aside{width:100%; min-width:0; height:auto; border-right:none; border-bottom:1px solid var(--line); padding:16px;}
+    main{height:min(94vw,520px); flex:none;}
+    .pieces{grid-template-columns:1fr 1fr 1fr;}
+    .piece .m{display:none;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+<script>
+(function(){
+  var box=null;
+  function show(t){
+    if(!box){
+      box=document.createElement("pre");
+      box.style.cssText="position:fixed;left:8px;right:8px;bottom:8px;max-height:45%;overflow:auto;"+
+        "background:#3a1420;color:#ffd9d9;border:1px solid #a04;border-radius:8px;padding:10px;"+
+        "font:11px/1.5 monospace;white-space:pre-wrap;z-index:9999;margin:0";
+      (document.body||document.documentElement).appendChild(box);
+    }
+    box.textContent+=t+"\n\n";
+  }
+  window.__showErr=show;
+  window.onerror=function(msg,src,line,col,err){
+    show("FEHLER: "+msg+"\n@ Zeile "+line+":"+col+(err&&err.stack?"\n"+String(err.stack).slice(0,600):""));
+    return false;
+  };
+  window.addEventListener("unhandledrejection",function(e){
+    show("PROMISE: "+(e.reason&&e.reason.stack?e.reason.stack:e.reason));
+  });
+})();
+</script>
+<aside>
+  <div>
+    <h1>Spiralpartitur</h1>
+    <div class="sub">Sechs Miniaturen für zwei Hände. Eine Umdrehung&nbsp;= zwei Takte — gleiche Zählzeiten liegen auf demselben Radius, Wiederholungen und Variationen werden als Muster sichtbar.</div>
+  </div>
+
+  <div class="pieces" id="pieceList"></div>
+
+  <div class="transport">
+    <button id="playBtn" aria-label="Abspielen">▶</button>
+    <div class="tempo">
+      <label><span>Tempo</span><span id="tempoVal">100%</span></label>
+      <input type="range" id="tempoSlider" min="70" max="130" value="100">
+    </div>
+  </div>
+
+  <div class="ticker">
+    <h3>Erklingt gerade</h3>
+    <div class="hand"><span class="lbl">RH</span><span class="notes" id="tickRH">–</span></div>
+    <div class="hand"><span class="lbl">LH</span><span class="notes" id="tickLH">–</span></div>
+    <div class="pos" id="posInfo">Takt –/– · Schlag –</div>
+  </div>
+
+  <div class="legend">
+    <b>Lesen:</b> Zeit läuft spiralig nach außen · radiale Auslenkung = Tonhöhe · Bogenlänge = Notendauer · warm = rechte Hand, kühl = linke Hand. Gespielte Noten bleiben hell, kommende sind gedimmt.
+    <br><b>Tasten:</b> Leertaste = Play/Pause · 1–6 = Stück wählen.
+  </div>
+</aside>
+
+<main>
+  <canvas id="cv"></canvas>
+  <div class="hint" id="hint">Stück wählen und ▶ drücken</div>
+</main>
+
+<script>
+"use strict";
+
+/* ============================================================
+   1. NOTATION & STÜCKE
+   Sequenzielle Notation pro Hand: "Note:Dauer Note:Dauer ..."
+   Dauer in Schlägen, R = Pause, Akkorde mit "+".
+   ============================================================ */
+
+const NOTE_SEMI = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+function nameToMidi(s){
+  const m = s.match(/^([A-G])(b|#)?(\d)$/);
+  if(!m) throw new Error("Bad note: "+s);
+  let v = NOTE_SEMI[m[1]];
+  if(m[2]==="#") v++; if(m[2]==="b") v--;
+  return 12*(parseInt(m[3])+1)+v;
+}
+const G_NAMES = ["C","Des","D","Es","E","F","Fis","G","As","A","B","H"];
+function midiToGerman(m){ return G_NAMES[m%12] + (Math.floor(m/12)-1); }
+
+function parseHand(measures, hand){
+  const notes=[]; let t=0;
+  for(const tok of measures.join(" ").trim().split(/\s+/)){
+    const i = tok.lastIndexOf(":");
+    const n = tok.slice(0,i), dur = parseFloat(tok.slice(i+1));
+    if(n!=="R") for(const p of n.split("+"))
+      notes.push({midi:nameToMidi(p), beat:t, dur, hand});
+    t+=dur;
+  }
+  return {notes, total:t};
+}
+
+const PIECES = [
+{
+  id:0, title:"Morgenlicht", tag:"fröhlich", key:"C-Dur · 4/4", bpm:116,
+  bpMeasure:4, beatUnit:0.25, measuresPerTurn:2, gate:0.92,
+  velRH:0.85, velLH:0.5, acc:"#f2b33d", accLH:"#5e8aa8",
+  rh:[
+   "C5:.5 D5:.5 E5:1 G5:1 E5:1",
+   "A4:.5 B4:.5 C5:1 E5:1 C5:1",
+   "F5:1 E5:.5 D5:.5 C5:1 A4:1",
+   "B4:1 D5:1 G4:2",
+   "E5:.5 F5:.5 G5:1 C6:1 G5:1",
+   "A5:1 G5:.5 E5:.5 C5:1 E5:1",
+   "F5:1 A5:1 B4:1 D5:1",
+   "C5:3 R:1",
+   "A5:1.5 G5:.5 F5:1 C5:1",
+   "E5:1.5 D5:.5 C5:1 G4:1",
+   "A4:.5 C5:.5 F5:1 F5:.5 G5:.5 A5:1",
+   "G5:2 B4:1 D5:1",
+   "F5:1 E5:1 D5:1 A4:1",
+   "E5:1 G5:1 C6:2",
+   "A5:1 F5:1 D5:1 B4:1",
+   "C5:4"
+  ],
+  lh:[
+   "C3:1 G3:1 E4:1 G3:1",
+   "A2:1 E3:1 C4:1 E3:1",
+   "F2:1 C3:1 A3:1 C3:1",
+   "G2:1 D3:1 B3:1 D3:1",
+   "C3:1 G3:1 E4:1 G3:1",
+   "A2:1 E3:1 C4:1 E3:1",
+   "F2:1 C3:1 G2:1 D3:1",
+   "C3:1 G3:1 E4:1 G3:1",
+   "F2:1 C3:1 A3:1 C3:1",
+   "C3:1 G3:1 E4:1 G3:1",
+   "F2:1 C3:1 A3:1 C3:1",
+   "G2:1 D3:1 B3:1 D3:1",
+   "D3:1 A3:1 F4:1 A3:1",
+   "C3:1 G3:1 E4:1 G3:1",
+   "F2:1 C3:1 G2:1 D3:1",
+   "C3+G3+C4:4"
+  ]
+},
+{
+  id:1, title:"November", tag:"melancholisch", key:"a-Moll · 4/4", bpm:72,
+  bpMeasure:4, beatUnit:0.25, measuresPerTurn:2, gate:0.98,
+  velRH:0.72, velLH:0.42, acc:"#7fa3c4", accLH:"#4f6378",
+  rh:[
+   "R:1 E5:1 C5:1 B4:1",
+   "A4:2.5 C5:1.5",
+   "B4:1 G4:2 E4:1",
+   "D5:1 B4:1 G4:2",
+   "C5:1 B4:1 A4:2",
+   "A4:1 C5:1 F5:2",
+   "E5:1 D5:1 B4:2",
+   "G#4:3 R:1",
+   "R:1 E5:1 C5:.5 D5:.5 E5:1",
+   "F5:2 E5:1 C5:1",
+   "E5:1.5 D5:.5 C5:1 G4:1",
+   "B4:1 D5:1 G4:2",
+   "F5:1 E5:1 D5:2",
+   "C5:1 B4:1 G#4:2",
+   "A4:3 R:1",
+   "A3+E4+A4:4"
+  ],
+  lh:[
+   "A2:.5 E3:.5 A3:.5 C4:.5 E4:.5 C4:.5 A3:.5 E3:.5",
+   "F2:.5 C3:.5 F3:.5 A3:.5 C4:.5 A3:.5 F3:.5 C3:.5",
+   "C3:.5 G3:.5 C4:.5 E4:.5 G4:.5 E4:.5 C4:.5 G3:.5",
+   "G2:.5 D3:.5 G3:.5 B3:.5 D4:.5 B3:.5 G3:.5 D3:.5",
+   "A2:.5 E3:.5 A3:.5 C4:.5 E4:.5 C4:.5 A3:.5 E3:.5",
+   "F2:.5 C3:.5 F3:.5 A3:.5 C4:.5 A3:.5 F3:.5 C3:.5",
+   "E2:.5 B2:.5 E3:.5 G#3:.5 B3:.5 G#3:.5 E3:.5 B2:.5",
+   "E2:.5 B2:.5 E3:.5 G#3:.5 B3:.5 G#3:.5 E3:.5 B2:.5",
+   "A2:.5 E3:.5 A3:.5 C4:.5 E4:.5 C4:.5 A3:.5 E3:.5",
+   "F2:.5 C3:.5 F3:.5 A3:.5 C4:.5 A3:.5 F3:.5 C3:.5",
+   "C3:.5 G3:.5 C4:.5 E4:.5 G4:.5 E4:.5 C4:.5 G3:.5",
+   "G2:.5 D3:.5 G3:.5 B3:.5 D4:.5 B3:.5 G3:.5 D3:.5",
+   "D2:.5 A2:.5 D3:.5 F3:.5 A3:.5 F3:.5 D3:.5 A2:.5",
+   "E2:.5 B2:.5 E3:.5 G#3:.5 B3:.5 G#3:.5 E3:.5 B2:.5",
+   "A2:.5 E3:.5 A3:.5 C4:.5 E4:.5 C4:.5 A3:.5 E3:.5",
+   "A1+E2+A2:4"
+  ]
+},
+{
+  id:2, title:"Frechdachs", tag:"frech", key:"G-Dur · 4/4", bpm:126,
+  bpMeasure:4, beatUnit:0.25, measuresPerTurn:2, gate:0.5,
+  velRH:0.9, velLH:0.55, acc:"#ff6a5e", accLH:"#7a5ea8",
+  rh:[
+   "D5:.5 E5:.5 F#5:.5 G5:.5 R:.5 B5:.5 A5:.5 G5:.5",
+   "E5:.5 G5:.5 C6:1 B5:.5 A5:.5 G5:.5 E5:.5",
+   "D5:.5 D5:.5 R:.5 D5:.5 C#5:.5 D5:.5 B4:.5 G4:.5",
+   "F#4:.5 A4:.5 C5:.5 E5:.5 D5:1.5 R:.5",
+   "G5:.25 F#5:.25 G5:.5 D5:.5 B4:.5 G4:.5 B4:.5 D5:.5 G5:.5",
+   "A5:.5 G5:.5 E5:.5 C5:.5 R:.5 E5:.5 G5:.5 A5:.5",
+   "Bb5:.5 B5:.5 A5:.5 F#5:.5 E5:.5 D5:.5 C5:.5 A4:.5",
+   "G4:.5 B4:.5 D5:.5 G5:.5 R:1.5 G5:.5",
+   "C6:.5 R:.5 C6:.5 R:.5 B5:.5 Bb5:.5 A5:.5 Ab5:.5",
+   "G5:.5 D5:.5 B4:.5 G4:.5 R:.5 B4:.5 D5:.5 G5:.5",
+   "C#5:.5 E5:.5 A5:.5 G5:.5 E5:.5 C#5:.5 A4:.5 G4:.5",
+   "F#4:.5 A4:.5 D5:.5 F#5:.5 A5:1 C6:.5 A5:.5",
+   "B5:.5 G5:.5 R:.5 B5:.5 G5:.5 R:.5 D5:.5 B4:.5",
+   "C5:.25 D5:.25 E5:.5 G5:.5 C6:.5 A5:.5 G5:.5 E5:.5 G5:.5",
+   "A4:.5 C5:.5 F#5:.5 A5:.5 C6:.5 A5:.5 F#5:.5 C5:.5",
+   "G5:.5 R:.5 D5:.5 R:.5 G4+B4+D5+G5:1.5 R:.5"
+  ],
+  lh:[
+   "G2:1 G3+B3+D4:1 D3:1 G3+B3+D4:1",
+   "C3:1 G3+C4+E4:1 G2:1 G3+C4+E4:1",
+   "G2:1 G3+B3+D4:1 D3:1 G3+B3+D4:1",
+   "D3:1 F#3+C4+D4:1 A2:1 F#3+C4+D4:1",
+   "G2:1 G3+B3+D4:1 D3:1 G3+B3+D4:1",
+   "C3:1 G3+C4+E4:1 G2:1 G3+C4+E4:1",
+   "D3:1 F#3+C4+D4:1 A2:1 F#3+C4+D4:1",
+   "G2:1 G3+B3+D4:1 D3:1 G3+B3+D4:1",
+   "C3:1 G3+C4+E4:1 G2:1 G3+C4+E4:1",
+   "G2:1 G3+B3+D4:1 D3:1 G3+B3+D4:1",
+   "A2:1 G3+C#4+E4:1 E3:1 G3+C#4+E4:1",
+   "D3:1 F#3+C4+D4:1 A2:1 F#3+C4+D4:1",
+   "G2:1 G3+B3+D4:1 D3:1 G3+B3+D4:1",
+   "C3:1 G3+C4+E4:1 G2:1 G3+C4+E4:1",
+   "D3:1 F#3+C4+D4:1 A2:1 F#3+C4+D4:1",
+   "G2:1 G3+B3+D4:1 G2+G3:2"
+  ]
+},
+{
+  id:3, title:"Wiegenlied", tag:"Schlafmusik", key:"F-Dur · 6/8", bpm:138,
+  bpMeasure:6, beatUnit:0.125, measuresPerTurn:2, gate:1.0,
+  velRH:0.5, velLH:0.3, acc:"#b79fe0", accLH:"#5f7398",
+  rh:[
+   "A4:2 G4:1 A4:2 C5:1",
+   "D5:2 C5:1 Bb4:3",
+   "A4:2 G4:1 F4:3",
+   "G4:2 A4:1 G4:3",
+   "A4:2 Bb4:1 C5:2 D5:1",
+   "D5:2 C5:1 A4:3",
+   "Bb4:2 A4:1 G4:3",
+   "G4:2 E4:1 C5:3",
+   "F5:2 E5:1 D5:2 C5:1",
+   "D5:2 C5:1 Bb4:3",
+   "A4:2 F4:1 C5:3",
+   "D5:2 A4:1 F4:3",
+   "G4:2 Bb4:1 D5:3",
+   "C5:2 Bb4:1 G4:3",
+   "F4:2 G4:1 A4:3",
+   "F4:6"
+  ],
+  lh:[
+   "F2:1 C3:1 A3:1 C3:1 A3:1 C3:1",
+   "Bb2:1 F3:1 D4:1 F3:1 D4:1 F3:1",
+   "F2:1 C3:1 A3:1 C3:1 A3:1 C3:1",
+   "C3:1 G3:1 E4:1 G3:1 E4:1 G3:1",
+   "F2:1 C3:1 A3:1 C3:1 A3:1 C3:1",
+   "D3:1 A3:1 F3:1 A3:1 F3:1 A3:1",
+   "G2:1 D3:1 Bb3:1 D3:1 Bb3:1 D3:1",
+   "C3:1 G3:1 E4:1 G3:1 E4:1 G3:1",
+   "F2:1 C3:1 A3:1 C3:1 A3:1 C3:1",
+   "Bb2:1 F3:1 D4:1 F3:1 D4:1 F3:1",
+   "F2:1 C3:1 A3:1 C3:1 A3:1 C3:1",
+   "D3:1 A3:1 F3:1 A3:1 F3:1 A3:1",
+   "G2:1 D3:1 Bb3:1 D3:1 Bb3:1 D3:1",
+   "C3:1 G3:1 E4:1 G3:1 E4:1 G3:1",
+   "F2:1 C3:1 A3:1 C3:1 A3:1 C3:1",
+   "F2+C3+F3:6"
+  ]
+},
+{
+  id:4, title:"Weite", tag:"episch", key:"d-Moll · 4/4", bpm:84,
+  bpMeasure:4, beatUnit:0.25, measuresPerTurn:2, gate:0.96,
+  velRH:0.95, velLH:0.7, acc:"#d98a5b", accLH:"#5a7d99",
+  rh:[
+   "D4+A4:1 D5:1 F5:2",
+   "G5:1 F5:1 D5:2",
+   "F5:1 A5:1 C6:2",
+   "G5:1 E5:1 C5:2",
+   "A4:1 D5:1 F5:1 G5:1",
+   "A5:2 F5:1 D5:1",
+   "G5:1 D5:1 Bb4:2",
+   "A4+C#5+E5:3 R:1",
+   "D5:1 F5:1 Bb5:2",
+   "C6:1 A5:1 F5:2",
+   "G5:1 E5:1 G5:1 C6:1",
+   "A5:2 F5:1 D5:1",
+   "Bb4+D5:1 F5:1 Bb5:2",
+   "G5:1 F5:1 D5:2",
+   "E5:1 C#5:1 A4:1 E5:1",
+   "D5+F#5+A5:4"
+  ],
+  lh:[
+   "D2+D3:2 A2:1 D3:1",
+   "Bb1+Bb2:2 F2:1 Bb2:1",
+   "F2+F3:2 C3:1 F3:1",
+   "C2+C3:2 G2:1 C3:1",
+   "D2+D3:2 A2:1 D3:1",
+   "Bb1+Bb2:2 F2:1 Bb2:1",
+   "G2+G3:2 D3:1 G3:1",
+   "A2+A3:2 E3:1 A3:1",
+   "Bb1+Bb2:2 F2:1 Bb2:1",
+   "F2+F3:2 C3:1 F3:1",
+   "C2+C3:2 G2:1 C3:1",
+   "D2+D3:2 A2:1 D3:1",
+   "Bb1+Bb2:2 F2:1 Bb2:1",
+   "G2+G3:2 D3:1 G3:1",
+   "A2+A3:2 E3:1 A3:1",
+   "D2+A2+D3+F#3:4"
+  ]
+},
+{
+  id:5, title:"Spiegelsee", tag:"verträumt", key:"e-Moll · 4/4", bpm:66,
+  bpMeasure:4, beatUnit:0.25, measuresPerTurn:2, gate:1.0,
+  velRH:0.6, velLH:0.38, acc:"#6fcdbd", accLH:"#4a6f8f",
+  rh:[
+   "R:1 B4:1 E5:1.5 F#5:.5",
+   "G5:2 E5:1 D5:1",
+   "B4:1.5 A4:.5 G4:2",
+   "F#4:1 A4:1 D5:2",
+   "R:.5 E5:.5 G5:1 B5:1 A5:1",
+   "G5:1.5 E5:.5 D5:2",
+   "E5:1 C5:1 A4:2",
+   "B4:1 D5:1 F#5:2",
+   "R:1 E5:1 B4:1 G4:1",
+   "A4:1.5 B4:.5 C5:2",
+   "D5:1 B4:1 G4:2",
+   "A4:1 F#5:1 E5:2",
+   "G5:2 E5:1 D5:1",
+   "C5:1 E5:1 A4:2",
+   "B4:1 F#4:1 D5:2",
+   "B4+E5:4"
+  ],
+  lh:[
+   "E2+B2+E3:4",
+   "C3+G3+B3:4",
+   "G2+D3+G3:4",
+   "D3+A3+D4:4",
+   "E2+B2+E3:4",
+   "C3+G3+B3:4",
+   "A2+E3+A3:4",
+   "B2+F#3+B3:4",
+   "E2+B2+E3:4",
+   "C3+G3+B3:4",
+   "G2+D3+G3:4",
+   "D3+A3+D4:4",
+   "C3+G3+B3:4",
+   "A2+E3+A3:4",
+   "B2+F#3+B3:4",
+   "E2+B2+E3:4"
+  ]
+}
+];
+
+// Parsen + Validieren
+for(const p of PIECES){
+  const rh = parseHand(p.rh, "rh"), lh = parseHand(p.lh, "lh");
+  const expected = p.rh.length * p.bpMeasure;
+  console.assert(1e-6>Math.abs(rh.total-expected), p.title+" RH: "+rh.total+" ≠ "+expected);
+  console.assert(1e-6>Math.abs(lh.total-expected), p.title+" LH: "+lh.total+" ≠ "+expected);
+  p.notes = [...rh.notes, ...lh.notes].sort((a,b)=>a.beat-b.beat);
+  p.totalBeats = expected;
+  p.measures = p.rh.length;
+  let lo=127, hi=0;
+  for(const n of p.notes){ lo=Math.min(lo,n.midi); hi=Math.max(hi,n.midi); }
+  p.pitchLo=lo; p.pitchHi=hi;
+}
+
+/* ============================================================
+   2. KLAVIER-SYNTHESE (Web Audio, ohne externe Samples)
+   Additive Teiltöne mit Inharmonizität, Hammergeräusch,
+   tonhöhenabhängiger Ausklang, Faltungshall.
+   ============================================================ */
+
+let ctx=null, master=null, wet=null, comp=null;
+function initAudio(){
+  if(ctx) return;
+  ctx = new (window.AudioContext||window.webkitAudioContext)();
+  comp = ctx.createDynamicsCompressor();
+  comp.threshold.value=-20; comp.ratio.value=4; comp.knee.value=10;
+  comp.connect(ctx.destination);
+  master = ctx.createGain(); master.gain.value=0.9;
+  master.connect(comp);
+  // Hall: generierte Impulsantwort
+  const conv = ctx.createConvolver();
+  const len = Math.floor(ctx.sampleRate*1.9), ir = ctx.createBuffer(2,len,ctx.sampleRate);
+  for(let ch=0; 2>ch; ch++){
+    const d = ir.getChannelData(ch);
+    for(let i=0;len>i;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.6);
+  }
+  conv.buffer = ir;
+  wet = ctx.createGain(); wet.gain.value=0.22;
+  master.connect(conv); conv.connect(wet); wet.connect(comp);
+  // Rauschpuffer für Hammeranschlag
+  const nb = ctx.createBuffer(1, Math.floor(ctx.sampleRate*0.06), ctx.sampleRate);
+  const nd = nb.getChannelData(0);
+  for(let i=0;nd.length>i;i++) nd[i]=Math.random()*2-1;
+  noiseBuf = nb;
+}
+let noiseBuf=null;
+
+const PARTIALS=[[1,1],[1.0014,0.32],[2.0008,0.5],[2.999,0.2],[4.003,0.09],[5.01,0.04]];
+
+function playPiano(midi, t, dur, vel, dest){
+  const f = 440*Math.pow(2,(midi-69)/12);
+  const out = ctx.createGain();
+  out.gain.value = 1; out.connect(dest);
+  const decay = Math.max(0.7, 4.5 - (midi-28)*0.05);   // Bass klingt länger
+  const stop = t + Math.min(dur, decay) + 0.5;
+  // Teiltöne
+  for(const [ratio, amp] of PARTIALS){
+    if(f*ratio > 9000) continue;
+    const o = ctx.createOscillator(); o.type="sine";
+    o.frequency.value = f*ratio;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(amp*vel*0.32, t+0.004);
+    g.gain.setTargetAtTime(0, t+0.004, decay/(3+ratio*1.4));
+    // Loslassen der Taste
+    g.gain.setTargetAtTime(0, t+dur, 0.09);
+    o.connect(g); g.connect(out);
+    o.start(t); o.stop(stop);
+  }
+  // Hammergeräusch
+  const ns = ctx.createBufferSource(); ns.buffer=noiseBuf;
+  const bp = ctx.createBiquadFilter(); bp.type="bandpass";
+  bp.frequency.value=Math.min(f*3,5000); bp.Q.value=0.8;
+  const ng = ctx.createGain();
+  ng.gain.setValueAtTime(0.1*vel, t);
+  ng.gain.exponentialRampToValueAtTime(0.0001, t+0.05);
+  ns.connect(bp); bp.connect(ng); ng.connect(out);
+  ns.start(t); ns.stop(t+0.06);
+}
+
+/* ============================================================
+   3. SEQUENCER (Lookahead-Scheduler) + ZUSTAND
+   ============================================================ */
+
+const state = {
+  piece: PIECES[0],
+  playing: false,
+  paused: false,
+  tempoFactor: 1,
+  startCtxTime: 0,     // Audio-Zeit von Schlag 0 (fortlaufend, ohne Loop-Reset)
+  schedBeat: 0,        // bis hierhin geplant (absolute Schläge inkl. Loops)
+  sessionGain: null,
+  timer: null,
+  pulses: [],
+  pulsedKeys: new Set()
+};
+
+function bps(){ return state.piece.bpm/60*state.tempoFactor; }
+function nowBeat(){
+  if(!ctx) return 0;
+  return (ctx.currentTime - state.startCtxTime)*bps();
+}
+
+function schedule(){
+  const ahead = 0.18;                                  // Sekunden Vorlauf
+  const aheadBeat = nowBeat() + ahead*bps();
+  const p = state.piece;
+  while(aheadBeat > state.schedBeat){
+    const loop = Math.floor(state.schedBeat/p.totalBeats);
+    const local = state.schedBeat - loop*p.totalBeats;
+    // alle Noten in [local, local+chunk) planen — wir gehen notenweise:
+    let nextEvt = Infinity;
+    for(const n of p.notes){
+      if(n.beat >= local - 1e-9 && local + 1e-9 > n.beat){
+        const t = state.startCtxTime + (n.beat + loop*p.totalBeats)/bps();
+        const vel = (n.hand==="rh"? p.velRH : p.velLH) *
+                    (n.beat % p.bpMeasure === 0 ? 1.12 : 1);
+        playPiano(n.midi, t, n.dur*p.gate/bps(), Math.min(vel,1), state.sessionGain);
+      } else if(n.beat > local && nextEvt > n.beat){
+        nextEvt = n.beat;
+      }
+    }
+    state.schedBeat = (nextEvt===Infinity)
+      ? (loop+1)*p.totalBeats
+      : nextEvt + loop*p.totalBeats;
+  }
+}
+
+function play(){
+  initAudio();
+  if(state.playing) return;
+  if(state.paused){                       // fortsetzen
+    ctx.resume();
+    state.paused=false; state.playing=true;
+    state.timer=setInterval(schedule,40);
+  } else {                                // neue Session
+    ctx.resume();
+    state.sessionGain = ctx.createGain();
+    state.sessionGain.connect(master);
+    state.startCtxTime = ctx.currentTime + 0.08;
+    state.schedBeat = 0;
+    state.pulsedKeys.clear();
+    state.playing = true;
+    state.timer = setInterval(schedule, 40);
+  }
+  document.getElementById("playBtn").textContent="❚❚";
+  document.getElementById("hint").style.opacity=0;
+}
+
+function pause(){
+  if(!state.playing) return;
+  state.playing=false; state.paused=true;
+  clearInterval(state.timer);
+  ctx.suspend();
+  document.getElementById("playBtn").textContent="▶";
+}
+
+function hardStop(){
+  if(!ctx) return;
+  clearInterval(state.timer);
+  state.playing=false; state.paused=false;
+  ctx.resume();
+  const g = state.sessionGain;
+  if(g){
+    g.gain.setTargetAtTime(0, ctx.currentTime, 0.05);
+    setTimeout(()=>g.disconnect(), 400);
+    state.sessionGain=null;
+  }
+  document.getElementById("playBtn").textContent="▶";
+}
+
+function selectPiece(i){
+  const was = state.playing;
+  hardStop();
+  state.piece = PIECES[i];
+  document.querySelectorAll(".piece").forEach((el,k)=>{
+    el.classList.toggle("active", k===i);
+  });
+  document.documentElement.style.setProperty("--acc", PIECES[i].acc);
+  document.getElementById("playBtn").style.background = PIECES[i].acc;
+  if(was) setTimeout(play, 120);
+}
+
+/* ============================================================
+   4. SPIRALPARTITUR (Canvas)
+   ============================================================ */
+
+const cv = document.getElementById("cv");
+const g2 = cv.getContext("2d");
+let W=0,H=0,DPR=1;
+
+function resize(){
+  DPR = Math.min(window.devicePixelRatio||1, 2);
+  W = cv.clientWidth; H = cv.clientHeight;
+  cv.width = W*DPR; cv.height = H*DPR;
+  g2.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener("resize", resize);
+
+function geom(){
+  const p = state.piece;
+  const cx=W/2, cy=H/2;
+  const maxR = Math.min(W,H)/2 - 26;
+  const turns = p.measures / p.measuresPerTurn;
+  const r0 = maxR*0.2;
+  const ringGap = (maxR - r0)/turns;
+  const turnBeats = p.bpMeasure * p.measuresPerTurn;
+  return {p,cx,cy,r0,ringGap,turnBeats,maxR};
+}
+
+function notePos(G, beat, midi){
+  const frac = (beat % G.turnBeats)/G.turnBeats;
+  const ang = frac*Math.PI*2 - Math.PI/2;
+  const u = (midi - G.p.pitchLo)/(G.p.pitchHi - G.p.pitchLo) - 0.5;
+  const r = G.r0 + (beat/G.turnBeats)*G.ringGap + u*G.ringGap*0.78;
+  return {x:G.cx + Math.cos(ang)*r, y:G.cy + Math.sin(ang)*r, ang, r};
+}
+
+function drawNoteArc(G, n, alpha, width, color, glow){
+  const segs = Math.max(2, Math.ceil(n.dur/G.turnBeats * 64));
+  g2.beginPath();
+  for(let i=0;segs>=i;i++){
+    const pt = notePos(G, n.beat + n.dur*i/segs * 0.96, n.midi);
+    i? g2.lineTo(pt.x,pt.y) : g2.moveTo(pt.x,pt.y);
+  }
+  g2.strokeStyle = color;
+  g2.globalAlpha = alpha;
+  g2.lineWidth = width;
+  g2.lineCap = "round";
+  if(glow){ g2.shadowColor=color; g2.shadowBlur=14; }
+  g2.stroke();
+  g2.shadowBlur=0;
+  // Notenkopf
+  const h = notePos(G, n.beat, n.midi);
+  g2.beginPath();
+  g2.arc(h.x, h.y, width*0.85+0.6, 0, Math.PI*2);
+  g2.fillStyle=color;
+  g2.fill();
+  g2.globalAlpha=1;
+}
+
+let frameErr=false;
+function frame(){
+  if(!frameErr) requestAnimationFrame(frame);
+  try{
+  if(W!==cv.clientWidth || H!==cv.clientHeight) resize();
+  if(60>W || 60>H) return;              // Layout noch nicht da (verhindert negative Radien)
+  const G = geom();
+  const p = G.p;
+  g2.clearRect(0,0,W,H);
+
+  // Hintergrund-Vignette
+  const bg = g2.createRadialGradient(G.cx,G.cy,G.r0*0.3, G.cx,G.cy,G.maxR*1.25);
+  bg.addColorStop(0,"#141b2b"); bg.addColorStop(1,"#0d1320");
+  g2.fillStyle=bg; g2.fillRect(0,0,W,H);
+
+  // Schlag-Speichen
+  const beats = G.turnBeats;
+  for(let b=0;beats>b;b++){
+    const ang = b/beats*Math.PI*2 - Math.PI/2;
+    const major = b % p.bpMeasure === 0;
+    g2.beginPath();
+    g2.moveTo(G.cx+Math.cos(ang)*(G.r0*0.86), G.cy+Math.sin(ang)*(G.r0*0.86));
+    g2.lineTo(G.cx+Math.cos(ang)*(G.maxR+8), G.cy+Math.sin(ang)*(G.maxR+8));
+    g2.strokeStyle = major ? "#33405f" : "#1d2740";
+    g2.lineWidth = major?1.2:0.6;
+    g2.stroke();
+  }
+
+  const beatNowAbs = (state.playing||state.paused) ? nowBeat() : -1;
+  const local = state.playing ? (beatNowAbs % p.totalBeats) : -1;
+
+  // Noten
+  for(const n of p.notes){
+    const isRH = n.hand==="rh";
+    const color = isRH ? p.acc : p.accLH;
+    const wdt = isRH ? 3.1 : 2.1;
+    const end = n.beat + n.dur;
+    let alpha, glow=false;
+    if(local>=0 && local>=n.beat && end > local){
+      alpha=1; glow=true;
+      // Puls auslösen
+      const key = n.beat+"/"+n.midi+"/"+Math.floor(beatNowAbs/p.totalBeats);
+      if(!state.pulsedKeys.has(key)){
+        state.pulsedKeys.add(key);
+        const pt = notePos(G, n.beat, n.midi);
+        state.pulses.push({x:pt.x,y:pt.y,t:performance.now(),color});
+      }
+    } else if(local>=0 && local > n.beat){
+      alpha = isRH? 0.85 : 0.55;          // bereits gespielt
+    } else {
+      alpha = isRH? 0.3 : 0.18;           // noch kommend
+    }
+    drawNoteArc(G, n, alpha, wdt, color, glow);
+    // Label für klingende RH-Noten
+    if(glow && isRH){
+      const pt = notePos(G, n.beat, n.midi);
+      g2.font="11px ui-monospace,Menlo,monospace";
+      g2.fillStyle="#f1ece1";
+      g2.globalAlpha=0.95;
+      g2.fillText(midiToGerman(n.midi), pt.x+9, pt.y-7);
+      g2.globalAlpha=1;
+    }
+  }
+
+  // Pulse (auslaufende Ringe)
+  const tn = performance.now();
+  state.pulses = state.pulses.filter(pl=>650>tn-pl.t);
+  for(const pl of state.pulses){
+    const k = (tn-pl.t)/650;
+    g2.beginPath();
+    g2.arc(pl.x,pl.y, 4+k*26, 0, Math.PI*2);
+    g2.strokeStyle=pl.color;
+    g2.globalAlpha=(1-k)*0.5;
+    g2.lineWidth=1.4;
+    g2.stroke();
+    g2.globalAlpha=1;
+  }
+
+  // Abspielkopf
+  if(local>=0){
+    const frac=(local%G.turnBeats)/G.turnBeats;
+    const ang=frac*Math.PI*2-Math.PI/2;
+    const rNow=G.r0+(local/G.turnBeats)*G.ringGap;
+    g2.beginPath();
+    g2.moveTo(G.cx+Math.cos(ang)*G.r0*0.7, G.cy+Math.sin(ang)*G.r0*0.7);
+    g2.lineTo(G.cx+Math.cos(ang)*(G.maxR+4), G.cy+Math.sin(ang)*(G.maxR+4));
+    g2.strokeStyle="rgba(241,236,225,0.35)";
+    g2.lineWidth=1;
+    g2.stroke();
+    g2.beginPath();
+    g2.arc(G.cx+Math.cos(ang)*rNow, G.cy+Math.sin(ang)*rNow, 4.5, 0, Math.PI*2);
+    g2.fillStyle="#f1ece1";
+    g2.shadowColor=p.acc; g2.shadowBlur=16;
+    g2.fill(); g2.shadowBlur=0;
+  }
+
+  // Titel im Zentrum
+  g2.textAlign="center";
+  g2.font='600 15px "Iowan Old Style",Palatino,Georgia,serif';
+  g2.fillStyle="#f1ece1";
+  g2.fillText(p.title, G.cx, G.cy-2);
+  g2.font="10px ui-monospace,Menlo,monospace";
+  g2.fillStyle="#8d96a8";
+  g2.fillText(p.key, G.cx, G.cy+14);
+  g2.textAlign="left";
+
+  updateTicker(local);
+  }catch(e){ frameErr=true; if(window.__showErr) window.__showErr("RENDER: "+(e.stack||e)); }
+}
+
+/* ============================================================
+   5. TICKER & UI
+   ============================================================ */
+
+function durLabel(p, dur){
+  // Anteil einer ganzen Note als gekürzter Bruch
+  let num = Math.round(dur * p.beatUnit * 64), den = 64;
+  if(num===0) return "";
+  while(num%2===0 && den%2===0){ num/=2; den/=2; }
+  return den===1 ? "1/1" : num+"/"+den;
+}
+
+function chipHTML(p, n){
+  return '\x3Cspan class="note-chip">'+midiToGerman(n.midi)+
+         '\x3Cspan class="dur">'+durLabel(p,n.dur)+'\x3C/span>\x3C/span>';
+}
+
+let lastTick="";
+function updateTicker(local){
+  const p = state.piece;
+  const rhEl=document.getElementById("tickRH");
+  const lhEl=document.getElementById("tickLH");
+  const pos=document.getElementById("posInfo");
+  if(0>local){
+    rhEl.textContent="–"; lhEl.textContent="–";
+    pos.textContent="Takt –/"+p.measures+" · Schlag –";
+    return;
+  }
+  const rh=[], lh=[];
+  for(const n of p.notes){
+    if(local>=n.beat && n.beat+n.dur>local)
+      (n.hand==="rh"?rh:lh).push(chipHTML(p,n));
+  }
+  const sig = rh.join("")+"|"+lh.join("");
+  if(sig!==lastTick){
+    lastTick=sig;
+    rhEl.innerHTML = rh.length? rh.join("") : "·";
+    lhEl.innerHTML = lh.length? lh.join("") : "·";
+  }
+  pos.textContent = "Takt "+(Math.floor(local/p.bpMeasure)+1)+"/"+p.measures+
+                    " · Schlag "+(Math.floor(local%p.bpMeasure)+1);
+}
+
+// Stück-Karten
+const list=document.getElementById("pieceList");
+PIECES.forEach((p,i)=>{
+  const b=document.createElement("button");
+  b.className="piece"+(i===0?" active":"");
+  b.style.setProperty("--acc",p.acc);
+  b.innerHTML='\x3Cdiv class="t">\x3Cspan class="dot" style="background:'+p.acc+'">\x3C/span>'+p.title+'\x3C/div>'+
+              '\x3Cdiv class="m">'+p.tag+' · '+p.key+'\x3C/div>';
+  b.onclick=()=>selectPiece(i);
+  list.appendChild(b);
+});
+document.documentElement.style.setProperty("--acc", PIECES[0].acc);
+document.getElementById("playBtn").style.background=PIECES[0].acc;
+
+document.getElementById("playBtn").onclick=()=> state.playing? pause() : play();
+document.getElementById("tempoSlider").oninput=e=>{
+  const f=e.target.value/100;
+  document.getElementById("tempoVal").textContent=e.target.value+"%";
+  if(state.playing && ctx){
+    // Position halten, Tempo nahtlos ändern
+    const cur=nowBeat();
+    state.tempoFactor=f;
+    state.startCtxTime = ctx.currentTime - cur/bps();
+  } else state.tempoFactor=f;
+};
+window.addEventListener("keydown",e=>{
+  if(e.code==="Space"){ e.preventDefault(); state.playing? pause():play(); }
+  if(e.key>="1"&&"6">=e.key) selectPiece(+e.key-1);
+});
+
+resize();
+frame();
+</script>
+</div>
+</body>
+</html>
