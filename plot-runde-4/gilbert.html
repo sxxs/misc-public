@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gilbert-Tessellation — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>6 · Gilbert-Tessellation (Rissnetz)</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Gilbert (1962): Aus zufälligen Keimpunkten wachsen
+            Risse in zwei Richtungen gleichzeitig. Trifft ein Riss auf einen
+            anderen, stoppt er — wie trocknender Schlamm oder Keramik-Glasur.
+            Typisch sind die T-Kreuzungen statt Voronoi-Sterne.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "gilbert-risse",
+        params: [
+            { key: "seeds", label: "Keimpunkte", min: 30, max: 320, step: 10, value: 140 },
+            { key: "mode", label: "Richtungen", value: "iso", options: [
+                { value: "iso", label: "Frei (isotrop)" },
+                { value: "axis", label: "Rechtwinklig" },
+                { value: "hex", label: "60°-Raster" }
+            ]}
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const M = 40, S = 920, LO = M, HI = M + S;
+
+            // dart-throwing for evenly spread seed points
+            const minDist = Math.sqrt((S * S) / values.seeds) * 0.55;
+            const seeds = [];
+            let tries = 0;
+            while (seeds.length < values.seeds && tries < values.seeds * 60) {
+                tries++;
+                const p = [LO + rnd() * S, LO + rnd() * S];
+                if (!seeds.some(q => (q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2 < minDist * minDist)) {
+                    seeds.push(p);
+                }
+            }
+
+            const cracks = seeds.map(p => {
+                let ang;
+                if (values.mode === "axis") ang = rnd() < 0.5 ? 0 : Math.PI / 2;
+                else if (values.mode === "hex") ang = Math.floor(rnd() * 3) * Math.PI / 3;
+                else ang = rnd() * Math.PI;
+                return {
+                    seed: p,
+                    dir: [Math.cos(ang), Math.sin(ang)],
+                    a: p.slice(), b: p.slice(),   // the two growing tips
+                    aActive: true, bActive: true
+                };
+            });
+
+            function segIntersect(p1, p2, p3, p4) {
+                const d1x = p2[0] - p1[0], d1y = p2[1] - p1[1];
+                const d2x = p4[0] - p3[0], d2y = p4[1] - p3[1];
+                const den = d1x * d2y - d1y * d2x;
+                if (Math.abs(den) < 1e-12) return null;
+                const t = ((p3[0] - p1[0]) * d2y - (p3[1] - p1[1]) * d2x) / den;
+                const u = ((p3[0] - p1[0]) * d1y - (p3[1] - p1[1]) * d1x) / den;
+                if (t < -1e-9 || t > 1 + 1e-9 || u < -1e-9 || u > 1 + 1e-9) return null;
+                return [p1[0] + t * d1x, p1[1] + t * d1y];
+            }
+
+            const DS = 3;
+            function stepTip(ci, which) {
+                const cr = cracks[ci];
+                const tip = which === "a" ? cr.a : cr.b;
+                const sign = which === "a" ? 1 : -1;
+                let nx = tip[0] + cr.dir[0] * DS * sign;
+                let ny = tip[1] + cr.dir[1] * DS * sign;
+                let stopped = false;
+                // clamp to page bounds
+                if (nx < LO || nx > HI || ny < LO || ny > HI) {
+                    nx = Math.max(LO, Math.min(HI, nx));
+                    ny = Math.max(LO, Math.min(HI, ny));
+                    stopped = true;
+                }
+                // stop when hitting any other crack
+                let best = null, bestD2 = Infinity;
+                for (let j = 0; j < cracks.length; j++) {
+                    if (j === ci) continue;
+                    const o = cracks[j];
+                    const hit = segIntersect(tip, [nx, ny], o.a, o.b);
+                    if (hit) {
+                        const d2 = (hit[0] - tip[0]) ** 2 + (hit[1] - tip[1]) ** 2;
+                        if (d2 < bestD2) { bestD2 = d2; best = hit; }
+                    }
+                }
+                if (best) { nx = best[0]; ny = best[1]; stopped = true; }
+                tip[0] = nx; tip[1] = ny;
+                if (stopped) {
+                    if (which === "a") cr.aActive = false; else cr.bActive = false;
+                }
+            }
+
+            const order = cracks.map((_, i) => i);
+            let iter = 0;
+            function frame() {
+                if (api.cancelled()) return;
+                let active = 0;
+                for (let s = 0; s < 4; s++) {
+                    // randomized update order keeps growth fair
+                    for (let i = order.length - 1; i > 0; i--) {
+                        const j = Math.floor(rnd() * (i + 1));
+                        const t = order[i]; order[i] = order[j]; order[j] = t;
+                    }
+                    active = 0;
+                    for (const i of order) {
+                        if (cracks[i].aActive) { stepTip(i, "a"); active++; }
+                        if (cracks[i].bActive) { stepTip(i, "b"); active++; }
+                    }
+                }
+                iter++;
+                const lines = cracks.map(c => [c.a, c.b]);
+                api.draw(lines);
+                if (active > 0 && iter < 400) {
+                    api.status("Risse wachsen… " + active + " aktive Spitzen");
+                    requestAnimationFrame(frame);
+                } else {
+                    lines.push({ pts: [[LO, LO], [HI, LO], [HI, HI], [LO, HI]], closed: true });
+                    api.done(lines);
+                }
+            }
+            requestAnimationFrame(frame);
+        }
+    });
+    </script>
+</body>
+</html>

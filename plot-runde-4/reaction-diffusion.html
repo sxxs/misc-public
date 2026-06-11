@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reaktion-Diffusion — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>3 · Reaktion-Diffusion (Turing-Muster)</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Gray-Scott-Simulation (Karl Sims): Zwei virtuelle
+            Chemikalien reagieren und diffundieren — es entstehen Korallen,
+            Flecken und Labyrinthe wie auf Tierfellen. Die Konzentration wird
+            per Marching&nbsp;Squares in plottbare Höhenlinien umgewandelt.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "reaktion-diffusion",
+        svgOpts: { width: 1.0 },
+        drawOpts: { width: 1.3 },
+        params: [
+            { key: "f", label: "Feed-Rate f", min: 0.025, max: 0.075, step: 0.001, value: 0.055 },
+            { key: "k", label: "Kill-Rate k", min: 0.055, max: 0.067, step: 0.0005, value: 0.062 },
+            { key: "steps", label: "Simulationsschritte", min: 800, max: 5000, step: 200, value: 2400 },
+            { key: "contours", label: "Konturlinien", min: 1, max: 6, step: 1, value: 3 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const N = 128, M = 40, S = 920;
+            const A = new Float32Array(N * N).fill(1);
+            const B = new Float32Array(N * N);
+            const A2 = new Float32Array(N * N);
+            const B2 = new Float32Array(N * N);
+            // seed a few random patches of chemical B
+            const patches = 5 + Math.floor(rnd() * 4);
+            for (let p = 0; p < patches; p++) {
+                const cx = 15 + Math.floor(rnd() * (N - 30));
+                const cy = 15 + Math.floor(rnd() * (N - 30));
+                for (let y = -3; y <= 3; y++) for (let x = -3; x <= 3; x++) {
+                    B[(cy + y) * N + cx + x] = 1;
+                }
+            }
+            const f = values.f, k = values.k, DA = 1.0, DB = 0.5;
+            let a = A, b = B, a2 = A2, b2 = B2;
+
+            function simStep() {
+                for (let y = 1; y < N - 1; y++) {
+                    for (let x = 1; x < N - 1; x++) {
+                        const i = y * N + x;
+                        const av = a[i], bv = b[i];
+                        const lapA = 0.2 * (a[i - 1] + a[i + 1] + a[i - N] + a[i + N]) +
+                            0.05 * (a[i - N - 1] + a[i - N + 1] + a[i + N - 1] + a[i + N + 1]) - av;
+                        const lapB = 0.2 * (b[i - 1] + b[i + 1] + b[i - N] + b[i + N]) +
+                            0.05 * (b[i - N - 1] + b[i - N + 1] + b[i + N - 1] + b[i + N + 1]) - bv;
+                        const abb = av * bv * bv;
+                        a2[i] = av + (DA * lapA - abb + f * (1 - av));
+                        b2[i] = bv + (DB * lapB + abb - (f + k) * bv);
+                    }
+                }
+                let t = a; a = a2; a2 = t;
+                t = b; b = b2; b2 = t;
+            }
+
+            // marching squares over field b at threshold t -> chained polylines
+            function contour(t) {
+                const segs = [];
+                const px = (ix) => M + ix * (S / (N - 1));
+                for (let y = 0; y < N - 1; y++) {
+                    for (let x = 0; x < N - 1; x++) {
+                        const v0 = b[y * N + x], v1 = b[y * N + x + 1];
+                        const v2 = b[(y + 1) * N + x + 1], v3 = b[(y + 1) * N + x];
+                        let c = 0;
+                        if (v0 >= t) c |= 1;
+                        if (v1 >= t) c |= 2;
+                        if (v2 >= t) c |= 4;
+                        if (v3 >= t) c |= 8;
+                        if (c === 0 || c === 15) continue;
+                        const ep = (e) => { // edge interpolation: 0 top,1 right,2 bottom,3 left
+                            if (e === 0) return [px(x + (t - v0) / (v1 - v0)), px(y) * 0 + M + y * (S / (N - 1))];
+                            if (e === 1) return [M + (x + 1) * (S / (N - 1)), M + (y + (t - v1) / (v2 - v1)) * (S / (N - 1))];
+                            if (e === 2) return [px(x + (t - v3) / (v2 - v3)), M + (y + 1) * (S / (N - 1))];
+                            return [M + x * (S / (N - 1)), M + (y + (t - v0) / (v3 - v0)) * (S / (N - 1))];
+                        };
+                        const TABLE = {
+                            1: [[3, 0]], 2: [[0, 1]], 3: [[3, 1]], 4: [[1, 2]],
+                            5: [[3, 0], [1, 2]], 6: [[0, 2]], 7: [[3, 2]], 8: [[2, 3]],
+                            9: [[0, 2]], 10: [[0, 1], [2, 3]], 11: [[1, 2]],
+                            12: [[1, 3]], 13: [[0, 1]], 14: [[0, 3]]
+                        };
+                        for (const [e1, e2] of TABLE[c]) segs.push([ep(e1), ep(e2)]);
+                    }
+                }
+                return chain(segs);
+            }
+
+            function chain(segs) {
+                const keyOf = (p) => p[0].toFixed(3) + "," + p[1].toFixed(3);
+                const map = new Map();
+                segs.forEach((s, i) => {
+                    for (const p of [s[0], s[1]]) {
+                        const key = keyOf(p);
+                        let arr = map.get(key);
+                        if (!arr) { arr = []; map.set(key, arr); }
+                        arr.push(i);
+                    }
+                });
+                const used = new Array(segs.length).fill(false);
+                const lines = [];
+                for (let i = 0; i < segs.length; i++) {
+                    if (used[i]) continue;
+                    used[i] = true;
+                    let path = [segs[i][0], segs[i][1]];
+                    // extend forward then backward
+                    for (const dir of [1, 0]) {
+                        for (;;) {
+                            const end = dir ? path[path.length - 1] : path[0];
+                            const cand = (map.get(keyOf(end)) || []).find(j => !used[j]);
+                            if (cand === undefined) break;
+                            used[cand] = true;
+                            const s = segs[cand];
+                            const nextPt = keyOf(s[0]) === keyOf(end) ? s[1] : s[0];
+                            if (dir) path.push(nextPt); else path.unshift(nextPt);
+                        }
+                    }
+                    if (path.length >= 3) lines.push(path);
+                }
+                return lines;
+            }
+
+            // grayscale preview while simulating
+            const off = document.createElement("canvas");
+            off.width = N; off.height = N;
+            const offCtx = off.getContext("2d");
+            function preview() {
+                const img = offCtx.createImageData(N, N);
+                for (let i = 0; i < N * N; i++) {
+                    const v = Math.max(0, Math.min(255, 255 - b[i] * 600));
+                    img.data[i * 4] = v; img.data[i * 4 + 1] = v;
+                    img.data[i * 4 + 2] = v; img.data[i * 4 + 3] = 255;
+                }
+                offCtx.putImageData(img, 0, 0);
+                const canvas = document.getElementById("canvas");
+                const ctx = PR4.fitCanvas(canvas);
+                ctx.fillStyle = "#fff";
+                ctx.fillRect(0, 0, PR4.SIZE, PR4.SIZE);
+                ctx.imageSmoothingEnabled = false;
+                ctx.drawImage(off, M, M, S, S);
+            }
+
+            let stepsDone = 0;
+            function frame() {
+                if (api.cancelled()) return;
+                for (let s = 0; s < 40 && stepsDone < values.steps; s++) {
+                    simStep(); stepsDone++;
+                }
+                preview();
+                if (stepsDone < values.steps) {
+                    api.status("Simuliere… " + stepsDone + " / " + values.steps);
+                    requestAnimationFrame(frame);
+                } else {
+                    let maxB = 0;
+                    for (let i = 0; i < N * N; i++) if (b[i] > maxB) maxB = b[i];
+                    const lines = [];
+                    const count = values.contours;
+                    for (let c = 0; c < count; c++) {
+                        const t = maxB * (0.28 + 0.5 * (c + 0.5) / count);
+                        for (const l of contour(t)) lines.push(l);
+                    }
+                    if (lines.length === 0) {
+                        api.status("Muster ausgestorben — andere f/k-Werte probieren");
+                        api.done([[[M, M], [M + S, M], [M + S, M + S], [M, M + S], [M, M]]]);
+                    } else {
+                        api.done(lines);
+                    }
+                }
+            }
+            requestAnimationFrame(frame);
+        }
+    });
+    </script>
+</body>
+</html>
