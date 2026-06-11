@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muster-Collage — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>21 · Muster-Collage</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Komposition: Die Fläche wird per BSP in Felder geteilt,
+            jedes Feld bekommt ein anderes Mikro-Muster aus dem Baukasten
+            (Schraffur, Truchet, Wellen, Spirale, Ringe, Punkte …). Die
+            <b>Freistellung</b> — Leerraum zwischen Rahmen und Muster — hält die
+            Texturen sauber auseinander.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "muster-collage",
+        params: [
+            { key: "cells", label: "Felder", min: 4, max: 16, step: 1, value: 9 },
+            { key: "gap", label: "Freistellung", min: 6, max: 34, step: 2, value: 16 },
+            { key: "density", label: "Musterdichte", min: 0.6, max: 1.6, step: 0.1, value: 1 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const noise = PR4.makeNoise2D(rnd);
+            const lines = [];
+            const M = 40, S = 920;
+            const sp = () => 10 / values.density;   // base stroke spacing
+
+            // ----- macro: BSP partition into cells -----
+            let cells = [{ x: M, y: M, w: S, h: S }];
+            while (cells.length < values.cells) {
+                // split the largest cell
+                let bi = 0;
+                for (let i = 1; i < cells.length; i++) {
+                    if (cells[i].w * cells[i].h > cells[bi].w * cells[bi].h) bi = i;
+                }
+                const c = cells[bi];
+                const ratio = 0.35 + rnd() * 0.3;
+                cells.splice(bi, 1);
+                if (c.w > c.h) {
+                    cells.push({ x: c.x, y: c.y, w: c.w * ratio, h: c.h });
+                    cells.push({ x: c.x + c.w * ratio, y: c.y, w: c.w * (1 - ratio), h: c.h });
+                } else {
+                    cells.push({ x: c.x, y: c.y, w: c.w, h: c.h * ratio });
+                    cells.push({ x: c.x, y: c.y + c.h * ratio, w: c.w, h: c.h * (1 - ratio) });
+                }
+            }
+
+            // clip a sampled polyline to a rect, splitting into visible runs
+            function clipRect(pts, r) {
+                let run = null;
+                for (const p of pts) {
+                    const inside = p[0] >= r.x && p[0] <= r.x + r.w &&
+                                   p[1] >= r.y && p[1] <= r.y + r.h;
+                    if (inside) {
+                        if (!run) run = [];
+                        run.push(p);
+                    } else if (run) {
+                        if (run.length > 1) lines.push(run);
+                        run = null;
+                    }
+                }
+                if (run && run.length > 1) lines.push(run);
+            }
+
+            // ----- micro pattern library (each fills rect r) -----
+            function patHatch(r, cross) {
+                const ang = rnd() * Math.PI;
+                const dirs = cross ? [ang, ang + Math.PI / 2] : [ang];
+                for (const a of dirs) {
+                    const dx = Math.cos(a), dy = Math.sin(a);
+                    const px = -dy, py = dx;
+                    const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+                    const ext = Math.hypot(r.w, r.h) / 2 + 2;
+                    for (let c = -ext; c <= ext; c += sp()) {
+                        const pts = [];
+                        for (let t = -ext; t <= ext; t += 4) {
+                            pts.push([cx + dx * t + px * c, cy + dy * t + py * c]);
+                        }
+                        clipRect(pts, r);
+                    }
+                }
+            }
+            function patWaves(r) {
+                const f = 0.012 + rnd() * 0.012;
+                const amp = 5 + rnd() * 7;
+                const o = rnd() * 50;
+                for (let y = r.y + sp() / 2; y < r.y + r.h; y += sp()) {
+                    const pts = [];
+                    for (let x = r.x; x <= r.x + r.w; x += 3) {
+                        pts.push([x, y + (noise.fbm(x * f + o, y * 0.02, 3) - 0.5) * 2 * amp]);
+                    }
+                    clipRect(pts, r);
+                }
+            }
+            function patSpiral(r) {
+                const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+                const maxR = Math.hypot(r.w, r.h) / 2;
+                const pts = [];
+                const spc = sp();
+                for (let t = 0; t < maxR / spc * Math.PI * 2; t += 0.05) {
+                    const rad = spc * t / (Math.PI * 2);
+                    pts.push([cx + rad * Math.cos(t), cy + rad * Math.sin(t)]);
+                }
+                clipRect(pts, r);
+            }
+            function patRings(r) {
+                const cx = r.x + rnd() * r.w, cy = r.y + rnd() * r.h;
+                const maxR = Math.hypot(Math.max(cx - r.x, r.x + r.w - cx),
+                                        Math.max(cy - r.y, r.y + r.h - cy));
+                for (let rad = sp(); rad <= maxR; rad += sp()) {
+                    const pts = [];
+                    const n = Math.max(24, Math.round(rad));
+                    for (let i = 0; i <= n; i++) {
+                        const a = i / n * Math.PI * 2;
+                        pts.push([cx + rad * Math.cos(a), cy + rad * Math.sin(a)]);
+                    }
+                    clipRect(pts, r);
+                }
+            }
+            function patTruchet(r) {
+                const g = Math.max(2, Math.round(Math.min(r.w, r.h) / (26 / values.density)));
+                const cs = Math.min(r.w, r.h) / g;
+                const cols = Math.floor(r.w / cs), rows = Math.floor(r.h / cs);
+                const ox = r.x + (r.w - cols * cs) / 2, oy = r.y + (r.h - rows * cs) / 2;
+                for (let gy = 0; gy < rows; gy++) {
+                    for (let gx = 0; gx < cols; gx++) {
+                        const x = ox + gx * cs, y = oy + gy * cs;
+                        const flip = rnd() < 0.5;
+                        const corners = flip ? [[x, y], [x + cs, y + cs]]
+                                             : [[x + cs, y], [x, y + cs]];
+                        const a0s = flip ? [0, Math.PI] : [Math.PI / 2, Math.PI * 1.5];
+                        for (let k = 0; k < 2; k++) {
+                            const pts = [];
+                            for (let i = 0; i <= 10; i++) {
+                                const a = a0s[k] + (Math.PI / 2) * i / 10;
+                                pts.push([corners[k][0] + (cs / 2) * Math.cos(a),
+                                          corners[k][1] + (cs / 2) * Math.sin(a)]);
+                            }
+                            lines.push(pts);
+                        }
+                    }
+                }
+            }
+            function patDots(r) {
+                const step = sp() * 2.2;
+                for (let y = r.y + step / 2; y < r.y + r.h - 2; y += step) {
+                    for (let x = r.x + step / 2; x < r.x + r.w - 2; x += step * 0.866) {
+                        const yy = y + ((Math.round(x / step) % 2) ? step / 2 : 0);
+                        if (yy > r.y + r.h - 3) continue;
+                        const pts = [];
+                        for (let i = 0; i <= 10; i++) {
+                            const a = i / 10 * Math.PI * 2;
+                            pts.push([x + 2.4 * Math.cos(a), yy + 2.4 * Math.sin(a)]);
+                        }
+                        lines.push({ pts, closed: true });
+                    }
+                }
+            }
+            function patBars(r) {
+                for (let x = r.x + sp() / 2; x < r.x + r.w; x += sp() * 0.8) {
+                    if (rnd() < 0.25) continue;
+                    lines.push([[x, r.y], [x, r.y + r.h]]);
+                }
+            }
+            function patZigzag(r) {
+                const w = sp() * 1.6;
+                for (let y = r.y + w; y < r.y + r.h; y += sp() * 1.5) {
+                    const pts = [];
+                    let up = true;
+                    for (let x = r.x; x <= r.x + r.w; x += w) {
+                        pts.push([x, up ? y - w / 2 : y + w / 2]);
+                        up = !up;
+                    }
+                    clipRect(pts, r);
+                }
+            }
+
+            const PATTERNS = [
+                (r) => patHatch(r, false), (r) => patHatch(r, true),
+                patWaves, patSpiral, patRings, patTruchet, patDots, patBars, patZigzag
+            ];
+
+            // ----- compose: frame each cell, inset, then fill with its pattern -----
+            // shuffle pattern order so neighbours differ
+            const order = PATTERNS.map((_, i) => i);
+            for (let i = order.length - 1; i > 0; i--) {
+                const j = Math.floor(rnd() * (i + 1));
+                const t = order[i]; order[i] = order[j]; order[j] = t;
+            }
+            const g = values.gap;
+            let idx = 0;
+            for (const c of cells) {
+                const frame = { x: c.x + g / 2, y: c.y + g / 2, w: c.w - g, h: c.h - g };
+                if (frame.w < 30 || frame.h < 30) continue;
+                lines.push({ pts: [[frame.x, frame.y], [frame.x + frame.w, frame.y],
+                    [frame.x + frame.w, frame.y + frame.h], [frame.x, frame.y + frame.h]],
+                    closed: true });
+                // Freistellung: padding between frame and pattern
+                const pad = Math.max(6, g * 0.55);
+                const inner = { x: frame.x + pad, y: frame.y + pad,
+                                w: frame.w - 2 * pad, h: frame.h - 2 * pad };
+                if (inner.w < 18 || inner.h < 18) continue;
+                PATTERNS[order[idx % order.length]](inner);
+                idx++;
+            }
+            api.status(cells.length + " Felder, " + idx + " Muster");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

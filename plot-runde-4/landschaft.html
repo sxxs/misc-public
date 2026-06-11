@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hügellandschaft — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>19 · Hügellandschaft</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Komposition: Hügelzüge aus fbm-Noise, von vorne nach
+            hinten gezeichnet mit <b>echter Verdeckung</b> — hintere Linien
+            erscheinen nur über der Silhouette der vorderen. Vordere Hügel
+            bekommen Echo-Linien und Gras-Striche (Mikro-Textur), die Sonne wird
+            vom Gelände sauber abgeschnitten.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "huegellandschaft",
+        params: [
+            { key: "ridges", label: "Hügelzüge", min: 8, max: 28, step: 1, value: 16 },
+            { key: "rough", label: "Welligkeit", min: 0.5, max: 2, step: 0.1, value: 1.2 },
+            { key: "sun", label: "Sonne", value: "rechts", options: [
+                { value: "rechts", label: "Rechts" },
+                { value: "mitte", label: "Mitte" },
+                { value: "links", label: "Links" },
+                { value: "keine", label: "Keine" }
+            ]},
+            { key: "birds", label: "Vögel", min: 0, max: 8, step: 1, value: 3 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const noise = PR4.makeNoise2D(rnd);
+            const lines = [];
+            const X0 = 40, X1 = 960, DX = 2;
+            const NX = Math.floor((X1 - X0) / DX) + 1;
+            const minY = new Float32Array(NX).fill(1e9);
+
+            // emit only the visible runs of a sampled line, given the silhouette
+            function emitVisible(ys, update) {
+                let run = null;
+                for (let i = 0; i < NX; i++) {
+                    const y = ys[i];
+                    const visible = y < minY[i] - 0.4;
+                    if (visible && y > 38 && y < 962) {
+                        if (!run) run = [];
+                        run.push([X0 + i * DX, y]);
+                    } else if (run) {
+                        if (run.length > 2) lines.push(run);
+                        run = null;
+                    }
+                }
+                if (run && run.length > 2) lines.push(run);
+                if (update) {
+                    for (let i = 0; i < NX; i++) if (ys[i] < minY[i]) minY[i] = ys[i];
+                }
+            }
+
+            const K = values.ridges;
+            for (let r = 0; r < K; r++) {
+                const t = r / (K - 1);                 // 0 = front, 1 = back
+                const yBase = 890 - Math.pow(t, 0.9) * 690;
+                const amp = values.rough * (28 + 135 * (1 - t));
+                const freq = 0.0035 + 0.0022 * (1 - t);
+                const ys = new Float32Array(NX);
+                for (let i = 0; i < NX; i++) {
+                    const x = X0 + i * DX;
+                    const n = noise.fbm(x * freq + r * 17.3, r * 5.31, 4);
+                    ys[i] = yBase - Math.pow(n, 1.25) * amp;
+                }
+                // micro: echo lines under the crest of front hills
+                if (t < 0.3) {
+                    for (const off of [6, 13]) {
+                        const echo = new Float32Array(NX);
+                        for (let i = 0; i < NX; i++) echo[i] = ys[i] + off;
+                        emitVisible(echo, false);
+                    }
+                }
+                // micro: grass ticks on the frontmost ridge
+                if (r === 0) {
+                    for (let i = 4; i < NX - 4; i += 3 + Math.floor(rnd() * 4)) {
+                        const x = X0 + i * DX;
+                        const y = ys[i];
+                        const len = 7 + rnd() * 9;
+                        const lean = (rnd() - 0.5) * 6;
+                        lines.push([[x, y + 3], [x + lean, y + 3 + len]]);
+                    }
+                }
+                emitVisible(ys, true);
+            }
+
+            // sun: concentric circles clipped against the full terrain silhouette
+            if (values.sun !== "keine") {
+                const sx = values.sun === "links" ? 230 : values.sun === "mitte" ? 500 : 770;
+                const sy = 215;
+                for (const rad of [95, 78, 61, 44]) {
+                    let run = null;
+                    for (let i = 0; i <= 180; i++) {
+                        const a = i / 180 * Math.PI * 2;
+                        const x = sx + rad * Math.cos(a);
+                        const y = sy + rad * Math.sin(a);
+                        const gi = Math.round((x - X0) / DX);
+                        const vis = gi >= 0 && gi < NX && y < minY[gi] - 0.4 && y > 42;
+                        if (vis) {
+                            if (!run) run = [];
+                            run.push([x, y]);
+                        } else if (run) {
+                            if (run.length > 2) lines.push(run);
+                            run = null;
+                        }
+                    }
+                    if (run && run.length > 2) lines.push(run);
+                }
+            }
+
+            // birds: two joined wing arcs in the open sky
+            for (let b = 0; b < values.birds; b++) {
+                const bx = 120 + rnd() * 760;
+                const by = 90 + rnd() * 160;
+                const gi = Math.round((bx - X0) / DX);
+                if (gi >= 0 && gi < NX && by > minY[gi] - 30) continue;
+                const w = 13 + rnd() * 9;
+                const wing = (sign) => {
+                    const pts = [];
+                    for (let i = 0; i <= 8; i++) {
+                        const u = i / 8;
+                        pts.push([bx + sign * u * w, by - Math.sin(u * Math.PI) * w * 0.42]);
+                    }
+                    return pts;
+                };
+                lines.push(wing(-1).reverse().concat(wing(1).slice(1)));
+            }
+            api.status(K + " Hügelzüge");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

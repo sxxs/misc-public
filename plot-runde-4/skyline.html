@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skyline — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>18 · Skyline</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Komposition: Eine generative Stadt-Silhouette mit
+            Kirchtürmen. Jedes Gebäude bekommt seine eigene <b>Mikro-Textur</b>
+            (Fensterraster, Schraffur oder Geschosslinien), darüber Mond und
+            Sterne, darunter Wasser-Spiegelung aus gestrichelten Linien.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "skyline",
+        params: [
+            { key: "churches", label: "Kirchen-Anteil", min: 0, max: 0.5, step: 0.05, value: 0.2 },
+            { key: "windows", label: "Fenster-Dichte", min: 0.2, max: 1, step: 0.05, value: 0.65 },
+            { key: "stars", label: "Sterne", min: 0, max: 30, step: 1, value: 14 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+            const HOR = 700;
+
+            function rect3(x, y, w, h) {  // left, top, right (bottom is the horizon)
+                lines.push([[x, y + h], [x, y], [x + w, y], [x + w, y + h]]);
+            }
+            function windows(x, y, w, h) {
+                const cols = Math.max(1, Math.floor(w / 20));
+                const rows = Math.max(1, Math.floor(h / 28));
+                const gx = w / cols, gy = h / rows;
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        if (rnd() > values.windows) continue;
+                        const wx = x + c * gx + gx / 2 - 4;
+                        const wy = y + r * gy + gy / 2 - 6;
+                        lines.push({ pts: [[wx, wy], [wx + 8, wy], [wx + 8, wy + 12], [wx, wy + 12]], closed: true });
+                    }
+                }
+            }
+            function hatch45(x, y, w, h) {
+                const sp = 12;
+                for (let c = -h; c < w; c += sp) {
+                    const x1 = Math.max(x, x + c), y1 = c < 0 ? y - c : y;
+                    const x2 = Math.min(x + w, x + c + h), y2 = y1 + (x2 - x1);
+                    if (x2 > x1) lines.push([[x1, y1], [x2, y2]]);
+                }
+            }
+            function floors(x, y, w, h) {
+                for (let fy = y + 18; fy < y + h - 6; fy += 18) {
+                    lines.push([[x + 4, fy], [x + w - 4, fy]]);
+                }
+            }
+            function church(x, w) {
+                const tw = Math.min(Math.max(w, 36), 60);
+                const h = 240 + rnd() * 130;
+                const ty = HOR - h;
+                rect3(x, ty, tw, h);
+                // spire with cross
+                const peak = [x + tw / 2, ty - 55 - rnd() * 35];
+                lines.push([[x, ty], peak, [x + tw, ty]]);
+                lines.push([[peak[0], peak[1] - 4], [peak[0], peak[1] - 22]]);
+                lines.push([[peak[0] - 7, peak[1] - 15], [peak[0] + 7, peak[1] - 15]]);
+                // clock + arched door
+                const cy = ty + 36;
+                const c = [];
+                for (let i = 0; i <= 24; i++) {
+                    const a = i / 24 * Math.PI * 2;
+                    c.push([x + tw / 2 + 11 * Math.cos(a), cy + 11 * Math.sin(a)]);
+                }
+                lines.push({ pts: c, closed: true });
+                lines.push([[x + tw / 2, cy], [x + tw / 2, cy - 8]]);
+                lines.push([[x + tw / 2, cy], [x + tw / 2 + 6, cy + 3]]);
+                const dw = 14, dx = x + tw / 2 - dw / 2;
+                const door = [[dx, HOR]];
+                for (let i = 0; i <= 12; i++) {
+                    const a = Math.PI - i / 12 * Math.PI;
+                    door.push([x + tw / 2 + (dw / 2) * Math.cos(a), HOR - 26 + (dw / 2) * Math.sin(-a)]);
+                }
+                door.push([dx + dw, HOR]);
+                lines.push(door);
+                // tall slit windows
+                for (let wy = ty + 70; wy < HOR - 50; wy += 46) {
+                    lines.push([[x + tw / 2 - 5, wy], [x + tw / 2 - 5, wy + 22]]);
+                    lines.push([[x + tw / 2 + 5, wy], [x + tw / 2 + 5, wy + 22]]);
+                }
+                return tw;
+            }
+
+            // build the city left to right (no overlaps, no hidden lines)
+            let x = 55;
+            let built = 0;
+            while (x < 880) {
+                const roll = rnd();
+                if (roll < values.churches) {
+                    x += church(x, 40 + rnd() * 25) + 6 + rnd() * 18;
+                } else if (roll < values.churches + 0.28) {
+                    // stepped tower
+                    let w = 70 + rnd() * 60;
+                    if (x + w > 940) w = 940 - x;
+                    const tiers = 2 + Math.floor(rnd() * 2);
+                    let ty = HOR, tw = w;
+                    for (let t = 0; t < tiers; t++) {
+                        const th = 60 + rnd() * 90;
+                        ty -= th;
+                        const tx = x + (w - tw) / 2;
+                        rect3(tx, ty, tw, th);
+                        if (rnd() < 0.6) windows(tx, ty, tw, th);
+                        else floors(tx, ty, tw, th);
+                        tw *= 0.6 + rnd() * 0.15;
+                    }
+                    x += w + 4 + rnd() * 16;
+                } else {
+                    let w = 55 + rnd() * 95;
+                    if (x + w > 940) w = 940 - x;
+                    const h = 80 + rnd() * 240;
+                    rect3(x, HOR - h, w, h);
+                    const tex = rnd();
+                    if (tex < 0.55) windows(x, HOR - h, w, h);
+                    else if (tex < 0.8) hatch45(x, HOR - h, w, h);
+                    else floors(x, HOR - h, w, h);
+                    // some flat roofs get an antenna
+                    if (rnd() < 0.3) {
+                        const ax = x + w * (0.2 + rnd() * 0.6);
+                        lines.push([[ax, HOR - h], [ax, HOR - h - 14 - rnd() * 22]]);
+                    }
+                    x += w + 4 + rnd() * 16;
+                }
+                built++;
+                if (built > 40) break;
+            }
+
+            // horizon
+            lines.push([[40, HOR], [960, HOR]]);
+            // moon
+            const mx = 120 + rnd() * 700, my = 110 + rnd() * 80;
+            for (const r of [42, 35, 28]) {
+                const c = [];
+                for (let i = 0; i <= 32; i++) {
+                    const a = i / 32 * Math.PI * 2;
+                    c.push([mx + r * Math.cos(a), my + r * Math.sin(a)]);
+                }
+                lines.push({ pts: c, closed: true });
+            }
+            // stars (small plus signs, kept clear of the moon)
+            for (let s = 0; s < values.stars; s++) {
+                const sx = 60 + rnd() * 880, sy = 60 + rnd() * 220;
+                if (Math.hypot(sx - mx, sy - my) < 70) continue;
+                lines.push([[sx - 5, sy], [sx + 5, sy]]);
+                lines.push([[sx, sy - 5], [sx, sy + 5]]);
+            }
+            // water: dashed reflection lines, sparser further down
+            for (let wy = HOR + 22; wy < 950; wy += 20) {
+                const density = 1 - (wy - HOR) / 300;
+                let wx = 40;
+                while (wx < 940) {
+                    const len = 20 + rnd() * 70;
+                    if (rnd() < density * 0.75) {
+                        lines.push([[wx, wy], [Math.min(wx + len, 958), wy]]);
+                    }
+                    wx += len + 18 + rnd() * 50;
+                }
+            }
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>
