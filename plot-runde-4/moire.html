@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moiré-Interferenz — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>27 · Moiré-Interferenz</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Zwei fast identische Linienfamilien überlagern sich —
+            erst die <b>Interferenz</b> erzeugt das eigentliche Bild: wandernde
+            Großmuster (Hyperbeln, Schwebungen), die in keiner der beiden
+            Familien allein existieren. Auf dem Plot entsteht der Effekt physisch
+            aus der Überlagerung der Tinte.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "moire",
+        svgOpts: { width: 0.6 },
+        drawOpts: { width: 0.8, stroke: "rgba(22,33,62,0.75)" },
+        params: [
+            { key: "type", label: "Familie", value: "circles", options: [
+                { value: "circles", label: "Kreisscharen" },
+                { value: "lines", label: "Liniengitter" },
+                { value: "radial", label: "Strahlenfächer" }
+            ]},
+            { key: "spacing", label: "Abstand", min: 6, max: 20, step: 1, value: 12 },
+            { key: "offset", label: "Versatz", min: 6, max: 120, step: 2, value: 55 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+            const CX = 500, CY = 500, CLIP = 448;
+
+            function clipPush(pts) {  // keep only what lies inside the big circle
+                let run = null;
+                for (const p of pts) {
+                    if ((p[0] - CX) ** 2 + (p[1] - CY) ** 2 <= CLIP * CLIP) {
+                        if (!run) run = [];
+                        run.push(p);
+                    } else if (run) {
+                        if (run.length > 1) lines.push(run);
+                        run = null;
+                    }
+                }
+                if (run && run.length > 1) lines.push(run);
+            }
+
+            const sp = values.spacing;
+            const off = values.offset;
+
+            if (values.type === "circles") {
+                const centers = [[CX - off / 2, CY - off * 0.35], [CX + off / 2, CY + off * 0.35]];
+                for (const [ox, oy] of centers) {
+                    for (let r = sp; r < CLIP + off; r += sp) {
+                        const pts = [];
+                        const n = Math.max(40, Math.round(r * 0.9));
+                        for (let i = 0; i <= n; i++) {
+                            const a = i / n * Math.PI * 2;
+                            pts.push([ox + r * Math.cos(a), oy + r * Math.sin(a)]);
+                        }
+                        clipPush(pts);
+                    }
+                }
+            } else if (values.type === "lines") {
+                const rot = off / 1400;            // small angle in radians
+                for (const ang of [0, rot]) {
+                    const dx = Math.cos(ang), dy = Math.sin(ang);
+                    const px = -dy, py = dx;
+                    for (let c = -CLIP - 20; c <= CLIP + 20; c += sp) {
+                        const pts = [];
+                        for (let t = -CLIP - 20; t <= CLIP + 20; t += 8) {
+                            pts.push([CX + dx * t + px * c, CY + dy * t + py * c]);
+                        }
+                        clipPush(pts);
+                    }
+                }
+            } else {
+                const rays = Math.round(360 / Math.max(2, sp * 0.45));
+                const centers = [[CX - off / 2, CY], [CX + off / 2, CY]];
+                for (const [ox, oy] of centers) {
+                    for (let i = 0; i < rays; i++) {
+                        const a = i / rays * Math.PI * 2 + rnd() * 0.0001;
+                        const pts = [];
+                        for (let r = 14; r <= CLIP * 2; r += 7) {
+                            pts.push([ox + r * Math.cos(a), oy + r * Math.sin(a)]);
+                        }
+                        clipPush(pts);
+                    }
+                }
+            }
+            // circular frame
+            const frame = [];
+            for (let i = 0; i <= 180; i++) {
+                const a = i / 180 * Math.PI * 2;
+                frame.push([CX + CLIP * Math.cos(a), CY + CLIP * Math.sin(a)]);
+            }
+            lines.push({ pts: frame, closed: true });
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

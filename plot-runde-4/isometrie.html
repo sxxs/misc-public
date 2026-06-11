@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Isometrie-Stapel — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>23 · Isometrie-Stapel</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Isometrische Säulenlandschaft mit <b>echter
+            Verdeckung</b> (Hidden-Line-Removal gegen bereits gezeichnete Flächen)
+            und Licht aus Schraffur: Deckel bleiben weiß, linke Flächen hell
+            schraffiert, rechte dunkel — drei Tonwerte, reine Linien. Höhen aus
+            Noise, Kuppel oder Treppen-Feld.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "isometrie",
+        svgOpts: { width: 0.9 },
+        drawOpts: { width: 1.1 },
+        params: [
+            { key: "grid", label: "Raster", min: 6, max: 16, step: 1, value: 10 },
+            { key: "maxh", label: "Max. Höhe", min: 40, max: 220, step: 10, value: 130 },
+            { key: "field", label: "Höhenfeld", value: "noise", options: [
+                { value: "noise", label: "Noise-Gebirge" },
+                { value: "dome", label: "Kuppel" },
+                { value: "stairs", label: "Treppen" },
+                { value: "wave", label: "Welle" }
+            ]}
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const noise = PR4.makeNoise2D(rnd);
+            const no = rnd() * 30;
+            const lines = [];
+            const G = values.grid;
+            const u = 700 / G;                       // cell size in world units
+            const AX = 0.866 * u, AY = 0.5 * u;      // +i axis on screen
+            const BX = -0.866 * u, BY = 0.5 * u;     // +j axis on screen
+            const OX = 500, OY = 240;
+            const P = (i, j, h) => [OX + i * AX + j * BX, OY + i * AY + j * BY - h];
+
+            function height(i, j) {
+                const fi = i / (G - 1), fj = j / (G - 1);
+                let v;
+                if (values.field === "dome") {
+                    const d = Math.hypot(fi - 0.5, fj - 0.5) * 2;
+                    v = Math.max(0.05, 1 - d * d);
+                } else if (values.field === "stairs") {
+                    v = 0.15 + 0.85 * Math.floor(((1 - fi) + (1 - fj)) / 2 * 6) / 6;
+                } else if (values.field === "wave") {
+                    v = 0.5 + 0.45 * Math.sin(fi * Math.PI * 2.2 + Math.sin(fj * Math.PI * 1.7) * 2);
+                } else {
+                    v = Math.pow(noise.fbm(fi * 2.3 + no, fj * 2.3 + no, 4), 2.4) * 2.1;
+                }
+                return 12 + Math.max(0, Math.min(1, v)) * values.maxh;
+            }
+
+            // occluders: convex quads with bboxes
+            const occ = [];
+            function addQuad(q) {
+                let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+                for (const p of q) {
+                    x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]);
+                    y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]);
+                }
+                occ.push({ q, x0, x1, y0, y1 });
+            }
+            function hidden(p) {
+                for (const o of occ) {
+                    if (p[0] < o.x0 || p[0] > o.x1 || p[1] < o.y0 || p[1] > o.y1) continue;
+                    let inside = true;
+                    const q = o.q;
+                    for (let k = 0; k < 4; k++) {
+                        const a = q[k], b = q[(k + 1) % 4];
+                        if ((b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]) < -0.35) {
+                            inside = false; break;
+                        }
+                    }
+                    if (inside) return true;
+                }
+                return false;
+            }
+            function drawClipped(a, b) {
+                const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+                const n = Math.max(1, Math.ceil(len / 2.5));
+                let run = null;
+                for (let s = 0; s <= n; s++) {
+                    const p = [a[0] + (b[0] - a[0]) * s / n, a[1] + (b[1] - a[1]) * s / n];
+                    if (!hidden(p)) {
+                        if (!run) run = [];
+                        run.push(p);
+                    } else if (run) {
+                        if (run.length > 1) lines.push([run[0], run[run.length - 1]]);
+                        run = null;
+                    }
+                }
+                if (run && run.length > 1) lines.push([run[0], run[run.length - 1]]);
+            }
+
+            // front to back: larger i+j first (clockwise winding quads)
+            const order = [];
+            for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) order.push([i, j]);
+            order.sort((a, b) => (b[0] + b[1]) - (a[0] + a[1]));
+
+            for (const [i, j] of order) {
+                const h = height(i, j);
+                const T1 = P(i, j, h), T2 = P(i + 1, j, h), T3 = P(i + 1, j + 1, h), T4 = P(i, j + 1, h);
+                const B2 = P(i + 1, j, 0), B3 = P(i + 1, j + 1, 0), B4 = P(i, j + 1, 0);
+                // edges
+                for (const [a, b] of [[T1, T2], [T2, T3], [T3, T4], [T4, T1],
+                                      [T2, B2], [T3, B3], [T4, B4],
+                                      [B2, B3], [B3, B4]]) {
+                    drawClipped(a, b);
+                }
+                // right face: dense hatch (shadow side), parallel to its top edge
+                for (let s = 7; s < h; s += 7) {
+                    drawClipped([T2[0], T2[1] + s], [T3[0], T3[1] + s]);
+                }
+                // left face: light hatch
+                for (let s = 14; s < h; s += 14) {
+                    drawClipped([T4[0], T4[1] + s], [T3[0], T3[1] + s]);
+                }
+                addQuad([T1, T2, T3, T4]);
+                addQuad([T2, B2, B3, T3]);
+                addQuad([T4, T3, B3, B4]);
+            }
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Metaball-Schraffur — Plot Runde 4</title>
+    <title>Ebenen-Schichten — Plot Runde 4</title>
     <link rel="stylesheet" href="shared.css">
 </head>
 <body>
     <header>
         <a class="back" href="./">← Übersicht</a>
-        <h1>9 · Metaball-Schraffur</h1>
+        <h1>9 · Ebenen-Schichten</h1>
     </header>
     <main>
         <section class="paper"><canvas id="canvas"></canvas></section>
@@ -20,11 +20,11 @@
                 <button id="download">⬇ SVG</button>
             </div>
             <p id="status" class="status"></p>
-            <p class="hint">Makro/Mikro-Prinzip: Die <b>große Form</b> entsteht aus
-            verschmelzenden Metaballs (Konturlinie des Summenfelds), die
-            <b>Textur</b> aus Schraffur-Lagen — je tiefer im Feld, desto dichter
-            und gekreuzter die Linien. So entsteht Tonwert auf einem reinen
-            Linien-Gerät.</p>
+            <p class="hint">Papierschnitt-Illusion: Mehrere <b>Metaball-Ebenen</b>
+            liegen übereinander. Jede Ebene hat ihre eigene Schraffur-Richtung;
+            vordere Ebenen stanzen hintere mit einem <b>Freistellungs-Rand</b>
+            aus, hintere werden dünner gezeichnet — so entsteht echte
+            Tiefenwirkung aus reinen Linien.</p>
         </section>
     </main>
     <script src="shared.js"></script>
@@ -32,72 +32,106 @@
     <script>
     "use strict";
     PR4App({
-        svgName: "metaball-schraffur",
+        svgName: "ebenen-schichten",
         svgOpts: { width: 0.9 },
         drawOpts: { width: 1.1 },
         params: [
-            { key: "blobs", label: "Metaballs", min: 3, max: 9, step: 1, value: 6 },
-            { key: "spacing", label: "Schraffur-Abstand", min: 6, max: 24, step: 1, value: 11 },
-            { key: "angle", label: "Winkel", min: 0, max: 180, step: 5, value: 35 },
-            { key: "layers", label: "Tonwert-Lagen", min: 1, max: 4, step: 1, value: 3 }
+            { key: "layers", label: "Ebenen", min: 2, max: 4, step: 1, value: 3 },
+            { key: "spacing", label: "Schraffur-Abstand", min: 5, max: 18, step: 1, value: 9 },
+            { key: "gap", label: "Freistellung", min: 2, max: 20, step: 1, value: 9 }
         ],
         generate(api) {
             const { rnd, values } = api;
             const M = 40, S = 920;
-            const blobs = [];
-            for (let i = 0; i < values.blobs; i++) {
-                blobs.push({
-                    x: 230 + rnd() * 540,
-                    y: 230 + rnd() * 540,
-                    r: 70 + rnd() * 110
+            const lines = [];
+            const L = values.layers;
+
+            // build layers back (0) to front (L-1), each with its own blob field
+            const layers = [];
+            for (let l = 0; l < L; l++) {
+                const blobs = [];
+                const n = 2 + Math.floor(rnd() * 2);
+                // each layer anchors elsewhere on the diagonal -> readable stack
+                const f = L === 1 ? 0.5 : l / (L - 1);
+                const ax = 280 + f * 440 + (rnd() - 0.5) * 120;
+                const ay = 280 + f * 440 + (rnd() - 0.5) * 120;
+                for (let b = 0; b < n; b++) {
+                    const r = 75 + rnd() * 110;
+                    blobs.push({
+                        x: Math.max(150 + r * 0.4, Math.min(850 - r * 0.4, ax + (rnd() - 0.5) * 300)),
+                        y: Math.max(150 + r * 0.4, Math.min(850 - r * 0.4, ay + (rnd() - 0.5) * 300)),
+                        r
+                    });
+                }
+                layers.push({
+                    blobs,
+                    angle: (l * 57 + rnd() * 25) * Math.PI / 180,
+                    w: 0.55 + (l / Math.max(1, L - 1)) * 0.85   // back thin, front bold
                 });
             }
-            function field(x, y) {
+            function field(l, x, y) {
                 let f = 0;
-                for (const b of blobs) {
-                    const d2 = (x - b.x) ** 2 + (y - b.y) ** 2 + 1;
-                    f += b.r * b.r / d2;
+                for (const b of layers[l].blobs) {
+                    f += b.r * b.r / ((x - b.x) ** 2 + (y - b.y) ** 2 + 1);
                 }
                 return f;
             }
-
-            const lines = [];
-            // macro: outline of the merged shape (plus a slightly tighter echo line)
-            const G = 180;
-            const mapC = (v) => M + v * (S / (G - 1));
-            const cache = new Float32Array(G * G);
-            for (let y = 0; y < G; y++) for (let x = 0; x < G; x++) {
-                cache[y * G + x] = field(mapC(x), mapC(y));
+            // halo threshold: front shapes plus a clearance margin knock out layers behind
+            const HALO = 1 / (1 + values.gap * 0.06);
+            function coveredByFront(l, x, y) {
+                for (let f = l + 1; f < L; f++) {
+                    if (field(f, x, y) >= HALO) return true;
+                }
+                return false;
             }
-            const sample = (x, y) => cache[y * G + x];
-            for (const c of PR4.contourLines(sample, G, G, 1.0, mapC, mapC)) lines.push(c);
-            for (const c of PR4.contourLines(sample, G, G, 1.18, mapC, mapC)) lines.push(c);
 
-            // micro: hatching layers, deeper field = denser + rotated
-            const cx = 500, cy = 500;
-            for (let layer = 0; layer < values.layers; layer++) {
-                const t = 1.0 + layer * 0.85;          // field threshold per layer
-                const ang = (values.angle + layer * 52) * Math.PI / 180;
-                const sp = values.spacing * Math.pow(0.82, layer);
-                const dx = Math.cos(ang), dy = Math.sin(ang);
-                const px = -dy, py = dx;
-                for (let c = -720; c <= 720; c += sp) {
+            const G = 170;
+            const mapC = (v) => M + v * (S / (G - 1));
+            for (let l = 0; l < L; l++) {
+                const w = layers[l].w;
+                // outline via marching squares, then drop the parts behind front layers
+                const cache = new Float32Array(G * G);
+                for (let y = 0; y < G; y++) for (let x = 0; x < G; x++) {
+                    cache[y * G + x] = field(l, mapC(x), mapC(y));
+                }
+                const contours = PR4.contourLines((x, y) => cache[y * G + x], G, G, 1.0, mapC, mapC);
+                for (const c of contours) {
                     let run = null;
-                    for (let tt = -720; tt <= 720; tt += 3) {
-                        const x = cx + dx * tt + px * c;
-                        const y = cy + dy * tt + py * c;
-                        const inside = x > M && x < M + S && y > M && y < M + S && field(x, y) >= t;
-                        if (inside) {
-                            if (!run) run = [[x, y]];
-                            else run.push([x, y]);
+                    for (const p of c) {
+                        if (!coveredByFront(l, p[0], p[1])) {
+                            if (!run) run = [];
+                            run.push(p);
                         } else if (run) {
-                            if (run.length > 1) lines.push([run[0], run[run.length - 1]]);
+                            if (run.length > 1) lines.push({ pts: run, w });
                             run = null;
                         }
                     }
-                    if (run && run.length > 1) lines.push([run[0], run[run.length - 1]]);
+                    if (run && run.length > 1) lines.push({ pts: run, w });
+                }
+                // hatch: kept where inside this layer and not covered in front
+                const ang = layers[l].angle;
+                const dx = Math.cos(ang), dy = Math.sin(ang);
+                const px = -dy, py = dx;
+                const sp = values.spacing * (1 + (L - 1 - l) * 0.25);  // back lighter
+                for (let c = -720; c <= 720; c += sp) {
+                    let run = null;
+                    for (let t = -720; t <= 720; t += 3) {
+                        const x = 500 + dx * t + px * c;
+                        const y = 500 + dy * t + py * c;
+                        const ok = x > M && x < M + S && y > M && y < M + S &&
+                            field(l, x, y) >= 1.0 && !coveredByFront(l, x, y);
+                        if (ok) {
+                            if (!run) run = [[x, y]];
+                            else run.push([x, y]);
+                        } else if (run) {
+                            if (run.length > 1) lines.push({ pts: [run[0], run[run.length - 1]], w });
+                            run = null;
+                        }
+                    }
+                    if (run && run.length > 1) lines.push({ pts: [run[0], run[run.length - 1]], w });
                 }
             }
+            api.status(L + " Ebenen, Freistellung " + values.gap);
             api.done(lines);
         }
     });

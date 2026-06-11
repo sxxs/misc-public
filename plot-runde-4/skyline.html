@@ -41,6 +41,7 @@
             const { rnd, values } = api;
             const lines = [];
             const HOR = 700;
+            const fronts = [];   // occupied rects of the front row, for clipping + reflections
 
             function rect3(x, y, w, h) {  // left, top, right (bottom is the horizon)
                 lines.push([[x, y + h], [x, y], [x + w, y], [x + w, y + h]]);
@@ -76,6 +77,7 @@
                 const h = 240 + rnd() * 130;
                 const ty = HOR - h;
                 rect3(x, ty, tw, h);
+                fronts.push({ x, w: tw, top: ty });
                 // spire with cross
                 const peak = [x + tw / 2, ty - 55 - rnd() * 35];
                 lines.push([[x, ty], peak, [x + tw, ty]]);
@@ -125,6 +127,7 @@
                         ty -= th;
                         const tx = x + (w - tw) / 2;
                         rect3(tx, ty, tw, th);
+                        fronts.push({ x: tx, w: tw, top: ty });
                         if (rnd() < 0.6) windows(tx, ty, tw, th);
                         else floors(tx, ty, tw, th);
                         tw *= 0.6 + rnd() * 0.15;
@@ -135,6 +138,7 @@
                     if (x + w > 940) w = 940 - x;
                     const h = 80 + rnd() * 240;
                     rect3(x, HOR - h, w, h);
+                    fronts.push({ x, w, top: HOR - h });
                     const tex = rnd();
                     if (tex < 0.55) windows(x, HOR - h, w, h);
                     else if (tex < 0.8) hatch45(x, HOR - h, w, h);
@@ -148,6 +152,43 @@
                 }
                 built++;
                 if (built > 40) break;
+            }
+
+            // background skyline: thin distant silhouette, clipped behind the front row
+            const hiddenBack = (px, py) =>
+                fronts.some(f => px >= f.x - 2 && px <= f.x + f.w + 2 && py >= f.top - 2);
+            const sil = [];
+            let bx = 40, bh = 120 + rnd() * 200;
+            sil.push([bx, HOR - bh]);
+            while (bx < 960) {
+                const bw = 50 + rnd() * 110;
+                const nx2 = Math.min(960, bx + bw);
+                sil.push([nx2, HOR - bh]);
+                bx = nx2;
+                if (bx < 960) {
+                    bh = 100 + rnd() * 230;
+                    sil.push([bx, HOR - bh]);
+                }
+            }
+            {
+                let run = null;
+                for (let i = 0; i < sil.length - 1; i++) {
+                    const [x1, y1] = sil[i], [x2, y2] = sil[i + 1];
+                    const len = Math.hypot(x2 - x1, y2 - y1);
+                    const n = Math.max(1, Math.ceil(len / 3));
+                    for (let s = 0; s <= n; s++) {
+                        const px = x1 + (x2 - x1) * s / n;
+                        const py = y1 + (y2 - y1) * s / n;
+                        if (!hiddenBack(px, py)) {
+                            if (!run) run = [];
+                            run.push([px, py]);
+                        } else if (run) {
+                            if (run.length > 1) lines.push({ pts: run, w: 0.55 });
+                            run = null;
+                        }
+                    }
+                }
+                if (run && run.length > 1) lines.push({ pts: run, w: 0.55 });
             }
 
             // horizon
@@ -169,16 +210,28 @@
                 lines.push([[sx - 5, sy], [sx + 5, sy]]);
                 lines.push([[sx, sy - 5], [sx, sy + 5]]);
             }
-            // water: dashed reflection lines, sparser further down
-            for (let wy = HOR + 22; wy < 950; wy += 20) {
-                const density = 1 - (wy - HOR) / 300;
+            // water: mirrored building reflections as broken dash bands
+            for (let wy = HOR + 14; wy < 950; wy += 16) {
+                const depth = wy - HOR;
+                for (const f of fronts) {
+                    if (depth > (HOR - f.top) * 0.85) continue;   // reflection length
+                    if (rnd() < 0.25) continue;                    // broken water
+                    const jit = (rnd() - 0.5) * 8;
+                    lines.push({
+                        pts: [[f.x + 2 + jit, wy], [f.x + f.w - 2 + jit, wy]],
+                        w: Math.max(0.5, 1.1 - depth / 250)
+                    });
+                }
+            }
+            // plus a few ambient ripples between reflections
+            for (let wy = HOR + 30; wy < 950; wy += 36) {
                 let wx = 40;
                 while (wx < 940) {
-                    const len = 20 + rnd() * 70;
-                    if (rnd() < density * 0.75) {
-                        lines.push([[wx, wy], [Math.min(wx + len, 958), wy]]);
+                    const len = 25 + rnd() * 60;
+                    if (rnd() < 0.3) {
+                        lines.push({ pts: [[wx, wy], [Math.min(wx + len, 958), wy]], w: 0.6 });
                     }
-                    wx += len + 18 + rnd() * 50;
+                    wx += len + 30 + rnd() * 60;
                 }
             }
             api.done(lines);

@@ -53,7 +53,7 @@
             const minY = new Float32Array(NX).fill(1e9);
 
             // emit only the visible runs of a sampled line, given the silhouette
-            function emitVisible(ys, update) {
+            function emitVisible(ys, update, w) {
                 let run = null;
                 for (let i = 0; i < NX; i++) {
                     const y = ys[i];
@@ -62,11 +62,11 @@
                         if (!run) run = [];
                         run.push([X0 + i * DX, y]);
                     } else if (run) {
-                        if (run.length > 2) lines.push(run);
+                        if (run.length > 2) lines.push({ pts: run, w });
                         run = null;
                     }
                 }
-                if (run && run.length > 2) lines.push(run);
+                if (run && run.length > 2) lines.push({ pts: run, w });
                 if (update) {
                     for (let i = 0; i < NX; i++) if (ys[i] < minY[i]) minY[i] = ys[i];
                 }
@@ -84,12 +84,29 @@
                     const n = noise.fbm(x * freq + r * 17.3, r * 5.31, 4);
                     ys[i] = yBase - Math.pow(n, 1.25) * amp;
                 }
+                // atmospheric perspective: front ridges drawn bolder
+                const lw = 0.55 + (1 - t) * 1.0;
                 // micro: echo lines under the crest of front hills
                 if (t < 0.3) {
                     for (const off of [6, 13]) {
                         const echo = new Float32Array(NX);
                         for (let i = 0; i < NX; i++) echo[i] = ys[i] + off;
-                        emitVisible(echo, false);
+                        emitVisible(echo, false, lw * 0.75);
+                    }
+                }
+                // micro: hachure shading on right-facing slopes of nearer hills
+                if (t < 0.45) {
+                    for (let i = 4; i < NX - 4; i += 3) {
+                        const slope = (ys[i + 2] - ys[i - 2]) / (4 * DX);
+                        if (slope < 0.3) continue;
+                        const x = X0 + i * DX;
+                        const y0 = ys[i] + 3;
+                        const len = Math.min(26, 5 + slope * 14) * (1 - t * 0.8);
+                        const x1 = x + slope * 3, y1 = y0 + len;
+                        const gi = Math.min(NX - 1, Math.round((x1 - X0) / DX));
+                        if (y0 < minY[i] - 0.4 && y1 < minY[gi] - 0.4) {
+                            lines.push({ pts: [[x, y0], [x1, y1]], w: lw * 0.7 });
+                        }
                     }
                 }
                 // micro: grass ticks on the frontmost ridge
@@ -99,10 +116,10 @@
                         const y = ys[i];
                         const len = 7 + rnd() * 9;
                         const lean = (rnd() - 0.5) * 6;
-                        lines.push([[x, y + 3], [x + lean, y + 3 + len]]);
+                        lines.push({ pts: [[x, y + 3], [x + lean, y + 3 + len]], w: lw * 0.8 });
                     }
                 }
-                emitVisible(ys, true);
+                emitVisible(ys, true, lw);
             }
 
             // sun: concentric circles clipped against the full terrain silhouette
@@ -121,11 +138,11 @@
                             if (!run) run = [];
                             run.push([x, y]);
                         } else if (run) {
-                            if (run.length > 2) lines.push(run);
+                            if (run.length > 2) lines.push({ pts: run, w: 0.8 });
                             run = null;
                         }
                     }
-                    if (run && run.length > 2) lines.push(run);
+                    if (run && run.length > 2) lines.push({ pts: run, w: 0.8 });
                 }
             }
 

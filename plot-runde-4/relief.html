@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relief-Schraffur — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>22 · Relief-Schraffur</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Op-Art-Tiefenillusion: Ein Feld paralleler Linien wird
+            von <b>unsichtbaren 3D-Formen</b> (Kugelkappen, Wülste, Mulden)
+            angehoben — die Linien legen sich wie Stoff über das Relief.
+            Zusätzlich rücken sie auf Anstiegen enger zusammen (Schattierung).
+            Das Motiv existiert nur als Verformung.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "relief-schraffur",
+        svgOpts: { width: 0.9 },
+        drawOpts: { width: 1.1 },
+        params: [
+            { key: "spacing", label: "Linienabstand", min: 6, max: 20, step: 1, value: 10 },
+            { key: "height", label: "Relief-Höhe", min: 20, max: 120, step: 5, value: 70 },
+            { key: "shapes", label: "Formen", min: 1, max: 7, step: 1, value: 4 },
+            { key: "dir", label: "Richtung", value: "h", options: [
+                { value: "h", label: "Horizontal" },
+                { value: "v", label: "Vertikal" },
+                { value: "grid", label: "Gitter" }
+            ]}
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const M = 40, S = 920;
+            const lines = [];
+
+            // hidden relief: smooth bumps and dents
+            const bumps = [];
+            for (let i = 0; i < values.shapes; i++) {
+                bumps.push({
+                    x: 180 + rnd() * 640,
+                    y: 180 + rnd() * 640,
+                    r: 110 + rnd() * 170,
+                    sign: rnd() < 0.78 ? 1 : -1     // mostly hills, some dents
+                });
+            }
+            function H(x, y) { // relief height in [-1, 1]
+                let h = 0;
+                for (const b of bumps) {
+                    const d = Math.hypot(x - b.x, y - b.y) / b.r;
+                    if (d < 1) {
+                        const t = Math.cos(d * Math.PI) * 0.5 + 0.5; // smooth cap
+                        h += b.sign * t * t;
+                    }
+                }
+                return Math.max(-1, Math.min(1, h));
+            }
+
+            function sweep(vertical) {
+                // march scan lines; local density increases on slopes facing "down"
+                const k = values.height;
+                let c = M;
+                while (c <= M + S) {
+                    const pts = [];
+                    let slopeAcc = 0, slopeN = 0;
+                    for (let t = M; t <= M + S; t += 3) {
+                        const x = vertical ? c : t;
+                        const y = vertical ? t : c;
+                        const h = H(x, y);
+                        // displace perpendicular to the sweep direction
+                        const px = vertical ? x + h * k : x;
+                        const py = vertical ? y : y - h * k;
+                        pts.push([px, py]);
+                        // slope along sweep axis controls next-line spacing
+                        const h2 = vertical ? H(x + 6, y) : H(x, y + 6);
+                        slopeAcc += (h2 - h);
+                        slopeN++;
+                    }
+                    lines.push(pts);
+                    const meanSlope = slopeAcc / slopeN;
+                    // compress lines where the surface rises toward the viewer
+                    const sp = values.spacing * (1 + meanSlope * 9);
+                    c += Math.max(values.spacing * 0.45, Math.min(values.spacing * 1.8, sp));
+                }
+            }
+            if (values.dir === "h" || values.dir === "grid") sweep(false);
+            if (values.dir === "v" || values.dir === "grid") sweep(true);
+
+            lines.push({ pts: [[M, M], [M + S, M], [M + S, M + S], [M, M + S]], closed: true });
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>
