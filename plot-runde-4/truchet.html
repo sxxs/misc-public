@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Scale Truchet — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>5 · Multi-Scale Truchet</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Truchet-Kacheln (Viertelkreis-Bögen oder Diagonalen)
+            auf einem rekursiv unterteilten Raster — nach Christopher Carlsons
+            „Multi-Scale Truchet Patterns" (Bridges 2018). Wo unterteilt wird,
+            entsteht feineres Detail: Komplexitätsgradienten aus einer Regel.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "truchet",
+        params: [
+            { key: "grid", label: "Grundraster", min: 3, max: 8, step: 1, value: 5 },
+            { key: "subdiv", label: "Subdivision-Chance", min: 0, max: 0.9, step: 0.05, value: 0.55 },
+            { key: "depth", label: "Max. Tiefe", min: 1, max: 4, step: 1, value: 3 },
+            { key: "style", label: "Stil", value: "arcs", options: [
+                { value: "arcs", label: "Bögen" },
+                { value: "diag", label: "Diagonalen" },
+                { value: "mix", label: "Mix" }
+            ]}
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const M = 40, S = 920;
+            const lines = [];
+
+            function arc(cx, cy, r, a0, a1, steps) {
+                const pts = [];
+                for (let i = 0; i <= steps; i++) {
+                    const a = a0 + (a1 - a0) * (i / steps);
+                    pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+                }
+                return pts;
+            }
+
+            function tile(x, y, s) {
+                const useArcs = values.style === "arcs" ||
+                    (values.style === "mix" && rnd() < 0.5);
+                const flip = rnd() < 0.5;
+                if (useArcs) {
+                    const steps = Math.max(6, Math.round(s / 14));
+                    if (flip) {
+                        // arcs around top-left and bottom-right corners
+                        lines.push(arc(x, y, s / 2, 0, Math.PI / 2, steps));
+                        lines.push(arc(x + s, y + s, s / 2, Math.PI, Math.PI * 1.5, steps));
+                    } else {
+                        lines.push(arc(x + s, y, s / 2, Math.PI / 2, Math.PI, steps));
+                        lines.push(arc(x, y + s, s / 2, Math.PI * 1.5, Math.PI * 2, steps));
+                    }
+                } else {
+                    if (flip) lines.push([[x + s / 2, y], [x, y + s / 2]],
+                                         [[x + s, y + s / 2], [x + s / 2, y + s]]);
+                    else lines.push([[x, y + s / 2], [x + s / 2, y + s]],
+                                    [[x + s / 2, y], [x + s, y + s / 2]]);
+                }
+            }
+
+            function cellRec(x, y, s, depth) {
+                const p = values.subdiv * Math.pow(0.8, depth);
+                if (depth < values.depth && rnd() < p) {
+                    const h = s / 2;
+                    cellRec(x, y, h, depth + 1);
+                    cellRec(x + h, y, h, depth + 1);
+                    cellRec(x, y + h, h, depth + 1);
+                    cellRec(x + h, y + h, h, depth + 1);
+                } else {
+                    tile(x, y, s);
+                }
+            }
+
+            const g = values.grid;
+            const cs = S / g;
+            for (let gy = 0; gy < g; gy++) {
+                for (let gx = 0; gx < g; gx++) {
+                    cellRec(M + gx * cs, M + gy * cs, cs, 0);
+                }
+            }
+            // outer frame
+            lines.push({ pts: [[M, M], [M + S, M], [M + S, M + S], [M, M + S]], closed: true });
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raumkolonisierung — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>2 · Raumkolonisierung (Blattadern)</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Space-Colonization-Algorithmus (Runions et&nbsp;al. 2005):
+            Ein Baum wächst Richtung zufällig verteilter „Attraktor"-Punkte und
+            verbraucht sie dabei. Es entstehen Blattadern, Wurzeln oder
+            Korallenfächer — reine Linienbäume, perfekt plottbar.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "raumkolonisierung",
+        params: [
+            { key: "attractors", label: "Attraktoren", min: 300, max: 3000, step: 100, value: 1400 },
+            { key: "influence", label: "Einflussradius", min: 40, max: 180, step: 5, value: 95 },
+            { key: "seg", label: "Segmentlänge", min: 6, max: 20, step: 1, value: 10 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const seg = values.seg;
+            const infl = values.influence;
+            const kill = Math.max(seg * 1.4, 12);
+
+            // attractors in a circle in the upper part of the page
+            const ACX = 500, ACY = 460, AR = 420;
+            let attractors = [];
+            while (attractors.length < values.attractors) {
+                const a = rnd() * Math.PI * 2;
+                const r = Math.sqrt(rnd()) * AR;
+                attractors.push([ACX + r * Math.cos(a), ACY + r * Math.sin(a)]);
+            }
+
+            const nodes = [{ p: [500, 955], parent: -1 }];
+            // grow a trunk upward until an attractor is in range
+            let guard = 0;
+            const inRange = (p) => attractors.some(a =>
+                (a[0] - p[0]) ** 2 + (a[1] - p[1]) ** 2 < infl * infl);
+            while (!inRange(nodes[nodes.length - 1].p) && guard++ < 80) {
+                const last = nodes[nodes.length - 1];
+                nodes.push({ p: [last.p[0], last.p[1] - seg], parent: nodes.length - 1 });
+            }
+
+            function buildLines() {
+                const children = nodes.map(() => []);
+                for (let i = 1; i < nodes.length; i++) children[nodes[i].parent].push(i);
+                const lines = [];
+                // walk chains from root and every branch point
+                const stack = [[0, [nodes[0].p]]];
+                while (stack.length) {
+                    const [i, path] = stack.pop();
+                    const kids = children[i];
+                    if (kids.length === 0) {
+                        if (path.length > 1) lines.push(path);
+                    } else {
+                        // continue current path with first child, fork for the rest
+                        for (let k = 1; k < kids.length; k++) {
+                            stack.push([kids[k], [nodes[i].p, nodes[kids[k]].p]]);
+                        }
+                        const c = kids[0];
+                        path.push(nodes[c].p);
+                        stack.push([c, path]);
+                    }
+                }
+                return lines;
+            }
+
+            function iterate() {
+                // assign each attractor to its nearest node within influence radius
+                const pull = new Map(); // nodeIndex -> [dx,dy,count]
+                for (const a of attractors) {
+                    let best = -1, bestD2 = infl * infl;
+                    for (let i = 0; i < nodes.length; i++) {
+                        const p = nodes[i].p;
+                        const d2 = (a[0] - p[0]) ** 2 + (a[1] - p[1]) ** 2;
+                        if (d2 < bestD2) { bestD2 = d2; best = i; }
+                    }
+                    if (best >= 0) {
+                        let acc = pull.get(best);
+                        if (!acc) { acc = [0, 0, 0]; pull.set(best, acc); }
+                        const p = nodes[best].p;
+                        const d = Math.sqrt(bestD2) || 1;
+                        acc[0] += (a[0] - p[0]) / d;
+                        acc[1] += (a[1] - p[1]) / d;
+                        acc[2]++;
+                    }
+                }
+                if (pull.size === 0) return 0;
+                const newNodes = [];
+                for (const [i, acc] of pull) {
+                    let dx = acc[0] / acc[2] + (rnd() - 0.5) * 0.3;
+                    let dy = acc[1] / acc[2] + (rnd() - 0.5) * 0.3;
+                    const m = Math.hypot(dx, dy);
+                    if (m < 1e-6) continue;
+                    const p = nodes[i].p;
+                    newNodes.push({ p: [p[0] + dx / m * seg, p[1] + dy / m * seg], parent: i });
+                }
+                for (const nn of newNodes) nodes.push(nn);
+                // remove attractors reached by any new node
+                attractors = attractors.filter(a => !newNodes.some(nn =>
+                    (a[0] - nn.p[0]) ** 2 + (a[1] - nn.p[1]) ** 2 < kill * kill));
+                return newNodes.length;
+            }
+
+            let iter = 0;
+            function frame() {
+                if (api.cancelled()) return;
+                let added = 0;
+                for (let s = 0; s < 3; s++) added += iterate();
+                iter++;
+                api.draw(buildLines());
+                if (added > 0 && attractors.length > 0 && iter < 300) {
+                    api.status("Wächst… " + attractors.length + " Attraktoren übrig, " + nodes.length + " Knoten");
+                    requestAnimationFrame(frame);
+                } else {
+                    api.done(buildLines());
+                }
+            }
+            requestAnimationFrame(frame);
+        }
+    });
+    </script>
+</body>
+</html>

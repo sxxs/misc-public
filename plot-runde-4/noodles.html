@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noodles — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>7 · Noodles (Self-Avoiding Walk)</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Selbstvermeidende Zufallspfade („Nudeln") füllen ein
+            Raster, bis kein Platz mehr ist. Gezeichnet wird nicht die Mittellinie,
+            sondern die Umrandung mit runden Ecken und Endkappen — das ergibt die
+            typische Verrohrungs-Optik (nach cadin/generative-noodles).</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "noodles",
+        params: [
+            { key: "grid", label: "Raster", min: 8, max: 24, step: 1, value: 14 },
+            { key: "thickness", label: "Dicke", min: 0.4, max: 0.8, step: 0.05, value: 0.65 },
+            { key: "maxLen", label: "Max. Länge", min: 4, max: 30, step: 1, value: 12 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const M = 40, S = 920;
+            const G = values.grid;
+            const cell = S / G;
+            const occupied = new Uint8Array(G * G);
+            const center = (cx, cy) => [M + (cx + 0.5) * cell, M + (cy + 0.5) * cell];
+
+            // place self-avoiding walks until the grid is full
+            const noodles = [];
+            for (;;) {
+                const free = [];
+                for (let i = 0; i < G * G; i++) if (!occupied[i]) free.push(i);
+                if (free.length === 0) break;
+                const start = free[Math.floor(rnd() * free.length)];
+                const target = 2 + Math.floor(rnd() * (values.maxLen - 1));
+                const cells = [start];
+                occupied[start] = 1;
+                while (cells.length < target) {
+                    const last = cells[cells.length - 1];
+                    const cx = last % G, cy = Math.floor(last / G);
+                    const opts = [];
+                    if (cx > 0 && !occupied[last - 1]) opts.push(last - 1);
+                    if (cx < G - 1 && !occupied[last + 1]) opts.push(last + 1);
+                    if (cy > 0 && !occupied[last - G]) opts.push(last - G);
+                    if (cy < G - 1 && !occupied[last + G]) opts.push(last + G);
+                    if (opts.length === 0) break;
+                    const nxt = opts[Math.floor(rnd() * opts.length)];
+                    occupied[nxt] = 1;
+                    cells.push(nxt);
+                }
+                noodles.push(cells);
+            }
+
+            const halfw = values.thickness * cell / 2;
+            const cornerR = cell * 0.46;
+
+            // densely sampled centerline with rounded corners
+            function centerline(cells) {
+                const cps = cells.map(i => center(i % G, Math.floor(i / G)));
+                const pts = [];
+                const SPACING = Math.max(2, cell / 10);
+                function lineTo(a, b) {
+                    const d = Math.hypot(b[0] - a[0], b[1] - a[1]);
+                    const n = Math.max(1, Math.ceil(d / SPACING));
+                    for (let i = 1; i <= n; i++) {
+                        pts.push([a[0] + (b[0] - a[0]) * i / n, a[1] + (b[1] - a[1]) * i / n]);
+                    }
+                }
+                pts.push(cps[0]);
+                for (let i = 1; i < cps.length - 1; i++) {
+                    const v = cps[i];
+                    const d0 = norm([v[0] - cps[i - 1][0], v[1] - cps[i - 1][1]]);
+                    const d1 = norm([cps[i + 1][0] - v[0], cps[i + 1][1] - v[1]]);
+                    if (Math.abs(d0[0] - d1[0]) < 1e-9 && Math.abs(d0[1] - d1[1]) < 1e-9) {
+                        lineTo(pts[pts.length - 1], v);
+                        continue;
+                    }
+                    // corner: straight to arc start, then quarter arc
+                    const p0 = [v[0] - d0[0] * cornerR, v[1] - d0[1] * cornerR];
+                    const p1 = [v[0] + d1[0] * cornerR, v[1] + d1[1] * cornerR];
+                    lineTo(pts[pts.length - 1], p0);
+                    const ctr = [p0[0] + d1[0] * cornerR, p0[1] + d1[1] * cornerR];
+                    const a0 = Math.atan2(p0[1] - ctr[1], p0[0] - ctr[0]);
+                    let a1 = Math.atan2(p1[1] - ctr[1], p1[0] - ctr[0]);
+                    let diff = a1 - a0;
+                    while (diff > Math.PI) diff -= 2 * Math.PI;
+                    while (diff < -Math.PI) diff += 2 * Math.PI;
+                    const steps = 8;
+                    for (let sIdx = 1; sIdx <= steps; sIdx++) {
+                        const a = a0 + diff * sIdx / steps;
+                        pts.push([ctr[0] + cornerR * Math.cos(a), ctr[1] + cornerR * Math.sin(a)]);
+                    }
+                }
+                lineTo(pts[pts.length - 1], cps[cps.length - 1]);
+                return pts;
+            }
+
+            function norm(v) {
+                const m = Math.hypot(v[0], v[1]) || 1;
+                return [v[0] / m, v[1] / m];
+            }
+
+            function outline(cl) {
+                const n = cl.length;
+                const L = [], R = [];
+                for (let i = 0; i < n; i++) {
+                    const a = cl[Math.max(0, i - 1)], b = cl[Math.min(n - 1, i + 1)];
+                    const t = norm([b[0] - a[0], b[1] - a[1]]);
+                    const nx = -t[1], ny = t[0];
+                    L.push([cl[i][0] + nx * halfw, cl[i][1] + ny * halfw]);
+                    R.push([cl[i][0] - nx * halfw, cl[i][1] - ny * halfw]);
+                }
+                function cap(centerPt, fromNormal) {
+                    const a0 = Math.atan2(fromNormal[1], fromNormal[0]);
+                    const capPts = [];
+                    for (let i = 1; i < 10; i++) {
+                        const a = a0 - Math.PI * i / 10;
+                        capPts.push([centerPt[0] + halfw * Math.cos(a),
+                                     centerPt[1] + halfw * Math.sin(a)]);
+                    }
+                    return capPts;
+                }
+                const endT = norm([cl[n - 1][0] - cl[n - 2][0], cl[n - 1][1] - cl[n - 2][1]]);
+                const startT = norm([cl[1][0] - cl[0][0], cl[1][1] - cl[0][1]]);
+                const endCap = cap(cl[n - 1], [-endT[1], endT[0]]);
+                const startCap = cap(cl[0], [startT[1], -startT[0]]);
+                const pts = L.concat(endCap, R.slice().reverse(), startCap);
+                return { pts, closed: true };
+            }
+
+            const lines = [];
+            for (const cells of noodles) {
+                if (cells.length === 1) {
+                    // single cell: draw a circle
+                    const c = center(cells[0] % G, Math.floor(cells[0] / G));
+                    const circ = [];
+                    for (let i = 0; i < 24; i++) {
+                        const a = i / 24 * Math.PI * 2;
+                        circ.push([c[0] + halfw * Math.cos(a), c[1] + halfw * Math.sin(a)]);
+                    }
+                    lines.push({ pts: circ, closed: true });
+                } else {
+                    lines.push(outline(centerline(cells)));
+                }
+            }
+            api.status(noodles.length + " Nudeln");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

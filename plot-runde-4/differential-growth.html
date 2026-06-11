@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Differentielles Linienwachstum — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>1 · Differentielles Linienwachstum</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Eine geschlossene Kurve wächst durch Abstoßung, Glättung
+            und adaptives Einfügen neuer Knoten — sie faltet sich wie Hirnwindungen
+            oder Korallen. Das Ergebnis ist ein einziger durchgehender Pfad,
+            ideal für den Plotter (minimale Stift-Hübe).</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "differential-growth",
+        params: [
+            { key: "maxNodes", label: "Max. Knoten", min: 400, max: 2600, step: 100, value: 1600 },
+            { key: "repulsion", label: "Abstoßungsradius", min: 12, max: 40, step: 1, value: 22 },
+            { key: "jitter", label: "Unruhe", min: 0, max: 2, step: 0.1, value: 0.5 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const CX = 500, CY = 500, BOUND = 455;
+            const R = values.repulsion;
+            const maxLen = Math.max(7, R * 0.42);
+            let pts = [];
+            const N0 = 60, R0 = 70;
+            for (let i = 0; i < N0; i++) {
+                const a = (i / N0) * Math.PI * 2;
+                pts.push([CX + R0 * Math.cos(a), CY + R0 * Math.sin(a)]);
+            }
+
+            let relaxLeft = 80;
+
+            function step(grow) {
+                const n = pts.length;
+                // spatial hash for neighbor lookups
+                const cell = R;
+                const grid = new Map();
+                for (let i = 0; i < n; i++) {
+                    const k = Math.floor(pts[i][0] / cell) + "," + Math.floor(pts[i][1] / cell);
+                    let arr = grid.get(k);
+                    if (!arr) { arr = []; grid.set(k, arr); }
+                    arr.push(i);
+                }
+                const next = new Array(n);
+                for (let i = 0; i < n; i++) {
+                    const p = pts[i];
+                    const prev = pts[(i - 1 + n) % n];
+                    const nxt = pts[(i + 1) % n];
+                    // attraction toward neighbor midpoint (smoothing)
+                    let fx = ((prev[0] + nxt[0]) / 2 - p[0]) * 0.4;
+                    let fy = ((prev[1] + nxt[1]) / 2 - p[1]) * 0.4;
+                    // repulsion from all nearby nodes
+                    const gx = Math.floor(p[0] / cell), gy = Math.floor(p[1] / cell);
+                    for (let ox = -1; ox <= 1; ox++) for (let oy = -1; oy <= 1; oy++) {
+                        const arr = grid.get((gx + ox) + "," + (gy + oy));
+                        if (!arr) continue;
+                        for (const j of arr) {
+                            if (j === i) continue;
+                            const dx = p[0] - pts[j][0], dy = p[1] - pts[j][1];
+                            const d2 = dx * dx + dy * dy;
+                            if (d2 > R * R || d2 < 1e-9) continue;
+                            const d = Math.sqrt(d2);
+                            const f = (1 - d / R) * 0.9 / d;
+                            fx += dx * f * R * 0.12;
+                            fy += dy * f * R * 0.12;
+                        }
+                    }
+                    fx += (rnd() - 0.5) * values.jitter;
+                    fy += (rnd() - 0.5) * values.jitter;
+                    // clamp step size
+                    const m = Math.hypot(fx, fy);
+                    const MAX = 2.4;
+                    if (m > MAX) { fx = fx / m * MAX; fy = fy / m * MAX; }
+                    let x = p[0] + fx, y = p[1] + fy;
+                    // keep inside circular boundary
+                    const dcx = x - CX, dcy = y - CY;
+                    const dc = Math.hypot(dcx, dcy);
+                    if (dc > BOUND) { x = CX + dcx / dc * BOUND; y = CY + dcy / dc * BOUND; }
+                    next[i] = [x, y];
+                }
+                pts = next;
+                if (grow) {
+                    const out = [];
+                    let budget = values.maxNodes - pts.length;
+                    for (let i = 0; i < pts.length; i++) {
+                        const a = pts[i], b = pts[(i + 1) % pts.length];
+                        out.push(a);
+                        if (budget > 0 &&
+                            Math.hypot(b[0] - a[0], b[1] - a[1]) > maxLen) {
+                            out.push([(a[0] + b[0]) / 2 + (rnd() - 0.5) * 0.5,
+                                      (a[1] + b[1]) / 2 + (rnd() - 0.5) * 0.5]);
+                            budget--;
+                            inserted++;
+                        }
+                    }
+                    pts = out;
+                }
+            }
+
+            let inserted = 0;
+            let stall = 0;
+            function frame() {
+                if (api.cancelled()) return;
+                let growing = pts.length < values.maxNodes && stall < 60;
+                for (let s = 0; s < 4; s++) {
+                    if (growing) {
+                        inserted = 0;
+                        step(true);
+                        // count iterations where the curve stopped expanding
+                        stall = inserted === 0 ? stall + 1 : 0;
+                        growing = pts.length < values.maxNodes && stall < 60;
+                    } else if (relaxLeft > 0) { step(false); relaxLeft--; }
+                }
+                api.draw([{ pts, closed: true }]);
+                if (growing || relaxLeft > 0) {
+                    api.status("Wächst… " + pts.length + " / " + values.maxNodes + " Knoten");
+                    requestAnimationFrame(frame);
+                } else {
+                    api.done([{ pts, closed: true }]);
+                }
+            }
+            requestAnimationFrame(frame);
+        }
+    });
+    </script>
+</body>
+</html>
