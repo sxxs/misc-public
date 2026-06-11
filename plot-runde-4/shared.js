@@ -32,12 +32,13 @@ const PR4 = (() => {
         ctx.fillStyle = opts.bg || "#fff";
         ctx.fillRect(0, 0, SIZE, SIZE);
         ctx.strokeStyle = opts.stroke || "#16213e";
-        ctx.lineWidth = opts.width || 1.6;
         ctx.lineJoin = "round";
         ctx.lineCap = "round";
+        const baseW = opts.width || 1.6;
         for (const line of lines) {
             const pts = line.pts || line;
             if (pts.length < 2) continue;
+            ctx.lineWidth = line.w ? line.w * baseW / 1.2 : baseW;
             ctx.beginPath();
             ctx.moveTo(pts[0][0], pts[0][1]);
             for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
@@ -54,7 +55,8 @@ const PR4 = (() => {
     function linesToSvg(lines, opts = {}) {
         const mm = opts.mm || 200;
         const sw = opts.width || 1.2;
-        const parts = [];
+        // group paths by stroke width (line.w overrides the default)
+        const groups = new Map();
         for (const line of lines) {
             const pts = line.pts || line;
             if (pts.length < 2) continue;
@@ -63,14 +65,19 @@ const PR4 = (() => {
                 d += "L" + rnum(pts[i][0]) + " " + rnum(pts[i][1]);
             }
             if (line.closed) d += "Z";
-            parts.push('<path d="' + d + '"/>');
+            const w = line.w || sw;
+            if (!groups.has(w)) groups.set(w, []);
+            groups.get(w).push('<path d="' + d + '"/>');
+        }
+        let body = "";
+        for (const [w, parts] of groups) {
+            body += '<g fill="none" stroke="#000" stroke-width="' + w +
+                '" stroke-linecap="round" stroke-linejoin="round">\n' +
+                parts.join("\n") + "\n</g>\n";
         }
         return '<?xml version="1.0" encoding="UTF-8"?>\n' +
             '<svg xmlns="http://www.w3.org/2000/svg" width="' + mm + 'mm" height="' + mm +
-            'mm" viewBox="0 0 ' + SIZE + " " + SIZE + '">\n' +
-            '<g fill="none" stroke="#000" stroke-width="' + sw +
-            '" stroke-linecap="round" stroke-linejoin="round">\n' +
-            parts.join("\n") + "\n</g>\n</svg>\n";
+            'mm" viewBox="0 0 ' + SIZE + " " + SIZE + '">\n' + body + "</svg>\n";
     }
 
     function downloadSvg(filename, svgString) {

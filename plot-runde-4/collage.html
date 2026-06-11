@@ -21,8 +21,9 @@
             </div>
             <p id="status" class="status"></p>
             <p class="hint">Komposition: Die Fläche wird per BSP in Felder geteilt,
-            jedes Feld bekommt ein anderes Mikro-Muster aus dem Baukasten
-            (Schraffur, Truchet, Wellen, Spirale, Ringe, Punkte …). Die
+            jedes Feld bekommt eines von <b>15 Mikro-Mustern</b> (Schraffur,
+            Truchet, Wellen, Spirale, Hex, Schuppen, Ziegel, Strahlen …).
+            Ein <b>Akzentfeld</b> trägt ein Symbol auf dichter Schraffur. Die
             <b>Freistellung</b> — Leerraum zwischen Rahmen und Muster — hält die
             Texturen sauber auseinander.</p>
         </section>
@@ -195,10 +196,123 @@
                 }
             }
 
+            function patSquares(r) {
+                const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+                for (let i = 1; ; i++) {
+                    const hw = r.w / 2 - i * sp(), hh = r.h / 2 - i * sp();
+                    if (hw < 3 || hh < 3) break;
+                    lines.push({ pts: [[cx - hw, cy - hh], [cx + hw, cy - hh],
+                        [cx + hw, cy + hh], [cx - hw, cy + hh]], closed: true });
+                }
+            }
+            function patFlow(r) {
+                const o = rnd() * 60;
+                const n = Math.round(r.w * r.h / 2400 * values.density);
+                for (let k = 0; k < n; k++) {
+                    let x = r.x + rnd() * r.w, y = r.y + rnd() * r.h;
+                    const pts = [[x, y]];
+                    for (let s = 0; s < 26; s++) {
+                        const a = noise.fbm(x * 0.012 + o, y * 0.012 + o, 3) * Math.PI * 4;
+                        x += Math.cos(a) * 5; y += Math.sin(a) * 5;
+                        if (x < r.x || x > r.x + r.w || y < r.y || y > r.y + r.h) break;
+                        pts.push([x, y]);
+                    }
+                    if (pts.length > 4) lines.push(pts);
+                }
+            }
+            function patHex(r) {
+                const s = sp() * 1.5;
+                const hw = s * 0.866;
+                for (let row = 0; ; row++) {
+                    const cy = r.y + s + row * s * 1.5;
+                    if (cy + s > r.y + r.h) break;
+                    for (let col = 0; ; col++) {
+                        const cx = r.x + hw + col * hw * 2 + (row % 2 ? hw : 0);
+                        if (cx + hw > r.x + r.w) break;
+                        const hex = [];
+                        for (let i = 0; i <= 6; i++) {
+                            const a = i / 6 * Math.PI * 2 + Math.PI / 6;
+                            hex.push([cx + s * Math.cos(a), cy + s * Math.sin(a)]);
+                        }
+                        lines.push(hex);
+                    }
+                }
+            }
+            function patScales(r) {
+                const s = sp() * 1.7;
+                for (let row = 0; ; row++) {
+                    const cy = r.y + row * s * 0.62;
+                    if (cy > r.y + r.h) break;
+                    for (let col = 0; ; col++) {
+                        const cx = r.x + col * s + (row % 2 ? s / 2 : 0);
+                        if (cx - s / 2 > r.x + r.w) break;
+                        const arc = [];
+                        for (let i = 0; i <= 12; i++) {
+                            const a = Math.PI + i / 12 * Math.PI;
+                            arc.push([cx + (s / 2) * Math.cos(a), cy - (s / 2) * Math.sin(a)]);
+                        }
+                        clipRect(arc, r);
+                    }
+                }
+            }
+            function patBricks(r) {
+                const bh = sp() * 1.4, bw = bh * 2.2;
+                for (let row = 0; ; row++) {
+                    const y = r.y + row * bh;
+                    if (y > r.y + r.h) break;
+                    if (y + bh <= r.y + r.h) lines.push([[r.x, y + bh], [r.x + r.w, y + bh]]);
+                    for (let col = 0; ; col++) {
+                        const x = r.x + col * bw + (row % 2 ? bw / 2 : 0);
+                        if (x > r.x + r.w) break;
+                        if (x > r.x) lines.push([[x, y], [x, Math.min(y + bh, r.y + r.h)]]);
+                    }
+                }
+            }
+            function patBurst(r) {
+                const cx = r.x + (rnd() < 0.5 ? 0 : r.w);
+                const cy = r.y + (rnd() < 0.5 ? 0 : r.h);
+                const rays = Math.round(26 * values.density);
+                for (let k = 0; k <= rays; k++) {
+                    const a = k / rays * Math.PI * 2;
+                    const pts = [];
+                    for (let d = 0; d < r.w + r.h; d += 5) {
+                        pts.push([cx + Math.cos(a) * d, cy + Math.sin(a) * d]);
+                    }
+                    clipRect(pts, r);
+                }
+            }
+
             const PATTERNS = [
                 (r) => patHatch(r, false), (r) => patHatch(r, true),
-                patWaves, patSpiral, patRings, patTruchet, patDots, patBars, patZigzag
+                patWaves, patSpiral, patRings, patTruchet, patDots, patBars, patZigzag,
+                patSquares, patFlow, patHex, patScales, patBricks, patBurst
             ];
+
+            // accent: a bold symbol on dense hatch, double-framed
+            function patAccent(r) {
+                patHatch(r, false);
+                const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+                const rad = Math.min(r.w, r.h) * 0.32;
+                if (rnd() < 0.5) {
+                    for (const f of [1, 0.82, 0.64]) {
+                        const c = [];
+                        for (let i = 0; i <= 40; i++) {
+                            const a = i / 40 * Math.PI * 2;
+                            c.push([cx + rad * f * Math.cos(a), cy + rad * f * Math.sin(a)]);
+                        }
+                        lines.push({ pts: c, closed: true });
+                    }
+                } else {
+                    for (const f of [1, 0.78, 0.56]) {
+                        const tri = [];
+                        for (let k = 0; k < 3; k++) {
+                            const a = k / 3 * Math.PI * 2 - Math.PI / 2;
+                            tri.push([cx + rad * f * Math.cos(a), cy + rad * f * Math.sin(a)]);
+                        }
+                        lines.push({ pts: tri, closed: true });
+                    }
+                }
+            }
 
             // ----- compose: frame each cell, inset, then fill with its pattern -----
             // shuffle pattern order so neighbours differ
@@ -208,19 +322,30 @@
                 const t = order[i]; order[i] = order[j]; order[j] = t;
             }
             const g = values.gap;
-            let idx = 0;
+            const accentAt = Math.floor(rnd() * cells.length);
+            let idx = 0, ci = 0;
             for (const c of cells) {
                 const frame = { x: c.x + g / 2, y: c.y + g / 2, w: c.w - g, h: c.h - g };
+                ci++;
                 if (frame.w < 30 || frame.h < 30) continue;
+                const isAccent = ci - 1 === accentAt;
                 lines.push({ pts: [[frame.x, frame.y], [frame.x + frame.w, frame.y],
                     [frame.x + frame.w, frame.y + frame.h], [frame.x, frame.y + frame.h]],
                     closed: true });
+                if (isAccent) {  // double frame marks the accent cell
+                    const e = 4;
+                    lines.push({ pts: [[frame.x + e, frame.y + e],
+                        [frame.x + frame.w - e, frame.y + e],
+                        [frame.x + frame.w - e, frame.y + frame.h - e],
+                        [frame.x + e, frame.y + frame.h - e]], closed: true });
+                }
                 // Freistellung: padding between frame and pattern
                 const pad = Math.max(6, g * 0.55);
                 const inner = { x: frame.x + pad, y: frame.y + pad,
                                 w: frame.w - 2 * pad, h: frame.h - 2 * pad };
                 if (inner.w < 18 || inner.h < 18) continue;
-                PATTERNS[order[idx % order.length]](inner);
+                if (isAccent) patAccent(inner);
+                else PATTERNS[order[idx % order.length]](inner);
                 idx++;
             }
             api.status(cells.length + " Felder, " + idx + " Muster");

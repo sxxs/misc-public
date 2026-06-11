@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mandala × Störung — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>26 · Mandala × Störung</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Perfekte Radialsymmetrie trifft Glitch: Ein
+            Guilloché-Mandala aus gewellten Ringen und Speichen wird von
+            <b>horizontalen Störungs-Bändern</b> zerschnitten, die quer übers
+            Bild laufen — die Linien darin sind seitlich versetzt, die Schnitte
+            bleiben sichtbar.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "mandala-stoerung",
+        svgOpts: { width: 0.8 },
+        drawOpts: { width: 1.0 },
+        params: [
+            { key: "sym", label: "Symmetrie", min: 4, max: 16, step: 1, value: 8 },
+            { key: "rings", label: "Ringe", min: 8, max: 30, step: 1, value: 18 },
+            { key: "bands", label: "Störungs-Bänder", min: 0, max: 6, step: 1, value: 3 },
+            { key: "shift", label: "Versatz", min: 10, max: 110, step: 5, value: 65 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const CX = 500, CY = 500;
+            const raw = [];
+
+            // ----- symmetric mandala -----
+            const sym = values.sym;
+            for (let k = 0; k < values.rings; k++) {
+                const t = k / (values.rings - 1);
+                const base = 60 + t * 370;
+                const amp = (3 + 14 * Math.sin(t * Math.PI)) * (0.6 + rnd() * 0.8);
+                const mult = (k % 3 === 0) ? 2 : 1;        // some rings double the symmetry
+                const phase = (k % 2) * Math.PI / sym;
+                const pts = [];
+                for (let i = 0; i <= 280; i++) {
+                    const a = i / 280 * Math.PI * 2;
+                    const r = base + amp * Math.sin(sym * mult * a + phase);
+                    pts.push([CX + r * Math.cos(a), CY + r * Math.sin(a)]);
+                }
+                raw.push(pts);
+            }
+            // spokes between inner and outer radius
+            for (let s = 0; s < sym * 2; s++) {
+                const a = s / (sym * 2) * Math.PI * 2 + Math.PI / sym / 2;
+                const pts = [];
+                for (let r = 70; r <= 420; r += 5) {
+                    const wob = Math.sin(r * 0.05 + s) * 4;
+                    pts.push([CX + r * Math.cos(a) - wob * Math.sin(a),
+                              CY + r * Math.sin(a) + wob * Math.cos(a)]);
+                }
+                raw.push(pts);
+            }
+            // center rosette
+            for (const r of [18, 30, 42]) {
+                const pts = [];
+                for (let i = 0; i <= 90; i++) {
+                    const a = i / 90 * Math.PI * 2;
+                    const rr = r + (r > 20 ? 4 * Math.sin(sym * a) : 0);
+                    pts.push([CX + rr * Math.cos(a), CY + rr * Math.sin(a)]);
+                }
+                raw.push(pts);
+            }
+
+            // ----- glitch bands: horizontal slices, shifted sideways -----
+            const bands = [];
+            for (let b = 0; b < values.bands; b++) {
+                const h = 22 + rnd() * 55;
+                bands.push({
+                    y0: 120 + rnd() * (760 - h),
+                    h,
+                    dx: (rnd() < 0.5 ? -1 : 1) * (values.shift * (0.5 + rnd() * 1.0)),
+                    skew: (rnd() - 0.5) * 0.15        // slight shear inside the band
+                });
+            }
+            function bandAt(y) {
+                for (let b = 0; b < bands.length; b++) {
+                    if (y >= bands[b].y0 && y < bands[b].y0 + bands[b].h) return b;
+                }
+                return -1;
+            }
+
+            const lines = [];
+            for (const pts of raw) {
+                let run = null, runBand = -2;
+                for (const p of pts) {
+                    const b = bandAt(p[1]);
+                    if (b !== runBand) {
+                        if (run && run.length > 1) lines.push(run);
+                        run = [];
+                        runBand = b;
+                    }
+                    if (b >= 0) {
+                        const band = bands[b];
+                        run.push([p[0] + band.dx + (p[1] - band.y0) * band.skew, p[1]]);
+                    } else {
+                        run.push(p);
+                    }
+                }
+                if (run && run.length > 1) lines.push(run);
+            }
+            // band edges run across the whole image (the "cut")
+            for (const b of bands) {
+                lines.push({ pts: [[40, b.y0], [960, b.y0]], w: 0.5 });
+                lines.push({ pts: [[40, b.y0 + b.h], [960, b.y0 + b.h]], w: 0.5 });
+            }
+            api.status(values.bands + " Störungs-Bänder");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

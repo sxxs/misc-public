@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form aus Formen — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>25 · Form aus Formen</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Ein großes <b>Makro-Symbol</b> wird vollständig aus
+            kleinen Kopien seiner selbst gepackt — und die größeren Kopien
+            enthalten als Echo nochmals geschrumpfte Versionen. Quasi-fraktale
+            Selbstähnlichkeit über drei Größenordnungen.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "form-aus-formen",
+        params: [
+            { key: "shape", label: "Symbol", value: "heart", options: [
+                { value: "heart", label: "Herz" },
+                { value: "star", label: "Stern" },
+                { value: "circle", label: "Kreis" },
+                { value: "tri", label: "Dreieck" }
+            ]},
+            { key: "copies", label: "Kopien (Ziel)", min: 30, max: 220, step: 10, value: 110 },
+            { key: "echo", label: "Echo-Tiefe", min: 0, max: 3, step: 1, value: 2 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+
+            // unit shape outline (max radius 1) at cx,cy scaled by r
+            function shapePts(cx, cy, r, samples) {
+                const pts = [];
+                const n = samples || Math.max(16, Math.min(72, Math.round(r * 1.4)));
+                for (let i = 0; i <= n; i++) {
+                    const t = i / n, a = t * Math.PI * 2;
+                    let x, y;
+                    if (values.shape === "heart") {
+                        x = 16 * Math.pow(Math.sin(a), 3) / 17;
+                        y = -(13 * Math.cos(a) - 5 * Math.cos(2 * a) -
+                              2 * Math.cos(3 * a) - Math.cos(4 * a)) / 17;
+                    } else if (values.shape === "star") {
+                        const seg = t * 10, k = Math.floor(seg), f = seg - k;
+                        const r1 = k % 2 === 0 ? 1 : 0.45;
+                        const r2 = k % 2 === 0 ? 0.45 : 1;
+                        const a1 = k / 10 * Math.PI * 2 - Math.PI / 2;
+                        const a2 = (k + 1) / 10 * Math.PI * 2 - Math.PI / 2;
+                        x = r1 * Math.cos(a1) + (r2 * Math.cos(a2) - r1 * Math.cos(a1)) * f;
+                        y = r1 * Math.sin(a1) + (r2 * Math.sin(a2) - r1 * Math.sin(a1)) * f;
+                    } else if (values.shape === "tri") {
+                        const seg = t * 3, k = Math.floor(seg), f = seg - k;
+                        const va = (k) => [Math.cos(k / 3 * Math.PI * 2 - Math.PI / 2),
+                                           Math.sin(k / 3 * Math.PI * 2 - Math.PI / 2)];
+                        const p1 = va(k), p2 = va(k + 1);
+                        x = p1[0] + (p2[0] - p1[0]) * f;
+                        y = p1[1] + (p2[1] - p1[1]) * f;
+                    } else {
+                        x = Math.cos(a); y = Math.sin(a);
+                    }
+                    pts.push([cx + x * r, cy + y * r]);
+                }
+                return pts;
+            }
+
+            // macro outline as containment polygon
+            const R0 = 430;
+            const CY = values.shape === "heart" ? 480 : 500;
+            const macro = shapePts(500, CY, R0, 160);
+            function inside(p) {
+                let c = false;
+                for (let i = 0, j = macro.length - 1; i < macro.length; j = i++) {
+                    if ((macro[i][1] > p[1]) !== (macro[j][1] > p[1]) &&
+                        p[0] < (macro[j][0] - macro[i][0]) * (p[1] - macro[i][1]) /
+                               (macro[j][1] - macro[i][1]) + macro[i][0]) c = !c;
+                }
+                return c;
+            }
+
+            lines.push({ pts: macro, closed: true });
+            lines.push({ pts: shapePts(500, CY, R0 * 0.985, 160), closed: true });
+
+            // greedy packing: large copies first, then ever smaller
+            const placed = [];
+            const SIZES = [85, 64, 48, 36, 27, 20, 15];
+            for (const r of SIZES) {
+                let attempts = values.copies * 4;
+                while (attempts-- > 0 && placed.length < values.copies) {
+                    const px = 500 + (rnd() - 0.5) * 2 * R0;
+                    const py = CY + (rnd() - 0.5) * 2 * R0;
+                    // shape must lie fully inside the macro symbol
+                    const probe = shapePts(px, py, r * 1.06, 14);
+                    if (!probe.every(inside)) continue;
+                    if (!placed.every(q => Math.hypot(q.x - px, q.y - py) > (q.r + r) * 1.06)) continue;
+                    placed.push({ x: px, y: py, r });
+                    lines.push({ pts: shapePts(px, py, r), closed: true });
+                    // echo: shrunken copies inside the larger ones
+                    let er = r, depth = 0;
+                    while (depth < values.echo && er > 18) {
+                        er *= 0.62;
+                        lines.push({ pts: shapePts(px, py, er), closed: true });
+                        depth++;
+                    }
+                }
+            }
+            api.status(placed.length + " Kopien platziert");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

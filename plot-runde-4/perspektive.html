@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perspektiv-Projektion — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>24 · Perspektiv-Projektion</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Ein flaches <b>Muster wird auf eine perspektivische
+            Bodenebene projiziert</b> — Schachbrett-Schraffur, Truchet-Bögen oder
+            Streifen laufen auf den Fluchtpunkt zu. Darüber schweben schraffierte
+            Kugeln mit Schatten-Ellipsen auf dem Boden. Tiefe durch Projektion
+            statt Verdeckung.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "perspektive",
+        svgOpts: { width: 0.9 },
+        drawOpts: { width: 1.1 },
+        params: [
+            { key: "pattern", label: "Bodenmuster", value: "check", options: [
+                { value: "check", label: "Schachbrett" },
+                { value: "truchet", label: "Truchet-Bögen" },
+                { value: "stripes", label: "Diagonalstreifen" }
+            ]},
+            { key: "tiles", label: "Kacheln pro Seite", min: 6, max: 16, step: 1, value: 10 },
+            { key: "spheres", label: "Kugeln", min: 0, max: 5, step: 1, value: 2 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+            const HOR = 360;                       // horizon
+            const VPX = 500;                       // vanishing point x
+            const F = 420, CAMH = 1.6;             // focal length, camera height
+            const Z0 = 1.6, Z1 = 14;               // visible depth range
+
+            // project world floor point (wx, z) -> screen
+            function proj(wx, z) {
+                return [VPX + wx / z * F, HOR + CAMH / z * F];
+            }
+            // draw a world-space floor polyline projected (curves stay curves)
+            function floorLine(worldPts) {
+                const out = [];
+                for (const [wx, z] of worldPts) {
+                    if (z < Z0 * 0.7) continue;
+                    const p = proj(wx, z);
+                    if (p[1] > 965 || p[0] < 35 || p[0] > 965) {
+                        if (out.length > 1) lines.push(out.slice());
+                        out.length = 0;
+                        continue;
+                    }
+                    out.push(p);
+                }
+                if (out.length > 1) lines.push(out);
+            }
+
+            const N = values.tiles;
+            const HALF = 6;                         // floor spans wx in [-HALF, HALF]
+            const tw = (2 * HALF) / N;              // tile size in world units
+            const zRow = (r) => Z0 * Math.pow(Z1 / Z0, r / N); // perspective-eased rows
+
+            // grid lines
+            for (let c = 0; c <= N; c++) {
+                const wx = -HALF + c * tw;
+                floorLine([[wx, zRow(0)], [wx, zRow(N)]]);
+            }
+            for (let r = 0; r <= N; r++) {
+                const z = zRow(r);
+                const pts = [];
+                for (let c = 0; c <= 40; c++) pts.push([-HALF + c * (2 * HALF / 40), z]);
+                floorLine(pts);
+            }
+
+            // per-tile pattern, generated in world space then projected
+            for (let r = 0; r < N; r++) {
+                const za = zRow(r), zb = zRow(r + 1);
+                for (let c = 0; c < N; c++) {
+                    const xa = -HALF + c * tw, xb = xa + tw;
+                    if (values.pattern === "check") {
+                        if ((r + c) % 2 === 0) continue;
+                        const hatchN = 6;
+                        for (let h = 1; h < hatchN; h++) {
+                            const z = za + (zb - za) * h / hatchN;
+                            floorLine([[xa, z], [xb, z]]);
+                        }
+                    } else if (values.pattern === "truchet") {
+                        const flip = rnd() < 0.5;
+                        const corners = flip ? [[xa, za], [xb, zb]] : [[xb, za], [xa, zb]];
+                        for (const [ccx, ccz] of corners) {
+                            const pts = [];
+                            for (let i = 0; i <= 14; i++) {
+                                const a = i / 14 * Math.PI / 2;
+                                // quarter circle in world space around the corner
+                                const dx = Math.cos(a) * tw / 2, dz = Math.sin(a) * (zb - za) / 2;
+                                const sx = ccx === xa ? 1 : -1, sz = ccz === za ? 1 : -1;
+                                pts.push([ccx + sx * dx, ccz + sz * dz]);
+                            }
+                            floorLine(pts);
+                        }
+                    } else {
+                        for (let h = 0; h < 3; h++) {
+                            const f = h / 3;
+                            floorLine([[xa + f * tw, za], [xa, za + f * (zb - za)]]);
+                            floorLine([[xb, za + f * (zb - za)], [xa + f * tw, zb]]);
+                        }
+                    }
+                }
+            }
+
+            // horizon line
+            lines.push([[40, HOR], [960, HOR]]);
+
+            // floating hatched spheres with shadow ellipses on the floor
+            for (let s = 0; s < values.spheres; s++) {
+                const wz = 2.2 + rnd() * 4.5;
+                const wxr = (rnd() - 0.5) * 7;
+                const ground = proj(wxr, wz);
+                const R = (0.85 + rnd() * 0.5) / wz * F * 0.55;
+                const cy = ground[1] - R - (30 + rnd() * 110) / wz;
+                const cx = ground[0];
+                if (cy - R < 50) continue;
+                // outline
+                const circ = [];
+                for (let i = 0; i <= 48; i++) {
+                    const a = i / 48 * Math.PI * 2;
+                    circ.push([cx + R * Math.cos(a), cy + R * Math.sin(a)]);
+                }
+                lines.push({ pts: circ, closed: true });
+                // shading: chords thicken toward lower right (light from upper left)
+                const ang = -Math.PI / 4;
+                const dx = Math.cos(ang), dy = Math.sin(ang);
+                for (let q = 0.05; q < 0.95; q += 0.09) {
+                    const off = (q * 1.6 - 0.6) * R;   // hatch only the shadow side
+                    if (off < -R * 0.2) continue;
+                    const half = Math.sqrt(Math.max(0, R * R - off * off));
+                    const mx = cx - dy * off, my = cy + dx * off;
+                    const arc = [];
+                    for (let i = 0; i <= 16; i++) {
+                        const t = -half + 2 * half * i / 16;
+                        // bow the chord to follow the sphere surface
+                        const bow = Math.sqrt(Math.max(0, R * R * 1.06 - t * t - off * off)) * 0.18;
+                        arc.push([mx + dx * t + dy * bow, my + dy * t - dx * bow]);
+                    }
+                    lines.push(arc);
+                }
+                // shadow ellipse on the floor
+                const sw = R * 1.15, sh = R * 0.26 * (1.5 / wz + 0.5);
+                for (const f of [1, 0.7]) {
+                    const ell = [];
+                    for (let i = 0; i <= 36; i++) {
+                        const a = i / 36 * Math.PI * 2;
+                        ell.push([ground[0] + sw * f * Math.cos(a),
+                                  ground[1] + sh * f * Math.sin(a)]);
+                    }
+                    lines.push({ pts: ell, closed: true });
+                }
+            }
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

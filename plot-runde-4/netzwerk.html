@@ -40,21 +40,52 @@
                 { value: "rng", label: "Nachbarschafts-Graph (spärlich)" },
                 { value: "delaunay", label: "Delaunay (dicht)" }
             ]},
-            { key: "routes", label: "Datenrouten", min: 0, max: 5, step: 1, value: 2 }
+            { key: "routes", label: "Datenrouten", min: 0, max: 5, step: 1, value: 2 },
+            { key: "clusters", label: "Cluster", min: 1, max: 6, step: 1, value: 4 }
         ],
         generate(api) {
             const { rnd, values } = api;
             const lines = [];
             const M = 90, S = 820;
 
-            // Poisson-ish node placement
-            const minDist = Math.sqrt(S * S / values.nodes) * 0.62;
+            // node placement: gaussian communities around cluster centers + scatter
+            const K = values.clusters;
+            const centers = [];
+            let ctries = 0;
+            while (centers.length < K && ctries++ < 600) {
+                const c = [M + 120 + rnd() * (S - 240), M + 120 + rnd() * (S - 240)];
+                if (centers.every(q => Math.hypot(q[0] - c[0], q[1] - c[1]) > 640 / K + 60)) {
+                    centers.push(c);
+                }
+            }
+            const gauss = () => (rnd() + rnd() + rnd() - 1.5) * 2;
+            const minDist = Math.sqrt(S * S / values.nodes) * (K > 1 ? 0.4 : 0.62);
             const pts = [];
+            const clusterOf = [];
             let tries = 0;
             while (pts.length < values.nodes && tries++ < values.nodes * 80) {
-                const p = [M + rnd() * S, M + rnd() * S];
+                let p, cl;
+                if (K > 1 && rnd() < 0.85) {
+                    cl = Math.floor(rnd() * centers.length);
+                    const sigma = 50 + 190 / K;
+                    p = [centers[cl][0] + gauss() * sigma, centers[cl][1] + gauss() * sigma];
+                } else {
+                    p = [M + rnd() * S, M + rnd() * S];
+                    cl = -1;
+                }
+                if (p[0] < M || p[0] > M + S || p[1] < M || p[1] > M + S) continue;
                 if (pts.every(q => (q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2 > minDist * minDist)) {
+                    if (cl === -1 && K > 1) {
+                        // assign strays to their nearest community
+                        let best = 0, bd = 1e18;
+                        for (let c = 0; c < centers.length; c++) {
+                            const d = (centers[c][0] - p[0]) ** 2 + (centers[c][1] - p[1]) ** 2;
+                            if (d < bd) { bd = d; best = c; }
+                        }
+                        cl = best;
+                    }
                     pts.push(p);
+                    clusterOf.push(K > 1 ? cl : 0);
                 }
             }
 
@@ -86,6 +117,25 @@
                     }
                 }
                 if (keep) edges.push([u, v]);
+            }
+
+            // communities: thin out inter-cluster edges to a few backbone links
+            const backbone = [];
+            if (values.clusters > 1) {
+                const intra = [];
+                const best = new Map();   // clusterPair -> shortest edge
+                for (const [u, v] of edges) {
+                    if (clusterOf[u] === clusterOf[v]) { intra.push([u, v]); continue; }
+                    const key = Math.min(clusterOf[u], clusterOf[v]) + ":" +
+                                Math.max(clusterOf[u], clusterOf[v]);
+                    const len = d2(pts[u], pts[v]);
+                    if (!best.has(key) || len < best.get(key).len) {
+                        best.set(key, { e: [u, v], len });
+                    }
+                }
+                edges.length = 0;
+                for (const e of intra) edges.push(e);
+                for (const { e } of best.values()) { edges.push(e); backbone.push(e); }
             }
 
             // node radius from degree, hubs get aura rings
@@ -120,9 +170,71 @@
                 return [[a[0] + dx * t0 + nx, a[1] + dy * t0 + ny],
                         [a[0] + dx * t1 + nx, a[1] + dy * t1 + ny]];
             }
+            const isBackbone = new Set(backbone.map(([u, v]) => u + ":" + v));
             for (const [u, v] of edges) {
-                const seg = trimmed(u, v, 0);
-                if (seg) lines.push(seg);
+                if (isBackbone.has(u + ":" + v)) {
+                    // backbone links drawn as double lines
+                    for (const off of [-2.2, 2.2]) {
+                        const seg = trimmed(u, v, off);
+                        if (seg) lines.push(seg);
+                    }
+                } else {
+                    const seg = trimmed(u, v, 0);
+                    if (seg) lines.push(seg);
+                }
+            }
+
+            // soft community hulls
+            if (values.clusters > 1) {
+                for (let c = 0; c < centers.length; c++) {
+                    const members = [];
+                    for (let i = 0; i < pts.length; i++) if (clusterOf[i] === c) members.push(pts[i]);
+                    if (members.length < 4) continue;
+                    // convex hull (gift wrapping is fine at this size)
+                    let start = 0;
+                    for (let i = 1; i < members.length; i++) {
+                        if (members[i][1] < members[start][1]) start = i;
+                    }
+                    const hull = [];
+                    let cur = start, guard = 0;
+                    do {
+                        hull.push(members[cur]);
+                        let next = (cur + 1) % members.length;
+                        for (let i = 0; i < members.length; i++) {
+                            if (i === cur) continue;
+                            const a = members[cur], b = members[next], q = members[i];
+                            if ((b[0] - a[0]) * (q[1] - a[1]) - (b[1] - a[1]) * (q[0] - a[0]) < 0) next = i;
+                        }
+                        cur = next;
+                    } while (cur !== start && guard++ < members.length + 2);
+                    // inflate from centroid and smooth-sample
+                    let mx = 0, my = 0;
+                    for (const p of hull) { mx += p[0]; my += p[1]; }
+                    mx /= hull.length; my /= hull.length;
+                    const inflated = hull.map(p => {
+                        const d = Math.hypot(p[0] - mx, p[1] - my) || 1;
+                        const grow = (d + 30) / d;
+                        return [mx + (p[0] - mx) * grow, my + (p[1] - my) * grow];
+                    });
+                    const smooth = [];
+                    const n = inflated.length;
+                    for (let i = 0; i < n; i++) {
+                        const p0 = inflated[(i - 1 + n) % n], p1 = inflated[i];
+                        const p2 = inflated[(i + 1) % n], p3 = inflated[(i + 2) % n];
+                        for (let s = 0; s < 8; s++) {
+                            const t = s / 8, t2 = t * t, t3 = t2 * t;
+                            smooth.push([
+                                0.5 * ((2 * p1[0]) + (-p0[0] + p2[0]) * t +
+                                    (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 +
+                                    (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3),
+                                0.5 * ((2 * p1[1]) + (-p0[1] + p2[1]) * t +
+                                    (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 +
+                                    (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3)
+                            ]);
+                        }
+                    }
+                    lines.push({ pts: smooth, closed: true, w: 0.6 });
+                }
             }
             for (let i = 0; i < pts.length; i++) {
                 if (deg[i] === 0) continue;
