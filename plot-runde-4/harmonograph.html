@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harmonograph — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>16 · Harmonograph</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Simulation eines mechanischen Harmonographen: Gedämpfte
+            Pendel mit leicht verstimmten Frequenzen zeichnen eine einzige lange
+            Kurve, die langsam nach innen spiralt — Guilloché-Ornamente wie auf
+            Banknoten. Ein durchgehender Pfad, minimaler Stift-Hub.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "harmonograph",
+        svgOpts: { width: 0.6 },
+        drawOpts: { width: 0.8, stroke: "rgba(22,33,62,0.7)" },
+        params: [
+            { key: "fx", label: "Frequenz X", min: 1, max: 7, step: 1, value: 3 },
+            { key: "fy", label: "Frequenz Y", min: 1, max: 7, step: 1, value: 2 },
+            { key: "detune", label: "Verstimmung", min: 0, max: 0.02, step: 0.001, value: 0.005 },
+            { key: "damping", label: "Dämpfung", min: 0.002, max: 0.012, step: 0.001, value: 0.005 },
+            { key: "length", label: "Dauer", min: 60, max: 240, step: 10, value: 140 }
+        ],
+        onRegen(rnd, params) {
+            for (const p of params) {
+                if (p.key === "fx") p._set(1 + Math.floor(rnd() * 7));
+                if (p.key === "fy") p._set(1 + Math.floor(rnd() * 7));
+                if (p.key === "detune") p._set(Math.round(rnd() * 15) / 1000);
+            }
+        },
+        generate(api) {
+            const { rnd, values } = api;
+            const A = 215;
+            const d = values.damping;
+            const p1 = rnd() * Math.PI * 2, p2 = rnd() * Math.PI * 2;
+            const p3 = rnd() * Math.PI * 2, p4 = rnd() * Math.PI * 2;
+            const f1 = values.fx, f2 = values.fx + values.detune;
+            const f3 = values.fy, f4 = values.fy + values.detune * 1.3;
+            const pts = [];
+            const T = values.length;
+            const DT = 0.012;
+            for (let t = 0; t < T; t += DT) {
+                const e1 = Math.exp(-d * t), e2 = Math.exp(-d * 1.4 * t);
+                const x = A * Math.sin(f1 * t + p1) * e1 + A * Math.sin(f2 * t + p2) * e2;
+                const y = A * Math.sin(f3 * t + p3) * e1 + A * Math.sin(f4 * t + p4) * e2;
+                pts.push([500 + x, 500 + y]);
+            }
+            api.status(pts.length + " Punkte, 1 durchgehender Pfad");
+            api.done([pts]);
+        }
+    });
+    </script>
+</body>
+</html>

@@ -150,5 +150,96 @@ const PR4 = (() => {
         };
     }
 
-    return { SIZE, mulberry32, randomSeed, fitCanvas, drawPolylines, linesToSvg, downloadSvg, buildControls, debounce };
+    /* seeded 2D value noise with fbm, in [0,1] */
+    function makeNoise2D(rnd) {
+        const N = 256;
+        const g = new Float32Array(N * N);
+        for (let i = 0; i < N * N; i++) g[i] = rnd();
+        const sm = (t) => t * t * (3 - 2 * t);
+        function noise(x, y) {
+            const xi = Math.floor(x), yi = Math.floor(y);
+            const xf = x - xi, yf = y - yi;
+            const x0 = xi & (N - 1), y0 = yi & (N - 1);
+            const x1 = (x0 + 1) & (N - 1), y1 = (y0 + 1) & (N - 1);
+            const u = sm(xf), v = sm(yf);
+            const a = g[y0 * N + x0], b = g[y0 * N + x1];
+            const c = g[y1 * N + x0], d = g[y1 * N + x1];
+            return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+        }
+        function fbm(x, y, oct = 4) {
+            let sum = 0, amp = 1, f = 1, norm = 0;
+            for (let o = 0; o < oct; o++) {
+                sum += noise(x * f, y * f) * amp;
+                norm += amp;
+                f *= 2; amp *= 0.5;
+            }
+            return sum / norm;
+        }
+        return { noise, fbm };
+    }
+
+    /* marching squares over a sampled scalar field; returns chained polylines.
+     * sample(ix,iy) gives field value, grid is nx*ny samples,
+     * mapX/mapY convert grid coords to page coords. */
+    function contourLines(sample, nx, ny, t, mapX, mapY) {
+        const segs = [];
+        const TABLE = {
+            1: [[3, 0]], 2: [[0, 1]], 3: [[3, 1]], 4: [[1, 2]],
+            5: [[3, 0], [1, 2]], 6: [[0, 2]], 7: [[3, 2]], 8: [[2, 3]],
+            9: [[0, 2]], 10: [[0, 1], [2, 3]], 11: [[1, 2]],
+            12: [[1, 3]], 13: [[0, 1]], 14: [[0, 3]]
+        };
+        for (let y = 0; y < ny - 1; y++) {
+            for (let x = 0; x < nx - 1; x++) {
+                const v0 = sample(x, y), v1 = sample(x + 1, y);
+                const v2 = sample(x + 1, y + 1), v3 = sample(x, y + 1);
+                let c = 0;
+                if (v0 >= t) c |= 1;
+                if (v1 >= t) c |= 2;
+                if (v2 >= t) c |= 4;
+                if (v3 >= t) c |= 8;
+                if (c === 0 || c === 15) continue;
+                const ep = (e) => {
+                    if (e === 0) return [mapX(x + (t - v0) / (v1 - v0)), mapY(y)];
+                    if (e === 1) return [mapX(x + 1), mapY(y + (t - v1) / (v2 - v1))];
+                    if (e === 2) return [mapX(x + (t - v3) / (v2 - v3)), mapY(y + 1)];
+                    return [mapX(x), mapY(y + (t - v0) / (v3 - v0))];
+                };
+                for (const [e1, e2] of TABLE[c]) segs.push([ep(e1), ep(e2)]);
+            }
+        }
+        // chain segments into polylines
+        const keyOf = (p) => p[0].toFixed(3) + "," + p[1].toFixed(3);
+        const map = new Map();
+        segs.forEach((s, i) => {
+            for (const p of [s[0], s[1]]) {
+                const key = keyOf(p);
+                let arr = map.get(key);
+                if (!arr) { arr = []; map.set(key, arr); }
+                arr.push(i);
+            }
+        });
+        const used = new Array(segs.length).fill(false);
+        const lines = [];
+        for (let i = 0; i < segs.length; i++) {
+            if (used[i]) continue;
+            used[i] = true;
+            const path = [segs[i][0], segs[i][1]];
+            for (const dir of [1, 0]) {
+                for (;;) {
+                    const end = dir ? path[path.length - 1] : path[0];
+                    const cand = (map.get(keyOf(end)) || []).find(j => !used[j]);
+                    if (cand === undefined) break;
+                    used[cand] = true;
+                    const s = segs[cand];
+                    const nextPt = keyOf(s[0]) === keyOf(end) ? s[1] : s[0];
+                    if (dir) path.push(nextPt); else path.unshift(nextPt);
+                }
+            }
+            if (path.length >= 3) lines.push(path);
+        }
+        return lines;
+    }
+
+    return { SIZE, mulberry32, randomSeed, fitCanvas, drawPolylines, linesToSvg, downloadSvg, buildControls, debounce, makeNoise2D, contourLines };
 })();

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sand-Splines — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>14 · Sand-Splines</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Nach Anders Hoffs „Sand Splines": Wenige
+            <b>Leitkurven</b> (Makro-Komposition) werden zu Bündeln aus dutzenden
+            leicht driftenden Kopien (Mikro-Textur) — jede Schicht erbt den
+            Versatz der vorigen und wandert weiter. Ergebnis: seidige,
+            rauchartige Kurvenschwärme.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "sand-splines",
+        svgOpts: { width: 0.5 },
+        drawOpts: { width: 0.7, stroke: "rgba(22,33,62,0.55)" },
+        params: [
+            { key: "strands", label: "Leitkurven", min: 2, max: 10, step: 1, value: 5 },
+            { key: "layers", label: "Schichten", min: 8, max: 60, step: 2, value: 30 },
+            { key: "drift", label: "Drift", min: 2, max: 14, step: 0.5, value: 7 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const noise = PR4.makeNoise2D(rnd);
+            const lines = [];
+
+            function catmullRom(cps, samples) {
+                const pts = [];
+                for (let i = 0; i < cps.length - 3; i++) {
+                    const p0 = cps[i], p1 = cps[i + 1], p2 = cps[i + 2], p3 = cps[i + 3];
+                    const n = Math.ceil(samples / (cps.length - 3));
+                    for (let s = 0; s < n; s++) {
+                        const t = s / n, t2 = t * t, t3 = t2 * t;
+                        pts.push([
+                            0.5 * ((2 * p1[0]) + (-p0[0] + p2[0]) * t +
+                                (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 +
+                                (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3),
+                            0.5 * ((2 * p1[1]) + (-p0[1] + p2[1]) * t +
+                                (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 +
+                                (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3)
+                        ]);
+                    }
+                }
+                return pts;
+            }
+
+            for (let g = 0; g < values.strands; g++) {
+                // macro: one guide curve crossing the page
+                const ang = rnd() * Math.PI;
+                const dx = Math.cos(ang), dy = Math.sin(ang);
+                const px = -dy, py = dx;
+                const cx = 280 + rnd() * 440, cy = 280 + rnd() * 440;
+                const cps = [];
+                for (let i = -1; i <= 4; i++) {
+                    const along = (i / 3 - 0.5) * 1300;
+                    const side = (rnd() - 0.5) * 320;
+                    cps.push([cx + dx * along + px * side, cy + dy * along + py * side]);
+                }
+                const guide = catmullRom(cps, 140);
+                const n = guide.length;
+                // normals from central differences
+                const normals = [];
+                for (let i = 0; i < n; i++) {
+                    const a = guide[Math.max(0, i - 1)], b = guide[Math.min(n - 1, i + 1)];
+                    const m = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+                    normals.push([-(b[1] - a[1]) / m, (b[0] - a[0]) / m]);
+                }
+                // micro: layers inherit and accumulate offset drift
+                const off = new Float32Array(n);
+                const seedOff = rnd() * 90;
+                for (let layer = 0; layer < values.layers; layer++) {
+                    const shift = (rnd() - 0.5) * values.drift * 1.6; // whole-layer wander
+                    for (let i = 0; i < n; i++) {
+                        off[i] += (noise.fbm(i * 0.035 + seedOff, layer * 0.22 + g * 7.3, 3) - 0.5) *
+                                  2 * values.drift + shift;
+                    }
+                    // emit only the parts inside the page (no clamped border runs)
+                    let run = null;
+                    for (let i = 0; i < n; i++) {
+                        const x = guide[i][0] + normals[i][0] * off[i];
+                        const y = guide[i][1] + normals[i][1] * off[i];
+                        if (x >= 40 && x <= 960 && y >= 40 && y <= 960) {
+                            if (!run) run = [];
+                            run.push([x, y]);
+                        } else if (run) {
+                            if (run.length > 2) lines.push(run);
+                            run = null;
+                        }
+                    }
+                    if (run && run.length > 2) lines.push(run);
+                }
+            }
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>
