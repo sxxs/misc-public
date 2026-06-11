@@ -241,5 +241,48 @@ const PR4 = (() => {
         return lines;
     }
 
-    return { SIZE, mulberry32, randomSeed, fitCanvas, drawPolylines, linesToSvg, downloadSvg, buildControls, debounce, makeNoise2D, contourLines };
+    /* Bowyer-Watson Delaunay triangulation; returns triangles as index triples */
+    function delaunay(pts) {
+        function circumcircle(a, b, c) {
+            const d = 2 * (a[0] * (b[1] - c[1]) + b[0] * (c[1] - a[1]) + c[0] * (a[1] - b[1]));
+            if (Math.abs(d) < 1e-9) return null;
+            const a2 = a[0] * a[0] + a[1] * a[1];
+            const b2 = b[0] * b[0] + b[1] * b[1];
+            const c2 = c[0] * c[0] + c[1] * c[1];
+            const ux = (a2 * (b[1] - c[1]) + b2 * (c[1] - a[1]) + c2 * (a[1] - b[1])) / d;
+            const uy = (a2 * (c[0] - b[0]) + b2 * (a[0] - c[0]) + c2 * (b[0] - a[0])) / d;
+            return { x: ux, y: uy, r2: (ux - a[0]) ** 2 + (uy - a[1]) ** 2 };
+        }
+        const all = pts.concat([[-4000, -4000], [5000, -4000], [500, 7000]]);
+        const SUPER = pts.length;
+        let tris = [{ a: SUPER, b: SUPER + 1, c: SUPER + 2,
+            cc: circumcircle(all[SUPER], all[SUPER + 1], all[SUPER + 2]) }];
+        for (let i = 0; i < pts.length; i++) {
+            const p = all[i];
+            const bad = [];
+            for (let t = 0; t < tris.length; t++) {
+                const cc = tris[t].cc;
+                if (cc && (p[0] - cc.x) ** 2 + (p[1] - cc.y) ** 2 < cc.r2) bad.push(t);
+            }
+            const edgeCount = new Map();
+            for (const t of bad) {
+                const tr = tris[t];
+                for (const [u, v] of [[tr.a, tr.b], [tr.b, tr.c], [tr.c, tr.a]]) {
+                    const k = Math.min(u, v) + ":" + Math.max(u, v);
+                    edgeCount.set(k, (edgeCount.get(k) || 0) + 1);
+                }
+            }
+            const badSet = new Set(bad);
+            tris = tris.filter((_, t) => !badSet.has(t));
+            for (const [k, count] of edgeCount) {
+                if (count !== 1) continue;
+                const [u, v] = k.split(":").map(Number);
+                tris.push({ a: u, b: v, c: i, cc: circumcircle(all[u], all[v], p) });
+            }
+        }
+        return tris.filter(t => t.a < SUPER && t.b < SUPER && t.c < SUPER)
+                   .map(t => [t.a, t.b, t.c]);
+    }
+
+    return { SIZE, mulberry32, randomSeed, fitCanvas, drawPolylines, linesToSvg, downloadSvg, buildControls, debounce, makeNoise2D, contourLines, delaunay };
 })();

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vernetzung — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>20 · Vernetzung</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Komposition: Ein Netzwerk aus Poisson-verteilten Knoten,
+            verbunden über einen <b>Gabriel- oder Nachbarschafts-Graphen</b>
+            (Teilmengen der Delaunay-Triangulierung). Knotengröße = Grad,
+            Hubs bekommen Ringe, und markierte <b>Datenrouten</b> laufen als
+            Doppellinien durchs Netz.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "vernetzung",
+        params: [
+            { key: "nodes", label: "Knoten", min: 50, max: 220, step: 10, value: 110 },
+            { key: "graph", label: "Verbindungen", value: "gabriel", options: [
+                { value: "gabriel", label: "Gabriel-Graph" },
+                { value: "rng", label: "Nachbarschafts-Graph (spärlich)" },
+                { value: "delaunay", label: "Delaunay (dicht)" }
+            ]},
+            { key: "routes", label: "Datenrouten", min: 0, max: 5, step: 1, value: 2 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+            const M = 90, S = 820;
+
+            // Poisson-ish node placement
+            const minDist = Math.sqrt(S * S / values.nodes) * 0.62;
+            const pts = [];
+            let tries = 0;
+            while (pts.length < values.nodes && tries++ < values.nodes * 80) {
+                const p = [M + rnd() * S, M + rnd() * S];
+                if (pts.every(q => (q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2 > minDist * minDist)) {
+                    pts.push(p);
+                }
+            }
+
+            // edges from Delaunay, optionally thinned to Gabriel / RNG
+            const triEdges = new Set();
+            for (const [a, b, c] of PR4.delaunay(pts)) {
+                for (const [u, v] of [[a, b], [b, c], [c, a]]) {
+                    triEdges.add(Math.min(u, v) + ":" + Math.max(u, v));
+                }
+            }
+            const d2 = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2;
+            const edges = [];
+            for (const e of triEdges) {
+                const [u, v] = e.split(":").map(Number);
+                const duv = d2(pts[u], pts[v]);
+                let keep = true;
+                if (values.graph === "gabriel") {
+                    const mid = [(pts[u][0] + pts[v][0]) / 2, (pts[u][1] + pts[v][1]) / 2];
+                    for (let w = 0; w < pts.length; w++) {
+                        if (w === u || w === v) continue;
+                        if (d2(pts[w], mid) < duv / 4 - 1e-9) { keep = false; break; }
+                    }
+                } else if (values.graph === "rng") {
+                    for (let w = 0; w < pts.length; w++) {
+                        if (w === u || w === v) continue;
+                        if (Math.max(d2(pts[w], pts[u]), d2(pts[w], pts[v])) < duv - 1e-9) {
+                            keep = false; break;
+                        }
+                    }
+                }
+                if (keep) edges.push([u, v]);
+            }
+
+            // node radius from degree, hubs get aura rings
+            const deg = new Array(pts.length).fill(0);
+            const adj = pts.map(() => []);
+            for (const [u, v] of edges) {
+                deg[u]++; deg[v]++;
+                adj[u].push(v); adj[v].push(u);
+            }
+            const radius = deg.map(d => Math.min(4 + d * 1.2, 15));
+            const sorted = [...deg].sort((a, b) => a - b);
+            const hubCut = sorted[Math.floor(sorted.length * 0.92)];
+
+            function circle(c, r) {
+                const out = [];
+                const n = Math.max(12, Math.round(r * 1.6));
+                for (let i = 0; i <= n; i++) {
+                    const a = i / n * Math.PI * 2;
+                    out.push([c[0] + r * Math.cos(a), c[1] + r * Math.sin(a)]);
+                }
+                return { pts: out, closed: true };
+            }
+
+            // edges, trimmed so they don't pierce the node circles
+            function trimmed(u, v, offset) {
+                const a = pts[u], b = pts[v];
+                const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+                const dx = (b[0] - a[0]) / len, dy = (b[1] - a[1]) / len;
+                const t0 = radius[u] + 3, t1 = len - radius[v] - 3;
+                if (t1 - t0 < 4) return null;
+                const nx = -dy * (offset || 0), ny = dx * (offset || 0);
+                return [[a[0] + dx * t0 + nx, a[1] + dy * t0 + ny],
+                        [a[0] + dx * t1 + nx, a[1] + dy * t1 + ny]];
+            }
+            for (const [u, v] of edges) {
+                const seg = trimmed(u, v, 0);
+                if (seg) lines.push(seg);
+            }
+            for (let i = 0; i < pts.length; i++) {
+                if (deg[i] === 0) continue;
+                lines.push(circle(pts[i], radius[i]));
+                if (deg[i] >= hubCut && deg[i] > 4) {
+                    lines.push(circle(pts[i], radius[i] + 6));
+                    lines.push(circle(pts[i], radius[i] + 11));
+                }
+            }
+
+            // highlighted routes: BFS shortest paths drawn as double lines
+            function bfs(src, dst) {
+                const prev = new Array(pts.length).fill(-1);
+                const seen = new Array(pts.length).fill(false);
+                const q = [src];
+                seen[src] = true;
+                while (q.length) {
+                    const cur = q.shift();
+                    if (cur === dst) break;
+                    for (const nb of adj[cur]) {
+                        if (!seen[nb]) { seen[nb] = true; prev[nb] = cur; q.push(nb); }
+                    }
+                }
+                if (!seen[dst]) return null;
+                const path = [dst];
+                while (path[path.length - 1] !== src) path.push(prev[path[path.length - 1]]);
+                return path;
+            }
+            let routesDrawn = 0;
+            for (let attempt = 0; attempt < values.routes * 6 && routesDrawn < values.routes; attempt++) {
+                const a = Math.floor(rnd() * pts.length);
+                const b = Math.floor(rnd() * pts.length);
+                if (a === b || deg[a] === 0 || deg[b] === 0) continue;
+                if (d2(pts[a], pts[b]) < 350 * 350) continue;   // only long routes
+                const path = bfs(a, b);
+                if (!path || path.length < 4) continue;
+                for (let i = 0; i < path.length - 1; i++) {
+                    for (const off of [-2.6, 2.6]) {
+                        const seg = trimmed(path[i], path[i + 1], off);
+                        if (seg) lines.push(seg);
+                    }
+                }
+                routesDrawn++;
+            }
+            api.status(pts.length + " Knoten, " + edges.length + " Kanten, " +
+                       routesDrawn + " Routen");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>
