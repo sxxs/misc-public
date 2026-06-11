@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metaball-Schraffur — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>9 · Metaball-Schraffur</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Makro/Mikro-Prinzip: Die <b>große Form</b> entsteht aus
+            verschmelzenden Metaballs (Konturlinie des Summenfelds), die
+            <b>Textur</b> aus Schraffur-Lagen — je tiefer im Feld, desto dichter
+            und gekreuzter die Linien. So entsteht Tonwert auf einem reinen
+            Linien-Gerät.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "metaball-schraffur",
+        svgOpts: { width: 0.9 },
+        drawOpts: { width: 1.1 },
+        params: [
+            { key: "blobs", label: "Metaballs", min: 3, max: 9, step: 1, value: 6 },
+            { key: "spacing", label: "Schraffur-Abstand", min: 6, max: 24, step: 1, value: 11 },
+            { key: "angle", label: "Winkel", min: 0, max: 180, step: 5, value: 35 },
+            { key: "layers", label: "Tonwert-Lagen", min: 1, max: 4, step: 1, value: 3 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const M = 40, S = 920;
+            const blobs = [];
+            for (let i = 0; i < values.blobs; i++) {
+                blobs.push({
+                    x: 230 + rnd() * 540,
+                    y: 230 + rnd() * 540,
+                    r: 70 + rnd() * 110
+                });
+            }
+            function field(x, y) {
+                let f = 0;
+                for (const b of blobs) {
+                    const d2 = (x - b.x) ** 2 + (y - b.y) ** 2 + 1;
+                    f += b.r * b.r / d2;
+                }
+                return f;
+            }
+
+            const lines = [];
+            // macro: outline of the merged shape (plus a slightly tighter echo line)
+            const G = 180;
+            const mapC = (v) => M + v * (S / (G - 1));
+            const cache = new Float32Array(G * G);
+            for (let y = 0; y < G; y++) for (let x = 0; x < G; x++) {
+                cache[y * G + x] = field(mapC(x), mapC(y));
+            }
+            const sample = (x, y) => cache[y * G + x];
+            for (const c of PR4.contourLines(sample, G, G, 1.0, mapC, mapC)) lines.push(c);
+            for (const c of PR4.contourLines(sample, G, G, 1.18, mapC, mapC)) lines.push(c);
+
+            // micro: hatching layers, deeper field = denser + rotated
+            const cx = 500, cy = 500;
+            for (let layer = 0; layer < values.layers; layer++) {
+                const t = 1.0 + layer * 0.85;          // field threshold per layer
+                const ang = (values.angle + layer * 52) * Math.PI / 180;
+                const sp = values.spacing * Math.pow(0.82, layer);
+                const dx = Math.cos(ang), dy = Math.sin(ang);
+                const px = -dy, py = dx;
+                for (let c = -720; c <= 720; c += sp) {
+                    let run = null;
+                    for (let tt = -720; tt <= 720; tt += 3) {
+                        const x = cx + dx * tt + px * c;
+                        const y = cy + dy * tt + py * c;
+                        const inside = x > M && x < M + S && y > M && y < M + S && field(x, y) >= t;
+                        if (inside) {
+                            if (!run) run = [[x, y]];
+                            else run.push([x, y]);
+                        } else if (run) {
+                            if (run.length > 1) lines.push([run[0], run[run.length - 1]]);
+                            run = null;
+                        }
+                    }
+                    if (run && run.length > 1) lines.push([run[0], run[run.length - 1]]);
+                }
+            }
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

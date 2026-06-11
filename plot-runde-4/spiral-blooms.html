@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral-Blüten — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>11 · Spiral-Blüten</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Makro/Mikro-Prinzip: Die <b>Komposition</b> besteht aus
+            organischen Blob-Formen (Makro), jede Fläche wird mit <b>einer
+            einzigen durchgehenden Spirale</b> gefüllt (Mikro) — wie PEmbroiders
+            SPIRAL-Fill: pro Form nur ein Federzug, extrem plotter-effizient.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "spiral-blueten",
+        svgOpts: { width: 0.9 },
+        drawOpts: { width: 1.1 },
+        params: [
+            { key: "count", label: "Blüten", min: 3, max: 14, step: 1, value: 7 },
+            { key: "spacing", label: "Spiralabstand", min: 4, max: 16, step: 1, value: 8 },
+            { key: "wobble", label: "Formunruhe", min: 0, max: 0.6, step: 0.05, value: 0.3 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+
+            // macro: place non-overlapping blooms by dart throwing
+            const blooms = [];
+            let tries = 0;
+            while (blooms.length < values.count && tries < 4000) {
+                tries++;
+                const r = 60 + rnd() * (160 - blooms.length * 8);
+                const x = 40 + r + rnd() * (920 - 2 * r);
+                const y = 40 + r + rnd() * (920 - 2 * r);
+                if (blooms.every(b => Math.hypot(b.x - x, b.y - y) > (b.r + r) * 0.92)) {
+                    blooms.push({ x, y, r });
+                }
+            }
+
+            for (const b of blooms) {
+                // star-convex radius function from random harmonics
+                const harm = [];
+                const H = 2 + Math.floor(rnd() * 3);
+                for (let h = 0; h < H; h++) {
+                    harm.push({
+                        k: 2 + Math.floor(rnd() * 4),
+                        a: values.wobble * (0.3 + rnd() * 0.7) / H,
+                        p: rnd() * Math.PI * 2
+                    });
+                }
+                const radius = (theta) => {
+                    let f = 1;
+                    for (const h of harm) f += h.a * Math.sin(h.k * theta + h.p);
+                    return b.r * f;
+                };
+                // micro: one continuous spiral from rim to center
+                const turns = Math.max(2, b.r / values.spacing);
+                const total = turns * Math.PI * 2;
+                const pts = [];
+                const phase = rnd() * Math.PI * 2;
+                const STEP = 0.07;
+                for (let t = 0; t <= total; t += STEP) {
+                    const theta = t + phase;
+                    const shrink = 1 - t / total;
+                    const r = radius(theta) * shrink;
+                    pts.push([b.x + r * Math.cos(theta), b.y + r * Math.sin(theta)]);
+                }
+                pts.push([b.x, b.y]);
+                lines.push(pts);
+                // macro outline on top
+                const outline = [];
+                for (let t = 0; t <= Math.PI * 2 + 0.01; t += 0.05) {
+                    const r = radius(t + phase);
+                    outline.push([b.x + r * Math.cos(t + phase), b.y + r * Math.sin(t + phase)]);
+                }
+                lines.push({ pts: outline, closed: true });
+            }
+            api.status(blooms.length + " Blüten platziert");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

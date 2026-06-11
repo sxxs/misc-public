@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adaptive Hilbert-Kurve — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>13 · Adaptive Hilbert-Kurve</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Makro/Mikro-Prinzip: <b>Eine einzige durchgehende
+            Linie</b> füllt die Fläche (Hilbert-Kurve). Die Rekursionstiefe —
+            also die Mikro-Detaildichte — folgt dem Makro-Motiv: Wo das Motiv
+            „dunkel" ist, windet sich die Kurve feiner. Null Stift-Hübe.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "hilbert-adaptiv",
+        svgOpts: { width: 0.9 },
+        drawOpts: { width: 1.0 },
+        params: [
+            { key: "motif", label: "Makro-Motiv", value: "circle", options: [
+                { value: "circle", label: "Kreis" },
+                { value: "ring", label: "Ring" },
+                { value: "diag", label: "Verlauf" },
+                { value: "blobs", label: "Noise-Inseln" }
+            ]},
+            { key: "minD", label: "Basis-Tiefe", min: 2, max: 5, step: 1, value: 4 },
+            { key: "maxD", label: "Detail-Tiefe", min: 5, max: 8, step: 1, value: 7 },
+            { key: "contrast", label: "Kontrast", min: 0.5, max: 2.5, step: 0.1, value: 1.4 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const M = 40, S = 920;
+            const noise = PR4.makeNoise2D(rnd);
+            const ox = rnd() * 50, oy = rnd() * 50;
+            const focusA = rnd() * Math.PI * 2;
+
+            // darkness of the macro motif in [0,1]
+            function darkness(x, y) {
+                const u = (x - 500) / 460, v = (y - 500) / 460;
+                const d = Math.hypot(u, v);
+                let w;
+                if (values.motif === "circle") w = 1 - d / 0.95;
+                else if (values.motif === "ring") w = 1 - Math.abs(d - 0.52) / 0.38;
+                else if (values.motif === "diag") {
+                    w = 1 - (u * Math.cos(focusA) + v * Math.sin(focusA) + 1) / 2;
+                } else w = (noise.fbm(u * 1.8 + ox, v * 1.8 + oy, 3) - 0.35) * 2.2;
+                w = Math.max(0, Math.min(1, w));
+                return Math.pow(w, 1 / values.contrast);
+            }
+
+            const minD = values.minD;
+            const maxD = Math.max(values.maxD, minD + 1);
+            const pts = [];
+
+            // adaptive Hilbert recursion: stop early where the motif is light
+            function hilbert(x0, y0, xi, xj, yi, yj, depth) {
+                const cx = x0 + (xi + yi) / 2;
+                const cy = y0 + (xj + yj) / 2;
+                // darkest spot in the cell decides (corners + center),
+                // so cells straddling a motif edge still refine
+                let dk = darkness(cx, cy);
+                dk = Math.max(dk, darkness(x0, y0));
+                dk = Math.max(dk, darkness(x0 + xi, y0 + xj));
+                dk = Math.max(dk, darkness(x0 + yi, y0 + yj));
+                dk = Math.max(dk, darkness(x0 + xi + yi, y0 + xj + yj));
+                const need = minD + Math.round(dk * (maxD - minD));
+                if (depth >= need || depth >= maxD) {
+                    pts.push([cx, cy]);
+                    return;
+                }
+                hilbert(x0, y0, yi / 2, yj / 2, xi / 2, xj / 2, depth + 1);
+                hilbert(x0 + xi / 2, y0 + xj / 2, xi / 2, xj / 2, yi / 2, yj / 2, depth + 1);
+                hilbert(x0 + xi / 2 + yi / 2, y0 + xj / 2 + yj / 2,
+                        xi / 2, xj / 2, yi / 2, yj / 2, depth + 1);
+                hilbert(x0 + xi / 2 + yi, y0 + xj / 2 + yj,
+                        -yi / 2, -yj / 2, -xi / 2, -xj / 2, depth + 1);
+            }
+            hilbert(M, M, S, 0, 0, S, 0);
+
+            api.status(pts.length + " Kurvenpunkte, 1 durchgehender Pfad");
+            api.done([pts]);
+        }
+    });
+    </script>
+</body>
+</html>

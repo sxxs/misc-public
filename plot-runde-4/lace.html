@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delaunay-Lace — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>12 · Delaunay-Lace</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Makro/Mikro-Prinzip: Eine <b>Silhouette</b> (Makro)
+            wird entlang der Kontur abgetastet und innen mit Zufallspunkten
+            gefüllt; eine Delaunay-Triangulierung verwandelt sie in filigrane
+            <b>Spitze</b> (Mikro) — die plottrbottr-„Lace"-Pipeline.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "delaunay-lace",
+        svgOpts: { width: 0.9 },
+        drawOpts: { width: 1.1 },
+        params: [
+            { key: "shape", label: "Silhouette", value: "heart", options: [
+                { value: "heart", label: "Herz" },
+                { value: "leaf", label: "Blatt" },
+                { value: "star", label: "Stern" },
+                { value: "circle", label: "Kreis" }
+            ]},
+            { key: "rim", label: "Konturpunkte", min: 40, max: 140, step: 5, value: 80 },
+            { key: "inner", label: "Innenpunkte", min: 40, max: 400, step: 10, value: 160 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+
+            // ----- macro: silhouette outline -----
+            function outlinePoint(t) { // t in [0,1)
+                const a = t * Math.PI * 2;
+                if (values.shape === "heart") {
+                    const x = 16 * Math.pow(Math.sin(a), 3);
+                    const y = 13 * Math.cos(a) - 5 * Math.cos(2 * a) -
+                              2 * Math.cos(3 * a) - Math.cos(4 * a);
+                    return [500 + x * 26, 470 - y * 26];
+                }
+                if (values.shape === "leaf") {
+                    // lens shape rotated 45 degrees
+                    const u = t < 0.5 ? t * 2 : 2 - t * 2; // 0..1..0 along the axis
+                    const ax = u * 820 - 410;
+                    const w = Math.sin(u * Math.PI) * 200 * (t < 0.5 ? 1 : -1);
+                    const c = Math.SQRT1_2;
+                    return [500 + (ax * c - w * c), 500 + (ax * c + w * c)];
+                }
+                if (values.shape === "star") {
+                    const spikes = 5;
+                    const seg = t * spikes * 2;          // which of the 10 edges
+                    const i = Math.floor(seg), f = seg - i;
+                    const r1 = (i % 2 === 0) ? 420 : 195;
+                    const r2 = (i % 2 === 0) ? 195 : 420;
+                    const a1 = (i / (spikes * 2)) * Math.PI * 2 - Math.PI / 2;
+                    const a2 = ((i + 1) / (spikes * 2)) * Math.PI * 2 - Math.PI / 2;
+                    const p1 = [500 + r1 * Math.cos(a1), 510 + r1 * Math.sin(a1)];
+                    const p2 = [500 + r2 * Math.cos(a2), 510 + r2 * Math.sin(a2)];
+                    return [p1[0] + (p2[0] - p1[0]) * f, p1[1] + (p2[1] - p1[1]) * f];
+                }
+                return [500 + 420 * Math.cos(a), 500 + 420 * Math.sin(a)];
+            }
+
+            const poly = [];
+            for (let i = 0; i < values.rim; i++) poly.push(outlinePoint(i / values.rim));
+
+            function inside(p) {
+                let c = false;
+                for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+                    if ((poly[i][1] > p[1]) !== (poly[j][1] > p[1]) &&
+                        p[0] < (poly[j][0] - poly[i][0]) * (p[1] - poly[i][1]) /
+                               (poly[j][1] - poly[i][1]) + poly[i][0]) c = !c;
+                }
+                return c;
+            }
+
+            // interior points via dart throwing
+            let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+            for (const p of poly) {
+                minX = Math.min(minX, p[0]); maxX = Math.max(maxX, p[0]);
+                minY = Math.min(minY, p[1]); maxY = Math.max(maxY, p[1]);
+            }
+            const area = (maxX - minX) * (maxY - minY) * 0.6;
+            const minDist = Math.sqrt(area / values.inner) * 0.62;
+            const pts = poly.map(p => [p[0] + (rnd() - 0.5) * 0.6, p[1] + (rnd() - 0.5) * 0.6]);
+            let tries = 0;
+            let placed = 0;
+            while (placed < values.inner && tries < values.inner * 60) {
+                tries++;
+                const p = [minX + rnd() * (maxX - minX), minY + rnd() * (maxY - minY)];
+                if (!inside(p)) continue;
+                let ok = true;
+                for (const q of pts) {
+                    if ((q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2 < minDist * minDist) { ok = false; break; }
+                }
+                if (ok) { pts.push(p); placed++; }
+            }
+
+            // ----- micro: Bowyer-Watson Delaunay triangulation -----
+            function circumcircle(a, b, c) {
+                const ax = a[0], ay = a[1], bx = b[0], by = b[1], cx = c[0], cy = c[1];
+                const d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
+                if (Math.abs(d) < 1e-9) return null;
+                const a2 = ax * ax + ay * ay, b2 = bx * bx + by * by, c2 = cx * cx + cy * cy;
+                const ux = (a2 * (by - cy) + b2 * (cy - ay) + c2 * (ay - by)) / d;
+                const uy = (a2 * (cx - bx) + b2 * (ax - cx) + c2 * (bx - ax)) / d;
+                return { x: ux, y: uy, r2: (ux - ax) ** 2 + (uy - ay) ** 2 };
+            }
+            const all = pts.concat([[-3000, -3000], [4000, -3000], [500, 6000]]);
+            const SUPER = pts.length;
+            let tris = [{ a: SUPER, b: SUPER + 1, c: SUPER + 2,
+                cc: circumcircle(all[SUPER], all[SUPER + 1], all[SUPER + 2]) }];
+            for (let i = 0; i < pts.length; i++) {
+                const p = all[i];
+                const bad = [];
+                for (let t = 0; t < tris.length; t++) {
+                    const cc = tris[t].cc;
+                    if (cc && (p[0] - cc.x) ** 2 + (p[1] - cc.y) ** 2 < cc.r2) bad.push(t);
+                }
+                const edgeCount = new Map();
+                for (const t of bad) {
+                    const tr = tris[t];
+                    for (const [u, v] of [[tr.a, tr.b], [tr.b, tr.c], [tr.c, tr.a]]) {
+                        const k = Math.min(u, v) + ":" + Math.max(u, v);
+                        edgeCount.set(k, (edgeCount.get(k) || 0) + 1);
+                    }
+                }
+                tris = tris.filter((_, t) => !bad.includes(t));
+                for (const [k, count] of edgeCount) {
+                    if (count !== 1) continue;
+                    const [u, v] = k.split(":").map(Number);
+                    tris.push({ a: u, b: v, c: i, cc: circumcircle(all[u], all[v], p) });
+                }
+            }
+            tris = tris.filter(t => t.a < SUPER && t.b < SUPER && t.c < SUPER);
+
+            // keep triangles whose centroid is inside the silhouette, draw unique edges
+            const edges = new Set();
+            for (const t of tris) {
+                const ctr = [(all[t.a][0] + all[t.b][0] + all[t.c][0]) / 3,
+                             (all[t.a][1] + all[t.b][1] + all[t.c][1]) / 3];
+                if (!inside(ctr)) continue;
+                for (const [u, v] of [[t.a, t.b], [t.b, t.c], [t.c, t.a]]) {
+                    edges.add(Math.min(u, v) + ":" + Math.max(u, v));
+                }
+            }
+            const lines = [];
+            for (const e of edges) {
+                const [u, v] = e.split(":").map(Number);
+                lines.push([all[u], all[v]]);
+            }
+            // macro outline plus echo frame
+            lines.push({ pts: poly, closed: true });
+            const cx0 = (minX + maxX) / 2, cy0 = (minY + maxY) / 2;
+            lines.push({
+                pts: poly.map(p => [cx0 + (p[0] - cx0) * 1.045, cy0 + (p[1] - cy0) * 1.045]),
+                closed: true
+            });
+            api.status(pts.length + " Punkte, " + edges.size + " Kanten");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

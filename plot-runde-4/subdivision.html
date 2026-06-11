@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fokus-Subdivision — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>15 · Fokus-Subdivision</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Makro/Mikro-Prinzip: Rekursive Subdivision
+            (Tyler Hobbs), aber die <b>Teilungstiefe folgt einem Makro-Feld</b> —
+            um den Fokuspunkt zersplittert die Fläche in feinste Zellen, zum
+            Rand hin bleibt sie ruhig. Jede Teilung zeichnet genau eine Linie:
+            keine Doppellinien beim Plotten.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "fokus-subdivision",
+        params: [
+            { key: "mode", label: "Zellen", value: "tri", options: [
+                { value: "tri", label: "Dreiecke" },
+                { value: "rect", label: "Rechtecke" }
+            ]},
+            { key: "field", label: "Makro-Feld", value: "focus", options: [
+                { value: "focus", label: "Fokuspunkt" },
+                { value: "two", label: "Zwei Pole" },
+                { value: "noise", label: "Noise" }
+            ]},
+            { key: "depth", label: "Max. Tiefe", min: 5, max: 11, step: 1, value: 9 },
+            { key: "falloff", label: "Fokus-Schärfe", min: 0.5, max: 3, step: 0.1, value: 1.5 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const M = 40, S = 920;
+            const noise = PR4.makeNoise2D(rnd);
+            const f1 = [M + 150 + rnd() * (S - 300), M + 150 + rnd() * (S - 300)];
+            const f2 = [M + 150 + rnd() * (S - 300), M + 150 + rnd() * (S - 300)];
+            const nOff = rnd() * 40;
+
+            // target recursion depth at a point, from the macro field
+            const minDepth = 2;
+            function depthAt(x, y) {
+                let w;
+                if (values.field === "focus") {
+                    w = 1 - Math.hypot(x - f1[0], y - f1[1]) / 650;
+                } else if (values.field === "two") {
+                    w = Math.max(1 - Math.hypot(x - f1[0], y - f1[1]) / 480,
+                                 1 - Math.hypot(x - f2[0], y - f2[1]) / 480);
+                } else {
+                    w = (noise.fbm(x / 350 + nOff, y / 350 + nOff, 3) - 0.3) * 1.9;
+                }
+                w = Math.max(0, Math.min(1, w));
+                w = Math.pow(w, values.falloff);
+                return minDepth + w * (values.depth - minDepth);
+            }
+
+            const lines = [];
+
+            // a cell keeps splitting if ANY part of it wants more depth,
+            // otherwise large cells far from the focus prune entire branches
+            function cellDepth(points) {
+                let d = 0;
+                for (const p of points) d = Math.max(d, depthAt(p[0], p[1]));
+                return d;
+            }
+
+            function rect(x, y, w, h, depth) {
+                const jitter = (rnd() - 0.5) * 0.7;
+                const want = cellDepth([[x, y], [x + w, y], [x, y + h], [x + w, y + h],
+                                        [x + w / 2, y + h / 2]]);
+                if (depth + jitter >= want || w < 14 || h < 14) return;
+                const ratio = 0.36 + rnd() * 0.28;
+                if (w > h) {
+                    const sx = x + w * ratio;
+                    lines.push([[sx, y], [sx, y + h]]);
+                    rect(x, y, w * ratio, h, depth + 1);
+                    rect(sx, y, w * (1 - ratio), h, depth + 1);
+                } else {
+                    const sy = y + h * ratio;
+                    lines.push([[x, sy], [x + w, sy]]);
+                    rect(x, y, w, h * ratio, depth + 1);
+                    rect(x, sy, w, h * (1 - ratio), depth + 1);
+                }
+            }
+
+            function tri(a, b, c, depth) {
+                const ctr = [(a[0] + b[0] + c[0]) / 3, (a[1] + b[1] + c[1]) / 3];
+                const jitter = (rnd() - 0.5) * 0.7;
+                if (depth + jitter >= cellDepth([a, b, c, ctr])) return;
+                // split the longest edge (randomized midpoint) toward the opposite vertex
+                const e = [[a, b, c], [b, c, a], [c, a, b]];
+                let best = 0, bestLen = -1;
+                for (let i = 0; i < 3; i++) {
+                    const len = Math.hypot(e[i][1][0] - e[i][0][0], e[i][1][1] - e[i][0][1]);
+                    if (len > bestLen) { bestLen = len; best = i; }
+                }
+                if (bestLen < 18) return;
+                const [u, v, opp] = e[best];
+                const t = 0.38 + rnd() * 0.24;
+                const m = [u[0] + (v[0] - u[0]) * t, u[1] + (v[1] - u[1]) * t];
+                lines.push([m, opp]);
+                tri(u, m, opp, depth + 1);
+                tri(m, v, opp, depth + 1);
+            }
+
+            if (values.mode === "rect") {
+                rect(M, M, S, S, 0);
+            } else {
+                const corners = [[M, M], [M + S, M], [M + S, M + S], [M, M + S]];
+                const d = rnd() < 0.5;
+                lines.push(d ? [corners[0], corners[2]] : [corners[1], corners[3]]);
+                if (d) {
+                    tri(corners[0], corners[1], corners[2], 1);
+                    tri(corners[0], corners[2], corners[3], 1);
+                } else {
+                    tri(corners[0], corners[1], corners[3], 1);
+                    tri(corners[1], corners[2], corners[3], 1);
+                }
+            }
+            lines.push({ pts: [[M, M], [M + S, M], [M + S, M + S], [M, M + S]], closed: true });
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

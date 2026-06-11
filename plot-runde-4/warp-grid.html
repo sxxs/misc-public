@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain-Warp-Gitter — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>10 · Domain-Warp-Gitter</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Makro/Mikro-Prinzip: Ein ruhiges Linien-Gitter
+            (Mikro-Struktur) wird durch ein Rausch-Feld verzerrt — aber nur dort,
+            wo das <b>unsichtbare Makro-Motiv</b> liegt. Die große Form erscheint
+            allein durch die Turbulenz der feinen Linien (Inigo Quilez'
+            Domain Warping).</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "warp-gitter",
+        svgOpts: { width: 0.8 },
+        drawOpts: { width: 1.0 },
+        params: [
+            { key: "motif", label: "Makro-Motiv", value: "circle", options: [
+                { value: "circle", label: "Kreis" },
+                { value: "ring", label: "Ring" },
+                { value: "band", label: "Diagonalband" },
+                { value: "blobs", label: "Noise-Inseln" }
+            ]},
+            { key: "density", label: "Gitterlinien", min: 20, max: 80, step: 2, value: 46 },
+            { key: "warp", label: "Warp-Stärke", min: 10, max: 100, step: 2, value: 60 },
+            { key: "scale", label: "Turbulenz-Skala", min: 1, max: 6, step: 0.5, value: 3 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const M = 40, S = 920;
+            const noise = PR4.makeNoise2D(rnd);
+            const ox = rnd() * 100, oy = rnd() * 100;
+            const blobNoise = PR4.makeNoise2D(rnd);
+
+            // macro weight in [0,1]: how strongly the motif warps this point
+            function motifWeight(x, y) {
+                const u = (x - 500) / 460, v = (y - 500) / 460;
+                const d = Math.hypot(u, v);
+                let w;
+                if (values.motif === "circle") w = 1 - d / 0.75;
+                else if (values.motif === "ring") w = 1 - Math.abs(d - 0.55) / 0.22;
+                else if (values.motif === "band") w = 1 - Math.abs(u + v) / 0.5;
+                else w = (blobNoise.fbm(u * 2 + 9, v * 2 + 9, 3) - 0.42) * 4;
+                return Math.max(0, Math.min(1, w));
+            }
+
+            function warp(x, y) {
+                const w = 0.12 + 0.88 * motifWeight(x, y);
+                const s = values.scale / 1000;
+                const a = noise.fbm(x * s + ox, y * s + oy, 4) - 0.5;
+                const b = noise.fbm(x * s + ox + 37.7, y * s + oy + 11.3, 4) - 0.5;
+                return [x + a * 2 * values.warp * w, y + b * 2 * values.warp * w];
+            }
+
+            const lines = [];
+            const n = values.density;
+            const STEP = 5;
+            for (const dir of ["h", "v"]) {
+                for (let i = 0; i < n; i++) {
+                    const c = M + (i + 0.5) * (S / n);
+                    const pts = [];
+                    for (let t = M; t <= M + S + 0.01; t += STEP) {
+                        const p = dir === "h" ? warp(t, c) : warp(c, t);
+                        // clamp into the frame
+                        p[0] = Math.max(M, Math.min(M + S, p[0]));
+                        p[1] = Math.max(M, Math.min(M + S, p[1]));
+                        pts.push(p);
+                    }
+                    lines.push(pts);
+                }
+            }
+            lines.push({ pts: [[M, M], [M + S, M], [M + S, M + S], [M, M + S]], closed: true });
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>
