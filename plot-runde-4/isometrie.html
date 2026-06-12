@@ -14,6 +14,10 @@
     <main>
         <section class="paper"><canvas id="canvas"></canvas></section>
         <section class="panel">
+            <div class="control">
+                <label><span>Monogramm (für Höhenfeld „Text“)</span></label>
+                <input id="textInput" type="text" value="W" maxlength="3">
+            </div>
             <div id="controls"></div>
             <div class="buttons">
                 <button id="regen" class="primary">🎲 Neu</button>
@@ -28,6 +32,7 @@
         </section>
     </main>
     <script src="shared.js"></script>
+    <script src="font.js"></script>
     <script src="app.js"></script>
     <script>
     "use strict";
@@ -38,17 +43,25 @@
         params: [
             { key: "grid", label: "Raster", min: 6, max: 16, step: 1, value: 10 },
             { key: "maxh", label: "Max. Höhe", min: 40, max: 220, step: 10, value: 130 },
-            { key: "field", label: "Höhenfeld", value: "noise", options: [
-                { value: "noise", label: "Noise-Gebirge" },
-                { value: "dome", label: "Kuppel" },
+            { key: "field", label: "Höhenfeld", value: "sine", options: [
+                { value: "sine", label: "Sinus-Interferenz" },
+                { value: "pyramid", label: "Stufenpyramide" },
+                { value: "checker", label: "Schachbrett-Orgel" },
+                { value: "text", label: "Monogramm (Text)" },
                 { value: "stairs", label: "Treppen" },
-                { value: "wave", label: "Welle" }
+                { value: "dome", label: "Kuppel" },
+                { value: "wave", label: "Welle" },
+                { value: "noise", label: "Noise-Gebirge" }
             ]}
         ],
         generate(api) {
             const { rnd, values } = api;
             const noise = PR4.makeNoise2D(rnd);
             const no = rnd() * 30;
+            const mono = PR4Font.normalize(document.getElementById("textInput").value).slice(0, 3);
+            const maskCapH = Math.min(820, 900 / Math.max(1, PR4Font.textWidth(mono, 100) / 100));
+            const maskInside = values.field === "text"
+                ? PR4Font.makeTextMask(mono, 500, 500, maskCapH, maskCapH * 0.34) : null;
             const lines = [];
             const G = values.grid;
             const u = 700 / G;                       // cell size in world units
@@ -60,7 +73,21 @@
             function height(i, j) {
                 const fi = i / (G - 1), fj = j / (G - 1);
                 let v;
-                if (values.field === "dome") {
+                if (values.field === "sine") {
+                    // two crossed standing waves: orderly interference relief
+                    v = 0.5 + 0.5 * Math.sin(fi * Math.PI * 3) * Math.sin(fj * Math.PI * 3);
+                    v = Math.round(v * 5) / 5;
+                } else if (values.field === "pyramid") {
+                    const d = Math.max(Math.abs(fi - 0.5), Math.abs(fj - 0.5)) * 2;
+                    v = Math.floor((1 - d) * 5 + 0.001) / 5 + 0.08;
+                } else if (values.field === "checker") {
+                    // checkerboard of two alternating staircase directions
+                    const a = Math.floor(fi * (G - 1)), b = Math.floor(fj * (G - 1));
+                    v = ((a + b) % 2 === 0 ? (a % 4) : (3 - (b % 4))) / 4 * 0.85 + 0.1;
+                } else if (values.field === "text") {
+                    // the monogram rises from a flat plate
+                    v = maskInside(fi * 1000, fj * 1000) ? 0.85 : 0.06;
+                } else if (values.field === "dome") {
                     const d = Math.hypot(fi - 0.5, fj - 0.5) * 2;
                     v = Math.max(0.05, 1 - d * d);
                 } else if (values.field === "stairs") {

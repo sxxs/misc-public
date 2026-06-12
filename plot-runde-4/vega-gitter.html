@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vega-Gitter — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>49 · Vega-Gitter</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Nach Vasarelys „Vega“: Ein Gitter kleiner Formen
+            wird von einer <b>unsichtbaren Kugel</b> aufgewölbt — Zellen nahe
+            dem Zentrum werden größer und wandern nach außen. Im Wölbungskern
+            sind die Formen <b>schraffiert gefüllt</b>: die Kugel scheint aus
+            dem Papier zu drücken.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "vega-gitter",
+        params: [
+            { key: "grid", label: "Raster", min: 12, max: 30, step: 1, value: 20 },
+            { key: "bulge", label: "Wölbung", min: 0.2, max: 1.2, step: 0.05, value: 0.7 },
+            { key: "shape", label: "Zellform", value: "sq", options: [
+                { value: "sq", label: "Quadrate" },
+                { value: "circ", label: "Kreise" },
+                { value: "mix", label: "Schachbrett-Mix" }
+            ]},
+            { key: "filled", label: "Füllkern", min: 0, max: 0.6, step: 0.05, value: 0.35 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+            const G = values.grid;
+            const cell = 920 / G;
+            const BX = 280 + rnd() * 440, BY = 280 + rnd() * 440;   // bulge centre
+            const RB = 330;                                          // bulge radius
+
+            // gentle barrel distortion: cells spread, the grid stays coherent
+            function warp(x, y) {
+                const dx = x - BX, dy = y - BY;
+                const d = Math.hypot(dx, dy);
+                if (d > RB || d < 1e-6) return [x, y, 0];
+                const t = d / RB;
+                const e = 1 / (1 + values.bulge * 0.45);
+                const nd = RB * Math.pow(t, e);
+                const mag = Math.cos(t * Math.PI / 2) * values.bulge;
+                return [BX + dx / d * nd, BY + dy / d * nd, mag];
+            }
+
+            for (let gy = 0; gy < G; gy++) {
+                for (let gx = 0; gx < G; gx++) {
+                    const x0 = 40 + (gx + 0.5) * cell;
+                    const y0 = 40 + (gy + 0.5) * cell;
+                    const [x, y, mag] = warp(x0, y0);
+                    const r = cell * 0.36 * (1 + mag * 0.75);
+                    const kind = values.shape === "mix"
+                        ? ((gx + gy) % 2 ? "circ" : "sq") : values.shape;
+                    const w = 0.7 + mag * 0.9;
+                    if (kind === "circ") {
+                        const c = [];
+                        const seg = Math.max(10, Math.round(r));
+                        for (let i = 0; i <= seg; i++) {
+                            const a = i / seg * Math.PI * 2;
+                            c.push([x + r * Math.cos(a), y + r * Math.sin(a)]);
+                        }
+                        lines.push({ pts: c, closed: true, w });
+                        if (mag > values.filled && values.filled > 0) {
+                            for (let yy = -r + 3; yy < r; yy += 3.6) {
+                                const half = Math.sqrt(Math.max(0, r * r - yy * yy));
+                                lines.push({ pts: [[x - half, y + yy], [x + half, y + yy]], w: w * 0.7 });
+                            }
+                        }
+                    } else {
+                        // square, slightly rotated toward the bulge tangent
+                        const ang = mag * 0.001 * 0;
+                        const q = [[-r, -r], [r, -r], [r, r], [-r, r]].map(p =>
+                            [x + p[0], y + p[1]]);
+                        lines.push({ pts: q, closed: true, w });
+                        if (mag > values.filled && values.filled > 0) {
+                            for (let yy = -r + 3; yy < r; yy += 3.6) {
+                                lines.push({ pts: [[x - r + 1, y + yy], [x + r - 1, y + yy]], w: w * 0.7 });
+                            }
+                        }
+                    }
+                }
+            }
+            lines.push({ pts: [[40, 40], [960, 40], [960, 960], [40, 960]], closed: true, w: 1.3 });
+            api.status("Wölbung bei " + Math.round(BX) + "/" + Math.round(BY));
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

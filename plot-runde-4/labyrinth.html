@@ -14,6 +14,10 @@
     <main>
         <section class="paper"><canvas id="canvas"></canvas></section>
         <section class="panel">
+            <div class="control">
+                <label><span>Buchstabe im Zentrum</span></label>
+                <input id="textInput" type="text" value="W" maxlength="1">
+            </div>
             <div id="controls"></div>
             <div class="buttons">
                 <button id="regen" class="primary">🎲 Neu</button>
@@ -27,15 +31,20 @@
         </section>
     </main>
     <script src="shared.js"></script>
+    <script src="font.js"></script>
     <script src="app.js"></script>
     <script>
     "use strict";
-    PR4App({
+    const app = PR4App({
         svgName: "theta-labyrinth",
         params: [
             { key: "rings", label: "Ringe", min: 5, max: 22, step: 1, value: 13 },
             { key: "sectors", label: "Startsektoren", min: 4, max: 16, step: 1, value: 8 },
-            { key: "twist", label: "Verdrehung", min: 0, max: 360, step: 5, value: 0 }
+            { key: "twist", label: "Verdrehung", min: 0, max: 360, step: 5, value: 0 },
+            { key: "solution", label: "Lösungsweg", value: "aus", options: [
+                { value: "aus", label: "Verstecken" },
+                { value: "an", label: "Einzeichnen" }
+            ]}
         ],
         generate(api) {
             const { rnd, values } = api;
@@ -137,16 +146,72 @@
                 if (j === exit) continue;
                 lines.push(arc(rOut, 2 * Math.PI * j / counts[rings - 1], 2 * Math.PI * (j + 1) / counts[rings - 1]));
             }
-            // a dot marking the center room
-            const dot = [];
-            for (let s = 0; s <= 20; s++) {
-                const a = s / 20 * Math.PI * 2;
-                dot.push([CX + 6 * Math.cos(a), CY + 6 * Math.sin(a)]);
+            // monogram in the centre room
+            const mono = PR4Font.normalize(document.getElementById("textInput").value).slice(0, 1);
+            for (const st of PR4Font.textCentered(mono, CX, CY, r0 * 1.05)) {
+                lines.push({ pts: st, w: 1.6 });
             }
-            lines.push({ pts: dot, closed: true });
+            // solution path: BFS from the entrance cell to the exit cell
+            if (values.solution === "an") {
+                const adj = new Map();
+                const ck = (i, j) => i + "." + j;
+                const link = (a, b) => {
+                    if (!adj.has(a)) adj.set(a, []);
+                    adj.get(a).push(b);
+                };
+                for (const key of passages) {
+                    const [a, b] = key.split("|");
+                    link(a, b); link(b, a);
+                }
+                const start = ck(0, entrance), goal = ck(rings - 1, exit);
+                const prev = new Map([[start, null]]);
+                const q = [start];
+                while (q.length) {
+                    const cur = q.shift();
+                    if (cur === goal) break;
+                    for (const nb of adj.get(cur) || []) {
+                        if (!prev.has(nb)) { prev.set(nb, cur); q.push(nb); }
+                    }
+                }
+                if (prev.has(goal)) {
+                    const cellCenter = (i, j) => {
+                        const rr = (radius(i) + radius(i + 1)) / 2;
+                        const a = (j + 0.5) / counts[i] * Math.PI * 2 + twist;
+                        return [CX + rr * Math.cos(a), CY + rr * Math.sin(a)];
+                    };
+                    const path = [];
+                    let cur = goal;
+                    while (cur) {
+                        const [i, j] = cur.split(".").map(Number);
+                        path.push(cellCenter(i, j));
+                        cur = prev.get(cur);
+                    }
+                    // entrance from the centre, exit out of the rim
+                    const eA = (entrance + 0.5) / counts[0] * Math.PI * 2 + twist;
+                    path.push([CX + r0 * 0.55 * Math.cos(eA), CY + r0 * 0.55 * Math.sin(eA)]);
+                    path.reverse();
+                    const xA = (exit + 0.5) / counts[rings - 1] * Math.PI * 2 + twist;
+                    path.push([CX + (rOut + 22) * Math.cos(xA), CY + (rOut + 22) * Math.sin(xA)]);
+                    // dashed solution line
+                    for (let i = 0; i < path.length - 1; i++) {
+                        const a = path[i], b = path[i + 1];
+                        const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+                        const n = Math.max(1, Math.round(len / 14));
+                        for (let k = 0; k < n; k++) {
+                            const t0 = k / n, t1 = t0 + 0.55 / n;
+                            lines.push({ pts: [
+                                [a[0] + (b[0] - a[0]) * t0, a[1] + (b[1] - a[1]) * t0],
+                                [a[0] + (b[0] - a[0]) * Math.min(1, t1), a[1] + (b[1] - a[1]) * Math.min(1, t1)]
+                            ], w: 0.7 });
+                        }
+                    }
+                }
+            }
             api.done(lines);
         }
     });
+    document.getElementById("textInput").addEventListener("input",
+        PR4.debounce(() => app.start(), 350));
     </script>
 </body>
 </html>

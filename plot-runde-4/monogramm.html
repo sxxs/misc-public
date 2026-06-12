@@ -40,6 +40,11 @@
         params: [
             { key: "size", label: "Füll-Textgröße", min: 6, max: 18, step: 1, value: 10 },
             { key: "lineGap", label: "Zeilenabstand", min: 1.1, max: 2.2, step: 0.1, value: 1.4 },
+            { key: "dir", label: "Richtung", value: "h", options: [
+                { value: "h", label: "Horizontal" },
+                { value: "diag", label: "Diagonal 30°" },
+                { value: "v", label: "Vertikal" }
+            ]},
             { key: "fill", label: "Füllung", value: "word", options: [
                 { value: "word", label: "Füllwort wiederholen" },
                 { value: "random", label: "Zufallsbuchstaben" },
@@ -58,12 +63,14 @@
 
             const size = values.size;
             const step = size * values.lineGap;
+            const ang = values.dir === "h" ? 0 : values.dir === "v" ? Math.PI / 2 : Math.PI / 6;
+            const dx = Math.cos(ang), dy = Math.sin(ang);
+            const px = -dy, py = dx;
             let glyphs = 0;
             let charIdx = 0;
-            for (let y = 60; y <= 950; y += step) {
-                // slight per-row x offset so columns don't align
-                let x = 45 + (rnd() * size);
-                while (x < 950) {
+            for (let c = -720; c <= 720; c += step) {
+                let t = -720 + rnd() * size;
+                while (t < 720) {
                     let ch;
                     if (values.fill === "random") {
                         ch = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(rnd() * 26)];
@@ -73,16 +80,19 @@
                         ch = FILLWORD[charIdx % FILLWORD.length];
                     }
                     charIdx++;
-                    if (ch === " ") { x += size * 0.5; continue; }
+                    if (ch === " ") { t += size * 0.5; continue; }
                     const adv = (PR4Font.glyphs[ch].w + 2) * (size / 10);
+                    const bx = 500 + dx * t + px * c;
+                    const by = 500 + dy * t + py * c;
                     // glyph cell center decides whether it belongs to the monogram
-                    if (inside(x + adv / 2, y - size * 0.45)) {
-                        for (const s of PR4Font.textStrokes(ch, x, y, size)) {
+                    if (inside(bx + dx * adv / 2 - px * size * 0.45,
+                               by + dy * adv / 2 - py * size * 0.45)) {
+                        for (const s of PR4Font.textStrokes(ch, bx, by, size, { angle: ang })) {
                             lines.push({ pts: s, w: 0.8 });
                         }
                         glyphs++;
                     }
-                    x += adv;
+                    t += adv;
                 }
             }
             // thin frame

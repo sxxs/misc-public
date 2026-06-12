@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mathe-Symbol — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>43 · Mathe-Symbol</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div class="control">
+                <label><span>Eigenes Zeichen (überschreibt Auswahl)</span></label>
+                <input id="textInput" type="text" value="" maxlength="2" placeholder="z. B. W">
+            </div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Ein blattfüllendes <b>mathematisches Symbol</b>
+            (π, Σ, ∞, ∫, λ, Ω, √, φ) oder eigenes Monogramm — als geschraffierte
+            Fläche mit doppelter Kontur und Echo-Ring aus kleinen Kopien.
+            Füllung wählbar: Schraffur, Kreuzlage oder Wellenlinien.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    const app = PR4App({
+        svgName: "mathe-symbol",
+        params: [
+            { key: "symbol", label: "Symbol", value: "π", options: [
+                { value: "π", label: "π  Pi" },
+                { value: "Σ", label: "Σ  Summe" },
+                { value: "∞", label: "∞  Unendlich" },
+                { value: "∫", label: "∫  Integral" },
+                { value: "λ", label: "λ  Lambda" },
+                { value: "Ω", label: "Ω  Omega" },
+                { value: "√", label: "√  Wurzel" },
+                { value: "φ", label: "φ  Phi" }
+            ]},
+            { key: "fill", label: "Füllung", value: "hatch", options: [
+                { value: "hatch", label: "Schraffur 45°" },
+                { value: "cross", label: "Kreuzschraffur" },
+                { value: "waves", label: "Wellenlinien" }
+            ]},
+            { key: "spacing", label: "Linienabstand", min: 4, max: 14, step: 1, value: 7 },
+            { key: "ring", label: "Echo-Ring", min: 0, max: 24, step: 2, value: 12 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const noise = PR4.makeNoise2D(rnd);
+            const lines = [];
+            const custom = PR4Font.normalize(document.getElementById("textInput").value || "");
+            const ch = document.getElementById("textInput").value.trim()
+                ? custom.slice(0, 2) : values.symbol;
+
+            const capH = Math.min(640, 760 / Math.max(1, PR4Font.textWidth(ch, 100) / 100));
+            const inside = PR4Font.makeTextMask(ch, 500, 480, capH, capH * 0.26);
+
+            // fill the symbol body
+            const sp = values.spacing;
+            const dirs = values.fill === "cross" ? [Math.PI / 4, -Math.PI / 4]
+                : values.fill === "waves" ? [0] : [Math.PI / 4];
+            for (const ang of dirs) {
+                const dx = Math.cos(ang), dy = Math.sin(ang);
+                const px = -dy, py = dx;
+                for (let c = -700; c <= 700; c += sp) {
+                    let run = null;
+                    for (let t = -700; t <= 700; t += 2.5) {
+                        let x = 500 + dx * t + px * c;
+                        let y = 480 + dy * t + py * c;
+                        if (values.fill === "waves") {
+                            y += Math.sin(t * 0.05 + c * 0.3) * sp * 0.35;
+                        }
+                        if (inside(x, y)) {
+                            if (!run) run = [];
+                            run.push([x, y]);
+                        } else if (run) {
+                            if (run.length > 1) lines.push({ pts: run, w: 0.8 });
+                            run = null;
+                        }
+                    }
+                    if (run && run.length > 1) lines.push({ pts: run, w: 0.8 });
+                }
+            }
+            // bold double outline: glyph strokes drawn with tiny offsets
+            for (const off of [[0, 0], [2.2, 1.4], [-1.8, -1.2]]) {
+                for (const s of PR4Font.textCentered(ch, 500 + off[0], 480 + off[1], capH)) {
+                    lines.push({ pts: s, w: 1.5 });
+                }
+            }
+            // echo ring of small copies around the symbol
+            const RING = values.ring;
+            for (let k = 0; k < RING; k++) {
+                const a = k / RING * Math.PI * 2 - Math.PI / 2;
+                const rr = 430;
+                const gx = 500 + rr * Math.cos(a);
+                const gy = 490 + rr * Math.sin(a) * 1.02;
+                for (const s of PR4Font.textCentered(ch, gx, gy, 34,
+                        { angle: a + Math.PI / 2 })) {
+                    lines.push({ pts: s, w: 0.8 });
+                }
+            }
+            // tiny constant caption for the classics
+            const captions = { "π": "3.14159265358979", "φ": "1.61803398874989",
+                "√": "√2 = 1.41421356", "∞": "ALEPH NULL", "Σ": "SUMME", "∫": "INTEGRAL",
+                "λ": "LAMBDA", "Ω": "OMEGA" };
+            const cap = captions[ch];
+            if (cap) {
+                for (const s of PR4Font.textCentered(cap, 500, 952, 16)) {
+                    lines.push({ pts: s, w: 0.8 });
+                }
+            }
+            api.status("Symbol " + ch + " · Füllung: " + values.fill);
+            api.done(lines);
+        }
+    });
+    document.getElementById("textInput").addEventListener("input",
+        PR4.debounce(() => app.start(), 350));
+    </script>
+</body>
+</html>

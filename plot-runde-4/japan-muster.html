@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Japanische Muster — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>46 · Japanische Muster</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Klassische Sashiko-Geometrien als Plot:
+            <b>Seigaiha</b> (überlappende Wellenfächer mit echter Verdeckung),
+            <b>Asanoha</b> (Hanfblatt-Sterne), <b>Shippo</b> (verkettete Kreise)
+            und <b>Uroko</b> (Schuppendreiecke, abwechselnd schraffiert).</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "japan-muster",
+        params: [
+            { key: "pattern", label: "Muster", value: "seigaiha", options: [
+                { value: "seigaiha", label: "Seigaiha (Wellen)" },
+                { value: "asanoha", label: "Asanoha (Hanfblatt)" },
+                { value: "shippo", label: "Shippo (Kreise)" },
+                { value: "uroko", label: "Uroko (Schuppen)" }
+            ]},
+            { key: "size", label: "Elementgröße", min: 40, max: 130, step: 5, value: 80 },
+            { key: "inner", label: "Innenlinien", min: 2, max: 7, step: 1, value: 4 }
+        ],
+        generate(api) {
+            const { values } = api;
+            const lines = [];
+            const M = 40, S = 920;
+            const u = values.size;
+
+            function clip(p) {
+                return p[0] >= M && p[0] <= M + S && p[1] >= M && p[1] <= M + S;
+            }
+            function pushClipped(pts, w) {
+                let run = null;
+                for (const p of pts) {
+                    if (clip(p)) {
+                        if (!run) run = [];
+                        run.push(p);
+                    } else if (run) {
+                        if (run.length > 1) lines.push({ pts: run, w });
+                        run = null;
+                    }
+                }
+                if (run && run.length > 1) lines.push({ pts: run, w });
+            }
+
+            if (values.pattern === "seigaiha") {
+                // fans drawn bottom-up; arcs hidden inside fans of rows below
+                const R = u, dy = R * 0.5, dx = R * 1.0;
+                const fans = [];          // fans already drawn (they occlude)
+                const rows = [];
+                for (let y = M + S + R; y >= M - R; y -= dy) rows.push(y);
+                let rowIdx = 0;
+                for (const y of rows) {
+                    const off = (rowIdx % 2) * R;
+                    for (let x = M - R + off; x <= M + S + R; x += dx * 2) {
+                        for (let k = 0; k <= values.inner; k++) {
+                            const r = R * (1 - k / (values.inner + 1.4));
+                            const arc = [];
+                            for (let i = 0; i <= 40; i++) {
+                                const a = Math.PI + i / 40 * Math.PI;
+                                arc.push([x + r * Math.cos(a), y + r * Math.sin(a)]);
+                            }
+                            let run = null;
+                            for (const p of arc) {
+                                const hidden = fans.some(f =>
+                                    (p[0] - f[0]) ** 2 + (p[1] - f[1]) ** 2 < (R - 0.5) ** 2);
+                                if (!hidden && clip(p)) {
+                                    if (!run) run = [];
+                                    run.push(p);
+                                } else if (run) {
+                                    if (run.length > 1) lines.push({ pts: run, w: k === 0 ? 1.2 : 0.8 });
+                                    run = null;
+                                }
+                            }
+                            if (run && run.length > 1) lines.push({ pts: run, w: k === 0 ? 1.2 : 0.8 });
+                        }
+                        fans.push([x, y]);
+                    }
+                    rowIdx++;
+                }
+            } else if (values.pattern === "asanoha") {
+                // triangular grid; in each triangle, medians from each vertex to centroid
+                const h = u * 0.866;
+                let row = 0;
+                for (let y = M; y <= M + S - h; y += h) {
+                    const off = (row % 2) * (u / 2);
+                    for (let x = M - u + off; x <= M + S; x += u) {
+                        const tris = [
+                            [[x, y + h], [x + u, y + h], [x + u / 2, y]],
+                            [[x + u / 2, y], [x + u * 1.5, y], [x + u, y + h]]
+                        ];
+                        for (const t of tris) {
+                            const c = [(t[0][0] + t[1][0] + t[2][0]) / 3,
+                                       (t[0][1] + t[1][1] + t[2][1]) / 3];
+                            for (let e = 0; e < 3; e++) {
+                                pushClipped([t[e], t[(e + 1) % 3]], 1.0);
+                                pushClipped([t[e], c], 0.7);
+                            }
+                        }
+                    }
+                    row++;
+                }
+            } else if (values.pattern === "shippo") {
+                // interlocking circles on a square grid (spacing = radius)
+                for (let y = M; y <= M + S; y += u) {
+                    for (let x = M; x <= M + S; x += u) {
+                        for (let k = 0; k < Math.max(1, values.inner - 2); k++) {
+                            const r = u * (0.707 - k * 0.09);
+                            const c = [];
+                            for (let i = 0; i <= 48; i++) {
+                                const a = i / 48 * Math.PI * 2;
+                                c.push([x + r * Math.cos(a), y + r * Math.sin(a)]);
+                            }
+                            pushClipped(c, k === 0 ? 1.0 : 0.6);
+                        }
+                    }
+                }
+            } else {
+                // uroko: rows of triangles, every other one hatched
+                const h = u * 0.866;
+                let row = 0;
+                for (let y = M; y < M + S; y += h) {
+                    const off = (row % 2) * (u / 2);
+                    for (let x = M - u + off; x < M + S + u; x += u) {
+                        const up = [[x, y + h], [x + u, y + h], [x + u / 2, y]];
+                        pushClipped(up.concat([up[0]]), 1.0);
+                        // the upward triangles carry the hatch (scales)
+                        for (let k = 1; k <= values.inner; k++) {
+                            const f = k / (values.inner + 1);
+                            const yy = y + h - f * h;
+                            const half = (1 - f) * u / 2;
+                            pushClipped([[x + u / 2 - half, yy + 0], [x + u / 2 + half, yy]], 0.6);
+                        }
+                    }
+                    row++;
+                }
+            }
+            lines.push({ pts: [[M, M], [M + S, M], [M + S, M + S], [M, M + S]], closed: true, w: 1.4 });
+            api.status("Muster: " + values.pattern);
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>
