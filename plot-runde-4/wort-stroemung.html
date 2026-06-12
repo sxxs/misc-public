@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wort-Strömung — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>39 · Wort-Strömung</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div class="control">
+                <label><span>Wort</span></label>
+                <input id="textInput" type="text" value="INFORMATIK" maxlength="16">
+            </div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Ein Wort fließt tausendfach durchs Bild: Glyphen folgen
+            den Stromlinien eines Noise-Felds, Buchstabe für Buchstabe der
+            Tangente nach gedreht. In der Mitte bleibt eine <b>kreisrunde
+            Aussparung</b> — Strömung um eine stille Insel.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    const app = PR4App({
+        svgName: "wort-stroemung",
+        params: [
+            { key: "streams", label: "Stromlinien", min: 20, max: 120, step: 5, value: 60 },
+            { key: "size", label: "Textgröße", min: 7, max: 18, step: 1, value: 11 },
+            { key: "turb", label: "Turbulenz", min: 0.5, max: 3, step: 0.1, value: 1.4 },
+            { key: "island", label: "Aussparung", min: 0, max: 220, step: 10, value: 130 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const noise = PR4.makeNoise2D(rnd);
+            const no = rnd() * 80;
+            const lines = [];
+            const word = PR4Font.normalize(document.getElementById("textInput").value) + " ";
+            const size = values.size;
+            const ISL = values.island;
+
+            const baseDir = (rnd() - 0.5) * 0.8;          // shared drift direction
+            const angleAt = (x, y) =>
+                baseDir + (noise.fbm(x * 0.0018 + no, y * 0.0018 + no, 3) - 0.5) *
+                Math.PI * 1.5 * values.turb;
+
+            const blocked = (x, y) =>
+                x < 48 || x > 952 || y < 48 || y > 952 ||
+                Math.hypot(x - 500, y - 500) < ISL;
+
+            // occupancy grid keeps streams from overprinting
+            const CELL = size * 0.9;
+            const taken = new Set();
+            const cellOf = (x, y) => Math.floor(x / CELL) + ":" + Math.floor(y / CELL);
+
+            let glyphs = 0;
+            for (let s = 0; s < values.streams * 2; s++) {
+                // stratified seeds: mostly from the left edge, some anywhere
+                let x, y;
+                if (s % 2 === 0) {
+                    x = 52 + rnd() * 60;
+                    y = 52 + (s / 2 / values.streams) * 900 + rnd() * 14;
+                } else {
+                    x = 60 + rnd() * 880;
+                    y = 60 + rnd() * 880;
+                }
+                if (blocked(x, y)) continue;
+                let ci = Math.floor(rnd() * word.length);
+                const own = new Set();
+                for (let step = 0; step < 140; step++) {
+                    const ch = word[ci % word.length];
+                    ci++;
+                    const adv = ch === " " ? size * 0.6
+                        : (PR4Font.glyphs[ch].w + 2) * (size / 10);
+                    const ang = angleAt(x, y);
+                    const nx = x + Math.cos(ang) * adv;
+                    const ny = y + Math.sin(ang) * adv;
+                    if (blocked(nx, ny)) break;
+                    if (ch !== " ") {
+                        const key = cellOf((x + nx) / 2, (y + ny) / 2);
+                        if (taken.has(key) && !own.has(key)) break; // foreign stream hit
+                        taken.add(key);
+                        own.add(key);
+                        const mid = [(x + nx) / 2, (y + ny) / 2];
+                        for (const st of PR4Font.textCentered(ch, mid[0], mid[1], size,
+                                { angle: ang })) {
+                            lines.push({ pts: st, w: 0.75 });
+                        }
+                        glyphs++;
+                    }
+                    x = nx; y = ny;
+                }
+            }
+            // island ring
+            if (ISL > 20) {
+                for (const r of [ISL, ISL - 8]) {
+                    const c = [];
+                    for (let i = 0; i <= 90; i++) {
+                        const a = i / 90 * Math.PI * 2;
+                        c.push([500 + r * Math.cos(a), 500 + r * Math.sin(a)]);
+                    }
+                    lines.push({ pts: c, closed: true, w: 1.1 });
+                }
+            }
+            lines.push({ pts: [[40, 40], [960, 40], [960, 960], [40, 960]], closed: true, w: 1.2 });
+            api.status(glyphs + " Glyphen in der Strömung");
+            api.done(lines);
+        }
+    });
+    document.getElementById("textInput").addEventListener("input",
+        PR4.debounce(() => app.start(), 350));
+    </script>
+</body>
+</html>

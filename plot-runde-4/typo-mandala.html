@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typo-Mandala — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>41 · Typo-Mandala</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div class="control">
+                <label><span>Wort</span></label>
+                <input id="textInput" type="text" value="WIAI" maxlength="12">
+            </div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Ein Wort wird zum Ornament: Ring um Ring läuft der Text
+            im Kreis, abwechselnd vorwärts und rückwärts, nach außen größer.
+            Zwischenringe und Speichen-Glyphen machen daraus ein
+            <b>typografisches Mandala</b> — Guilloché aus Sprache.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    const app = PR4App({
+        svgName: "typo-mandala",
+        params: [
+            { key: "rings", label: "Text-Ringe", min: 3, max: 10, step: 1, value: 6 },
+            { key: "grow", label: "Größenverlauf", min: 1, max: 2, step: 0.05, value: 1.35 },
+            { key: "spokes", label: "Speichen-Glyphen", min: 0, max: 32, step: 4, value: 16 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+            const word = PR4Font.normalize(document.getElementById("textInput").value);
+            const CX = 500, CY = 500;
+
+            function ringOfText(r, size, reverse, phase) {
+                // how many word repeats fit on the circumference?
+                const wordW = PR4Font.textWidth(word + " * ", size);
+                const reps = Math.max(1, Math.floor((2 * Math.PI * r) / wordW));
+                const text = (word + " * ").repeat(reps);
+                const total = PR4Font.textWidth(text, size);
+                let arc = 0;
+                for (const ch of PR4Font.normalize(text)) {
+                    const adv = (PR4Font.glyphs[ch].w + 2) * (size / 10);
+                    const aMid = (arc + adv / 2) / total * Math.PI * 2 + phase;
+                    const a = reverse ? -aMid : aMid;
+                    const gx = CX + r * Math.cos(a);
+                    const gy = CY + r * Math.sin(a);
+                    if (ch !== " ") {
+                        const rot = a + (reverse ? -Math.PI / 2 : Math.PI / 2);
+                        for (const s of PR4Font.textCentered(ch, gx, gy, size,
+                                { angle: rot })) {
+                            lines.push({ pts: s, w: 0.6 + size / 30 });
+                        }
+                    }
+                    arc += adv;
+                }
+            }
+
+            // text rings, separated by plain circles
+            const R0 = 70, R1 = 440;
+            const K = values.rings;
+            let sizes = [];
+            let sum = 0;
+            for (let k = 0; k < K; k++) {
+                const f = Math.pow(values.grow, k);
+                sizes.push(f);
+                sum += f;
+            }
+            const space = (R1 - R0) / sum;
+            let r = R0;
+            for (let k = 0; k < K; k++) {
+                const band = sizes[k] * space;
+                const size = Math.min(band * 0.62, 56);
+                ringOfText(r + band * 0.55, size, k % 2 === 1, rnd() * Math.PI * 2);
+                // separator circle
+                const c = [];
+                const rr = r + band;
+                for (let i = 0; i <= 120; i++) {
+                    const a = i / 120 * Math.PI * 2;
+                    c.push([CX + rr * Math.cos(a), CY + rr * Math.sin(a)]);
+                }
+                lines.push({ pts: c, closed: true, w: 0.7 });
+                r += band;
+            }
+            // center: first letter, large, with echo
+            for (const f of [1, 0.7, 0.45]) {
+                for (const s of PR4Font.textCentered(word[0], CX, CY, R0 * 1.0 * f)) {
+                    lines.push({ pts: s, w: 1.2 });
+                }
+            }
+            // spoke glyphs outside the last ring
+            for (let k = 0; k < values.spokes; k++) {
+                const a = k / values.spokes * Math.PI * 2;
+                const ch = word[k % word.length];
+                for (const s of PR4Font.textCentered(ch, CX + (R1 + 22) * Math.cos(a),
+                        CY + (R1 + 22) * Math.sin(a), 20, { angle: a + Math.PI / 2 })) {
+                    lines.push({ pts: s, w: 0.8 });
+                }
+            }
+            api.status("Mandala aus „" + word + "“");
+            api.done(lines);
+        }
+    });
+    document.getElementById("textInput").addEventListener("input",
+        PR4.debounce(() => app.start(), 350));
+    </script>
+</body>
+</html>

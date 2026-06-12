@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buchstaben-Blumen — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>38 · Buchstaben-Blumen</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div class="control">
+                <label><span>Wort (eine Blume je Buchstabe)</span></label>
+                <input id="textInput" type="text" value="WIAI" maxlength="8">
+            </div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Eine Wiese, deren <b>Blütenblätter Buchstaben sind</b>:
+            Jede Blume trägt einen Buchstaben des Worts, radial um die Blütenmitte
+            wiederholt. Stängel biegen sich im Wind, kleine Glyphen wirbeln als
+            „Pollen" davon. Das Wort steht als Beet-Reihenfolge vorne.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    const app = PR4App({
+        svgName: "buchstaben-blumen",
+        params: [
+            { key: "petals", label: "Blütenblätter", min: 4, max: 12, step: 1, value: 7 },
+            { key: "wind", label: "Wind", min: 0, max: 2, step: 0.1, value: 0.8 },
+            { key: "pollen", label: "Pollen-Glyphen", min: 0, max: 30, step: 2, value: 12 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const noise = PR4.makeNoise2D(rnd);
+            const lines = [];
+            const word = PR4Font.normalize(document.getElementById("textInput").value).slice(0, 8);
+            const WIND = values.wind * (rnd() < 0.5 ? 1 : -1) * 0.8;
+
+            function letterFlower(x0, y0, h, ch, scale, w) {
+                // bent stem
+                const stemPts = [];
+                const bend = WIND * (0.25 + rnd() * 0.3);
+                for (let s = 0; s <= 16; s++) {
+                    const u = s / 16;
+                    stemPts.push([x0 + bend * h * u * u, y0 - u * h]);
+                }
+                lines.push({ pts: stemPts, w });
+                const tip = stemPts[16];
+                // two leaves
+                for (const side of [-1, 1]) {
+                    if (rnd() < 0.4) continue;
+                    const ly = y0 - h * (0.3 + rnd() * 0.25);
+                    const lx = x0 + bend * h * 0.12;
+                    const ang = side * (0.9 + rnd() * 0.4) - Math.PI / 2 + bend * 0.5;
+                    const len = 20 * scale + rnd() * 12;
+                    const a = [], b = [];
+                    for (let s = 0; s <= 8; s++) {
+                        const u = s / 8;
+                        const wid = Math.sin(u * Math.PI) * len * 0.14;
+                        const px = lx + Math.cos(ang) * u * len;
+                        const py = ly + Math.sin(ang) * u * len;
+                        a.push([px - Math.sin(ang) * wid, py + Math.cos(ang) * wid]);
+                        b.push([px + Math.sin(ang) * wid, py - Math.cos(ang) * wid]);
+                    }
+                    lines.push({ pts: a.concat(b.reverse()), closed: true, w: w * 0.8 });
+                }
+                // petals: the letter, repeated radially around the tip
+                const P = values.petals;
+                const R = (36 + rnd() * 10) * scale;
+                const glyphSize = R * 1.35;
+                for (let p = 0; p < P; p++) {
+                    const a = (p / P) * Math.PI * 2 + bend * 0.4;
+                    const gx = tip[0] + Math.cos(a) * R;
+                    const gy = tip[1] + Math.sin(a) * R;
+                    for (const s of PR4Font.textCentered(ch, gx, gy, glyphSize,
+                            { angle: a + Math.PI / 2 })) {
+                        lines.push({ pts: s, w });
+                    }
+                }
+                // flower center
+                for (const f of [0.42, 0.22]) {
+                    const c = [];
+                    for (let i = 0; i <= 18; i++) {
+                        const a = i / 18 * Math.PI * 2;
+                        c.push([tip[0] + R * f * Math.cos(a), tip[1] + R * f * Math.sin(a)]);
+                    }
+                    lines.push({ pts: c, closed: true, w });
+                }
+            }
+
+            // rows: a back row of random word letters, the front row spells the word
+            const backCount = Math.min(9, word.length + 3);
+            for (let k = 0; k < backCount; k++) {
+                const x = 90 + (k + 0.5) * (820 / backCount) + (rnd() - 0.5) * 40;
+                const y = 640 + (rnd() - 0.5) * 30;
+                letterFlower(x, y, 130 + rnd() * 90,
+                    word[Math.floor(rnd() * word.length)], 0.55, 0.6);
+            }
+            for (let k = 0; k < word.length; k++) {
+                const x = 110 + (k + 0.5) * (780 / word.length) + (rnd() - 0.5) * 30;
+                const y = 905 + (rnd() - 0.5) * 20;
+                letterFlower(x, y, 240 + rnd() * 130, word[k], 1.2, 1.1);
+            }
+            // ground lines
+            for (const [gy, gw] of [[652, 0.6], [918, 1.0]]) {
+                const pts = [];
+                for (let x = 40; x <= 960; x += 7) {
+                    pts.push([x, gy + (noise.fbm(x * 0.008, gy, 2) - 0.5) * 10]);
+                }
+                lines.push({ pts, w: gw });
+            }
+            // pollen: tiny glyphs drifting with the wind
+            for (let p = 0; p < values.pollen; p++) {
+                const x = 150 + rnd() * 700, y = 120 + rnd() * 420;
+                const ch = word[Math.floor(rnd() * word.length)];
+                for (const s of PR4Font.textCentered(ch, x, y, 7 + rnd() * 7,
+                        { angle: rnd() * Math.PI * 2 })) {
+                    lines.push({ pts: s, w: 0.5 });
+                }
+            }
+            api.status(word.length + backCount + " Buchstaben-Blumen · " + word);
+            api.done(lines);
+        }
+    });
+    document.getElementById("textInput").addEventListener("input",
+        PR4.debounce(() => app.start(), 350));
+    </script>
+</body>
+</html>
