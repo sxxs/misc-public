@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quallen — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>32 · Quallen</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Unterwasserszene: Quallen mit gewellten Schirmen,
+            Echo-Linien im Schirm und lang fließenden Tentakeln, die per Noise
+            nach unten driften. Dazu Lichtstrahlen von oben und aufsteigende
+            Bläschen — ferne Tiere klein und dünn.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "quallen",
+        params: [
+            { key: "count", label: "Quallen", min: 1, max: 6, step: 1, value: 3 },
+            { key: "tentacles", label: "Tentakel", min: 4, max: 14, step: 1, value: 8 },
+            { key: "bubbles", label: "Bläschen", min: 0, max: 40, step: 2, value: 18 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const noise = PR4.makeNoise2D(rnd);
+            const lines = [];
+
+            // light rays from the upper left
+            for (let r = 0; r < 5; r++) {
+                const x0 = 80 + r * 90 + rnd() * 40;
+                const ang = 0.32 + rnd() * 0.1;
+                const len = 500 + rnd() * 300;
+                lines.push({ pts: [[x0, 40], [x0 + Math.sin(ang) * len, 40 + Math.cos(ang) * len]],
+                             w: 0.45 });
+            }
+
+            function jelly(cx, cy, R, w, seed) {
+                // bell: dome with a scalloped lower rim
+                const scallops = 5 + Math.floor(rnd() * 3);
+                const rim = [];
+                const dome = [];
+                for (let s = 0; s <= 60; s++) {
+                    const u = s / 60;                              // 0..1 across the bell
+                    const a = Math.PI + u * Math.PI;               // left to right over the top
+                    dome.push([cx + Math.cos(a) * R, cy + Math.sin(a) * R * 1.05]);
+                }
+                for (let s = 0; s <= 60; s++) {
+                    const u = s / 60;
+                    const x = cx - R + u * 2 * R;
+                    const y = cy + Math.abs(Math.sin(u * Math.PI * scallops)) * R * 0.14 + R * 0.02;
+                    rim.push([x, y]);
+                }
+                lines.push({ pts: dome.concat(rim.reverse()), closed: true, w: w * 1.2 });
+                // echo lines inside the bell
+                for (const f of [0.78, 0.56]) {
+                    const echo = [];
+                    for (let s = 0; s <= 40; s++) {
+                        const a = Math.PI + (s / 40) * Math.PI;
+                        echo.push([cx + Math.cos(a) * R * f, cy + Math.sin(a) * R * f * 1.05 + R * (1 - f) * 0.18]);
+                    }
+                    lines.push({ pts: echo, w });
+                }
+                // radial marks on the dome
+                for (let k = 1; k < 6; k++) {
+                    const a = Math.PI + k / 6 * Math.PI;
+                    lines.push({ pts: [[cx + Math.cos(a) * R * 0.55, cy + Math.sin(a) * R * 0.58],
+                                       [cx + Math.cos(a) * R * 0.92, cy + Math.sin(a) * R * 0.97]], w: w * 0.8 });
+                }
+                // tentacles: drifting noise curves
+                const T = values.tentacles;
+                for (let t = 0; t < T; t++) {
+                    const fx = -0.85 + (t / (T - 1)) * 1.7;
+                    const sx = cx + fx * R * 0.9;
+                    const sy = cy + R * 0.12;
+                    const len = R * (2.2 + rnd() * 2.6);
+                    const pts = [[sx, sy]];
+                    let x = sx;
+                    for (let s = 1; s <= 36; s++) {
+                        const u = s / 36;
+                        x += (noise.fbm(u * 3 + t * 7.3 + seed, seed + t, 3) - 0.5) * R * 0.2;
+                        x += fx * R * 0.02;                       // splay outward slightly
+                        pts.push([x, sy + u * len]);
+                    }
+                    lines.push({ pts, w: w * 0.75 });
+                }
+                // two frilly oral arms: tighter zigzag waves
+                for (const fx of [-0.3, 0.32]) {
+                    const sx = cx + fx * R, sy = cy + R * 0.15;
+                    const len = R * (1.6 + rnd());
+                    const pts = [];
+                    let x = sx;
+                    for (let s = 0; s <= 60; s++) {
+                        const u = s / 60;
+                        x += (noise.fbm(u * 5 + fx * 31 + seed, seed * 2, 2) - 0.5) * R * 0.2;
+                        pts.push([x + Math.sin(u * Math.PI * 14) * R * 0.07 * (1 - u * 0.5),
+                                  sy + u * len]);
+                    }
+                    lines.push({ pts, w });
+                }
+            }
+
+            // place jellies: one big main, others smaller/farther
+            const spots = [];
+            let tries = 0;
+            while (spots.length < values.count && tries++ < 300) {
+                const main = spots.length === 0;
+                const R = main ? 120 + rnd() * 40 : 35 + rnd() * 55;
+                const x = main ? 280 + rnd() * 380 : 100 + rnd() * 800;
+                const y = main ? 220 + rnd() * 160 : 130 + rnd() * 480;
+                if (!spots.every(s => Math.hypot(s.x - x, s.y - y) > (s.R + R) * 1.8)) continue;
+                spots.push({ x, y, R });
+            }
+            spots.sort((a, b) => a.R - b.R);   // small (far) first
+            for (const s of spots) {
+                jelly(s.x, s.y, s.R, s.R > 90 ? 1.25 : 0.6 + s.R / 150, rnd() * 90);
+            }
+
+            // bubbles drifting up
+            for (let b = 0; b < values.bubbles; b++) {
+                const x = 60 + rnd() * 880, y = 80 + rnd() * 820;
+                const r = 2.5 + rnd() * 6;
+                const c = [];
+                for (let i = 0; i <= 14; i++) {
+                    const a = i / 14 * Math.PI * 2;
+                    c.push([x + r * Math.cos(a), y + r * Math.sin(a)]);
+                }
+                lines.push({ pts: c, closed: true, w: 0.6 });
+                if (r > 5) lines.push({ pts: [[x - r * 0.4, y - r * 0.45], [x - r * 0.1, y - r * 0.6]], w: 0.5 });
+            }
+            // sea floor hint
+            {
+                const pts = [];
+                for (let x = 40; x <= 960; x += 7) {
+                    pts.push([x, 930 + (noise.fbm(x * 0.01, 3, 2) - 0.5) * 16]);
+                }
+                lines.push({ pts, w: 0.9 });
+                for (let g = 0; g < 14; g++) {
+                    const x = 70 + rnd() * 860;
+                    const y = 930 + (noise.fbm(x * 0.01, 3, 2) - 0.5) * 16;
+                    const h = 10 + rnd() * 22;
+                    const blade = [];
+                    for (let s = 0; s <= 6; s++) {
+                        const u = s / 6;
+                        blade.push([x + Math.sin(u * 2.4 + g) * 6 * u, y - u * h]);
+                    }
+                    lines.push({ pts: blade, w: 0.6 });
+                }
+            }
+            api.status(spots.length + " Quallen");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

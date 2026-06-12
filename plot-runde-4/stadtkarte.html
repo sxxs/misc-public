@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imaginäre Stadtkarte — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>29 · Imaginäre Stadtkarte</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Eine Stadt, die es nicht gibt: gewachsenes Straßennetz
+            mit Fluss, Brücken, Parks (schraffiert, mit Bäumen), dichteren
+            Altstadt-Blöcken ums Zentrum und Kompassrose — im Stil der beliebten
+            Map-Plots der Plotter-Community.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "stadtkarte",
+        params: [
+            { key: "density", label: "Straßendichte", min: 30, max: 70, step: 2, value: 48 },
+            { key: "parks", label: "Parks", min: 0, max: 8, step: 1, value: 4 },
+            { key: "blocks", label: "Altstadt-Radius", min: 0, max: 320, step: 20, value: 200 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const noise = PR4.makeNoise2D(rnd);
+            const no = rnd() * 70;
+            const lines = [];
+            const M = 40, S = 920;
+            const CXC = 380 + rnd() * 240, CYC = 380 + rnd() * 240;  // city center
+
+            // organic street warp
+            function warp(x, y) {
+                const a = (noise.fbm(x * 0.0035 + no, y * 0.0035 + no, 3) - 0.5) * 56;
+                const b = (noise.fbm(x * 0.0035 + no + 31, y * 0.0035 + no + 17, 3) - 0.5) * 56;
+                return [x + a, y + b];
+            }
+
+            // river: a wide meander crossing the map
+            const riverAng = rnd() * Math.PI;
+            const rdx = Math.cos(riverAng), rdy = Math.sin(riverAng);
+            const rpx = -rdy, rpy = rdx;
+            function riverOffset(t) {  // perpendicular offset of the centerline
+                return (noise.fbm(t * 0.0028 + no + 53, no, 3) - 0.5) * 420;
+            }
+            function riverDist(x, y) {
+                // approximate distance to the centerline
+                const relT = (x - 500) * rdx + (y - 500) * rdy;
+                const relP = (x - 500) * rpx + (y - 500) * rpy;
+                return Math.abs(relP - riverOffset(relT));
+            }
+            const RIVER_W = 26;
+
+            // parks: blobby areas
+            const parks = [];
+            for (let p = 0; p < values.parks; p++) {
+                parks.push({
+                    x: M + 120 + rnd() * (S - 240),
+                    y: M + 120 + rnd() * (S - 240),
+                    r: 55 + rnd() * 60
+                });
+            }
+            const inPark = (x, y) => parks.some(p =>
+                (x - p.x) ** 2 + (y - p.y) ** 2 < p.r * p.r);
+
+            // streets: warped grid, clipped at river and parks; denser near center
+            const step = 2000 / values.density;
+            function street(points, w) {
+                let run = null;
+                for (const [x, y] of points) {
+                    const ok = x >= M && x <= M + S && y >= M && y <= M + S &&
+                        riverDist(x, y) > RIVER_W + 6 && !inPark(x, y);
+                    if (ok) {
+                        if (!run) run = [];
+                        run.push(warp(x, y));
+                    } else if (run) {
+                        if (run.length > 1) lines.push({ pts: run, w });
+                        run = null;
+                    }
+                }
+                if (run && run.length > 1) lines.push({ pts: run, w });
+            }
+            for (let gx = M; gx <= M + S; gx += step) {
+                const pts = [];
+                for (let y = M; y <= M + S; y += 7) pts.push([gx, y]);
+                street(pts, 0.7);
+            }
+            for (let gy = M; gy <= M + S; gy += step) {
+                const pts = [];
+                for (let x = M; x <= M + S; x += 7) pts.push([x, gy]);
+                street(pts, 0.7);
+            }
+            // arterials: bold roads radiating from the center
+            const nArt = 4 + Math.floor(rnd() * 3);
+            for (let a = 0; a < nArt; a++) {
+                const ang = a / nArt * Math.PI * 2 + rnd() * 0.5;
+                const pts = [];
+                for (let r = 0; r < 700; r += 7) {
+                    pts.push([CXC + Math.cos(ang) * r + Math.sin(r * 0.01 + a) * 14,
+                              CYC + Math.sin(ang) * r + Math.cos(r * 0.012 + a) * 14]);
+                }
+                street(pts, 1.7);
+            }
+            // ring road
+            {
+                const pts = [];
+                const rr = 150 + rnd() * 60;
+                for (let i = 0; i <= 140; i++) {
+                    const a = i / 140 * Math.PI * 2;
+                    const r = rr + (noise.fbm(a * 1.5 + no, 9, 2) - 0.5) * 40;
+                    pts.push([CXC + r * Math.cos(a), CYC + r * Math.sin(a)]);
+                }
+                street(pts, 1.7);
+            }
+
+            // old town blocks: small inset rectangles near the center
+            if (values.blocks > 0) {
+                for (let gx = M; gx < M + S - step; gx += step) {
+                    for (let gy = M; gy < M + S - step; gy += step) {
+                        const cx = gx + step / 2, cy = gy + step / 2;
+                        if (Math.hypot(cx - CXC, cy - CYC) > values.blocks) continue;
+                        if (riverDist(cx, cy) < RIVER_W + 14 || inPark(cx, cy)) continue;
+                        if (rnd() < 0.25) continue;
+                        const inset = 5 + rnd() * 3;
+                        const q = [[gx + inset, gy + inset], [gx + step - inset, gy + inset],
+                                   [gx + step - inset, gy + step - inset], [gx + inset, gy + step - inset]];
+                        lines.push({ pts: q.map(p => warp(p[0], p[1])), closed: true, w: 0.7 });
+                    }
+                }
+            }
+
+            // river banks (two offset lines) + bridges
+            for (const side of [-RIVER_W, RIVER_W]) {
+                const pts = [];
+                for (let t = -720; t <= 720; t += 8) {
+                    const o = riverOffset(t) + side;
+                    const x = 500 + rdx * t + rpx * o;
+                    const y = 500 + rdy * t + rpy * o;
+                    if (x < M || x > M + S || y < M || y > M + S) {
+                        if (pts.length > 1) lines.push({ pts: pts.slice(), w: 1.4 });
+                        pts.length = 0;
+                        continue;
+                    }
+                    pts.push([x, y]);
+                }
+                if (pts.length > 1) lines.push({ pts, w: 1.4 });
+            }
+            // water texture: short dashes along the river
+            for (let t = -700; t <= 700; t += 26) {
+                const o = riverOffset(t) + (rnd() - 0.5) * RIVER_W * 1.2;
+                const x = 500 + rdx * t + rpx * o, y = 500 + rdy * t + rpy * o;
+                if (x < M + 10 || x > M + S - 10 || y < M + 10 || y > M + S - 10) continue;
+                lines.push({ pts: [[x - rdx * 9, y - rdy * 9], [x + rdx * 9, y + rdy * 9]], w: 0.5 });
+            }
+            // bridges
+            for (let b = 0; b < 3; b++) {
+                const t = -300 + b * 300 + (rnd() - 0.5) * 120;
+                const o = riverOffset(t);
+                for (const off of [-4, 4]) {
+                    const p1 = [500 + rdx * (t + off) + rpx * (o - RIVER_W - 12),
+                                500 + rdy * (t + off) + rpy * (o - RIVER_W - 12)];
+                    const p2 = [500 + rdx * (t + off) + rpx * (o + RIVER_W + 12),
+                                500 + rdy * (t + off) + rpy * (o + RIVER_W + 12)];
+                    if (p1[0] < M || p1[0] > M + S || p1[1] < M || p1[1] > M + S) continue;
+                    if (p2[0] < M || p2[0] > M + S || p2[1] < M || p2[1] > M + S) continue;
+                    lines.push({ pts: [p1, p2], w: 1.4 });
+                }
+            }
+
+            // parks: outline, hatch, trees
+            for (const p of parks) {
+                const outline = [];
+                for (let i = 0; i <= 60; i++) {
+                    const a = i / 60 * Math.PI * 2;
+                    const r = p.r * (1 + (noise.fbm(a * 1.2 + p.x, p.y, 2) - 0.5) * 0.35);
+                    outline.push([p.x + r * Math.cos(a), p.y + r * Math.sin(a)]);
+                }
+                lines.push({ pts: outline, closed: true, w: 1.0 });
+                // light 45-degree hatch inside the park
+                for (let c = -p.r; c <= p.r; c += 11) {
+                    const half = Math.sqrt(Math.max(0, p.r * p.r * 0.92 - c * c));
+                    if (half < 4) continue;
+                    lines.push({ pts: [[p.x + c * 0.707 - half * 0.707, p.y + c * 0.707 + half * 0.707],
+                                       [p.x + c * 0.707 + half * 0.707, p.y + c * 0.707 - half * 0.707]], w: 0.5 });
+                }
+                for (let t = 0; t < p.r / 8; t++) {
+                    const a = rnd() * Math.PI * 2, rr = Math.sqrt(rnd()) * p.r * 0.8;
+                    const tx = p.x + rr * Math.cos(a), ty = p.y + rr * Math.sin(a);
+                    const circ = [];
+                    for (let i = 0; i <= 10; i++) {
+                        const aa = i / 10 * Math.PI * 2;
+                        circ.push([tx + 3.5 * Math.cos(aa), ty + 3.5 * Math.sin(aa)]);
+                    }
+                    lines.push({ pts: circ, closed: true, w: 0.6 });
+                }
+            }
+
+            // compass rose, bottom left
+            {
+                const cx = 110, cy = 890, R = 38;
+                for (const r of [R, R * 0.72]) {
+                    const c = [];
+                    for (let i = 0; i <= 36; i++) {
+                        const a = i / 36 * Math.PI * 2;
+                        c.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+                    }
+                    lines.push({ pts: c, closed: true, w: 0.8 });
+                }
+                lines.push({ pts: [[cx, cy + R * 0.6], [cx - R * 0.22, cy], [cx, cy - R],
+                                   [cx + R * 0.22, cy], [cx, cy + R * 0.6]], closed: true, w: 1.2 });
+                lines.push({ pts: [[cx - 4, cy - R - 16], [cx - 4, cy - R - 6], [cx + 4, cy - R - 16],
+                                   [cx + 4, cy - R - 6]], w: 0.9 });
+            }
+            // scale bar, bottom right
+            {
+                const bx = 760, by = 916;
+                lines.push({ pts: [[bx, by], [bx + 140, by]], w: 1.2 });
+                for (const t of [0, 35, 70, 105, 140]) {
+                    lines.push({ pts: [[bx + t, by - 5], [bx + t, by + 5]], w: 1.2 });
+                }
+            }
+            // map frame
+            lines.push({ pts: [[M, M], [M + S, M], [M + S, M + S], [M, M + S]], closed: true, w: 1.6 });
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>
