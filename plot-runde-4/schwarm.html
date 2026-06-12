@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vogelschwarm — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>30 · Vogelschwarm</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Eine Starenwolke (Murmuration) über der Abendlandschaft:
+            Hunderte kleiner Flügel-Glyphen, dichter im Kern der Schwarmwolke,
+            alle einer gemeinsamen Strömung folgend. Unten kahler Baum und
+            Hügelsilhouette, hinten die tiefe Sonne.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "vogelschwarm",
+        params: [
+            { key: "birds", label: "Vögel", min: 200, max: 1600, step: 100, value: 800 },
+            { key: "spread", label: "Wolkenform", min: 0.6, max: 1.8, step: 0.1, value: 1.1 },
+            { key: "wind", label: "Strömung", min: 0, max: 2, step: 0.1, value: 1 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const noise = PR4.makeNoise2D(rnd);
+            const no = rnd() * 60;
+            const lines = [];
+
+            // swarm cloud: 3 elongated gaussian lobes
+            const lobes = [];
+            const baseX = 350 + rnd() * 250, baseY = 300 + rnd() * 120;
+            for (let l = 0; l < 3; l++) {
+                lobes.push({
+                    x: baseX + (rnd() - 0.5) * 380 * values.spread,
+                    y: baseY + (rnd() - 0.5) * 200 * values.spread,
+                    rx: (90 + rnd() * 140) * values.spread,
+                    ry: (50 + rnd() * 80) * values.spread,
+                    rot: rnd() * Math.PI
+                });
+            }
+            function density(x, y) {
+                let d = 0;
+                for (const lo of lobes) {
+                    const dx = x - lo.x, dy = y - lo.y;
+                    const u = (dx * Math.cos(lo.rot) + dy * Math.sin(lo.rot)) / lo.rx;
+                    const v = (-dx * Math.sin(lo.rot) + dy * Math.cos(lo.rot)) / lo.ry;
+                    d += Math.exp(-(u * u + v * v) * 1.6);
+                }
+                return d;
+            }
+
+            // shared flow direction field
+            function flowAngle(x, y) {
+                return (noise.fbm(x * 0.002 + no, y * 0.002 + no, 3) - 0.5) *
+                    Math.PI * 0.9 * values.wind - 0.15;
+            }
+
+            const gauss = () => (rnd() + rnd() + rnd() - 1.5) * 2;
+            let placed = 0, attempts = 0;
+            while (placed < values.birds && attempts++ < values.birds * 14) {
+                const lo = lobes[Math.floor(rnd() * lobes.length)];
+                const u = gauss() * 0.62, v = gauss() * 0.62;
+                const x = lo.x + (u * Math.cos(lo.rot) - v * Math.sin(lo.rot)) * lo.rx;
+                const y = lo.y + (u * Math.sin(lo.rot) + v * Math.cos(lo.rot)) * lo.ry;
+                if (x < 55 || x > 945 || y < 60 || y > 660) continue;
+                // size: small at the dense core (far) feel — vary mildly with noise
+                const d = density(x, y);
+                if (rnd() > d * 1.1) continue;
+                const size = 3 + rnd() * 5 + (1 - Math.min(1, d)) * 3;
+                const ang = flowAngle(x, y) + (rnd() - 0.5) * 0.5;
+                const flap = 0.5 + rnd() * 1.6;       // wing openness
+                const w = size < 5.5 ? 0.55 : 0.9;
+                // bird glyph: two wing strokes meeting at the body
+                for (const sgn of [-1, 1]) {
+                    const wing = [];
+                    for (let s = 0; s <= 4; s++) {
+                        const uu = s / 4;
+                        const wx = uu * size * sgn;
+                        const wy = -Math.sin(uu * Math.PI * 0.5) * size * 0.55 * flap;
+                        wing.push([
+                            x + wx * Math.cos(ang) - wy * Math.sin(ang),
+                            y + wx * Math.sin(ang) + wy * Math.cos(ang)
+                        ]);
+                    }
+                    lines.push({ pts: wing, w });
+                }
+                placed++;
+            }
+
+            // low evening sun, partly behind the hills
+            const sunX = 700 + rnd() * 140, sunY = 690, sunR = 95;
+
+            // hill silhouettes with occlusion
+            const X0 = 40, DXs = 3, NX = Math.floor(920 / DXs) + 1;
+            const minY = new Float32Array(NX).fill(1e9);
+            const ridges = [
+                { base: 800, amp: 60, f: 0.004, w: 1.3 },
+                { base: 760, amp: 45, f: 0.005, w: 0.9 },
+                { base: 730, amp: 30, f: 0.006, w: 0.6 }
+            ];
+            const ridgeYs = [];
+            for (let r = 0; r < ridges.length; r++) {
+                const rd = ridges[r];
+                const ys = new Float32Array(NX);
+                for (let i = 0; i < NX; i++) {
+                    const x = X0 + i * DXs;
+                    ys[i] = rd.base - Math.pow(noise.fbm(x * rd.f + no + r * 11, r * 7, 3), 1.3) * rd.amp * 2;
+                }
+                let run = null;
+                for (let i = 0; i < NX; i++) {
+                    if (ys[i] < minY[i] - 0.4) {
+                        if (!run) run = [];
+                        run.push([X0 + i * DXs, ys[i]]);
+                    } else if (run) {
+                        if (run.length > 2) lines.push({ pts: run, w: rd.w });
+                        run = null;
+                    }
+                }
+                if (run && run.length > 2) lines.push({ pts: run, w: rd.w });
+                for (let i = 0; i < NX; i++) if (ys[i] < minY[i]) minY[i] = ys[i];
+                ridgeYs.push(ys);
+            }
+            // sun clipped by the hills
+            {
+                let run = null;
+                for (let i = 0; i <= 140; i++) {
+                    const a = i / 140 * Math.PI * 2;
+                    const x = sunX + sunR * Math.cos(a), y = sunY + sunR * Math.sin(a);
+                    const gi = Math.round((x - X0) / DXs);
+                    const vis = gi >= 0 && gi < NX && y < minY[gi] - 0.4;
+                    if (vis) {
+                        if (!run) run = [];
+                        run.push([x, y]);
+                    } else if (run) {
+                        if (run.length > 2) lines.push({ pts: run, w: 1.2 });
+                        run = null;
+                    }
+                }
+                if (run && run.length > 2) lines.push({ pts: run, w: 1.2 });
+            }
+            // bare tree on the front hill
+            {
+                const tx = 150 + rnd() * 180;
+                const gi = Math.round((tx - X0) / DXs);
+                const ty = ridgeYs[0][gi];
+                (function branch(p, ang, len, d) {
+                    const q = [p[0] + Math.sin(ang) * len, p[1] - Math.cos(ang) * len];
+                    lines.push({ pts: [p, q], w: d > 3 ? 1.6 : 1.0 });
+                    if (d <= 0 || len < 4) return;
+                    const n = rnd() < 0.6 ? 2 : 3;
+                    for (let k = 0; k < n; k++) {
+                        branch(q, ang + (k - (n - 1) / 2) * (0.4 + rnd() * 0.4) + (rnd() - 0.5) * 0.2,
+                            len * (0.62 + rnd() * 0.15), d - 1);
+                    }
+                })([tx, ty], (rnd() - 0.5) * 0.15, 56, 5);
+            }
+            api.status(placed + " Vögel");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>
