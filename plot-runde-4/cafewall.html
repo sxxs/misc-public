@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Café-Wall — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>56 · Café-Wall-Illusion</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Die klassische <b>Café-Wall-Täuschung</b>: Versetzte
+            Reihen aus „hellen“ (leeren) und „dunklen“ (schraffierten) Ziegeln mit
+            dünner Mörtellinie. Obwohl alle Reihen exakt waagerecht sind, scheinen
+            sie zu kippen. Mit Wellen-Versatz kann das ganze Feld zu wogen
+            beginnen.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "cafewall",
+        params: [
+            { key: "cols", label: "Ziegel je Reihe", min: 6, max: 20, step: 1, value: 11 },
+            { key: "rows", label: "Reihen", min: 6, max: 22, step: 1, value: 13 },
+            { key: "shift", label: "Versatz je Reihe", min: 0, max: 0.5, step: 0.05, value: 0.25 },
+            { key: "wave", label: "Wellen-Versatz", min: 0, max: 1, step: 0.1, value: 0 }
+        ],
+        generate(api) {
+            const { values } = api;
+            const lines = [];
+            const M = 50, S = 900;
+            const cols = values.cols, rows = values.rows;
+            const bw = S / cols, bh = S / rows;
+
+            for (let r = 0; r < rows; r++) {
+                const y0 = M + r * bh, y1 = y0 + bh;
+                // mortar lines (the thin grout that drives the illusion)
+                lines.push({ pts: [[M, y0], [M + S, y0]], w: 0.6 });
+                // row offset: alternating, optionally modulated into a wave
+                let off = (r % 2) * values.shift * bw;
+                if (values.wave > 0) off += Math.sin(r / rows * Math.PI * 2) * values.wave * bw * 0.5;
+                for (let c = -1; c <= cols; c++) {
+                    const x0 = M + c * bw + off, x1 = x0 + bw;
+                    const xa = Math.max(M, x0), xb = Math.min(M + S, x1);
+                    if (xb <= xa) continue;
+                    // dark bricks (every other one) get hatching
+                    if (((c % 2) + 2) % 2 === 0) {
+                        for (let yy = y0 + 3; yy < y1; yy += 4.5) {
+                            lines.push({ pts: [[xa, yy], [xb, yy]], w: 0.7 });
+                        }
+                    }
+                    // vertical brick edges
+                    if (x0 >= M && x0 <= M + S) lines.push({ pts: [[x0, y0], [x0, y1]], w: 0.6 });
+                }
+            }
+            lines.push({ pts: [[M, M], [M + S, M], [M + S, M + S], [M, M + S]], closed: true, w: 1.4 });
+            lines.push({ pts: [[M, M + S], [M + S, M + S]], w: 0.6 });
+            api.status(cols + "×" + rows + " Ziegel");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

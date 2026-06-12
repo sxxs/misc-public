@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maurer-Rose — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>52 · Maurer-Rose</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Eine <b>Maurer-Rose</b>: Man läuft in festen
+            Grad-Schritten <i>d</i> über die Rosenkurve r = sin(n·θ) und verbindet
+            die Punkte mit Geraden. Aus einer Blüte wird ein dichtes, sich
+            selbst überlagerndes Liniengewebe — <b>ein einziger durchgehender
+            Pfad</b>. Parameter n und d stehen klein im Blatt.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "maurer-rose",
+        svgOpts: { width: 0.5 },
+        drawOpts: { width: 0.7, stroke: "rgba(22,33,62,0.85)" },
+        params: [
+            { key: "n", label: "Blütenzahl n", min: 2, max: 13, step: 1, value: 6 },
+            { key: "d", label: "Schrittwinkel d", min: 11, max: 179, step: 1, value: 71 },
+            { key: "petals", label: "Rosenkurve zeigen", value: "an", options: [
+                { value: "an", label: "Ja (zweite Lage)" },
+                { value: "aus", label: "Nein" }
+            ]}
+        ],
+        onRegen(rnd, params) {
+            for (const p of params) {
+                if (p.key === "n") p._set(2 + Math.floor(rnd() * 12));
+                if (p.key === "d") p._set(11 + Math.floor(rnd() * 168));
+            }
+        },
+        generate(api) {
+            const { values } = api;
+            const lines = [];
+            const CX = 500, CY = 480, R = 420;
+            const n = values.n, d = values.d;
+
+            // the Maurer walk: 361 points at d-degree steps
+            const walk = [];
+            for (let i = 0; i <= 360; i++) {
+                const k = i * d * Math.PI / 180;
+                const r = Math.sin(n * k) * R;
+                walk.push([CX + r * Math.cos(k), CY + r * Math.sin(k)]);
+            }
+            lines.push({ pts: walk, w: 0.7 });
+
+            // the smooth underlying rose, lighter
+            if (values.petals === "an") {
+                const rose = [];
+                for (let i = 0; i <= 720; i++) {
+                    const k = i * 0.5 * Math.PI / 180;
+                    const r = Math.sin(n * k) * R;
+                    rose.push([CX + r * Math.cos(k), CY + r * Math.sin(k)]);
+                }
+                lines.push({ pts: rose, w: 1.1 });
+            }
+
+            // caption
+            const f = "R = SIN(" + n + "θ),  d = " + d + "°";
+            const fw = PR4Font.textWidth(f, 18);
+            lines.push({ pts: [[500 - fw / 2 - 14, 922], [500 + fw / 2 + 14, 922],
+                [500 + fw / 2 + 14, 962], [500 - fw / 2 - 14, 962]], closed: true, w: 1.0 });
+            for (const s of PR4Font.textCentered(f, 500, 942, 18)) lines.push({ pts: s, w: 0.9 });
+            api.status("n=" + n + ", d=" + d + "°");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

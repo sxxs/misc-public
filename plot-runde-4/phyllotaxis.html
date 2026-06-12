@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phyllotaxis — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>51 · Phyllotaxis</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div class="control">
+                <label><span>Monogramm (für Modus „Im Buchstaben“)</span></label>
+                <input id="textInput" type="text" value="W" maxlength="2">
+            </div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Die Samenpackung der Sonnenblume: Jeder Samen sitzt im
+            <b>goldenen Winkel</b> (137,5°) zum vorigen, Radius ∝ √n. Es entstehen
+            die typischen ineinander laufenden Spiralarme (Fibonacci). Die Samen
+            innerhalb eines <b>Monogramms</b> werden größer/gefüllt — der
+            Buchstabe erscheint im Blütenstand.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    const app = PR4App({
+        svgName: "phyllotaxis",
+        params: [
+            { key: "count", label: "Samen", min: 300, max: 2400, step: 100, value: 1100 },
+            { key: "angle", label: "Winkel (°)", min: 136, max: 139, step: 0.1, value: 137.5 },
+            { key: "shape", label: "Samenform", value: "circ", options: [
+                { value: "circ", label: "Kreise" },
+                { value: "petal", label: "Blütenblätter" },
+                { value: "tri", label: "Dreiecke" }
+            ]},
+            { key: "mode", label: "Monogramm", value: "aus", options: [
+                { value: "aus", label: "Aus" },
+                { value: "fill", label: "Im Buchstaben gefüllt" },
+                { value: "only", label: "Nur im Buchstaben" }
+            ]}
+        ],
+        onRegen(rnd, params) {
+            for (const p of params) {
+                if (p.key === "angle") p._set(Math.round((137 + rnd() * 1.2) * 10) / 10);
+            }
+        },
+        generate(api) {
+            const { values } = api;
+            const lines = [];
+            const CX = 500, CY = 500;
+            const N = values.count;
+            const ga = values.angle * Math.PI / 180;
+            const Rmax = 440;
+            const c = Rmax / Math.sqrt(N);
+
+            const mask = values.mode !== "aus"
+                ? PR4Font.makeTextMask(PR4Font.normalize(
+                    document.getElementById("textInput").value).slice(0, 2),
+                    CX, CY, 760, 230) : null;
+
+            function shapeAt(x, y, r, kind, ang) {
+                if (kind === "circ") {
+                    const pts = [];
+                    const seg = Math.max(7, Math.round(r * 1.6));
+                    for (let i = 0; i <= seg; i++) {
+                        const a = i / seg * Math.PI * 2;
+                        pts.push([x + r * Math.cos(a), y + r * Math.sin(a)]);
+                    }
+                    return { pts, closed: true };
+                }
+                if (kind === "tri") {
+                    const pts = [];
+                    for (let i = 0; i <= 3; i++) {
+                        const a = ang + i / 3 * Math.PI * 2;
+                        pts.push([x + r * Math.cos(a), y + r * Math.sin(a)]);
+                    }
+                    return { pts, closed: true };
+                }
+                // petal: small lens oriented outward
+                const pts = [];
+                for (let i = 0; i <= 12; i++) {
+                    const t = i / 12;
+                    const along = (t - 0.5) * 2 * r * 1.6;
+                    const wide = Math.cos((t - 0.5) * Math.PI) * r * 0.7;
+                    pts.push([x + Math.cos(ang) * along - Math.sin(ang) * wide,
+                              y + Math.sin(ang) * along + Math.cos(ang) * wide]);
+                }
+                for (let i = 12; i >= 0; i--) {
+                    const t = i / 12;
+                    const along = (t - 0.5) * 2 * r * 1.6;
+                    const wide = -Math.cos((t - 0.5) * Math.PI) * r * 0.7;
+                    pts.push([x + Math.cos(ang) * along - Math.sin(ang) * wide,
+                              y + Math.sin(ang) * along + Math.cos(ang) * wide]);
+                }
+                return { pts, closed: true };
+            }
+
+            let drawn = 0;
+            for (let n = 1; n <= N; n++) {
+                const r = c * Math.sqrt(n);
+                const a = n * ga;
+                const x = CX + r * Math.cos(a), y = CY + r * Math.sin(a);
+                if (Math.hypot(x - CX, y - CY) > Rmax) continue;
+                const inLetter = mask ? mask(x, y) : false;
+                if (values.mode === "only" && !inLetter) continue;
+                const baseR = c * 0.6;
+                const sr = inLetter && values.mode === "fill" ? baseR * 1.55 : baseR;
+                const w = inLetter && values.mode === "fill" ? 1.1 : 0.7;
+                lines.push(Object.assign(shapeAt(x, y, sr, values.shape, a + Math.PI / 2), { w }));
+                if (inLetter && values.mode === "fill") {
+                    // a dot in the middle to "fill"
+                    lines.push({ pts: [[x - 1, y], [x + 1, y]], w: 1.4 });
+                }
+                drawn++;
+            }
+            api.status(drawn + " Samen · Winkel " + values.angle + "°");
+            api.done(lines);
+        }
+    });
+    document.getElementById("textInput").addEventListener("input",
+        PR4.debounce(() => app.start(), 350));
+    </script>
+</body>
+</html>

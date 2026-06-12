@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apollonisches Netz — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>50 · Apollonisches Netz</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div class="control">
+                <label><span>Monogramm-Buchstabe</span></label>
+                <input id="textInput" type="text" value="W" maxlength="1">
+            </div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Ein <b>apollonisches Kreispacking</b>: Drei sich
+            berührende Kreise werden über den Satz von Descartes immer feiner mit
+            tangentialen Kreisen gefüllt — ein Fraktal aus reinen Kreisen, perfekt
+            für den Plotter. Optional sitzt ein kleines Monogramm im größten
+            Kreis.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    /* Circles use complex curvature-center coordinates (Descartes / complex
+     * Descartes theorem). A circle = {b: curvature, c:[re,im] center*curvature}. */
+    const app = PR4App({
+        svgName: "apollon",
+        params: [
+            { key: "minR", label: "Kleinster Radius", min: 2, max: 16, step: 1, value: 5 },
+            { key: "ratio", label: "Aufteilung", min: 0.3, max: 0.5, step: 0.02, value: 0.5 },
+            { key: "mono", label: "Monogramm", value: "aus", options: [
+                { value: "aus", label: "Kein" },
+                { value: "an", label: "Im größten Kreis" }
+            ]}
+        ],
+        generate(api) {
+            const { values } = api;
+            const lines = [];
+            const CX = 500, CY = 500, R = 452;
+            const minR = values.minR;
+
+            // complex helpers
+            const cadd = (a, b) => [a[0] + b[0], a[1] + b[1]];
+            const csub = (a, b) => [a[0] - b[0], a[1] - b[1]];
+            const cmul = (a, b) => [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]];
+            const cscale = (a, s) => [a[0] * s, a[1] * s];
+            const csqrt = (a) => {
+                const m = Math.hypot(a[0], a[1]);
+                const re = Math.sqrt(Math.max(0, (m + a[0]) / 2));
+                let im = Math.sqrt(Math.max(0, (m - a[0]) / 2));
+                if (a[1] < 0) im = -im;
+                return [re, im];
+            };
+            // circle: { b: curvature (signed), z: centre, K: b*z }
+            const mk = (b, z) => ({ b, z, K: cscale(z, b) });
+
+            const all = [];
+            const seen = new Set();
+            const keyOf = (c) => Math.round(c.z[0]) + "," + Math.round(c.z[1]) + "," +
+                Math.round(Math.abs(1 / c.b));
+            function tryAdd(c) {
+                const r = Math.abs(1 / c.b);
+                if (!isFinite(r) || r < minR || r > R + 1) return false;
+                const k = keyOf(c);
+                if (seen.has(k)) return false;
+                seen.add(k);
+                all.push(c);
+                return true;
+            }
+
+            // initial config: outer circle + two inner circles summing to R
+            const r1 = values.ratio * R, r2 = R - r1;
+            const c0 = mk(-1 / R, [CX, CY]);
+            const c1 = mk(1 / r1, [CX - (R - r1), CY]);
+            const c2 = mk(1 / r2, [CX + (R - r2), CY]);
+            // Descartes 4th circle of (c0,c1,c2), both solutions (top/bottom)
+            const sumB = c0.b + c1.b + c2.b;
+            const rootB = 2 * Math.sqrt(Math.abs(c0.b * c1.b + c1.b * c2.b + c2.b * c0.b));
+            const sumK = cadd(cadd(c0.K, c1.K), c2.K);
+            const rootK = cscale(csqrt(cadd(cadd(cmul(c0.K, c1.K), cmul(c1.K, c2.K)),
+                cmul(c2.K, c0.K))), 2);
+            for (const c of [c0, c1, c2]) tryAdd(c);
+            const seeds3 = [];
+            for (const sb of [sumB + rootB, sumB - rootB]) {
+                for (const sk of [cadd(sumK, rootK), csub(sumK, rootK)]) {
+                    const z = cscale(sk, 1 / sb);
+                    const cc = mk(sb, z);
+                    // verify tangency to c0 (centre distance ~ |r0 - r|)
+                    const r = Math.abs(1 / sb);
+                    const dd = Math.hypot(z[0] - CX, z[1] - CY);
+                    if (Math.abs(dd - (R - r)) < 1.5 && r < R) {
+                        if (tryAdd(cc)) seeds3.push(cc);
+                    }
+                }
+            }
+
+            // reflective recursion: 4th-other = 2(K1+K2+K3) - K4
+            let count = 0;
+            function other(a, b, c, d) {
+                const nb = 2 * (a.b + b.b + c.b) - d.b;
+                const nK = csub(cscale(cadd(cadd(a.K, b.K), c.K), 2), d.K);
+                return mk(nb, cscale(nK, 1 / nb));
+            }
+            function quad(c1, c2, c3, c4) {
+                if (count > 9000) return;
+                // generate the circle opposite each of the three "parents", keep c4 fixed
+                for (const [a, b, c, d] of [[c2, c3, c4, c1], [c1, c3, c4, c2], [c1, c2, c4, c3]]) {
+                    const nc = other(a, b, c, d);
+                    if (Math.abs(1 / nc.b) < minR) continue;
+                    if (tryAdd(nc)) { count++; quad(a, b, c, nc); }
+                }
+            }
+            for (const s3 of seeds3) quad(c0, c1, c2, s3);
+
+            for (const c of all) {
+                const r = Math.abs(1 / c.b);
+                const seg = Math.max(12, Math.round(r));
+                const pts = [];
+                for (let i = 0; i <= seg; i++) {
+                    const a = i / seg * Math.PI * 2;
+                    pts.push([c.z[0] + r * Math.cos(a), c.z[1] + r * Math.sin(a)]);
+                }
+                lines.push({ pts, closed: true, w: Math.max(0.5, Math.min(1.4, r / 70)) });
+            }
+            if (values.mono === "an") {
+                let big = null;
+                for (const c of all) {
+                    const r = Math.abs(1 / c.b);
+                    if (r < R - 1 && (!big || r > big.r)) big = { z: c.z, r };
+                }
+                if (big) {
+                    const mono = PR4Font.normalize(
+                        document.getElementById("textInput").value || "W").slice(0, 1);
+                    for (const st of PR4Font.textCentered(mono, big.z[0], big.z[1], big.r * 1.1)) {
+                        lines.push({ pts: st, w: 1.4 });
+                    }
+                }
+            }
+            api.status(all.length + " Kreise");
+            api.done(lines);
+        }
+    });
+    document.getElementById("textInput").addEventListener("input",
+        PR4.debounce(() => app.start(), 350));
+    </script>
+</body>
+</html>
