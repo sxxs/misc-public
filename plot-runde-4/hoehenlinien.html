@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Höhenlinien-Monogramm — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>57 · Höhenlinien-Monogramm</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div class="control">
+                <label><span>Wort / Symbol</span></label>
+                <input id="textInput" type="text" value="WIAI" maxlength="8">
+            </div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Dein Wort als <b>Insel auf einer Landkarte</b>: Aus der
+            Buchstaben-Maske wird ein weiches Höhenfeld berechnet, das in
+            geschachtelten <b>Höhenlinien</b> (Isokonturen) gezeichnet wird. Der
+            Schriftzug erhebt sich wie ein Gebirge, umgeben von topografischen
+            Ringen.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    const app = PR4App({
+        svgName: "hoehenlinien",
+        svgOpts: { width: 0.8 },
+        drawOpts: { width: 1.0 },
+        params: [
+            { key: "lines", label: "Höhenlinien", min: 8, max: 30, step: 1, value: 18 },
+            { key: "smooth", label: "Weichheit", min: 3, max: 16, step: 1, value: 7 },
+            { key: "peaks", label: "Gipfel-Ringe", value: "an", options: [
+                { value: "an", label: "Innen verdichtet" },
+                { value: "aus", label: "Gleichmäßig" }
+            ]}
+        ],
+        generate(api) {
+            const { values } = api;
+            const lines = [];
+            const word = PR4Font.normalize(document.getElementById("textInput").value).slice(0, 8);
+            const capH = Math.min(420, 820 / Math.max(1, PR4Font.textWidth(word, 100) / 100));
+            const inside = PR4Font.makeTextMask(word, 500, 500, capH, Math.max(14, capH * 0.22));
+
+            // sample mask on a grid, then box-blur repeatedly -> smooth height field
+            const G = 200;
+            const M = 40, S = 920;
+            const mapToPage = (g) => M + g * (S / (G - 1));
+            let f = new Float32Array(G * G);
+            for (let y = 0; y < G; y++) {
+                for (let x = 0; x < G; x++) {
+                    f[y * G + x] = inside(mapToPage(x), mapToPage(y)) ? 1 : 0;
+                }
+            }
+            // separable box blur, several passes
+            function blur(src, rad) {
+                const tmp = new Float32Array(G * G);
+                const out = new Float32Array(G * G);
+                for (let y = 0; y < G; y++) {
+                    for (let x = 0; x < G; x++) {
+                        let s = 0, n = 0;
+                        for (let k = -rad; k <= rad; k++) {
+                            const xx = x + k;
+                            if (xx >= 0 && xx < G) { s += src[y * G + xx]; n++; }
+                        }
+                        tmp[y * G + x] = s / n;
+                    }
+                }
+                for (let y = 0; y < G; y++) {
+                    for (let x = 0; x < G; x++) {
+                        let s = 0, n = 0;
+                        for (let k = -rad; k <= rad; k++) {
+                            const yy = y + k;
+                            if (yy >= 0 && yy < G) { s += tmp[yy * G + x]; n++; }
+                        }
+                        out[y * G + x] = s / n;
+                    }
+                }
+                return out;
+            }
+            for (let p = 0; p < values.smooth; p++) f = blur(f, 2);
+
+            let lo = 1, hi = 0;
+            for (let i = 0; i < f.length; i++) { lo = Math.min(lo, f[i]); hi = Math.max(hi, f[i]); }
+            const sample = (x, y) => f[y * G + x];
+
+            const K = values.lines;
+            for (let k = 0; k < K; k++) {
+                let t;
+                if (values.peaks === "an") {
+                    // denser thresholds near the peak (inside the letter)
+                    t = lo + (hi - lo) * Math.pow((k + 0.5) / K, 0.7);
+                } else {
+                    t = lo + (hi - lo) * (k + 0.5) / K;
+                }
+                const cs = PR4.contourLines(sample, G, G, t, mapToPage, mapToPage);
+                const w = t > (lo + hi) * 0.5 ? 1.1 : 0.7;
+                for (const c of cs) lines.push({ pts: c, w });
+            }
+            // faint title strip
+            for (const s of PR4Font.textCentered(word, 500, 975, 16)) lines.push({ pts: s, w: 0.7 });
+            api.status(K + " Höhenlinien · „" + word + "“");
+            api.done(lines);
+        }
+    });
+    document.getElementById("textInput").addEventListener("input",
+        PR4.debounce(() => app.start(), 350));
+    </script>
+</body>
+</html>

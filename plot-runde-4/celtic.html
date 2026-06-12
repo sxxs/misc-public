@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keltischer Knoten — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>54 · Keltischer Knoten</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div class="control">
+                <label><span>Aussparung (Wort)</span></label>
+                <input id="textInput" type="text" value="" maxlength="4" placeholder="leer = voll">
+            </div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Ein <b>keltisches Geflecht</b>: Zwei Scharen
+            diagonaler Bänder weben sich über- und untereinander, an jeder
+            Kreuzung eine Lücke für das Band, das darunter durchläuft. Gibt man
+            ein Wort ein, bleibt es als Aussparung im Geflecht stehen.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    const app = PR4App({
+        svgName: "celtic",
+        params: [
+            { key: "spacing", label: "Bandabstand", min: 30, max: 90, step: 5, value: 55 },
+            { key: "gap", label: "Kreuzungslücke", min: 0.15, max: 0.5, step: 0.05, value: 0.3 },
+            { key: "doubled", label: "Doppellinien", value: "an", options: [
+                { value: "an", label: "Bänder (Doppellinie)" },
+                { value: "aus", label: "Einfache Linien" }
+            ]}
+        ],
+        generate(api) {
+            const { values } = api;
+            const lines = [];
+            const M = 50, S = 900, LO = M, HI = M + S;
+            const d = values.spacing;
+            const gap = d * values.gap;
+
+            const txt = document.getElementById("textInput").value.trim();
+            const mask = txt ? PR4Font.makeTextMask(
+                PR4Font.normalize(txt).slice(0, 4), 500, 500,
+                Math.min(560, 860 / Math.max(1, PR4Font.textWidth(PR4Font.normalize(txt), 100) / 100)),
+                90) : null;
+            const blanked = (x, y) => mask ? mask(x, y) : false;
+
+            // strand family A: y - x = a (slope +1); B: y + x = b (slope -1)
+            // crossing of A(a) and B(b): x=(b-a)/2, y=(b+a)/2
+            const offsets = [];
+            for (let k = -40; k <= 40; k++) offsets.push(k * d);
+
+            function strand(fixed, fam, bandShift) {
+                // sample along the line, break at "under" crossings and outside box
+                const pts = [];
+                let run = null;
+                const flush = () => { if (run && run.length > 1) pts.push(run); run = null; };
+                for (let t = -1400; t <= 1400; t += d / 14) {
+                    let x, y;
+                    if (fam === "A") { x = t; y = t + fixed; }    // y - x = fixed
+                    else { x = t; y = -t + fixed; }               // y + x = fixed
+                    // band offset perpendicular to the strand
+                    if (bandShift) {
+                        const nx = fam === "A" ? -Math.SQRT1_2 : Math.SQRT1_2;
+                        const ny = Math.SQRT1_2;
+                        x += nx * bandShift; y += ny * bandShift;
+                    }
+                    if (x < LO || x > HI || y < LO || y > HI || blanked(x, y)) { flush(); continue; }
+                    // nearest crossing along this line: find index of the other family
+                    // A(a=fixed) meets B(b): at x=(b-fixed)/2 -> b = 2x + fixed (since y+x=b)
+                    // distance to nearest crossing measured along t:
+                    let bUnder;
+                    if (fam === "A") {
+                        const b = y + x;                 // current b value
+                        const nb = Math.round(b / d) * d;
+                        const cx = (nb - fixed) / 2;     // crossing x
+                        const dist = Math.abs(x - cx) * Math.SQRT2;
+                        const k = Math.round(fixed / d), m = Math.round(nb / d);
+                        const under = ((k + m) & 1) === 1;
+                        if (under && dist < gap / 2) { flush(); continue; }
+                    } else {
+                        const a = y - x;
+                        const na = Math.round(a / d) * d;
+                        const cx = (fixed - na) / 2;
+                        const dist = Math.abs(x - cx) * Math.SQRT2;
+                        const k = Math.round(na / d), m = Math.round(fixed / d);
+                        const under = ((k + m) & 1) === 0;   // opposite parity for B
+                        if (under && dist < gap / 2) { flush(); continue; }
+                    }
+                    if (!run) run = [];
+                    run.push([x, y]);
+                }
+                flush();
+                return pts;
+            }
+
+            const bandOff = values.doubled === "an" ? [-d * 0.16, d * 0.16] : [0];
+            for (const fam of ["A", "B"]) {
+                for (const fixed of offsets) {
+                    for (const bs of bandOff) {
+                        for (const seg of strand(fixed, fam, bs)) {
+                            lines.push({ pts: seg, w: values.doubled === "an" ? 0.7 : 1.0 });
+                        }
+                    }
+                }
+            }
+            lines.push({ pts: [[LO, LO], [HI, LO], [HI, HI], [LO, HI]], closed: true, w: 1.6 });
+            api.status(txt ? "Aussparung: " + txt.toUpperCase() : "Volles Geflecht");
+            api.done(lines);
+        }
+    });
+    document.getElementById("textInput").addEventListener("input",
+        PR4.debounce(() => app.start(), 350));
+    </script>
+</body>
+</html>

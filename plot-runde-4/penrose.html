@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penrose-Parkett — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>53 · Penrose-Parkett</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Das berühmte <b>aperiodische Penrose-Parkett</b> (P3)
+            aus dicken und dünnen Rauten, erzeugt durch wiederholte Teilung der
+            Robinson-Dreiecke (goldener Schnitt). Es wiederholt sich nie exakt,
+            zeigt aber überall fünfzählige Sterne. Optional fließende
+            <b>Bögen</b>, die sich über die Kanten zu Schleifen verbinden.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "penrose",
+        params: [
+            { key: "gen", label: "Teilungen", min: 3, max: 7, step: 1, value: 5 },
+            { key: "decor", label: "Darstellung", value: "rhombi", options: [
+                { value: "rhombi", label: "Rauten" },
+                { value: "arcs", label: "Bögen" },
+                { value: "both", label: "Rauten + Bögen" }
+            ]},
+            { key: "clip", label: "Beschnitt", value: "circle", options: [
+                { value: "circle", label: "Kreis" },
+                { value: "none", label: "Voll" }
+            ]}
+        ],
+        generate(api) {
+            const { values } = api;
+            const lines = [];
+            const CX = 500, CY = 500, SC = 470;
+            const PHI = (1 + Math.sqrt(5)) / 2;
+            // complex helpers
+            const C = (re, im) => [re, im];
+            const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
+            const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
+            const mul = (a, s) => [a[0] * s, a[1] * s];
+            const rect = (r, th) => [r * Math.cos(th), r * Math.sin(th)];
+
+            // initial wheel of 10 Robinson triangles
+            let tris = [];
+            for (let i = 0; i < 10; i++) {
+                let b = rect(1, (2 * i - 1) * Math.PI / 10);
+                let c = rect(1, (2 * i + 1) * Math.PI / 10);
+                if (i % 2 === 0) { const t = b; b = c; c = t; }
+                tris.push([0, [0, 0], b, c]);   // [color, A, B, C]
+            }
+            // deflation
+            for (let g = 0; g < values.gen; g++) {
+                const next = [];
+                for (const [col, A, B, Bc] of tris) {
+                    if (col === 0) {
+                        const P = add(A, mul(sub(B, A), 1 / PHI));
+                        next.push([0, Bc, P, B]);
+                        next.push([1, P, Bc, A]);
+                    } else {
+                        const Q = add(B, mul(sub(A, B), 1 / PHI));
+                        const R = add(B, mul(sub(Bc, B), 1 / PHI));
+                        next.push([1, R, Bc, A]);
+                        next.push([1, Q, R, B]);
+                        next.push([0, R, Q, A]);
+                    }
+                }
+                tris = next;
+            }
+
+            const TP = (p) => [CX + p[0] * SC, CY + p[1] * SC];
+            const inClip = (p) => values.clip === "none" ||
+                Math.hypot(p[0] - CX, p[1] - CY) <= SC * 0.96;
+
+            // clean rhombus edges: draw legs A-B and A-C, dedupe shared edges
+            if (values.decor !== "arcs") {
+                const seen = new Set();
+                const key = (p, q) => {
+                    const a = Math.round(p[0] * 1e4) + "," + Math.round(p[1] * 1e4);
+                    const b = Math.round(q[0] * 1e4) + "," + Math.round(q[1] * 1e4);
+                    return a < b ? a + "|" + b : b + "|" + a;
+                };
+                for (const [col, A, B, Bc] of tris) {
+                    for (const [p, q] of [[A, B], [A, Bc]]) {
+                        const k = key(p, q);
+                        if (seen.has(k)) continue;
+                        seen.add(k);
+                        const P = TP(p), Q = TP(q);
+                        if (inClip(P) && inClip(Q)) lines.push({ pts: [P, Q], w: col === 1 ? 1.0 : 0.7 });
+                    }
+                }
+            }
+            // arcs: in each triangle, an arc near vertex B connecting the two legs
+            if (values.decor !== "rhombi") {
+                for (const [col, A, B, Bc] of tris) {
+                    // two arcs centred at B and at C-ish, radii by golden ratio
+                    for (const [center, e1, e2, rad] of [
+                        [B, A, Bc, col === 1 ? 0.5 / PHI : 0.5 - 0.5 / PHI]
+                    ]) {
+                        const d1 = sub(e1, center), d2 = sub(e2, center);
+                        const a1 = Math.atan2(d1[1], d1[0]), a2 = Math.atan2(d2[1], d2[0]);
+                        let da = a2 - a1;
+                        while (da > Math.PI) da -= 2 * Math.PI;
+                        while (da < -Math.PI) da += 2 * Math.PI;
+                        const r = rad;
+                        const pts = [];
+                        const steps = 10;
+                        let ok = true;
+                        for (let s = 0; s <= steps; s++) {
+                            const a = a1 + da * s / steps;
+                            const p = TP(add(center, rect(r, a)));
+                            if (!inClip(p)) { ok = false; break; }
+                            pts.push(p);
+                        }
+                        if (ok && pts.length > 1) lines.push({ pts, w: 0.8 });
+                    }
+                }
+            }
+            if (values.clip === "circle") {
+                const fr = [];
+                for (let i = 0; i <= 180; i++) {
+                    const a = i / 180 * Math.PI * 2;
+                    fr.push([CX + SC * 0.96 * Math.cos(a), CY + SC * 0.96 * Math.sin(a)]);
+                }
+                lines.push({ pts: fr, closed: true, w: 1.4 });
+            }
+            api.status(tris.length + " Dreiecke (" + values.gen + " Teilungen)");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>
