@@ -40,7 +40,12 @@
         params: [
             { key: "rings", label: "Text-Ringe", min: 3, max: 10, step: 1, value: 6 },
             { key: "grow", label: "Größenverlauf", min: 1, max: 2, step: 0.05, value: 1.35 },
-            { key: "spokes", label: "Speichen-Glyphen", min: 0, max: 32, step: 4, value: 16 }
+            { key: "spokes", label: "Speichen-Glyphen", min: 0, max: 32, step: 4, value: 16 },
+            { key: "ornament", label: "Ornamente", value: "reich", options: [
+                { value: "reich", label: "Reich (Bögen+Punkte+Zacken)" },
+                { value: "dezent", label: "Dezent (nur Bögen)" },
+                { value: "aus", label: "Aus" }
+            ]}
         ],
         generate(api) {
             const { rnd, values } = api;
@@ -72,6 +77,47 @@
                 }
             }
 
+            function ornamentRing(r, type) {
+                if (values.ornament === "aus") return;
+                const n = Math.max(8, Math.round(2 * Math.PI * r / 20));
+                if (type === 0 || values.ornament === "dezent") {
+                    // scallop arcs bulging outward
+                    for (let k = 0; k < n; k++) {
+                        const a0 = k / n * Math.PI * 2, a1 = (k + 1) / n * Math.PI * 2;
+                        const pts = [];
+                        for (let s = 0; s <= 8; s++) {
+                            const a = a0 + (a1 - a0) * s / 8;
+                            const rr = r + Math.sin(s / 8 * Math.PI) * 7;
+                            pts.push([CX + rr * Math.cos(a), CY + rr * Math.sin(a)]);
+                        }
+                        lines.push({ pts, w: 0.7 });
+                    }
+                } else if (type === 1) {
+                    // bead dots
+                    for (let k = 0; k < n; k++) {
+                        const a = (k + 0.5) / n * Math.PI * 2;
+                        const bx = CX + r * Math.cos(a), by = CY + r * Math.sin(a);
+                        const c = [];
+                        for (let i = 0; i <= 10; i++) {
+                            const aa = i / 10 * Math.PI * 2;
+                            c.push([bx + 3.2 * Math.cos(aa), by + 3.2 * Math.sin(aa)]);
+                        }
+                        lines.push({ pts: c, closed: true, w: 0.7 });
+                    }
+                } else {
+                    // triangle teeth pointing outward
+                    for (let k = 0; k < n; k++) {
+                        const a0 = k / n * Math.PI * 2, a1 = (k + 1) / n * Math.PI * 2;
+                        const am = (a0 + a1) / 2;
+                        lines.push({ pts: [
+                            [CX + r * Math.cos(a0), CY + r * Math.sin(a0)],
+                            [CX + (r + 9) * Math.cos(am), CY + (r + 9) * Math.sin(am)],
+                            [CX + r * Math.cos(a1), CY + r * Math.sin(a1)]
+                        ], w: 0.7 });
+                    }
+                }
+            }
+
             // text rings, separated by plain circles
             const R0 = 70, R1 = 440;
             const K = values.rings;
@@ -96,6 +142,7 @@
                     c.push([CX + rr * Math.cos(a), CY + rr * Math.sin(a)]);
                 }
                 lines.push({ pts: c, closed: true, w: 0.7 });
+                ornamentRing(rr + 9, k % 3);
                 r += band;
             }
             // center: first letter, large, with echo

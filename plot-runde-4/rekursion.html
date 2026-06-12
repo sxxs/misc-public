@@ -39,6 +39,14 @@
                 { value: "circle", label: "Kreis" },
                 { value: "tri", label: "Dreieck" }
             ]},
+            { key: "small", label: "Füllform", value: "same", options: [
+                { value: "same", label: "Wie Symbol" },
+                { value: "circle", label: "Kreise" },
+                { value: "tri", label: "Dreiecke" },
+                { value: "star", label: "Sterne" },
+                { value: "heart", label: "Herzen" }
+            ]},
+            { key: "hatch", label: "Schraffur-Anteil", min: 0, max: 1, step: 0.1, value: 0.3 },
             { key: "copies", label: "Kopien (Ziel)", min: 30, max: 220, step: 10, value: 110 },
             { key: "echo", label: "Echo-Tiefe", min: 0, max: 3, step: 1, value: 2 }
         ],
@@ -47,17 +55,18 @@
             const lines = [];
 
             // unit shape outline (max radius 1) at cx,cy scaled by r
-            function shapePts(cx, cy, r, samples) {
+            function shapePts(cx, cy, r, samples, kindArg) {
+                const kind = kindArg || values.shape;
                 const pts = [];
                 const n = samples || Math.max(16, Math.min(72, Math.round(r * 1.4)));
                 for (let i = 0; i <= n; i++) {
                     const t = i / n, a = t * Math.PI * 2;
                     let x, y;
-                    if (values.shape === "heart") {
+                    if (kind === "heart") {
                         x = 16 * Math.pow(Math.sin(a), 3) / 17;
                         y = -(13 * Math.cos(a) - 5 * Math.cos(2 * a) -
                               2 * Math.cos(3 * a) - Math.cos(4 * a)) / 17;
-                    } else if (values.shape === "star") {
+                    } else if (kind === "star") {
                         const seg = t * 10, k = Math.floor(seg), f = seg - k;
                         const r1 = k % 2 === 0 ? 1 : 0.45;
                         const r2 = k % 2 === 0 ? 0.45 : 1;
@@ -65,7 +74,7 @@
                         const a2 = (k + 1) / 10 * Math.PI * 2 - Math.PI / 2;
                         x = r1 * Math.cos(a1) + (r2 * Math.cos(a2) - r1 * Math.cos(a1)) * f;
                         y = r1 * Math.sin(a1) + (r2 * Math.sin(a2) - r1 * Math.sin(a1)) * f;
-                    } else if (values.shape === "tri") {
+                    } else if (kind === "tri") {
                         const seg = t * 3, k = Math.floor(seg), f = seg - k;
                         const va = (k) => [Math.cos(k / 3 * Math.PI * 2 - Math.PI / 2),
                                            Math.sin(k / 3 * Math.PI * 2 - Math.PI / 2)];
@@ -110,13 +119,40 @@
                     if (!probe.every(inside)) continue;
                     if (!placed.every(q => Math.hypot(q.x - px, q.y - py) > (q.r + r) * 1.06)) continue;
                     placed.push({ x: px, y: py, r });
-                    lines.push({ pts: shapePts(px, py, r), closed: true });
-                    // echo: shrunken copies inside the larger ones
-                    let er = r, depth = 0;
-                    while (depth < values.echo && er > 18) {
-                        er *= 0.62;
-                        lines.push({ pts: shapePts(px, py, er), closed: true });
-                        depth++;
+                    const kind = values.small === "same" ? values.shape : values.small;
+                    const outline = shapePts(px, py, r, 28, kind);
+                    lines.push({ pts: outline, closed: true });
+                    if (rnd() < values.hatch) {
+                        // hatch the small shape: chords clipped by its outline
+                        const inPoly = (x, y) => {
+                            let c = false;
+                            for (let ii = 0, jj = outline.length - 1; ii < outline.length; jj = ii++) {
+                                if ((outline[ii][1] > y) !== (outline[jj][1] > y) &&
+                                    x < (outline[jj][0] - outline[ii][0]) * (y - outline[ii][1]) /
+                                        (outline[jj][1] - outline[ii][1]) + outline[ii][0]) c = !c;
+                            }
+                            return c;
+                        };
+                        for (let yy = py - r; yy <= py + r; yy += Math.max(4, r / 5)) {
+                            let run = null;
+                            for (let xx = px - r; xx <= px + r; xx += 2.5) {
+                                if (inPoly(xx, yy)) {
+                                    if (!run) run = [xx, yy];
+                                } else if (run) {
+                                    lines.push([run, [xx, yy]]);
+                                    run = null;
+                                }
+                            }
+                            if (run) lines.push([run, [px + r, yy]]);
+                        }
+                    } else {
+                        // echo: shrunken copies inside the larger ones
+                        let er = r, depth = 0;
+                        while (depth < values.echo && er > 18) {
+                            er *= 0.62;
+                            lines.push({ pts: shapePts(px, py, er, 24, kind), closed: true });
+                            depth++;
+                        }
                     }
                 }
             }

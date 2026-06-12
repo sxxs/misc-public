@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echo-Tunnel — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>45 · Echo-Tunnel</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Echo + Perspektive: Eine geometrische Form wird
+            Schritt für Schritt <b>geschrumpft, gedreht und Richtung
+            Fluchtpunkt geschoben</b> — ein Sog in die Tiefe. Optional verbinden
+            Kanten-Strahlen die Ecken zu einem Drahtgitter-Tunnel.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "echo-tunnel",
+        params: [
+            { key: "shape", label: "Form", value: "sq", options: [
+                { value: "sq", label: "Quadrat" },
+                { value: "hex", label: "Sechseck" },
+                { value: "tri", label: "Dreieck" },
+                { value: "star", label: "Stern" },
+                { value: "circ", label: "Kreis" }
+            ]},
+            { key: "steps", label: "Echo-Schritte", min: 14, max: 90, step: 2, value: 44 },
+            { key: "twist", label: "Drehung pro Schritt (°)", min: -10, max: 10, step: 0.5, value: 3 },
+            { key: "drift", label: "Fluchtpunkt-Versatz", min: 0, max: 300, step: 10, value: 150 },
+            { key: "rays", label: "Kanten-Strahlen", value: "on", options: [
+                { value: "on", label: "An" },
+                { value: "off", label: "Aus" }
+            ]}
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+            const N = values.steps;
+            const twist = values.twist * Math.PI / 180;
+            // vanishing point, offset from the page centre
+            const va = rnd() * Math.PI * 2;
+            const VP = [500 + Math.cos(va) * values.drift, 500 + Math.sin(va) * values.drift];
+
+            function ring(kind, cx, cy, r, rot) {
+                const pts = [];
+                const M = kind === "circ" ? 60 : kind === "star" ? 10 :
+                    kind === "hex" ? 6 : kind === "tri" ? 3 : 4;
+                for (let i = 0; i <= M; i++) {
+                    let rad = r;
+                    let a = i / M * Math.PI * 2 + rot - Math.PI / 2;
+                    if (kind === "star") rad = (i % 2 === 0) ? r : r * 0.5;
+                    if (kind === "circ") a = i / 60 * Math.PI * 2 + rot;
+                    pts.push([cx + rad * Math.cos(a), cy + rad * Math.sin(a)]);
+                }
+                return pts;
+            }
+
+            const R0 = 455;
+            const SH = 0.93;                          // shrink per step
+            const ringsPts = [];
+            for (let i = 0; i < N; i++) {
+                const f = Math.pow(SH, i);
+                // pull toward the vanishing point with perspective easing
+                const cx = 500 + (VP[0] - 500) * (1 - f);
+                const cy = 500 + (VP[1] - 500) * (1 - f);
+                const pts = ring(values.shape, cx, cy, R0 * f, twist * i);
+                ringsPts.push(pts);
+                lines.push({ pts, closed: true, w: Math.max(0.5, 1.5 * f + 0.3) });
+            }
+            // wireframe rays: connect every corner of every 2nd ring
+            if (values.rays === "on" && values.shape !== "circ") {
+                const M = ringsPts[0].length - 1;
+                for (let v = 0; v < M; v++) {
+                    const pts = [];
+                    for (let i = 0; i < N; i += 1) pts.push(ringsPts[i][v]);
+                    lines.push({ pts, w: 0.55 });
+                }
+            }
+            api.status(N + " Echos Richtung Fluchtpunkt");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chladni-Figuren — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>48 · Chladni-Klangfiguren</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Die Knotenlinien einer <b>schwingenden Platte</b>
+            (Chladni-Figuren): Konturen von
+            cos(nπx)·cos(mπy) ± cos(mπx)·cos(nπy). Echte Physik, die wie
+            Ornament aussieht — die Formel mit den gewählten Moden steht klein
+            im Blatt.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "chladni",
+        params: [
+            { key: "n", label: "Mode n", min: 1, max: 9, step: 1, value: 3 },
+            { key: "m", label: "Mode m", min: 1, max: 9, step: 1, value: 5 },
+            { key: "mode", label: "Kopplung", value: "plus", options: [
+                { value: "plus", label: "Symmetrisch (+)" },
+                { value: "minus", label: "Antisymmetrisch (−)" }
+            ]},
+            { key: "bands", label: "Konturen", min: 1, max: 9, step: 2, value: 5 }
+        ],
+        onRegen(rnd, params) {
+            for (const p of params) {
+                if (p.key === "n") p._set(1 + Math.floor(rnd() * 9));
+                if (p.key === "m") p._set(1 + Math.floor(rnd() * 9));
+            }
+        },
+        generate(api) {
+            const { values } = api;
+            const lines = [];
+            const M = 70, S = 800;
+            const n = values.n, m = values.m;
+            const sgn = values.mode === "plus" ? 1 : -1;
+
+            const G = 220;
+            const field = new Float32Array(G * G);
+            for (let gy = 0; gy < G; gy++) {
+                for (let gx = 0; gx < G; gx++) {
+                    const x = gx / (G - 1), y = gy / (G - 1);
+                    field[gy * G + gx] =
+                        Math.cos(n * Math.PI * x) * Math.cos(m * Math.PI * y) +
+                        sgn * Math.cos(m * Math.PI * x) * Math.cos(n * Math.PI * y);
+                }
+            }
+            const mapC = (v) => M + v * (S / (G - 1));
+            // nodal line (0) plus symmetric side bands
+            const B = values.bands;
+            for (let b = 0; b < B; b++) {
+                const t = (b - (B - 1) / 2) * (1.4 / Math.max(1, B - 1) || 0);
+                const cs = PR4.contourLines((x, y) => field[y * G + x], G, G,
+                    B === 1 ? 0 : t, mapC, mapC);
+                const w = Math.abs(t) < 0.01 ? 1.5 : 0.7;
+                for (const c of cs) lines.push({ pts: c, w });
+            }
+            // plate frame, doubled
+            for (const e of [0, 7]) {
+                lines.push({ pts: [[M - e, M - e], [M + S + e, M - e],
+                    [M + S + e, M + S + e], [M - e, M + S + e]], closed: true, w: 1.2 });
+            }
+            // formula caption
+            const f = "COS(" + n + "πX)·COS(" + m + "πY) " +
+                (sgn > 0 ? "+" : "-") + " COS(" + m + "πX)·COS(" + n + "πY) = 0";
+            for (const s of PR4Font.textCentered(f, 500, 945, 15)) {
+                lines.push({ pts: s, w: 0.8 });
+            }
+            api.status("Moden n=" + n + ", m=" + m);
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

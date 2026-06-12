@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formen-Strömung — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>44 · Formen-Strömung</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Wie die Wort-Strömung, aber mit <b>geometrischen
+            Formen</b>: Dreiecke, Quadrate und Kreise treiben entlang der
+            Strömung. Innerhalb der großen <b>Makro-Form</b> sind sie größer und
+            <b>schraffiert gefüllt</b>, außerhalb klein und leer — Figur und
+            Grund aus demselben Konfetti.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "formen-stroemung",
+        params: [
+            { key: "macro", label: "Makro-Form", value: "circle", options: [
+                { value: "circle", label: "Kreis" },
+                { value: "tri", label: "Dreieck" },
+                { value: "ring", label: "Ring" },
+                { value: "diag", label: "Diagonale Welle" }
+            ]},
+            { key: "micro", label: "Klein-Formen", value: "mix", options: [
+                { value: "mix", label: "Mix" },
+                { value: "tri", label: "Nur Dreiecke" },
+                { value: "sq", label: "Nur Quadrate" },
+                { value: "circ", label: "Nur Kreise" }
+            ]},
+            { key: "count", label: "Formen", min: 300, max: 1500, step: 50, value: 800 },
+            { key: "flow", label: "Strömung", min: 0, max: 2, step: 0.1, value: 1 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const noise = PR4.makeNoise2D(rnd);
+            const no = rnd() * 60;
+            const lines = [];
+
+            function inMacro(x, y) {
+                const u = (x - 500) / 430, v = (y - 500) / 430;
+                if (values.macro === "circle") return Math.hypot(u, v) < 0.72;
+                if (values.macro === "ring") {
+                    const d = Math.hypot(u, v);
+                    return d > 0.42 && d < 0.78;
+                }
+                if (values.macro === "tri") {
+                    // equilateral triangle, apex up, half-plane tests
+                    const R = 0.82;
+                    const A = [0, -R], B = [R * 0.866, R * 0.5], C = [-R * 0.866, R * 0.5];
+                    const sign = (p, q, r) =>
+                        (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]);
+                    const d1 = sign([u, v], A, B), d2 = sign([u, v], B, C), d3 = sign([u, v], C, A);
+                    return (d1 >= 0 && d2 >= 0 && d3 >= 0) || (d1 <= 0 && d2 <= 0 && d3 <= 0);
+                }
+                return Math.abs(Math.sin((u + v) * 3.4)) < 0.42;
+            }
+
+            const flowA = (x, y) =>
+                (noise.fbm(x * 0.002 + no, y * 0.002 + no, 3) - 0.5) *
+                Math.PI * 1.6 * values.flow + 0.25;
+
+            // unit shapes with precomputed hatch chords (local coords, radius 1)
+            function shapePts(kind, n) {
+                const pts = [];
+                const corners = kind === "tri" ? 3 : 4;
+                if (kind === "circ") {
+                    for (let i = 0; i <= 12; i++) {
+                        const a = i / 12 * Math.PI * 2;
+                        pts.push([Math.cos(a), Math.sin(a)]);
+                    }
+                } else {
+                    for (let i = 0; i <= corners; i++) {
+                        const a = i / corners * Math.PI * 2 - Math.PI / 2;
+                        pts.push([Math.cos(a), Math.sin(a)]);
+                    }
+                }
+                return pts;
+            }
+            function hatchLocal(kind) {
+                // horizontal chords across the unit shape
+                const segs = [];
+                for (let yy = -0.7; yy <= 0.75; yy += 0.42) {
+                    let x0, x1;
+                    if (kind === "circ") {
+                        const h = Math.sqrt(Math.max(0, 1 - yy * yy));
+                        x0 = -h; x1 = h;
+                    } else if (kind === "tri") {
+                        // triangle with apex up (-90deg), base at y = +0.5
+                        if (yy < -0.9 || yy > 0.5) continue;
+                        const t = (yy + 1) / 1.5;
+                        x0 = -0.87 * t; x1 = 0.87 * t;
+                    } else {
+                        if (Math.abs(yy) > 0.68) continue;
+                        x0 = -0.7; x1 = 0.7;
+                    }
+                    if (x1 - x0 > 0.2) segs.push([[x0, yy], [x1, yy]]);
+                }
+                return segs;
+            }
+            const KINDS = values.micro === "mix" ? ["tri", "sq", "circ"] : [values.micro];
+            const HATCH = { tri: hatchLocal("tri"), sq: hatchLocal("sq"), circ: hatchLocal("circ") };
+
+            // occupancy to avoid overlaps
+            const taken = [];
+            let placed = 0, tries = 0;
+            while (placed < values.count && tries++ < values.count * 18) {
+                const x = 60 + rnd() * 880, y = 60 + rnd() * 880;
+                const inside = inMacro(x, y);
+                if (!inside && rnd() < 0.45) continue;       // sparser background
+                const r = inside ? 9 + rnd() * 13 : 3.5 + rnd() * 5;
+                let ok = true;
+                for (let i = taken.length - 1; i >= 0; i--) {
+                    const o = taken[i];
+                    const dd = (o[0] - x) ** 2 + (o[1] - y) ** 2;
+                    if (dd < (o[2] + r + 2) ** 2) { ok = false; break; }
+                }
+                if (!ok) continue;
+                taken.push([x, y, r]);
+                const kind = KINDS[Math.floor(rnd() * KINDS.length)];
+                const ang = flowA(x, y) + (kind === "circ" ? 0 : (rnd() - 0.5) * 0.3);
+                const ca = Math.cos(ang), sa = Math.sin(ang);
+                const T = (p) => [x + (p[0] * ca - p[1] * sa) * r, y + (p[0] * sa + p[1] * ca) * r];
+                const w = inside ? 1.0 : 0.6;
+                lines.push({ pts: shapePts(kind).map(T), closed: true, w });
+                if (inside) {
+                    for (const seg of HATCH[kind]) {
+                        lines.push({ pts: [T(seg[0]), T(seg[1])], w: w * 0.75 });
+                    }
+                }
+                placed++;
+            }
+            lines.push({ pts: [[40, 40], [960, 40], [960, 960], [40, 960]], closed: true, w: 1.2 });
+            api.status(placed + " Formen");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

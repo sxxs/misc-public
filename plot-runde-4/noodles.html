@@ -14,6 +14,10 @@
     <main>
         <section class="paper"><canvas id="canvas"></canvas></section>
         <section class="panel">
+            <div class="control">
+                <label><span>Wort (für Masken-Modus)</span></label>
+                <input id="textInput" type="text" value="HI" maxlength="5">
+            </div>
             <div id="controls"></div>
             <div class="buttons">
                 <button id="regen" class="primary">🎲 Neu</button>
@@ -27,15 +31,21 @@
         </section>
     </main>
     <script src="shared.js"></script>
+    <script src="font.js"></script>
     <script src="app.js"></script>
     <script>
     "use strict";
-    PR4App({
+    const app = PR4App({
         svgName: "noodles",
         params: [
             { key: "grid", label: "Raster", min: 8, max: 24, step: 1, value: 14 },
             { key: "thickness", label: "Dicke", min: 0.4, max: 0.8, step: 0.05, value: 0.65 },
-            { key: "maxLen", label: "Max. Länge", min: 4, max: 30, step: 1, value: 12 }
+            { key: "maxLen", label: "Max. Länge", min: 4, max: 30, step: 1, value: 12 },
+            { key: "mask", label: "Wort-Maske", value: "aus", options: [
+                { value: "aus", label: "Keine" },
+                { value: "neg", label: "Wort ausgespart (Negativ)" },
+                { value: "pos", label: "Nur im Wort (Positiv)" }
+            ]}
         ],
         generate(api) {
             const { rnd, values } = api;
@@ -44,6 +54,22 @@
             const cell = S / G;
             const occupied = new Uint8Array(G * G);
             const center = (cx, cy) => [M + (cx + 0.5) * cell, M + (cy + 0.5) * cell];
+            // word mask: block cells so the noodles leave (or form) the word
+            if (values.mask !== "aus") {
+                const word = PR4Font.normalize(document.getElementById("textInput").value).slice(0, 5);
+                const capH = Math.min(680, 860 / Math.max(1, PR4Font.textWidth(word, 100) / 100));
+                const inside = PR4Font.makeTextMask(word, 500, 500, capH, capH * 0.42);
+                for (let cy = 0; cy < G; cy++) {
+                    for (let cx = 0; cx < G; cx++) {
+                        const p = center(cx, cy);
+                        const inWord = inside(p[0], p[1]);
+                        if ((values.mask === "neg" && inWord) ||
+                            (values.mask === "pos" && !inWord)) {
+                            occupied[cy * G + cx] = 1;
+                        }
+                    }
+                }
+            }
 
             // place self-avoiding walks until the grid is full
             const noodles = [];
@@ -167,6 +193,8 @@
             api.done(lines);
         }
     });
+    document.getElementById("textInput").addEventListener("input",
+        PR4.debounce(() => app.start(), 350));
     </script>
 </body>
 </html>

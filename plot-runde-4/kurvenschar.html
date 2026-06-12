@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kurvenschar — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>42 · Kurvenschar</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Eine Kurvenfamilie, bei der <b>ein Parameter über die
+            Schar variiert</b> — raumfüllend wie ein gewebter Körper. Die Formel
+            steht klein in Hershey-Schrift im Blatt, wie auf einem
+            mathematischen Druck. Fünf Familien von Rosenkurven bis
+            Spirograph.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "kurvenschar",
+        svgOpts: { width: 0.7 },
+        drawOpts: { width: 0.9, stroke: "rgba(22,33,62,0.8)" },
+        params: [
+            { key: "family", label: "Familie", value: "rose", options: [
+                { value: "rose", label: "Rosenkurven" },
+                { value: "liss", label: "Lissajous" },
+                { value: "spiro", label: "Spirograph" },
+                { value: "super", label: "Superellipsen" },
+                { value: "damped", label: "Gedämpfte Wellen" }
+            ]},
+            { key: "count", label: "Kurven in der Schar", min: 6, max: 60, step: 2, value: 24 },
+            { key: "shape", label: "Formparameter", min: 2, max: 9, step: 1, value: 5 }
+        ],
+        onRegen(rnd, params) {
+            for (const p of params) {
+                if (p.key === "shape") p._set(2 + Math.floor(rnd() * 8));
+            }
+        },
+        generate(api) {
+            const { values } = api;
+            const lines = [];
+            const CX = 500, CY = 470, R = 390;
+            const N = values.count;
+            const k = values.shape;
+            let formula = "";
+
+            if (values.family === "rose") {
+                formula = "R = A·COS(" + k + "·T),  A = 1 … " + N;
+                for (let i = 0; i < N; i++) {
+                    const a = R * (0.15 + 0.85 * (i + 1) / N);
+                    const pts = [];
+                    for (let t = 0; t <= Math.PI * 2 + 0.01; t += 0.008) {
+                        const r = a * Math.cos(k * t);
+                        pts.push([CX + r * Math.cos(t), CY + r * Math.sin(t)]);
+                    }
+                    lines.push(pts);
+                }
+            } else if (values.family === "liss") {
+                const b = k + 1;
+                formula = "X = SIN(" + k + "·T + D),  Y = SIN(" + b + "·T),  D = 0 … π";
+                for (let i = 0; i < N; i++) {
+                    const d = (i / N) * Math.PI;
+                    const pts = [];
+                    for (let t = 0; t <= Math.PI * 2 + 0.01; t += 0.006) {
+                        pts.push([CX + Math.sin(k * t + d) * R * 0.92,
+                                  CY + Math.sin(b * t) * R * 0.92]);
+                    }
+                    lines.push(pts);
+                }
+            } else if (values.family === "spiro") {
+                const Rr = 5, rr = k % 4 + 2;
+                formula = "HYPOTROCHOID  R=" + Rr + " R'=" + rr + "  D = VAR";
+                for (let i = 0; i < N; i++) {
+                    const d = 0.5 + 4.5 * i / N;
+                    const pts = [];
+                    const loops = rr / gcd(Rr, rr);
+                    for (let t = 0; t <= Math.PI * 2 * loops + 0.01; t += 0.01) {
+                        const x = (Rr - rr) * Math.cos(t) + d * Math.cos((Rr - rr) / rr * t);
+                        const y = (Rr - rr) * Math.sin(t) - d * Math.sin((Rr - rr) / rr * t);
+                        pts.push([CX + x * R / 9.6, CY + y * R / 9.6]);
+                    }
+                    lines.push(pts);
+                }
+                function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+            } else if (values.family === "super") {
+                formula = "|X/A|^N + |Y/A|^N = 1,  N = 0.4 … " + (k + 1);
+                for (let i = 0; i < N; i++) {
+                    const n = 0.4 + (k + 0.6) * i / (N - 1);
+                    const pts = [];
+                    for (let t = 0; t <= Math.PI * 2 + 0.01; t += 0.01) {
+                        const c = Math.cos(t), s = Math.sin(t);
+                        const r = Math.pow(Math.pow(Math.abs(c), n) +
+                                           Math.pow(Math.abs(s), n), -1 / n);
+                        pts.push([CX + r * c * R * 0.88, CY + r * s * R * 0.88]);
+                    }
+                    lines.push({ pts, closed: true });
+                }
+            } else {
+                formula = "Y = SIN(N·X)·E^(-X^2),  N = 1 … " + N;
+                for (let i = 0; i < N; i++) {
+                    const n = 1 + i * (k * 2) / N;
+                    const pts = [];
+                    for (let x = -3; x <= 3; x += 0.012) {
+                        const y = Math.sin(n * x) * Math.exp(-x * x);
+                        pts.push([CX + x * R / 3, CY - y * R * 0.78]);
+                    }
+                    lines.push(pts);
+                }
+            }
+            // formula caption in a small box
+            const fw = PR4Font.textWidth(formula, 17);
+            const bx = 500 - fw / 2 - 16, by = 922;
+            lines.push({ pts: [[bx, by], [bx + fw + 32, by],
+                [bx + fw + 32, by + 42], [bx, by + 42]], closed: true, w: 1.0 });
+            for (const s of PR4Font.textCentered(formula, 500, by + 21, 17)) {
+                lines.push({ pts: s, w: 0.9 });
+            }
+            api.status(N + " Kurven · " + formula);
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>
