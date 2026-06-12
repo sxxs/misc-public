@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kontur-Lettern — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>37 · Kontur-Lettern</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div class="control">
+                <label><span>Text (1–4 Zeichen)</span></label>
+                <input id="textInput" type="text" value="AB" maxlength="4">
+            </div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Die Striche der großen Lettern werden nicht gezeichnet,
+            sondern mit <b>kleinen Buchstaben entlang des Pfads</b> nachgelegt —
+            wie eine Perlenkette aus Glyphen, jeweils zur Strichrichtung gedreht.
+            Wahlweise läuft das Füll-Alphabet der Reihe nach oder zufällig.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    const app = PR4App({
+        svgName: "kontur-lettern",
+        params: [
+            { key: "size", label: "Perlen-Größe", min: 8, max: 26, step: 1, value: 15 },
+            { key: "mode", label: "Perlen", value: "abc", options: [
+                { value: "abc", label: "Alphabet der Reihe nach" },
+                { value: "same", label: "Gleicher Buchstabe wie Letter" },
+                { value: "random", label: "Zufällig" }
+            ]},
+            { key: "echo", label: "Echo-Konturen", min: 1, max: 3, step: 1, value: 2 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+            const word = PR4Font.normalize(document.getElementById("textInput").value).slice(0, 4);
+            const size = values.size;
+
+            const capH = Math.min(740, 880 / Math.max(1, PR4Font.textWidth(word, 100) / 100));
+            let beadIdx = 0;
+
+            function beadsAlong(pts, letterCh, scale) {
+                // resample the stroke at bead spacing, place rotated glyphs
+                const spacing = size * 1.15 * scale;
+                let acc = 0;
+                let prev = pts[0];
+                for (let i = 1; i < pts.length; i++) {
+                    const seg = Math.hypot(pts[i][0] - prev[0], pts[i][1] - prev[1]);
+                    let d = seg;
+                    let from = prev;
+                    while (acc + d >= spacing) {
+                        const need = spacing - acc;
+                        const f = need / d;
+                        const bx = from[0] + (pts[i][0] - from[0]) * f;
+                        const by = from[1] + (pts[i][1] - from[1]) * f;
+                        const ang = Math.atan2(pts[i][1] - prev[1], pts[i][0] - prev[0]);
+                        let ch;
+                        if (values.mode === "same") ch = letterCh;
+                        else if (values.mode === "random") {
+                            ch = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(rnd() * 26)];
+                        } else {
+                            ch = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[beadIdx % 26];
+                        }
+                        beadIdx++;
+                        for (const s of PR4Font.textCentered(ch, bx, by, size * scale, { angle: ang })) {
+                            lines.push({ pts: s, w: 0.8 * scale + 0.25 });
+                        }
+                        from = [bx, by];
+                        d -= need;
+                        acc = 0;
+                    }
+                    acc += d;
+                    prev = pts[i];
+                }
+            }
+
+            // each big letter's strokes become bead paths; echo = shrunken repeats
+            const totalW = PR4Font.textWidth(word, capH);
+            let x = 500 - totalW / 2;
+            const baseY = 500 + capH * 0.45;
+            for (const ch of word) {
+                for (let e = 0; e < values.echo; e++) {
+                    const f = 1 - e * 0.16;
+                    const g = PR4Font.glyphs[ch];
+                    const cx = x + (g.w / 2) * (capH / 10);
+                    const cy = baseY - capH * 0.45;
+                    for (const stroke of PR4Font.textStrokes(ch, x, baseY, capH)) {
+                        // shrink stroke toward the letter center for echoes
+                        const sPts = stroke.map(p => [cx + (p[0] - cx) * f, cy + (p[1] - cy) * f]);
+                        // densify so beads space evenly on long segments
+                        const dense = [];
+                        for (let i = 0; i < sPts.length - 1; i++) {
+                            const a = sPts[i], b = sPts[i + 1];
+                            const n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 6));
+                            for (let s = 0; s < n; s++) {
+                                dense.push([a[0] + (b[0] - a[0]) * s / n, a[1] + (b[1] - a[1]) * s / n]);
+                            }
+                        }
+                        dense.push(sPts[sPts.length - 1]);
+                        beadsAlong(dense, ch, 1 - e * 0.3);
+                    }
+                }
+                x += (PR4Font.glyphs[ch].w + 2) * (capH / 10);
+            }
+            api.status(beadIdx + " Perlen-Buchstaben");
+            api.done(lines);
+        }
+    });
+    document.getElementById("textInput").addEventListener("input",
+        PR4.debounce(() => app.start(), 350));
+    </script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monogramm — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>36 · Monogramm</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div class="control">
+                <label><span>Monogramm (1–3 Zeichen)</span></label>
+                <input id="textInput" type="text" value="W" maxlength="3">
+            </div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Ein blattfüllendes Monogramm, dessen Fläche aus
+            <b>Zeilen kleiner Buchstaben</b> besteht (Mikro-Typo als Schraffur).
+            Der große Buchstabe wird nie selbst gezeichnet — er entsteht nur
+            aus dem Text. Füllwort wählbar, z.&nbsp;B. ein Name.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    const app = PR4App({
+        svgName: "monogramm",
+        params: [
+            { key: "size", label: "Füll-Textgröße", min: 6, max: 18, step: 1, value: 10 },
+            { key: "lineGap", label: "Zeilenabstand", min: 1.1, max: 2.2, step: 0.1, value: 1.4 },
+            { key: "fill", label: "Füllung", value: "word", options: [
+                { value: "word", label: "Füllwort wiederholen" },
+                { value: "random", label: "Zufallsbuchstaben" },
+                { value: "same", label: "Monogramm selbst" }
+            ]}
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+            const mono = PR4Font.normalize(document.getElementById("textInput").value).slice(0, 3);
+            const FILLWORD = "PLOTTERLIEBE ";
+
+            // big glyph mask, scaled to fill the page
+            const capH = Math.min(820, 880 / Math.max(1, PR4Font.textWidth(mono, 100) / 100));
+            const inside = PR4Font.makeTextMask(mono, 500, 500, capH, capH * 0.34);
+
+            const size = values.size;
+            const step = size * values.lineGap;
+            let glyphs = 0;
+            let charIdx = 0;
+            for (let y = 60; y <= 950; y += step) {
+                // slight per-row x offset so columns don't align
+                let x = 45 + (rnd() * size);
+                while (x < 950) {
+                    let ch;
+                    if (values.fill === "random") {
+                        ch = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(rnd() * 26)];
+                    } else if (values.fill === "same") {
+                        ch = mono[charIdx % mono.length];
+                    } else {
+                        ch = FILLWORD[charIdx % FILLWORD.length];
+                    }
+                    charIdx++;
+                    if (ch === " ") { x += size * 0.5; continue; }
+                    const adv = (PR4Font.glyphs[ch].w + 2) * (size / 10);
+                    // glyph cell center decides whether it belongs to the monogram
+                    if (inside(x + adv / 2, y - size * 0.45)) {
+                        for (const s of PR4Font.textStrokes(ch, x, y, size)) {
+                            lines.push({ pts: s, w: 0.8 });
+                        }
+                        glyphs++;
+                    }
+                    x += adv;
+                }
+            }
+            // thin frame
+            lines.push({ pts: [[40, 40], [960, 40], [960, 960], [40, 960]], closed: true, w: 1.0 });
+            api.status(glyphs + " Glyphen im Monogramm " + mono);
+            api.done(lines);
+        }
+    });
+    document.getElementById("textInput").addEventListener("input",
+        PR4.debounce(() => app.start(), 350));
+    </script>
+</body>
+</html>

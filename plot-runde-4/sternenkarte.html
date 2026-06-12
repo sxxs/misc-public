@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sternenkarte — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>40 · Sternenkarte</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Planisphäre des Nordhimmels mit <b>echten
+            Sterndaten</b> (Auszug der hellsten Sterne, Koordinaten gerundet):
+            Polaris im Zentrum, Sterngröße nach Helligkeit, Sternbild-Linien
+            für Großer Wagen, Orion, Kassiopeia, Schwan &amp; Co., dazu
+            Rektaszensions-Speichen und Deklinationsringe.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    /* Bright-star excerpt: [RA hours, Dec degrees, magnitude] (rounded values) */
+    const STARS = {
+        Polaris: [2.53, 89.3, 2.0],
+        Dubhe: [11.06, 61.8, 1.8], Merak: [11.03, 56.4, 2.4], Phecda: [11.9, 53.7, 2.4],
+        Megrez: [12.26, 57.0, 3.3], Alioth: [12.9, 56.0, 1.8], Mizar: [13.4, 54.9, 2.2],
+        Alkaid: [13.79, 49.3, 1.9],
+        Kochab: [14.85, 74.2, 2.1],
+        Caph: [0.15, 59.1, 2.3], Schedar: [0.68, 56.5, 2.2], GammaCas: [0.95, 60.7, 2.5],
+        Ruchbah: [1.43, 60.2, 2.7], Segin: [1.9, 63.7, 3.4],
+        Betelgeuse: [5.92, 7.4, 0.5], Bellatrix: [5.42, 6.3, 1.6], Alnitak: [5.68, -1.9, 1.7],
+        Alnilam: [5.6, -1.2, 1.7], Mintaka: [5.53, -0.3, 2.2], Saiph: [5.8, -9.7, 2.1],
+        Rigel: [5.24, -8.2, 0.1],
+        Deneb: [20.69, 45.3, 1.3], Sadr: [20.37, 40.3, 2.2], GienahCyg: [20.77, 34.0, 2.5],
+        DeltaCyg: [19.75, 45.1, 2.9], Albireo: [19.51, 28.0, 3.1],
+        Vega: [18.62, 38.8, 0.0], Sheliak: [18.83, 33.4, 3.5], Sulafat: [18.98, 32.7, 3.2],
+        Altair: [19.85, 8.9, 0.8], Tarazed: [19.77, 10.6, 2.7],
+        Arcturus: [14.26, 19.2, 0.0], Izar: [14.75, 27.1, 2.4], Muphrid: [13.91, 18.4, 2.7],
+        Sirius: [6.75, -16.7, -1.5], Mirzam: [6.38, -18.0, 2.0],
+        Castor: [7.58, 31.9, 1.6], Pollux: [7.76, 28.0, 1.1], Alhena: [6.63, 16.4, 1.9],
+        Regulus: [10.14, 12.0, 1.4], Denebola: [11.82, 14.6, 2.1],
+        Algieba: [10.33, 19.8, 2.6], Zosma: [11.24, 20.5, 2.6],
+        Aldebaran: [4.6, 16.5, 0.9], Elnath: [5.44, 28.6, 1.7], Alcyone: [3.79, 24.1, 2.9],
+        Mirfak: [3.41, 49.9, 1.8], Algol: [3.14, 41.0, 2.1],
+        Capella: [5.28, 46.0, 0.1], Menkalinan: [6.0, 45.0, 1.9],
+        Alpheratz: [0.14, 29.1, 2.1], Mirach: [1.16, 35.6, 2.1], Almach: [2.06, 42.3, 2.1],
+        Markab: [23.08, 15.2, 2.5], Scheat: [23.06, 28.1, 2.4], Algenib: [0.22, 15.2, 2.8],
+        Enif: [21.74, 9.9, 2.4],
+        Procyon: [7.66, 5.2, 0.3], Spica: [13.42, -11.2, 1.0],
+        Alderamin: [21.31, 62.6, 2.5],
+        Eltanin: [17.94, 51.5, 2.2], Rastaban: [17.51, 52.3, 2.8]
+    };
+    const FIGURES = [
+        ["Dubhe", "Merak", "Phecda", "Megrez", "Alioth", "Mizar", "Alkaid"],
+        ["Megrez", "Dubhe"],
+        ["Caph", "Schedar", "GammaCas", "Ruchbah", "Segin"],
+        ["Betelgeuse", "Bellatrix", "Mintaka", "Alnilam", "Alnitak", "Betelgeuse"],
+        ["Alnitak", "Saiph", "Rigel", "Mintaka"],
+        ["Albireo", "Sadr", "Deneb"],
+        ["DeltaCyg", "Sadr", "GienahCyg"],
+        ["Vega", "Sheliak", "Sulafat", "Vega"],
+        ["Tarazed", "Altair"],
+        ["Muphrid", "Arcturus", "Izar"],
+        ["Mirzam", "Sirius"],
+        ["Castor", "Pollux"],
+        ["Regulus", "Algieba", "Zosma", "Denebola"],
+        ["Alcyone", "Aldebaran", "Elnath"],
+        ["Algol", "Mirfak"],
+        ["Capella", "Menkalinan"],
+        ["Alpheratz", "Mirach", "Almach"],
+        ["Markab", "Scheat", "Alpheratz", "Algenib", "Markab"],
+        ["Enif", "Markab"],
+        ["Rastaban", "Eltanin"],
+        ["Kochab", "Polaris"]
+    ];
+
+    PR4App({
+        svgName: "sternenkarte",
+        params: [
+            { key: "maglim", label: "Grenzhelligkeit", min: 2, max: 3.5, step: 0.1, value: 3.5 },
+            { key: "figures", label: "Sternbild-Linien", value: "on", options: [
+                { value: "on", label: "Anzeigen" },
+                { value: "off", label: "Ausblenden" }
+            ]},
+            { key: "rotation", label: "Drehung (Std.)", min: 0, max: 23, step: 1, value: 0 }
+        ],
+        generate(api) {
+            const { values } = api;
+            const lines = [];
+            const CX = 500, CY = 500, RMAX = 430;
+            const DEC_MIN = -20;
+
+            function project(ra, dec) {
+                const r = (90 - dec) / (90 - DEC_MIN) * RMAX;
+                const a = (ra + values.rotation) / 24 * Math.PI * 2 - Math.PI / 2;
+                return [CX + r * Math.cos(a), CY + r * Math.sin(a), r];
+            }
+            const starR = (mag) => Math.max(1.6, 7.2 - mag * 1.8);
+
+            // declination rings + RA ticks
+            for (const dec of [60, 30, 0]) {
+                const rr = (90 - dec) / (90 - DEC_MIN) * RMAX;
+                const c = [];
+                for (let i = 0; i <= 140; i++) {
+                    const a = i / 140 * Math.PI * 2;
+                    c.push([CX + rr * Math.cos(a), CY + rr * Math.sin(a)]);
+                }
+                lines.push({ pts: c, closed: true, w: 0.45 });
+            }
+            for (let h = 0; h < 24; h++) {
+                const a = (h + values.rotation) / 24 * Math.PI * 2 - Math.PI / 2;
+                const r0 = h % 6 === 0 ? RMAX - 26 : RMAX - 13;
+                lines.push({ pts: [[CX + r0 * Math.cos(a), CY + r0 * Math.sin(a)],
+                                   [CX + RMAX * Math.cos(a), CY + RMAX * Math.sin(a)]],
+                             w: h % 6 === 0 ? 1.0 : 0.5 });
+            }
+            // outer double frame
+            for (const rr of [RMAX, RMAX + 12]) {
+                const c = [];
+                for (let i = 0; i <= 180; i++) {
+                    const a = i / 180 * Math.PI * 2;
+                    c.push([CX + rr * Math.cos(a), CY + rr * Math.sin(a)]);
+                }
+                lines.push({ pts: c, closed: true, w: rr === RMAX ? 0.8 : 1.4 });
+            }
+
+            // constellation figures, trimmed before the star circles
+            if (values.figures === "on") {
+                for (const fig of FIGURES) {
+                    for (let i = 0; i < fig.length - 1; i++) {
+                        const s1 = STARS[fig[i]], s2 = STARS[fig[i + 1]];
+                        if (!s1 || !s2) continue;
+                        const p1 = project(s1[0], s1[1]);
+                        const p2 = project(s2[0], s2[1]);
+                        if (p1[2] > RMAX || p2[2] > RMAX) continue;
+                        const len = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+                        const t0 = (starR(s1[2]) + 4) / len, t1 = 1 - (starR(s2[2]) + 4) / len;
+                        if (t1 <= t0) continue;
+                        lines.push({ pts: [
+                            [p1[0] + (p2[0] - p1[0]) * t0, p1[1] + (p2[1] - p1[1]) * t0],
+                            [p1[0] + (p2[0] - p1[0]) * t1, p1[1] + (p2[1] - p1[1]) * t1]
+                        ], w: 0.6 });
+                    }
+                }
+            }
+
+            // stars as open circles sized by magnitude; bright ones get spikes
+            let shown = 0;
+            for (const name in STARS) {
+                const [ra, dec, mag] = STARS[name];
+                if (mag > values.maglim) continue;
+                const p = project(ra, dec);
+                if (p[2] > RMAX - 4) continue;
+                const r = starR(mag);
+                const c = [];
+                for (let i = 0; i <= 20; i++) {
+                    const a = i / 20 * Math.PI * 2;
+                    c.push([p[0] + r * Math.cos(a), p[1] + r * Math.sin(a)]);
+                }
+                lines.push({ pts: c, closed: true, w: 1.0 });
+                if (mag < 0.6) {
+                    for (let k = 0; k < 4; k++) {
+                        const a = k / 4 * Math.PI * 2 + Math.PI / 4;
+                        lines.push({ pts: [
+                            [p[0] + (r + 2.5) * Math.cos(a), p[1] + (r + 2.5) * Math.sin(a)],
+                            [p[0] + (r + 7.5) * Math.cos(a), p[1] + (r + 7.5) * Math.sin(a)]
+                        ], w: 0.7 });
+                    }
+                }
+                shown++;
+            }
+            // title
+            for (const s of PR4Font.textCentered("NORDHIMMEL", CX, 985, 20)) {
+                lines.push({ pts: s, w: 0.9 });
+            }
+            api.status(shown + " echte Sterne · " + FIGURES.length + " Linienzüge");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

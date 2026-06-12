@@ -89,6 +89,19 @@ input[type="range"] {
     accent-color: var(--accent);
 }
 
+input[type="text"] {
+    width: 100%;
+    min-height: 44px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid #2c3a5e;
+    border-radius: 8px;
+    padding: 0.5rem 0.7rem;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
 select {
     width: 100%;
     min-height: 44px;
