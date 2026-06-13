@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monogramm-Echo-Tunnel — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>67 · Monogramm-Echo-Tunnel</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div class="control">
+                <label><span>Monogramm (1–2 Zeichen)</span></label>
+                <input id="textInput" type="text" value="W" maxlength="2">
+            </div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Dein Buchstabe als sich selbst wiederholender <b>Echo-Tunnel</b> — die Form schrumpft, dreht sich und stürzt in die Tiefe. Ein persönliches Vortex-Bild.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    const app = PR4App({
+        svgName: "monogramm-tunnel",
+        params: [
+            { key: "steps", label: "Echo-Schritte",        min: 14,  max: 80,  step: 2,   value: 40  },
+            { key: "twist", label: "Drehung/Schritt (°)",   min: -8,  max: 8,   step: 0.5, value: 3   },
+            { key: "drift", label: "Fluchtpunkt-Versatz",   min: 0,   max: 300, step: 10,  value: 120 },
+            { key: "rays",  label: "Kanten-Strahlen", value: "on", options: [
+                { value: "on",  label: "An"  },
+                { value: "off", label: "Aus" }
+            ]},
+            { key: "size",  label: "Startgröße",            min: 200, max: 500, step: 20,  value: 380 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+
+            const mono = (PR4Font.normalize(document.getElementById("textInput").value) || "W").slice(0, 2);
+
+            // vanishing point offset from centre
+            const va = rnd() * Math.PI * 2;
+            const VP = [
+                500 + Math.cos(va) * values.drift,
+                500 + Math.sin(va) * values.drift
+            ];
+
+            const N = values.steps;
+            const twist = values.twist * Math.PI / 180;
+            const SH = 0.92; // shrink factor per step
+
+            // For each step collect the first point of each stroke (for ray drawing)
+            const stepFirstPts = [];   // stepFirstPts[k] = array of first-pts from all strokes
+
+            for (let k = 0; k < N; k++) {
+                const f = Math.pow(SH, k);
+                // pull center toward vanishing point as letter shrinks
+                const cx = 500 + (VP[0] - 500) * (1 - f);
+                const cy = 500 + (VP[1] - 500) * (1 - f);
+                const rot = k * twist;
+
+                // scale size: the capHeight parameter in textCentered
+                // values.size at k=0 should map to a reasonable cap height
+                // textCentered(str, cx, cy, capH, {angle}) — capH in px (1000-space units)
+                const capH = f * values.size * 0.5;
+
+                const strokes = PR4Font.textCentered(mono, cx, cy, capH, { angle: rot });
+                const lineW = Math.max(0.4, 1.5 * f + 0.3);
+
+                const firstPts = [];
+                for (const s of strokes) {
+                    lines.push({ pts: s, w: lineW });
+                    if (s.length > 0) firstPts.push(s[0]);
+                }
+                stepFirstPts.push(firstPts);
+            }
+
+            // wireframe rays: sample points on bounding circle at each step and connect
+            if (values.rays === "on") {
+                const N_RAY = 8;
+                // collect circle sample points per step
+                const raySeries = Array.from({ length: N_RAY }, () => []);
+                for (let k = 0; k < N; k++) {
+                    const f = Math.pow(SH, k);
+                    const cx = 500 + (VP[0] - 500) * (1 - f);
+                    const cy = 500 + (VP[1] - 500) * (1 - f);
+                    const r = f * values.size * 0.5;
+                    const rot = k * twist;
+                    for (let ri = 0; ri < N_RAY; ri++) {
+                        const a = (ri / N_RAY) * Math.PI * 2 + rot;
+                        raySeries[ri].push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]);
+                    }
+                }
+                for (const series of raySeries) {
+                    lines.push({ pts: series, w: 0.45 });
+                }
+            }
+
+            // thin outer frame
+            lines.push({ pts: [[40,40],[960,40],[960,960],[40,960]], closed: true, w: 0.8 });
+
+            api.status(N + " Echos · Monogramm: " + mono);
+            api.done(lines);
+        }
+    });
+    document.getElementById("textInput").addEventListener("input",
+        PR4.debounce(() => app.start(), 350));
+    </script>
+</body>
+</html>

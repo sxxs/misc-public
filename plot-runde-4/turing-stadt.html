@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>65 · Turing-Stadt — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>65 · Turing-Stadt</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Ein Gray-Scott-Turing-Muster bestimmt die <b>Höhen isometrischer Türme</b>: Spots werden Wolkenkratzer, Labyrinthe werden Häuserreihen — eine Stadt nach biologischen Wachstumsregeln.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "turing-stadt",
+        svgOpts: { width: 0.9 },
+        drawOpts: { width: 1.1 },
+        params: [
+            { key: "f",     label: "Feed-Rate",          min: 0.025, max: 0.075, step: 0.001,  value: 0.055 },
+            { key: "k",     label: "Kill-Rate",           min: 0.055, max: 0.067, step: 0.0005, value: 0.062 },
+            { key: "steps", label: "Simulationsschritte", min: 400,   max: 3000,  step: 200,    value: 1600 },
+            { key: "grid",  label: "Iso-Raster",          min: 8,     max: 20,    step: 1,      value: 14 },
+            { key: "maxh",  label: "Max. Höhe",           min: 60,    max: 250,   step: 10,     value: 180 },
+            { key: "light", label: "Licht",               value: "left", options: [
+                { value: "left",  label: "Links" },
+                { value: "right", label: "Rechts" }
+            ]}
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+
+            // --- Gray-Scott simulation ---
+            const N = 64;
+            const A  = new Float32Array(N * N).fill(1);
+            const B  = new Float32Array(N * N);
+            const A2 = new Float32Array(N * N);
+            const B2 = new Float32Array(N * N);
+
+            // seed random patches of chemical B
+            const patches = 4 + Math.floor(rnd() * 5);
+            for (let p = 0; p < patches; p++) {
+                const cx = 8 + Math.floor(rnd() * (N - 16));
+                const cy = 8 + Math.floor(rnd() * (N - 16));
+                for (let dy = -3; dy <= 3; dy++) {
+                    for (let dx = -3; dx <= 3; dx++) {
+                        const idx = (cy + dy) * N + (cx + dx);
+                        if (idx >= 0 && idx < N * N) B[idx] = 1;
+                    }
+                }
+            }
+
+            const f = values.f, k = values.k, DA = 1.0, DB = 0.5;
+            let a = A, b = B, a2 = A2, b2 = B2;
+
+            function simStep() {
+                for (let y = 1; y < N - 1; y++) {
+                    for (let x = 1; x < N - 1; x++) {
+                        const i = y * N + x;
+                        const av = a[i], bv = b[i];
+                        const lapA = 0.2 * (a[i-1] + a[i+1] + a[i-N] + a[i+N])
+                                   + 0.05 * (a[i-N-1] + a[i-N+1] + a[i+N-1] + a[i+N+1]) - av;
+                        const lapB = 0.2 * (b[i-1] + b[i+1] + b[i-N] + b[i+N])
+                                   + 0.05 * (b[i-N-1] + b[i-N+1] + b[i+N-1] + b[i+N+1]) - bv;
+                        const abb = av * bv * bv;
+                        a2[i] = av + (DA * lapA - abb + f * (1 - av));
+                        b2[i] = bv + (DB * lapB + abb - (f + k) * bv);
+                    }
+                }
+                const tmp = a; a = a2; a2 = tmp;
+                const tmp2 = b; b = b2; b2 = tmp2;
+            }
+
+            // preview during simulation
+            const off = document.createElement("canvas");
+            off.width = N; off.height = N;
+            const offCtx = off.getContext("2d");
+            function preview() {
+                const img = offCtx.createImageData(N, N);
+                for (let i = 0; i < N * N; i++) {
+                    const v = Math.max(0, Math.min(255, 255 - b[i] * 600));
+                    img.data[i * 4] = v; img.data[i * 4 + 1] = v;
+                    img.data[i * 4 + 2] = v; img.data[i * 4 + 3] = 255;
+                }
+                offCtx.putImageData(img, 0, 0);
+                const canvas = document.getElementById("canvas");
+                const ctx = PR4.fitCanvas(canvas);
+                ctx.fillStyle = "#fff";
+                ctx.fillRect(0, 0, PR4.SIZE, PR4.SIZE);
+                ctx.imageSmoothingEnabled = false;
+                ctx.drawImage(off, 40, 40, 920, 920);
+            }
+
+            let stepsDone = 0;
+
+            function buildCity() {
+                // find max of B field
+                let bMax = 0;
+                for (let i = 0; i < N * N; i++) if (b[i] > bMax) bMax = b[i];
+                if (bMax < 1e-6) bMax = 1;
+
+                const G = values.grid;
+                const u = 700 / G;
+                const AX = 0.866 * u, AY = 0.5 * u;
+                const BX = -0.866 * u, BY = 0.5 * u;
+                const OX = 500, OY = 240;
+                const P = (i, j, h) => [OX + i * AX + j * BX, OY + i * AY + j * BY - h];
+
+                // sample B field bilinearly at (fi, fj) in [0,1]
+                function sampleB(fi, fj) {
+                    const gx = fi * (N - 1), gy = fj * (N - 1);
+                    const x0 = Math.floor(gx), y0 = Math.floor(gy);
+                    const x1 = Math.min(x0 + 1, N - 1), y1 = Math.min(y0 + 1, N - 1);
+                    const tx = gx - x0, ty = gy - y0;
+                    const v00 = b[y0 * N + x0], v10 = b[y0 * N + x1];
+                    const v01 = b[y1 * N + x0], v11 = b[y1 * N + x1];
+                    return v00 * (1 - tx) * (1 - ty) + v10 * tx * (1 - ty)
+                         + v01 * (1 - tx) * ty       + v11 * tx * ty;
+                }
+
+                function getHeight(i, j) {
+                    const fi = i / G, fj = j / G;
+                    const bv = sampleB(fi, fj) / bMax;
+                    return values.maxh * bv;
+                }
+
+                const lines = [];
+
+                // occluder system for hidden line removal
+                const occ = [];
+                function addQuad(q) {
+                    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+                    for (const p of q) {
+                        x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]);
+                        y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]);
+                    }
+                    occ.push({ q, x0, x1, y0, y1 });
+                }
+                function isHidden(p) {
+                    for (const o of occ) {
+                        if (p[0] < o.x0 || p[0] > o.x1 || p[1] < o.y0 || p[1] > o.y1) continue;
+                        let inside = true;
+                        const q = o.q;
+                        for (let kk = 0; kk < 4; kk++) {
+                            const a = q[kk], bp = q[(kk + 1) % 4];
+                            if ((bp[0] - a[0]) * (p[1] - a[1]) - (bp[1] - a[1]) * (p[0] - a[0]) < -0.35) {
+                                inside = false; break;
+                            }
+                        }
+                        if (inside) return true;
+                    }
+                    return false;
+                }
+                function drawClipped(a, b, w) {
+                    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+                    const n = Math.max(1, Math.ceil(len / 3));
+                    let run = null;
+                    for (let s = 0; s <= n; s++) {
+                        const t = s / n;
+                        const p = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+                        if (!isHidden(p)) {
+                            if (!run) run = [];
+                            run.push(p);
+                        } else if (run) {
+                            if (run.length > 1) lines.push({ pts: [run[0], run[run.length - 1]], w });
+                            run = null;
+                        }
+                    }
+                    if (run && run.length > 1) lines.push({ pts: [run[0], run[run.length - 1]], w });
+                }
+
+                // draw in painter's order: larger i+j first
+                const order = [];
+                for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) order.push([i, j]);
+                order.sort((a, b) => (b[0] + b[1]) - (a[0] + a[1]));
+
+                for (const [i, j] of order) {
+                    const h = getHeight(i, j);
+
+                    const T00 = P(i,     j,     h);
+                    const T10 = P(i + 1, j,     h);
+                    const T11 = P(i + 1, j + 1, h);
+                    const T01 = P(i,     j + 1, h);
+                    const B10 = P(i + 1, j,     0);
+                    const B11 = P(i + 1, j + 1, 0);
+                    const B01 = P(i,     j + 1, 0);
+
+                    // top face outline
+                    for (const [pa, pb] of [[T00, T10], [T10, T11], [T11, T01], [T01, T00]]) {
+                        drawClipped(pa, pb, 1.0);
+                    }
+
+                    // vertical edges
+                    for (const [pa, pb] of [[T10, B10], [T11, B11], [T01, B01]]) {
+                        drawClipped(pa, pb, 0.8);
+                    }
+
+                    // bottom edges of side faces
+                    drawClipped(B10, B11, 0.7);
+                    drawClipped(B01, B11, 0.7);
+
+                    // hatch side faces based on lighting
+                    if (values.light === "left") {
+                        // left face (j+1 side): light hatch spacing 14
+                        for (let s = 14; s < h; s += 14) {
+                            drawClipped([T01[0], T01[1] + s], [T11[0], T11[1] + s], 0.45);
+                        }
+                        // right face (i+1 side): dense hatch spacing 7
+                        for (let s = 7; s < h; s += 7) {
+                            drawClipped([T10[0], T10[1] + s], [T11[0], T11[1] + s], 0.5);
+                        }
+                    } else {
+                        // right face: light hatch
+                        for (let s = 14; s < h; s += 14) {
+                            drawClipped([T10[0], T10[1] + s], [T11[0], T11[1] + s], 0.45);
+                        }
+                        // left face: dense hatch
+                        for (let s = 7; s < h; s += 7) {
+                            drawClipped([T01[0], T01[1] + s], [T11[0], T11[1] + s], 0.5);
+                        }
+                    }
+
+                    // register occluders
+                    addQuad([T00, T10, T11, T01]);
+                    addQuad([T10, B10, B11, T11]);
+                    addQuad([T01, T11, B11, B01]);
+                }
+
+                return lines;
+            }
+
+            function frame() {
+                if (api.cancelled()) return;
+                for (let s = 0; s < 30 && stepsDone < values.steps; s++) {
+                    simStep(); stepsDone++;
+                }
+                preview();
+                if (stepsDone < values.steps) {
+                    api.status("Simuliere… " + stepsDone + " / " + values.steps);
+                    requestAnimationFrame(frame);
+                } else {
+                    api.status("Baue Skyline…");
+                    requestAnimationFrame(() => {
+                        if (api.cancelled()) return;
+                        const lines = buildCity();
+                        if (lines.length === 0) {
+                            api.status("Muster ausgestorben — andere f/k-Werte probieren");
+                            api.done([{ pts: [[40,40],[960,40],[960,960],[40,960],[40,40]], w: 1.2 }]);
+                        } else {
+                            api.status("Turing-Stadt — " + lines.length + " Pfade · f=" + values.f + " k=" + values.k);
+                            api.done(lines);
+                        }
+                    });
+                }
+            }
+
+            requestAnimationFrame(frame);
+        }
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phyllotaxis × Chladni — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>60 · Phyllotaxis × Chladni</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Sonnenblumen-Samen (goldener Winkel) erscheinen nur auf den <b>Knotenlinien einer Chladni-Figur</b> — wie wenn man Körner auf eine vibrierende Platte streut. Mode (n,m) bestimmt den Rhythmus.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "phyllotaxis-chladni",
+        params: [
+            { key: "n", label: "Chladni Mode n", min: 1, max: 9, step: 1, value: 3 },
+            { key: "m", label: "Chladni Mode m", min: 1, max: 9, step: 1, value: 5 },
+            { key: "coupling", label: "Kopplung", value: "plus", options: [
+                { value: "plus", label: "+" },
+                { value: "minus", label: "−" }
+            ]},
+            { key: "count", label: "Samen", min: 300, max: 2400, step: 100, value: 1200 },
+            { key: "threshold", label: "Knotenbreite", min: 0.05, max: 0.3, step: 0.01, value: 0.12 },
+            { key: "shape", label: "Samenform", value: "circ", options: [
+                { value: "circ", label: "Kreise" },
+                { value: "petal", label: "Blütenblätter" },
+                { value: "tri", label: "Dreiecke" }
+            ]}
+        ],
+        onRegen(rnd, params) {
+            for (const p of params) {
+                if (p.key === "n") p._set(1 + Math.floor(rnd() * 9));
+                if (p.key === "m") p._set(1 + Math.floor(rnd() * 9));
+            }
+        },
+        generate(api) {
+            const { values } = api;
+            const lines = [];
+            const M = 40, S = 920;
+            const CX = 500, CY = 500, Rmax = 440;
+            const ga = 137.5 * Math.PI / 180;
+
+            const n = values.n, m = values.m;
+            const sgn = values.coupling === "plus" ? 1 : -1;
+
+            // Precompute Chladni field on 200x200 grid
+            const GF = 200;
+            const field = new Float32Array(GF * GF);
+            for (let gy = 0; gy < GF; gy++) {
+                for (let gx = 0; gx < GF; gx++) {
+                    const x = gx / (GF - 1), y = gy / (GF - 1);
+                    field[gy * GF + gx] =
+                        Math.cos(n * Math.PI * x) * Math.cos(m * Math.PI * y) +
+                        sgn * Math.cos(m * Math.PI * x) * Math.cos(n * Math.PI * y);
+                }
+            }
+
+            // Bilinear interpolation of field at page coords
+            function chladniAt(px, py) {
+                const fx = (px - M) / S * (GF - 1);
+                const fy = (py - M) / S * (GF - 1);
+                const ix = Math.max(0, Math.min(GF - 2, Math.floor(fx)));
+                const iy = Math.max(0, Math.min(GF - 2, Math.floor(fy)));
+                const tx = fx - ix, ty = fy - iy;
+                return field[iy * GF + ix] * (1 - tx) * (1 - ty)
+                     + field[iy * GF + ix + 1] * tx * (1 - ty)
+                     + field[(iy + 1) * GF + ix] * (1 - tx) * ty
+                     + field[(iy + 1) * GF + ix + 1] * tx * ty;
+            }
+
+            function shapeAt(x, y, r, kind, ang) {
+                if (kind === "circ") {
+                    const pts = [];
+                    const seg = Math.max(7, Math.round(r * 1.6));
+                    for (let i = 0; i <= seg; i++) {
+                        const a = i / seg * Math.PI * 2;
+                        pts.push([x + r * Math.cos(a), y + r * Math.sin(a)]);
+                    }
+                    return { pts, closed: true };
+                }
+                if (kind === "tri") {
+                    const pts = [];
+                    for (let i = 0; i <= 3; i++) {
+                        const a = ang + i / 3 * Math.PI * 2;
+                        pts.push([x + r * Math.cos(a), y + r * Math.sin(a)]);
+                    }
+                    return { pts, closed: true };
+                }
+                // petal: small lens oriented outward
+                const pts = [];
+                for (let i = 0; i <= 12; i++) {
+                    const t = i / 12;
+                    const along = (t - 0.5) * 2 * r * 1.6;
+                    const wide = Math.cos((t - 0.5) * Math.PI) * r * 0.7;
+                    pts.push([x + Math.cos(ang) * along - Math.sin(ang) * wide,
+                              y + Math.sin(ang) * along + Math.cos(ang) * wide]);
+                }
+                for (let i = 12; i >= 0; i--) {
+                    const t = i / 12;
+                    const along = (t - 0.5) * 2 * r * 1.6;
+                    const wide = -Math.cos((t - 0.5) * Math.PI) * r * 0.7;
+                    pts.push([x + Math.cos(ang) * along - Math.sin(ang) * wide,
+                              y + Math.sin(ang) * along + Math.cos(ang) * wide]);
+                }
+                return { pts, closed: true };
+            }
+
+            const count = values.count;
+            const threshold = values.threshold;
+            const c = Rmax / Math.sqrt(count);
+            let drawn = 0;
+
+            for (let i = 1; i <= count; i++) {
+                const r = c * Math.sqrt(i);
+                const a = i * ga;
+                const x = CX + r * Math.cos(a);
+                const y = CY + r * Math.sin(a);
+                if (Math.hypot(x - CX, y - CY) > Rmax) continue;
+                // clamp to page bounds
+                if (x < M || x > M + S || y < M || y > M + S) continue;
+
+                const fv = chladniAt(x, y);
+                const absFv = Math.abs(fv);
+                if (absFv >= threshold) continue;
+
+                // size proportional to closeness to nodal line
+                const closeness = 1 - absFv / threshold;
+                const baseR = c * 0.6;
+                const sr = baseR * (0.5 + closeness * 0.7);
+                const w = 0.5 + closeness * 0.6;
+
+                const shapeObj = shapeAt(x, y, sr, values.shape, a + Math.PI / 2);
+                lines.push(Object.assign(shapeObj, { w }));
+                drawn++;
+            }
+
+            // frame
+            lines.push({ pts: [[M, M], [M + S, M], [M + S, M + S], [M, M + S]], closed: true, w: 1.2 });
+
+            api.status(drawn + " Samen auf Knotenlinien · n=" + n + " m=" + m);
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

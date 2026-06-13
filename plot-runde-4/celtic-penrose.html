@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>71 · Celtic × Penrose — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>71 · Celtic × Penrose</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Keltisches Geflecht auf einem <b>Penrose-Gitter</b> — die Bänder weben sich über aperiodische Rhomben-Kanten. Ein Knoten, der sich nie exakt wiederholt.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "celtic-penrose",
+        params: [
+            { key: "gen", label: "Penrose-Tiefe", min: 3, max: 6, step: 1, value: 4 },
+            { key: "gap", label: "Kreuzungslücke", min: 0.1, max: 0.45, step: 0.05, value: 0.25 },
+            { key: "doubled", label: "Doppellinien", value: "an", options: [
+                { value: "an", label: "Bänder (Doppellinie)" },
+                { value: "aus", label: "Einfach" }
+            ]},
+            { key: "bandW", label: "Bandbreite", min: 0.05, max: 0.25, step: 0.01, value: 0.12 }
+        ],
+        generate(api) {
+            const { values } = api;
+            const lines = [];
+            const CX = 500, CY = 500, SC = 450;
+            const PHI = (1 + Math.sqrt(5)) / 2;
+            const CLIP = 450;
+
+            // --- STEP 1: Generate Penrose P3 tiling via Robinson triangle subdivision ---
+            // tris: [color, A, B, C] where color 0 = fat (kite), 1 = thin (dart)
+            let tris = [];
+            for (let i = 0; i < 10; i++) {
+                const a1 = (2 * i - 1) * Math.PI / 10;
+                const a2 = (2 * i + 1) * Math.PI / 10;
+                let B = [Math.cos(a1), Math.sin(a1)];
+                let C = [Math.cos(a2), Math.sin(a2)];
+                const A = [0, 0];
+                if (i % 2 === 0) { const t = B; B = C; C = t; }
+                tris.push([0, A, B, C]);
+            }
+
+            for (let g = 0; g < values.gen; g++) {
+                const next = [];
+                for (const [col, A, B, Bc] of tris) {
+                    if (col === 0) {
+                        // Fat triangle (type 0): split into 1 fat + 1 thin
+                        const P = [A[0] + (B[0] - A[0]) / PHI, A[1] + (B[1] - A[1]) / PHI];
+                        next.push([0, Bc, P, B]);
+                        next.push([1, P, Bc, A]);
+                    } else {
+                        // Thin triangle (type 1): split into 1 fat + 2 thin
+                        const Q = [B[0] + (A[0] - B[0]) / PHI, B[1] + (A[1] - B[1]) / PHI];
+                        const Rv = [B[0] + (Bc[0] - B[0]) / PHI, B[1] + (Bc[1] - B[1]) / PHI];
+                        next.push([1, Rv, Bc, A]);
+                        next.push([1, Q, Rv, B]);
+                        next.push([0, Rv, Q, A]);
+                    }
+                }
+                tris = next;
+            }
+
+            // Transform from unit-circle coords to canvas coords
+            const TP = (p) => [CX + p[0] * SC, CY + p[1] * SC];
+
+            // --- STEP 2: Collect unique edges ---
+            function edgeKey(p1, p2) {
+                const k1 = Math.round(p1[0] * 1000) + "," + Math.round(p1[1] * 1000);
+                const k2 = Math.round(p2[0] * 1000) + "," + Math.round(p2[1] * 1000);
+                return k1 < k2 ? k1 + "|" + k2 : k2 + "|" + k1;
+            }
+
+            const edgeMap = new Map();
+            for (const [col, A, B, Bc] of tris) {
+                for (const [P, Q] of [[A, B], [B, Bc], [Bc, A]]) {
+                    const tp = TP(P), tq = TP(Q);
+                    // Clip to circle
+                    const mpX = (tp[0] + tq[0]) / 2, mpY = (tp[1] + tq[1]) / 2;
+                    if (Math.hypot(mpX - CX, mpY - CY) > CLIP + 20) continue;
+                    const k = edgeKey(P, Q);
+                    if (!edgeMap.has(k)) {
+                        edgeMap.set(k, { p1: tp, p2: tq });
+                    }
+                }
+            }
+            const edges = [...edgeMap.values()];
+
+            // --- STEP 3: Collect vertices and their edge lists ---
+            function vertKey(p) {
+                return Math.round(p[0]) + "," + Math.round(p[1]);
+            }
+
+            const vertexEdges = new Map();
+            for (let ei = 0; ei < edges.length; ei++) {
+                const { p1, p2 } = edges[ei];
+                for (const p of [p1, p2]) {
+                    const k = vertKey(p);
+                    if (!vertexEdges.has(k)) vertexEdges.set(k, { pos: p, edgeIndices: [] });
+                    vertexEdges.get(k).edgeIndices.push(ei);
+                }
+            }
+
+            // Helper: get the sorted rank of edge ei at vertex p
+            function edgeAngleRank(p, ei) {
+                const k = vertKey(p);
+                const ve = vertexEdges.get(k);
+                if (!ve) return 0;
+                const { p1, p2 } = edges[ei];
+                // Determine which end of edge ei is at p, then find the other end
+                const other = (Math.abs(p1[0] - p[0]) < 2 && Math.abs(p1[1] - p[1]) < 2) ? p2 : p1;
+                const myAng = Math.atan2(other[1] - p[1], other[0] - p[0]);
+
+                const sorted = ve.edgeIndices.map(i => {
+                    const e = edges[i];
+                    const q = (Math.abs(e.p1[0] - p[0]) < 2 && Math.abs(e.p1[1] - p[1]) < 2) ? e.p2 : e.p1;
+                    return { idx: i, ang: Math.atan2(q[1] - p[1], q[0] - p[0]) };
+                });
+                sorted.sort((a, b) => a.ang - b.ang);
+                return sorted.findIndex(a => a.idx === ei);
+            }
+
+            // --- STEP 4: Draw each edge as a Celtic band ---
+            const bw = values.bandW * 30; // band half-width in px
+            const gapFrac = values.gap;
+            const bandOffsets = values.doubled === "an" ? [-bw, bw] : [0];
+            const lineW = values.doubled === "an" ? 0.7 : 1.0;
+
+            for (let ei = 0; ei < edges.length; ei++) {
+                const { p1, p2 } = edges[ei];
+
+                const dx = p2[0] - p1[0], dy = p2[1] - p1[1];
+                const len = Math.hypot(dx, dy);
+                if (len < 2) continue;
+
+                const ux = dx / len, uy = dy / len; // unit along edge
+                const nx = -uy, ny = ux;             // perpendicular (band width direction)
+
+                // Determine over/under at each endpoint using angle rank parity
+                const rankStart = edgeAngleRank(p1, ei);
+                const rankEnd = edgeAngleRank(p2, ei);
+                const overStart = (rankStart % 2 === 0);
+                const overEnd = (rankEnd % 2 === 0);
+
+                const gapLen = len * gapFrac;
+                // t parameter along edge: 0=p1, 1=p2
+                const t0 = overStart ? 0 : gapLen / len;
+                const t1 = overEnd ? 1 : 1 - gapLen / len;
+
+                if (t0 >= t1 - 0.01) continue; // fully hidden
+
+                for (const off of bandOffsets) {
+                    const x0 = p1[0] + dx * t0 + nx * off;
+                    const y0 = p1[1] + dy * t0 + ny * off;
+                    const x1 = p1[0] + dx * t1 + nx * off;
+                    const y1 = p1[1] + dy * t1 + ny * off;
+                    lines.push({ pts: [[x0, y0], [x1, y1]], w: lineW });
+                }
+            }
+
+            // Circular clipping frame
+            const frame = [];
+            for (let i = 0; i <= 80; i++) {
+                const a = i / 80 * Math.PI * 2;
+                frame.push([CX + CLIP * Math.cos(a), CY + CLIP * Math.sin(a)]);
+            }
+            lines.push({ pts: frame, closed: true, w: 1.5 });
+
+            api.status(edges.length + " Kanten · " + values.gen + " Teilungen");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>
