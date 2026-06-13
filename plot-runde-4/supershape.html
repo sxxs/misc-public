@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>90 · Supershape — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>90 · Supershape</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Gielis' Superformel verallgemeinert den Kreis zu organischen Formen — Blätter, Blüten, Diatomeen, Sterne. Als konzentrische Mandala-Schichten, Felder oder Morphing zwischen zwei Gestalten.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "supershape",
+        params: [
+            { key: "form", label: "Form", value: "blume", options: [
+                { value: "blume",    label: "Blume" },
+                { value: "stern",    label: "Stern" },
+                { value: "blatt",    label: "Blatt" },
+                { value: "diatomee", label: "Diatomee" },
+                { value: "zufall",   label: "Zufall" }
+            ]},
+            { key: "mode", label: "Modus", value: "mandala", options: [
+                { value: "mandala", label: "Mandala" },
+                { value: "feld",    label: "Feld" },
+                { value: "morph",   label: "Morph" }
+            ]},
+            { key: "layers", label: "Schichten", min: 3, max: 20, step: 1, value: 10 },
+            { key: "size",   label: "Größe",     min: 200, max: 450, step: 10, value: 380 },
+            { key: "twist",  label: "Drehung",   min: 0, max: 30, step: 1, value: 8 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+
+            // Gielis superformula
+            function superformula(theta, m, n1, n2, n3, a, b) {
+                const t = m * theta / 4;
+                const part1 = Math.pow(Math.abs(Math.cos(t) / a), n2);
+                const part2 = Math.pow(Math.abs(Math.sin(t) / b), n3);
+                const sum = part1 + part2;
+                if (sum === 0) return 0;
+                return Math.pow(sum, -1 / n1);
+            }
+
+            // Get preset parameters
+            function getPreset(name, rndFn) {
+                switch (name) {
+                    case "blume":    return { m: 5,  n1: 1,   n2: 1,   n3: 1 };
+                    case "stern":    return { m: 8,  n1: 0.5, n2: 0.5, n3: 8 };
+                    case "blatt":    return { m: 2,  n1: 1,   n2: 4,   n3: 8 };
+                    case "diatomee": return { m: 3,  n1: 4,   n2: 12,  n3: 15 };
+                    case "zufall":
+                    default:
+                        return {
+                            m:  2 + Math.floor(rndFn() * 7),
+                            n1: 0.3 + rndFn() * 8,
+                            n2: rndFn() * 10,
+                            n3: rndFn() * 10
+                        };
+                }
+            }
+
+            // Build a closed polyline for one superformula curve
+            function makeCurve(cx, cy, scale, m, n1, n2, n3, a, b, rotOffset) {
+                const STEPS = 800;
+                const pts = [];
+                for (let i = 0; i <= STEPS; i++) {
+                    const theta = (i / STEPS) * Math.PI * 2 + (rotOffset || 0);
+                    const r = superformula(theta, m, n1, n2, n3, a || 1, b || 1);
+                    const x = cx + r * scale * Math.cos(theta);
+                    const y = cy + r * scale * Math.sin(theta);
+                    pts.push([x, y]);
+                }
+                return { pts, closed: true };
+            }
+
+            const lines = [];
+            const preset = getPreset(values.form, rnd);
+            const { m, n1, n2, n3 } = preset;
+            const mode = values.mode;
+            const layers = values.layers | 0;
+            const size = values.size;
+            const twistDeg = values.twist;
+            const twistRad = (twistDeg * Math.PI) / 180;
+
+            if (mode === "mandala") {
+                // Concentric scaled copies, each slightly rotated
+                for (let i = 1; i <= layers; i++) {
+                    const t = i / layers;
+                    const scale = size * t;
+                    const rot = (layers - i) * twistRad;
+                    const curve = makeCurve(500, 500, scale, m, n1, n2, n3, 1, 1, rot);
+                    curve.w = 0.8 + 0.4 * t;
+                    lines.push(curve);
+                }
+            } else if (mode === "feld") {
+                // 5x5 grid of small shapes with slight parameter variation
+                const N = 5;
+                const spacing = 800 / N;
+                const cellSize = spacing * 0.42;
+                const startX = 100 + spacing * 0.5;
+                const startY = 100 + spacing * 0.5;
+                for (let row = 0; row < N; row++) {
+                    for (let col = 0; col < N; col++) {
+                        const cx = startX + col * spacing;
+                        const cy = startY + row * spacing;
+                        const dn1 = (rnd() - 0.5) * 1.5;
+                        const dn2 = (rnd() - 0.5) * 2.0;
+                        const dn3 = (rnd() - 0.5) * 2.0;
+                        const dm  = (rnd() < 0.3) ? Math.floor(rnd() * 3) - 1 : 0;
+                        const curve = makeCurve(
+                            cx, cy, cellSize,
+                            Math.max(1, m + dm),
+                            Math.max(0.1, n1 + dn1),
+                            Math.max(0.1, n2 + dn2),
+                            Math.max(0.1, n3 + dn3),
+                            1, 1, rnd() * Math.PI
+                        );
+                        curve.w = 0.9;
+                        lines.push(curve);
+                    }
+                }
+            } else { // morph
+                // Interpolate between two presets across layers
+                const presetNames = ["blume", "stern", "blatt", "diatomee"];
+                const nameA = presetNames[Math.floor(rnd() * presetNames.length)];
+                let nameB;
+                do { nameB = presetNames[Math.floor(rnd() * presetNames.length)]; } while (nameB === nameA);
+                const pA = getPreset(nameA, rnd);
+                const pB = getPreset(nameB, rnd);
+
+                for (let i = 1; i <= layers; i++) {
+                    const t = (i - 1) / Math.max(layers - 1, 1);
+                    const lerpM  = pA.m  + (pB.m  - pA.m)  * t;
+                    const lerpN1 = pA.n1 + (pB.n1 - pA.n1) * t;
+                    const lerpN2 = pA.n2 + (pB.n2 - pA.n2) * t;
+                    const lerpN3 = pA.n3 + (pB.n3 - pA.n3) * t;
+                    const scale = size * (0.2 + 0.8 * (i / layers));
+                    const rot = i * twistRad;
+                    const curve = makeCurve(500, 500, scale, lerpM, lerpN1, lerpN2, lerpN3, 1, 1, rot);
+                    curve.w = 0.8 + 0.4 * (i / layers);
+                    lines.push(curve);
+                }
+            }
+
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

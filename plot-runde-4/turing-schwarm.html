@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>87 · Turing-Schwarm — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>87 · Turing-Schwarm</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Turing-Spots werden zu schwebenden 3D-Körpern — Würfel, Oktaeder, Tetraeder — im perspektivischen Raum. Keine Ebene, kein Raster, nur ein Schwarm aus biologisch platzierten Geometrien.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "turing-schwarm",
+        params: [
+            { key: "f",        label: "Feed-Rate",          min: 0.025, max: 0.075, step: 0.001,  value: 0.055 },
+            { key: "k",        label: "Kill-Rate",           min: 0.055, max: 0.067, step: 0.0005, value: 0.062 },
+            { key: "steps",    label: "Simulationsschritte", min: 400,   max: 2000,  step: 200,    value: 1200 },
+            { key: "threshold","label": "Schwelle",          min: 5,     max: 50,    step: 5,      value: 20 },
+            { key: "maxSize",  label: "Objektgröße",         min: 20,    max: 80,    step: 5,      value: 40 },
+            { key: "viewDist", label: "Perspektive",         min: 300,   max: 900,   step: 50,     value: 600 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+
+            // --- Gray-Scott simulation ---
+            const N = 64;
+            const A  = new Float32Array(N * N).fill(1);
+            const B  = new Float32Array(N * N);
+            const A2 = new Float32Array(N * N);
+            const B2 = new Float32Array(N * N);
+
+            // seed random patches of chemical B
+            const patches = 4 + Math.floor(rnd() * 5);
+            for (let p = 0; p < patches; p++) {
+                const cx = 8 + Math.floor(rnd() * (N - 16));
+                const cy = 8 + Math.floor(rnd() * (N - 16));
+                for (let dy = -3; dy <= 3; dy++) {
+                    for (let dx = -3; dx <= 3; dx++) {
+                        const idx = (cy + dy) * N + (cx + dx);
+                        if (idx >= 0 && idx < N * N) B[idx] = 1;
+                    }
+                }
+            }
+
+            const f = values.f, k = values.k, DA = 1.0, DB = 0.5;
+            let a = A, b = B, a2 = A2, b2 = B2;
+
+            function simStep() {
+                for (let y = 1; y < N - 1; y++) {
+                    for (let x = 1; x < N - 1; x++) {
+                        const i = y * N + x;
+                        const av = a[i], bv = b[i];
+                        const lapA = 0.2 * (a[i-1] + a[i+1] + a[i-N] + a[i+N])
+                                   + 0.05 * (a[i-N-1] + a[i-N+1] + a[i+N-1] + a[i+N+1]) - av;
+                        const lapB = 0.2 * (b[i-1] + b[i+1] + b[i-N] + b[i+N])
+                                   + 0.05 * (b[i-N-1] + b[i-N+1] + b[i+N-1] + b[i+N+1]) - bv;
+                        const abb = av * bv * bv;
+                        a2[i] = av + (DA * lapA - abb + f * (1 - av));
+                        b2[i] = bv + (DB * lapB + abb - (f + k) * bv);
+                    }
+                }
+                const tmp = a; a = a2; a2 = tmp;
+                const tmp2 = b; b = b2; b2 = tmp2;
+            }
+
+            // preview during simulation
+            const off = document.createElement("canvas");
+            off.width = N; off.height = N;
+            const offCtx = off.getContext("2d");
+            function preview() {
+                const img = offCtx.createImageData(N, N);
+                for (let i = 0; i < N * N; i++) {
+                    const v = Math.max(0, Math.min(255, 255 - b[i] * 600));
+                    img.data[i * 4] = v; img.data[i * 4 + 1] = v;
+                    img.data[i * 4 + 2] = v; img.data[i * 4 + 3] = 255;
+                }
+                offCtx.putImageData(img, 0, 0);
+                const canvas = document.getElementById("canvas");
+                const ctx = PR4.fitCanvas(canvas);
+                ctx.fillStyle = "#fff";
+                ctx.fillRect(0, 0, PR4.SIZE, PR4.SIZE);
+                ctx.imageSmoothingEnabled = false;
+                ctx.drawImage(off, 40, 40, 920, 920);
+            }
+
+            let stepsDone = 0;
+
+            function buildSchwarm() {
+                // find max B field
+                let bMax = 0;
+                for (let i = 0; i < N * N; i++) if (b[i] > bMax) bMax = b[i];
+                if (bMax < 1e-6) bMax = 1;
+
+                const threshVal = (values.threshold / 100) * bMax;
+
+                // Extract spots: cells above threshold, downsampled
+                // Use a step of 2 cells to avoid overcrowding
+                const spots = [];
+                for (let y = 0; y < N; y += 2) {
+                    for (let x = 0; x < N; x += 2) {
+                        const bv = b[y * N + x];
+                        if (bv > threshVal) {
+                            spots.push({ px: x, py: y, bv });
+                        }
+                    }
+                }
+
+                // Limit to 100 objects, picking highest B values
+                spots.sort((a2, b2) => b2.bv - a2.bv);
+                const objs = spots.slice(0, 100);
+
+                // Global rotation angles (azimuth=25, tilt=15 defaults)
+                const az = 25 * Math.PI / 180;
+                const tl = 15 * Math.PI / 180;
+                const viewDist = values.viewDist;
+                const maxSz = values.maxSize;
+
+                // Rotate a 3D vector by azimuth (y-axis) then tilt (x-axis)
+                function rotateWorld(px, py, pz) {
+                    // azimuth around y-axis
+                    const rx = px * Math.cos(az) + pz * Math.sin(az);
+                    const ry = py;
+                    const rz = -px * Math.sin(az) + pz * Math.cos(az);
+                    // tilt around x-axis
+                    const fx = rx;
+                    const fy = ry * Math.cos(tl) - rz * Math.sin(tl);
+                    const fz = ry * Math.sin(tl) + rz * Math.cos(tl);
+                    return [fx, fy, fz];
+                }
+
+                // Rotate a local vector by a per-object random angle (around z-axis only)
+                function rotateLocal(px, py, pz, ang) {
+                    const cx = Math.cos(ang), sx = Math.sin(ang);
+                    const rx = px * cx - py * sx;
+                    const ry = px * sx + py * cx;
+                    return [rx, ry, pz];
+                }
+
+                // Generate a cube wireframe (front 3 faces)
+                function cubeEdges(s) {
+                    // 8 vertices of a cube of size s
+                    const v = [];
+                    for (let dz = -1; dz <= 1; dz += 2)
+                        for (let dy = -1; dy <= 1; dy += 2)
+                            for (let dx = -1; dx <= 1; dx += 2)
+                                v.push([dx * s, dy * s, dz * s]);
+                    // indices: 0=---, 1=+--, 2=-+-, 3=++-, 4=--+, 5=+-+, 6=-++, 7=+++
+                    return [
+                        [0,1],[2,3],[4,5],[6,7],  // x-edges
+                        [0,2],[1,3],[4,6],[5,7],  // y-edges
+                        [0,4],[1,5],[2,6],[3,7]   // z-edges
+                    ].map(([i, j]) => [v[i], v[j]]);
+                }
+
+                // Octahedron edges (6 vertices, 12 edges)
+                function octaEdges(s) {
+                    const v = [
+                        [s, 0, 0], [-s, 0, 0],
+                        [0, s, 0], [0, -s, 0],
+                        [0, 0, s], [0, 0, -s]
+                    ];
+                    // All pairs except parallel (i.e., all except 0-1, 2-3, 4-5)
+                    const edges = [];
+                    for (let i = 0; i < 6; i++) {
+                        for (let j = i + 1; j < 6; j++) {
+                            if ((i === 0 && j === 1) || (i === 2 && j === 3) || (i === 4 && j === 5)) continue;
+                            edges.push([v[i], v[j]]);
+                        }
+                    }
+                    return edges;
+                }
+
+                // Tetrahedron edges (4 vertices, 6 edges)
+                function tetraEdges(s) {
+                    const v = [
+                        [s,  s,  s],
+                        [s, -s, -s],
+                        [-s, s, -s],
+                        [-s,-s,  s]
+                    ];
+                    return [
+                        [v[0],v[1]], [v[0],v[2]], [v[0],v[3]],
+                        [v[1],v[2]], [v[1],v[3]], [v[2],v[3]]
+                    ];
+                }
+
+                // Perspective project + apply world rotation
+                function projectEdge(edge, wx, wy, wz, objAng) {
+                    const [va, vb] = edge;
+                    const segments = [];
+                    for (const lv of [va, vb]) {
+                        // Apply local rotation (around z-axis)
+                        const [rx, ry, rz] = rotateLocal(lv[0], lv[1], lv[2], objAng);
+                        // World position
+                        const [fx, fy, fz] = rotateWorld(wx + rx, wy + ry, wz + rz);
+                        // Perspective
+                        const depth = fz + viewDist;
+                        if (depth < 10) return null; // behind camera
+                        const sc = viewDist / depth;
+                        segments.push([500 + fx * sc, 500 - fy * sc]);
+                    }
+                    return segments;
+                }
+
+                // Assign 3D positions to objects
+                const objects = objs.map(obj => {
+                    const worldX = (obj.px / N - 0.5) * 800;
+                    const worldY = (obj.py / N - 0.5) * 800;
+                    const worldZ = rnd() * 600 - 300;
+                    const size = maxSz * (obj.bv / bMax);
+                    const objAng = rnd() * Math.PI * 2;
+                    return { worldX, worldY, worldZ, size, bv: obj.bv, objAng };
+                });
+
+                // Sort back to front (ascending Z = most negative first)
+                objects.sort((a2, b2) => a2.worldZ - b2.worldZ);
+
+                const lines = [];
+
+                for (const obj of objects) {
+                    const { worldX, worldY, worldZ, size, bv, objAng } = obj;
+                    const ratio = bv / bMax;
+
+                    let edges;
+                    if (ratio > 0.7) {
+                        edges = cubeEdges(size * 0.5);
+                    } else if (ratio > 0.4) {
+                        edges = octaEdges(size * 0.6);
+                    } else {
+                        edges = tetraEdges(size * 0.6);
+                    }
+
+                    // Apply perspective and world rotation
+                    // First rotate world position
+                    const [rwx, rwy, rwz] = rotateWorld(worldX, worldY, worldZ);
+                    const depth = rwz + viewDist;
+                    if (depth < 10) continue;
+                    const sc = viewDist / depth;
+                    const drawSz = size * sc;
+
+                    for (const edge of edges) {
+                        const [va, vb] = edge;
+                        // rotate local verts and project
+                        const [rax, ray, raz] = rotateLocal(va[0] * sc, va[1] * sc, va[2] * sc, objAng);
+                        const [rbx, rby, rbz] = rotateLocal(vb[0] * sc, vb[1] * sc, vb[2] * sc, objAng);
+
+                        const sax = 500 + rwx * sc + rax;
+                        const say = 500 - rwy * sc - ray;
+                        const sbx = 500 + rwx * sc + rbx;
+                        const sby = 500 - rwy * sc - rby;
+
+                        // Face normal for hidden-line removal (approximate)
+                        // Use the z-component of local edge cross with view direction
+                        // For simplicity: draw all edges (plotter style)
+                        lines.push({ pts: [[sax, say], [sbx, sby]], w: Math.max(0.3, ratio * 1.2) });
+                    }
+                }
+
+                return lines;
+            }
+
+            function frame() {
+                if (api.cancelled()) return;
+                for (let s = 0; s < 30 && stepsDone < values.steps; s++) {
+                    simStep(); stepsDone++;
+                }
+                preview();
+                if (stepsDone < values.steps) {
+                    api.status("Simuliere… " + stepsDone + " / " + values.steps);
+                    requestAnimationFrame(frame);
+                } else {
+                    api.status("Platziere Körper…");
+                    requestAnimationFrame(() => {
+                        if (api.cancelled()) return;
+                        const lines = buildSchwarm();
+                        if (lines.length === 0) {
+                            api.status("Muster ausgestorben — andere f/k-Werte probieren");
+                            api.done([{ pts: [[40,40],[960,40],[960,960],[40,960],[40,40]], w: 1.2 }]);
+                        } else {
+                            api.status("Turing-Schwarm — " + lines.length + " Pfade · f=" + values.f + " k=" + values.k);
+                            api.done(lines);
+                        }
+                    });
+                }
+            }
+
+            requestAnimationFrame(frame);
+        }
+    });
+    </script>
+</body>
+</html>
