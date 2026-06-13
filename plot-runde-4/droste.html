@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>93 · Droste-Spirale — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>93 · Droste-Spirale</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Das Droste-Prinzip: ein geometrisches Motiv enthält eine verkleinerte, gedrehte Kopie seiner selbst — ad infinitum. Logarithmische Spiralrekursion als plottergerechte Selbstähnlichkeit.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "droste",
+        params: [
+            { key: "motif", label: "Motiv", value: "sechseck", options: [
+                { value: "sechseck", label: "Sechseck" },
+                { value: "quadrat", label: "Quadrat" },
+                { value: "dreieck", label: "Dreieck" },
+                { value: "spiralarme", label: "Spiralarme" }
+            ]},
+            { key: "scale", label: "Skalierung", min: 0.3, max: 0.7, step: 0.02, value: 0.45 },
+            { key: "angle", label: "Drehwinkel", min: 0, max: 60, step: 1, value: 22 },
+            { key: "levels", label: "Ebenen", min: 3, max: 15, step: 1, value: 8 },
+            { key: "size", label: "Größe", min: 200, max: 450, step: 10, value: 400 },
+            { key: "connect", label: "Verbinden", value: "an", options: [
+                { value: "an", label: "Verbindungskurven" },
+                { value: "aus", label: "Nur Motive" }
+            ]}
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+
+            const r = values.scale;
+            const thetaDeg = values.angle;
+            const theta = thetaDeg * Math.PI / 180;
+            const R0 = values.size;
+            const CX = 500, CY = 500;
+            const motif = values.motif;
+            const doConnect = values.connect === "an";
+
+            // Minimum visible size (stop when scale^n * R0 < minSize)
+            const minSize = Math.max(3, 0.003 * R0);
+
+            // Build base motif vertices (unit radius, centered at origin)
+            // Returns array of [x,y] points forming the outline
+            function baseMotifVerts(m) {
+                const verts = [];
+                if (m === "sechseck") {
+                    for (let k = 0; k < 6; k++) {
+                        const a = Math.PI/6 + k * Math.PI/3;
+                        verts.push([Math.cos(a), Math.sin(a)]);
+                    }
+                } else if (m === "quadrat") {
+                    for (let k = 0; k < 4; k++) {
+                        const a = Math.PI/4 + k * Math.PI/2;
+                        verts.push([Math.cos(a), Math.sin(a)]);
+                    }
+                } else if (m === "dreieck") {
+                    for (let k = 0; k < 3; k++) {
+                        const a = -Math.PI/2 + k * 2*Math.PI/3;
+                        verts.push([Math.cos(a), Math.sin(a)]);
+                    }
+                }
+                // spiralarme handled separately
+                return verts;
+            }
+
+            // Apply scale+rotation to a 2D point around origin
+            function applyTransform(pt, sc, rot) {
+                const c = Math.cos(rot), s = Math.sin(rot);
+                const x = pt[0]*c - pt[1]*s;
+                const y = pt[0]*s + pt[1]*c;
+                return [x*sc, y*sc];
+            }
+
+            // Draw one copy of the motif at level n (scale r^n, rotation n*theta, base radius R0)
+            function drawMotifAtLevel(n, weight) {
+                const sc = Math.pow(r, n) * R0;
+                const rot = n * theta;
+                if (motif === "spiralarme") {
+                    // 3 spiral arms radiating from center, each is a polyline curving outward
+                    const numArms = 3;
+                    const armPts = 20;
+                    for (let arm = 0; arm < numArms; arm++) {
+                        const armAngle = arm * 2*Math.PI/numArms + rot;
+                        const pts = [];
+                        for (let i = 0; i <= armPts; i++) {
+                            const t = i / armPts;
+                            // Archimedean spiral arm: radius grows from 0 to sc, angle sweeps quarter turn
+                            const rad = t * sc;
+                            const ang = armAngle + t * Math.PI * 0.5;
+                            pts.push([CX + rad*Math.cos(ang), CY + rad*Math.sin(ang)]);
+                        }
+                        lines.push({ pts, w: weight });
+                    }
+                } else {
+                    const baseVerts = baseMotifVerts(motif);
+                    const transformed = baseVerts.map(v => {
+                        const tv = applyTransform(v, sc, rot);
+                        return [CX + tv[0], CY + tv[1]];
+                    });
+                    lines.push({ pts: [...transformed, transformed[0]], w: weight, closed: false });
+                }
+            }
+
+            // Compute vertex positions at level n for connecting curves
+            function vertsAtLevel(n) {
+                const sc = Math.pow(r, n) * R0;
+                const rot = n * theta;
+                if (motif === "spiralarme") {
+                    // Use arm tip as vertex
+                    const numArms = 3;
+                    return Array.from({length: numArms}, (_, arm) => {
+                        const armAngle = arm * 2*Math.PI/numArms + rot;
+                        return [CX + sc*Math.cos(armAngle + Math.PI*0.5), CY + sc*Math.sin(armAngle + Math.PI*0.5)];
+                    });
+                } else {
+                    const baseVerts = baseMotifVerts(motif);
+                    return baseVerts.map(v => {
+                        const tv = applyTransform(v, sc, rot);
+                        return [CX + tv[0], CY + tv[1]];
+                    });
+                }
+            }
+
+            // Determine max levels based on minimum visible size
+            let maxLevel = 0;
+            while (maxLevel < values.levels) {
+                const sc = Math.pow(r, maxLevel) * R0;
+                if (sc < minSize) break;
+                maxLevel++;
+            }
+            maxLevel = Math.min(maxLevel, Math.round(values.levels));
+
+            // Draw each level (outermost first = level 0, heaviest weight)
+            for (let n = 0; n < maxLevel; n++) {
+                const sc = Math.pow(r, n) * R0;
+                if (sc < minSize) break;
+                // Weight: heavier for outer (larger) copies
+                const weight = Math.max(0.4, 1.4 - n * 0.1);
+                drawMotifAtLevel(n, weight);
+            }
+
+            // Draw connecting spiral curves between successive levels
+            if (doConnect && motif !== "spiralarme") {
+                const baseVerts = baseMotifVerts(motif);
+                const numVerts = baseVerts.length;
+                const CURVE_PTS = 24;
+
+                for (let k = 0; k < numVerts; k++) {
+                    const basePt = baseVerts[k];
+                    // Spiral curve: at continuous level t, the vertex position is
+                    // (r^t * R0) * rotate(basePt, t*theta) + center
+                    const pts = [];
+                    const tMax = maxLevel - 1;
+                    if (tMax < 1) continue;
+                    for (let i = 0; i <= CURVE_PTS * tMax; i++) {
+                        const t = i / CURVE_PTS;
+                        const sc = Math.pow(r, t) * R0;
+                        const rot = t * theta;
+                        const tv = applyTransform(basePt, sc, rot);
+                        pts.push([CX + tv[0], CY + tv[1]]);
+                    }
+                    if (pts.length >= 2) lines.push({ pts, w: 0.5 });
+                }
+            }
+
+            // For spiralarme, draw connecting curves between arm tips
+            if (doConnect && motif === "spiralarme") {
+                const numArms = 3;
+                const CURVE_PTS = 24;
+                for (let arm = 0; arm < numArms; arm++) {
+                    const pts = [];
+                    const tMax = maxLevel - 1;
+                    if (tMax < 1) continue;
+                    for (let i = 0; i <= CURVE_PTS * tMax; i++) {
+                        const t = i / CURVE_PTS;
+                        const sc = Math.pow(r, t) * R0;
+                        const rot = t * theta;
+                        const armAngle = arm * 2*Math.PI/numArms + rot;
+                        pts.push([CX + sc*Math.cos(armAngle + Math.PI*0.5), CY + sc*Math.sin(armAngle + Math.PI*0.5)]);
+                    }
+                    if (pts.length >= 2) lines.push({ pts, w: 0.5 });
+                }
+            }
+
+            api.status("Fertig — " + maxLevel + " Ebenen, Skala " + r.toFixed(2) + ", Drehung " + thetaDeg + "°");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>96 · TSP-Wort — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>96 · TSP-Wort</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div class="control">
+                <label><span>Wort</span></label>
+                <input id="textInput" type="text" value="PLOT" maxlength="6">
+            </div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Das Wort als einzige Linie: der TSP-Pfad besucht jeden Strich-Punkt genau einmal. Innerhalb der Buchstaben eine durchgehende Spur — zwischen ihnen eine Lücke, ein Strich-Hauch oder Punkte.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    const app = PR4App({
+        svgName: "tsp-wort",
+        params: [
+            { key: "spacing", label: "Punktdichte", min: 5, max: 30, step: 1, value: 10 },
+            { key: "gaps", label: "Zwischenraum", value: "skip", options: [
+                { value: "skip",   label: "Lücke" },
+                { value: "dash",   label: "Gestrichelt" },
+                { value: "punkte", label: "Punkte" }
+            ]}
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+
+            // Read and normalize the input word
+            const raw = (document.getElementById("textInput").value || "PLOT");
+            const text = PR4Font.normalize(raw).slice(0, 6) || "PLOT";
+
+            const spacing = values.spacing;
+            const gapMode = values.gaps;
+
+            // -------------------------------------------------------
+            // Sample stroke points from each letter
+            // -------------------------------------------------------
+            // textCentered returns arrays of [x,y] stroke points for
+            // the full word centered at (500, 500) with capH 220
+            const capH = 220;
+            const strokes = PR4Font.textCentered(text, 500, 500, capH);
+
+            // We need to know which letter each stroke belongs to.
+            // Recompute per-letter strokes to assign letter index.
+            const letterStrokes = []; // letterStrokes[i] = array of strokes for letter i
+            {
+                const t = PR4Font.normalize(text);
+                const k = capH / 10;
+                // compute total width for centering (same logic as font.js textCentered)
+                let totalW = 0;
+                for (const c of t) totalW += (PR4Font.glyphs[c].w + 2) * k;
+                totalW -= 2 * k; // trailing gap removed
+                let cx = 500 - totalW / 2;
+                const cy = 500 + capH * 0.45; // baseline y
+                for (const c of t) {
+                    const g = PR4Font.glyphs[c];
+                    const strokesToAdd = [];
+                    for (const stroke of g.s) {
+                        const pts = stroke.map(([gx, gy]) => [cx + gx * k, cy - gy * k]);
+                        strokesToAdd.push(pts);
+                    }
+                    letterStrokes.push(strokesToAdd);
+                    cx += (g.w + 2) * k;
+                }
+            }
+
+            // Sample equidistant points along each stroke of each letter
+            function sampleStroke(pts, sp) {
+                const out = [];
+                if (pts.length < 2) {
+                    out.push(pts[0]);
+                    return out;
+                }
+                out.push([pts[0][0], pts[0][1]]);
+                let acc = 0;
+                for (let i = 1; i < pts.length; i++) {
+                    const dx = pts[i][0] - pts[i - 1][0];
+                    const dy = pts[i][1] - pts[i - 1][1];
+                    const segLen = Math.sqrt(dx * dx + dy * dy);
+                    if (segLen < 1e-9) continue;
+                    let d = acc;
+                    while (d + (sp - acc) <= segLen + 1e-9) {
+                        const t = (d + (sp - acc)) / segLen;
+                        if (t > 1) break;
+                        out.push([
+                            pts[i - 1][0] + dx * t,
+                            pts[i - 1][1] + dy * t
+                        ]);
+                        d += sp;
+                    }
+                    acc = (acc + segLen) % sp;
+                }
+                // always include the endpoint
+                const last = pts[pts.length - 1];
+                const prev = out[out.length - 1];
+                if (Math.hypot(last[0] - prev[0], last[1] - prev[1]) > 1) {
+                    out.push([last[0], last[1]]);
+                }
+                return out;
+            }
+
+            // Collect all nodes with letter index
+            const nodes = []; // [{x, y, letter}]
+            for (let li = 0; li < letterStrokes.length; li++) {
+                for (const stroke of letterStrokes[li]) {
+                    const sampled = sampleStroke(stroke, spacing);
+                    for (const [x, y] of sampled) {
+                        nodes.push({ x, y, letter: li });
+                    }
+                }
+            }
+
+            if (nodes.length < 2) {
+                api.status("Zu wenige Punkte — Wort prüfen");
+                api.done([]);
+                return;
+            }
+
+            // -------------------------------------------------------
+            // Nearest-neighbor TSP with grid-based spatial index
+            // -------------------------------------------------------
+            const n = nodes.length;
+            const CELL = 60; // grid cell size
+            const gridW = Math.ceil(1000 / CELL);
+            const gridH = Math.ceil(1000 / CELL);
+            const grid = new Array(gridW * gridH).fill(null).map(() => []);
+
+            for (let i = 0; i < n; i++) {
+                const cx = Math.floor(nodes[i].x / CELL);
+                const cy = Math.floor(nodes[i].y / CELL);
+                const ci = Math.max(0, Math.min(gridW - 1, cx)) +
+                           Math.max(0, Math.min(gridH - 1, cy)) * gridW;
+                grid[ci].push(i);
+            }
+
+            const used = new Uint8Array(n);
+            const order = new Int32Array(n);
+            order[0] = 0;
+            used[0] = 1;
+
+            // Remove node 0 from its grid cell
+            {
+                const cx = Math.floor(nodes[0].x / CELL);
+                const cy = Math.floor(nodes[0].y / CELL);
+                const ci = Math.max(0, Math.min(gridW - 1, cx)) +
+                           Math.max(0, Math.min(gridH - 1, cy)) * gridW;
+                const cell = grid[ci];
+                const idx = cell.indexOf(0);
+                if (idx >= 0) cell.splice(idx, 1);
+            }
+
+            for (let step = 1; step < n; step++) {
+                const last = order[step - 1];
+                const lx = nodes[last].x, ly = nodes[last].y;
+                const gcx = Math.floor(lx / CELL);
+                const gcy = Math.floor(ly / CELL);
+
+                let bestD = Infinity, bestJ = -1;
+
+                // Search expanding rings of grid cells
+                for (let radius = 0; radius <= Math.max(gridW, gridH); radius++) {
+                    // If we already found a candidate closer than the nearest
+                    // possible point in the next ring, we can stop.
+                    if (bestJ >= 0 && radius > 0) {
+                        const minRingDist = (radius - 1) * CELL;
+                        if (minRingDist * minRingDist > bestD) break;
+                    }
+                    const x0 = gcx - radius, x1 = gcx + radius;
+                    const y0 = gcy - radius, y1 = gcy + radius;
+                    for (let gy = y0; gy <= y1; gy++) {
+                        if (gy < 0 || gy >= gridH) continue;
+                        for (let gx = x0; gx <= x1; gx++) {
+                            if (gx < 0 || gx >= gridW) continue;
+                            // Only process border cells of the ring
+                            if (radius > 0 &&
+                                gx > x0 && gx < x1 &&
+                                gy > y0 && gy < y1) continue;
+                            const cell = grid[gx + gy * gridW];
+                            for (const j of cell) {
+                                if (used[j]) continue;
+                                const dx = nodes[j].x - lx;
+                                const dy = nodes[j].y - ly;
+                                const d = dx * dx + dy * dy;
+                                if (d < bestD) { bestD = d; bestJ = j; }
+                            }
+                        }
+                    }
+                    if (bestJ >= 0 && radius > 0) {
+                        const minNextDist = radius * CELL;
+                        if (minNextDist * minNextDist > bestD) break;
+                    }
+                }
+
+                if (bestJ < 0) {
+                    // fallback: linear scan
+                    for (let j = 0; j < n; j++) {
+                        if (used[j]) continue;
+                        const dx = nodes[j].x - lx;
+                        const dy = nodes[j].y - ly;
+                        const d = dx * dx + dy * dy;
+                        if (d < bestD) { bestD = d; bestJ = j; }
+                    }
+                }
+
+                order[step] = bestJ;
+                used[bestJ] = 1;
+
+                // Remove bestJ from its grid cell
+                const bcx = Math.floor(nodes[bestJ].x / CELL);
+                const bcy = Math.floor(nodes[bestJ].y / CELL);
+                const bci = Math.max(0, Math.min(gridW - 1, bcx)) +
+                            Math.max(0, Math.min(gridH - 1, bcy)) * gridW;
+                const cell = grid[bci];
+                const idx = cell.indexOf(bestJ);
+                if (idx >= 0) cell.splice(idx, 1);
+            }
+
+            // -------------------------------------------------------
+            // Build polylines from TSP tour
+            // -------------------------------------------------------
+            // Walk the tour: collect consecutive within-letter segments
+            // into solid polylines; handle inter-letter gaps per mode.
+
+            let solidPts = []; // current solid polyline accumulator
+
+            function flushSolid() {
+                if (solidPts.length >= 2) {
+                    lines.push({ pts: solidPts.slice(), w: 1.0 });
+                }
+                solidPts = [];
+            }
+
+            function drawGapSegment(x0, y0, x1, y1) {
+                const dx = x1 - x0, dy = y1 - y0;
+                const segLen = Math.sqrt(dx * dx + dy * dy);
+                if (segLen < 1) return;
+                if (gapMode === "dash") {
+                    // 5px dash, 5px gap
+                    const dashLen = 5, gapLen = 5;
+                    const period = dashLen + gapLen;
+                    const nx = dx / segLen, ny = dy / segLen;
+                    let t = 0;
+                    while (t < segLen) {
+                        const t1 = Math.min(t + dashLen, segLen);
+                        lines.push({ pts: [
+                            [x0 + nx * t,  y0 + ny * t],
+                            [x0 + nx * t1, y0 + ny * t1]
+                        ], w: 0.4 });
+                        t += period;
+                    }
+                } else if (gapMode === "punkte") {
+                    // tiny dots every 20px
+                    const dotInterval = 20;
+                    const nx = dx / segLen, ny = dy / segLen;
+                    for (let t = 0; t <= segLen; t += dotInterval) {
+                        const px = x0 + nx * t, py = y0 + ny * t;
+                        lines.push({ pts: [
+                            [px, py],
+                            [px + 1, py]
+                        ], w: 0.4 });
+                    }
+                }
+                // "skip": draw nothing
+            }
+
+            // Start the first point
+            const firstNode = nodes[order[0]];
+            solidPts.push([firstNode.x, firstNode.y]);
+
+            for (let step = 1; step < n; step++) {
+                const prev = nodes[order[step - 1]];
+                const curr = nodes[order[step]];
+                const sameLetter = (prev.letter === curr.letter);
+
+                if (sameLetter) {
+                    // Continue solid line
+                    solidPts.push([curr.x, curr.y]);
+                } else {
+                    // End current solid run
+                    flushSolid();
+                    // Draw gap segment
+                    drawGapSegment(prev.x, prev.y, curr.x, curr.y);
+                    // Start new solid run from curr
+                    solidPts.push([curr.x, curr.y]);
+                }
+            }
+            flushSolid();
+
+            // Thin frame
+            lines.push({ pts: [[40, 40], [960, 40], [960, 960], [40, 960]], closed: true, w: 1.0 });
+
+            api.status(n + " Punkte · " + text + " · " + lines.length + " Pfade");
+            api.done(lines);
+        }
+    });
+    document.getElementById("textInput").addEventListener("input",
+        PR4.debounce(() => app.start(), 350));
+    </script>
+</body>
+</html>
