@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>94 · Torusknoten — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>94 · Torusknoten</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Ein Torusknoten windet sich um einen unsichtbaren Donut — p Runden um die Achse, q durch das Loch. Kleeblatt, Fünfblatt, Komplex: reine 3D-Kurven, orthografisch projiziert.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "torusknoten",
+        params: [
+            { key: "knot", label: "Knoten (p,q)", value: "2,3", options: [
+                { value: "2,3", label: "(2,3) Kleeblatt" },
+                { value: "2,5", label: "(2,5) Fünfblatt" },
+                { value: "3,4", label: "(3,4) Komplex" },
+                { value: "3,5", label: "(3,5) Vielfach" },
+                { value: "2,7", label: "(2,7) Siebenblatt" }
+            ]},
+            { key: "torus",   label: "Torus zeigen", value: "aus", options: [
+                { value: "aus", label: "Nein" },
+                { value: "an",  label: "Ja" }
+            ]},
+            { key: "size",    label: "Größe",   min: 200, max: 450, step: 10, value: 350 },
+            { key: "azimuth", label: "Azimut",  min: 0,   max: 360, step: 5,  value: 20 },
+            { key: "tilt",    label: "Neigung", min: -90, max: 90,  step: 5,  value: 30 }
+        ],
+        generate(api) {
+            const { values } = api;
+
+            // Parse p, q from knot string
+            const [kp, kq] = values.knot.split(",").map(Number);
+
+            // Rotation angles
+            const azRad = (values.azimuth * Math.PI) / 180;
+            const tiltRad = (values.tilt * Math.PI) / 180;
+
+            // 3D rotation: first around Z (azimuth), then around X (tilt)
+            function rotate3D(x, y, z) {
+                // rotate around Z axis
+                const x1 = x * Math.cos(azRad) - y * Math.sin(azRad);
+                const y1 = x * Math.sin(azRad) + y * Math.cos(azRad);
+                const z1 = z;
+                // rotate around X axis
+                const x2 = x1;
+                const y2 = y1 * Math.cos(tiltRad) - z1 * Math.sin(tiltRad);
+                const z2 = y1 * Math.sin(tiltRad) + z1 * Math.cos(tiltRad);
+                return [x2, y2, z2];
+            }
+
+            // Orthographic projection
+            const SCALE = values.size / 3;
+            function project(x, y, z) {
+                const [rx, ry] = rotate3D(x, y, z);
+                return [500 + rx * SCALE, 500 - ry * SCALE];
+            }
+
+            const lines = [];
+
+            // Draw torus surface lines (background, thin)
+            if (values.torus === "an") {
+                const N_LAT = 8;
+                const N_LON = 12;
+                const TORUS_STEPS = 80;
+
+                // Latitude circles (u = const, v varies)
+                for (let li = 0; li < N_LAT; li++) {
+                    const u = (li / N_LAT) * Math.PI * 2;
+                    const pts = [];
+                    for (let j = 0; j <= TORUS_STEPS; j++) {
+                        const v = (j / TORUS_STEPS) * Math.PI * 2;
+                        const rx = (2 + Math.cos(u)) * Math.cos(v);
+                        const ry = (2 + Math.cos(u)) * Math.sin(v);
+                        const rz = -Math.sin(u);
+                        pts.push(project(rx, ry, rz));
+                    }
+                    lines.push({ pts, w: 0.3, closed: true });
+                }
+
+                // Longitude circles (v = const, u varies)
+                for (let li = 0; li < N_LON; li++) {
+                    const v = (li / N_LON) * Math.PI * 2;
+                    const pts = [];
+                    for (let j = 0; j <= TORUS_STEPS; j++) {
+                        const u = (j / TORUS_STEPS) * Math.PI * 2;
+                        const rx = (2 + Math.cos(u)) * Math.cos(v);
+                        const ry = (2 + Math.cos(u)) * Math.sin(v);
+                        const rz = -Math.sin(u);
+                        pts.push(project(rx, ry, rz));
+                    }
+                    lines.push({ pts, w: 0.3, closed: true });
+                }
+            }
+
+            // Generate torus knot curve
+            // t in [0, 2*pi], need lcm(p,q) full loops actually; for torus knot:
+            // the curve closes after t = 2*pi (it winds p times around z, q times through hole)
+            const KNOT_STEPS = 2000;
+            const knotPts = [];
+            for (let i = 0; i <= KNOT_STEPS; i++) {
+                const t = (i / KNOT_STEPS) * Math.PI * 2;
+                const r = Math.cos(kq * t) + 2;
+                const x = r * Math.cos(kp * t);
+                const y = r * Math.sin(kp * t);
+                const z = -Math.sin(kq * t);
+                knotPts.push(project(x, y, z));
+            }
+            lines.push({ pts: knotPts, w: 1.5, closed: true });
+
+            const totalPaths = lines.length;
+            api.done(lines);
+            api.status && api.status("Fertig — " + totalPaths + " Pfade");
+        }
+    });
+    </script>
+</body>
+</html>

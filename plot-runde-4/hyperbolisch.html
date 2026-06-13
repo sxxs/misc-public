@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>91 · Hyperbolisch — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>91 · Hyperbolisch</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Hyperbolisches Parkett im Poincaré-Disk-Modell — reguläre {p,q}-Kachelung, bei der sich identische Vielecke bis zum Kreisrand häufen. Eschers Kreislimit als Plotterbild.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "hyperbolisch",
+        params: [
+            { key: "p", label: "Ecken", min: 3, max: 8, step: 1, value: 7 },
+            { key: "q", label: "Treffen", min: 3, max: 8, step: 1, value: 3 },
+            { key: "depth", label: "Tiefe", min: 2, max: 7, step: 1, value: 4 },
+            { key: "twist", label: "Drehung", min: 0, max: 360, step: 5, value: 0 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+
+            // Validate hyperbolic condition: (p-2)*(q-2) > 4
+            let p = Math.round(values.p);
+            let q = Math.round(values.q);
+            // If not hyperbolic, adjust q upward
+            while ((p - 2) * (q - 2) <= 4 && q < 20) q++;
+            if ((p - 2) * (q - 2) <= 4) { p = 7; q = 3; }
+
+            const maxDepth = Math.round(values.depth);
+            const twistRad = values.twist * Math.PI / 180;
+
+            // Scale from disk [-1,1] to screen [50,950]
+            const DISK_R = 450;
+            const CX = 500, CY = 500;
+            function toScreen(z) {
+                return [CX + z[0] * DISK_R, CY + z[1] * DISK_R];
+            }
+
+            // Complex number helpers
+            function cadd(a, b) { return [a[0]+b[0], a[1]+b[1]]; }
+            function csub(a, b) { return [a[0]-b[0], a[1]-b[1]]; }
+            function cmul(a, b) { return [a[0]*b[0]-a[1]*b[1], a[0]*b[1]+a[1]*b[0]]; }
+            function cdiv(a, b) {
+                const d = b[0]*b[0]+b[1]*b[1];
+                return [(a[0]*b[0]+a[1]*b[1])/d, (a[1]*b[0]-a[0]*b[1])/d];
+            }
+            function cconj(a) { return [a[0], -a[1]]; }
+            function cabs2(a) { return a[0]*a[0]+a[1]*a[1]; }
+            function cabs(a) { return Math.sqrt(cabs2(a)); }
+            function cscale(a, s) { return [a[0]*s, a[1]*s]; }
+
+            // Möbius transformation: move point a to origin
+            // T_a(z) = (z - a) / (1 - conj(a)*z)
+            function moebius(z, a) {
+                const num = csub(z, a);
+                const den = csub([1,0], cmul(cconj(a), z));
+                return cdiv(num, den);
+            }
+
+            // Inverse Möbius: T_a^{-1}(w) = T_{-a}(w) = (w + a) / (1 + conj(a)*w)
+            function moebiusInv(w, a) {
+                const num = cadd(w, a);
+                const den = cadd([1,0], cmul(cconj(a), w));
+                return cdiv(num, den);
+            }
+
+            // Reflect point z through the geodesic connecting A and B
+            function reflectThrough(z, A, B) {
+                // Map A -> 0
+                const w = moebius(z, A);
+                const bw = moebius(B, A);
+                // Now reflect w about the geodesic through 0 and bw (a diameter)
+                // Reflection about a line through origin at angle phi: rotate by -phi, mirror, rotate by phi
+                const phi = Math.atan2(bw[1], bw[0]);
+                // Rotate w by -phi
+                const c = Math.cos(-phi), s = Math.sin(-phi);
+                const wr = [w[0]*c - w[1]*s, w[0]*s + w[1]*c];
+                // Reflect in x-axis
+                const wrRef = [wr[0], -wr[1]];
+                // Rotate back by phi
+                const c2 = Math.cos(phi), s2 = Math.sin(phi);
+                const wFinal = [wrRef[0]*c2 - wrRef[1]*s2, wrRef[0]*s2 + wrRef[1]*c2];
+                // Map back
+                return moebiusInv(wFinal, A);
+            }
+
+            // Geodesic arc between two points in the Poincaré disk
+            // Returns array of screen-coordinate points
+            function geodesicArc(A, B, npts) {
+                npts = npts || 24;
+                const [ax, ay] = A, [bx, by] = B;
+                // Check if nearly a diameter (cross product ~ 0)
+                if (Math.abs(ax*by - ay*bx) < 1e-7) {
+                    return [toScreen(A), toScreen(B)];
+                }
+                // Circle through A and B orthogonal to unit circle:
+                // 2*cx*ax + 2*cy*ay = 1 + ax^2 + ay^2
+                // 2*cx*bx + 2*cy*by = 1 + bx^2 + by^2
+                const d = 2*(ax*by - ay*bx);
+                if (Math.abs(d) < 1e-10) return [toScreen(A), toScreen(B)];
+                const rA2 = ax*ax + ay*ay;
+                const rB2 = bx*bx + by*by;
+                const cx = (by*(1+rA2) - ay*(1+rB2)) / d;
+                const cy = (ax*(1+rB2) - bx*(1+rA2)) / d;
+                const r = Math.sqrt((cx-ax)*(cx-ax) + (cy-ay)*(cy-ay));
+                const a1 = Math.atan2(ay-cy, ax-cx);
+                const a2 = Math.atan2(by-cy, bx-cx);
+                let da = a2 - a1;
+                if (da > Math.PI) da -= 2*Math.PI;
+                if (da < -Math.PI) da += 2*Math.PI;
+                const pts = [];
+                for (let i = 0; i <= npts; i++) {
+                    const a = a1 + da * i/npts;
+                    pts.push(toScreen([cx + r*Math.cos(a), cy + r*Math.sin(a)]));
+                }
+                return pts;
+            }
+
+            // Compute circumradius in Poincaré disk for regular {p,q} tiling
+            // cosh(R) = cos(π/q) / sin(π/p)
+            const coshR = Math.cos(Math.PI/q) / Math.sin(Math.PI/p);
+            const R_disk = coshR <= 1 ? 0.5 : Math.tanh(Math.acosh(coshR) / 2);
+
+            // Build vertices of the central p-gon
+            function makePolygonVerts(center, radius, numSides, angleOffset) {
+                const verts = [];
+                for (let k = 0; k < numSides; k++) {
+                    const a = angleOffset + 2*Math.PI*k/numSides;
+                    verts.push([center[0] + radius*Math.cos(a), center[1] + radius*Math.sin(a)]);
+                }
+                return verts;
+            }
+
+            // Draw one polygon given its vertices (in disk coordinates)
+            function drawPolygon(verts, weight) {
+                for (let i = 0; i < verts.length; i++) {
+                    const A = verts[i];
+                    const B = verts[(i+1) % verts.length];
+                    // Skip if both points are outside or on the boundary
+                    if (cabs(A) >= 0.999 && cabs(B) >= 0.999) continue;
+                    const arc = geodesicArc(A, B, 24);
+                    if (arc.length >= 2) lines.push({ pts: arc, w: weight });
+                }
+            }
+
+            // BFS tiling
+            // Each tile is represented by its vertex array in the Poincaré disk
+            const baseVerts = makePolygonVerts([0,0], R_disk, p, twistRad);
+
+            // Use a map to track visited tiles by approximate center
+            const seen = new Map();
+            function tileKey(verts) {
+                // Key by centroid rounded to 3 decimal places
+                let sx = 0, sy = 0;
+                for (const v of verts) { sx += v[0]; sy += v[1]; }
+                const cx = sx/verts.length, cy = sy/verts.length;
+                return (Math.round(cx*200)/200).toFixed(3) + "," + (Math.round(cy*200)/200).toFixed(3);
+            }
+
+            function tileVisible(verts) {
+                // Check if tile has any vertex well inside the disk
+                for (const v of verts) {
+                    if (cabs(v) < 0.98) return true;
+                }
+                return false;
+            }
+
+            function tileSize(verts) {
+                // Approximate size: max dist between centroid and vertices in disk coords
+                let sx = 0, sy = 0;
+                for (const v of verts) { sx += v[0]; sy += v[1]; }
+                const cx = sx/verts.length, cy = sy/verts.length;
+                let maxD = 0;
+                for (const v of verts) {
+                    const d = Math.sqrt((v[0]-cx)*(v[0]-cx) + (v[1]-cy)*(v[1]-cy));
+                    if (d > maxD) maxD = d;
+                }
+                return maxD;
+            }
+
+            const queue = [];
+            const rootKey = tileKey(baseVerts);
+            seen.set(rootKey, true);
+            queue.push({ verts: baseVerts, depth: 0 });
+
+            let tileCount = 0;
+            const MAX_TILES = 2000;
+
+            while (queue.length > 0 && tileCount < MAX_TILES) {
+                const { verts, depth } = queue.shift();
+
+                if (!tileVisible(verts)) continue;
+
+                // Draw this polygon
+                const weight = depth === 0 ? 1.2 : 0.7;
+                drawPolygon(verts, weight);
+                tileCount++;
+
+                if (depth >= maxDepth) continue;
+                // Stop expanding if the tile is very small (near boundary)
+                if (tileSize(verts) < 0.01) continue;
+
+                // Generate neighbors: reflect through each edge
+                for (let i = 0; i < p; i++) {
+                    const A = verts[i];
+                    const B = verts[(i+1) % p];
+                    // Reflect all vertices through edge A-B
+                    const newVerts = verts.map(v => reflectThrough(v, A, B));
+                    // Check it's a valid tile (center inside disk)
+                    let sx = 0, sy = 0;
+                    for (const v of newVerts) { sx += v[0]; sy += v[1]; }
+                    const cx = sx/p, cy = sy/p;
+                    if (Math.sqrt(cx*cx+cy*cy) >= 0.999) continue;
+
+                    const key = tileKey(newVerts);
+                    if (seen.has(key)) continue;
+                    seen.set(key, true);
+                    queue.push({ verts: newVerts, depth: depth+1 });
+                }
+            }
+
+            // Draw boundary circle
+            const circPts = [];
+            for (let i = 0; i <= 120; i++) {
+                const a = 2*Math.PI*i/120;
+                circPts.push(toScreen([Math.cos(a)*0.999, Math.sin(a)*0.999]));
+            }
+            lines.push({ pts: circPts, w: 1.5, closed: true });
+
+            api.status("Fertig — " + tileCount + " Kacheln, {" + p + "," + q + "}-Parkett");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

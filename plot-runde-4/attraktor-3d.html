@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>88 · 3D-Attraktor — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>88 · 3D-Attraktor</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Ein dreidimensionaler Strange Attractor — Lorenz, Aizawa, Thomas oder Dadras — als seidener Faden im Raum. Azimut und Neigung drehen die Geometrie, Stränge verdichten das Gewebe.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "attraktor-3d",
+        svgOpts: { width: 0.5 },
+        drawOpts: { width: 0.7, stroke: "rgba(22,33,62,0.5)" },
+        params: [
+            { key: "type",    label: "Attraktor", value: "lorenz", options: [
+                { value: "lorenz",  label: "Lorenz" },
+                { value: "aizawa",  label: "Aizawa" },
+                { value: "thomas",  label: "Thomas" },
+                { value: "dadras",  label: "Dadras" }
+            ]},
+            { key: "steps",   label: "Schritte",  min: 20000, max: 150000, step: 10000, value: 80000 },
+            { key: "size",    label: "Größe",      min: 200,   max: 480,    step: 20,    value: 350 },
+            { key: "azimuth", label: "Azimut",     min: 0,     max: 360,    step: 5,     value: 30 },
+            { key: "tilt",    label: "Neigung",    min: -90,   max: 90,     step: 5,     value: 20 },
+            { key: "strands", label: "Stränge",    min: 1,     max: 5,      step: 1,     value: 1 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+
+            const az = values.azimuth * Math.PI / 180;
+            const tl = values.tilt    * Math.PI / 180;
+            const sc = values.size;
+            const nSteps = values.steps;
+            const nStrands = values.strands;
+
+            // Rotation: azimuth around y-axis, then tilt around x-axis
+            function rotate(px, py, pz) {
+                // around y
+                const rx = px * Math.cos(az) + pz * Math.sin(az);
+                const ry = py;
+                const rz = -px * Math.sin(az) + pz * Math.cos(az);
+                // around x
+                const fx = rx;
+                const fy = ry * Math.cos(tl) - rz * Math.sin(tl);
+                const fz = ry * Math.sin(tl) + rz * Math.cos(tl);
+                return [fx, fy, fz];
+            }
+
+            // Project: x → screenX, z → screenY (orthographic)
+            function project(p) {
+                return [500 + p[0] * sc, 500 - p[2] * sc];
+            }
+
+            // Attractor step functions (RK4)
+            const type = values.type;
+
+            function derivatives(x, y, z) {
+                if (type === "lorenz") {
+                    const sigma = 10, rho = 28, beta = 8 / 3;
+                    return [
+                        sigma * (y - x),
+                        x * (rho - z) - y,
+                        x * y - beta * z
+                    ];
+                } else if (type === "aizawa") {
+                    const a = 0.95, b = 0.7, c = 0.6, d = 3.5, e = 0.25, ff = 0.1;
+                    return [
+                        (z - b) * x - d * y,
+                        d * x + (z - b) * y,
+                        c + a * z - z * z * z / 3 - (x * x + y * y) * (1 + e * z) + ff * z
+                    ];
+                } else if (type === "thomas") {
+                    const b = 0.19;
+                    return [
+                        Math.sin(y) - b * x,
+                        Math.sin(z) - b * y,
+                        Math.sin(x) - b * z
+                    ];
+                } else { // dadras
+                    const p = 3, q = 2.7, r = 1.7, m = 2, n = 9;
+                    return [
+                        y - p * x + q * y * z,
+                        r * y - x * z + z,
+                        m * x * y - n * z
+                    ];
+                }
+            }
+
+            // dt per attractor type
+            const dt = type === "lorenz" ? 0.01 : 0.02;
+            // transient skip
+            const transient = 1000;
+            // collect every 3rd point
+            const collect = 3;
+
+            function integrate(startX, startY, startZ) {
+                let x = startX, y = startY, z = startZ;
+                const pts3d = [];
+
+                for (let i = 0; i < nSteps + transient; i++) {
+                    // RK4
+                    const [k1x, k1y, k1z] = derivatives(x, y, z);
+                    const [k2x, k2y, k2z] = derivatives(
+                        x + dt * k1x / 2, y + dt * k1y / 2, z + dt * k1z / 2);
+                    const [k3x, k3y, k3z] = derivatives(
+                        x + dt * k2x / 2, y + dt * k2y / 2, z + dt * k2z / 2);
+                    const [k4x, k4y, k4z] = derivatives(
+                        x + dt * k3x, y + dt * k3y, z + dt * k3z);
+                    x += dt * (k1x + 2 * k2x + 2 * k3x + k4x) / 6;
+                    y += dt * (k1y + 2 * k2y + 2 * k3y + k4y) / 6;
+                    z += dt * (k1z + 2 * k2z + 2 * k3z + k4z) / 6;
+
+                    // Guard against NaN/Inf
+                    if (!isFinite(x) || !isFinite(y) || !isFinite(z)) break;
+
+                    if (i >= transient && (i - transient) % collect === 0) {
+                        pts3d.push([x, y, z]);
+                    }
+                }
+                return pts3d;
+            }
+
+            // Collect all points across strands for normalization
+            const allStrands = [];
+            const perturbations = [
+                [0.1,   0,   0],
+                [0.1, 0.01,  0],
+                [0.1,   0, 0.01],
+                [0.11,  0,   0],
+                [0.1, 0.02,  0]
+            ];
+
+            for (let s = 0; s < nStrands; s++) {
+                const [sx, sy, sz] = perturbations[s % perturbations.length];
+                allStrands.push(integrate(sx, sy, sz));
+            }
+
+            // Find global bounding box
+            let minX = Infinity, maxX = -Infinity;
+            let minY = Infinity, maxY = -Infinity;
+            let minZ = Infinity, maxZ = -Infinity;
+            for (const strand of allStrands) {
+                for (const [x, y, z] of strand) {
+                    if (x < minX) minX = x; if (x > maxX) maxX = x;
+                    if (y < minY) minY = y; if (y > maxY) maxY = y;
+                    if (z < minZ) minZ = z; if (z > maxZ) maxZ = z;
+                }
+            }
+
+            const cx = (minX + maxX) / 2;
+            const cy = (minY + maxY) / 2;
+            const cz = (minZ + maxZ) / 2;
+            const extent = Math.max(maxX - minX, maxY - minY, maxZ - minZ, 1e-6);
+            const norm = 2.0 / extent;
+
+            // Normalize, rotate, project
+            const CHUNK = 2000;
+            const lines = [];
+
+            for (const strand of allStrands) {
+                if (strand.length < 2) continue;
+
+                // Split into chunks of max 2000 points
+                for (let start = 0; start < strand.length; start += CHUNK) {
+                    const end = Math.min(start + CHUNK, strand.length);
+                    const pts2d = [];
+                    for (let i = start; i < end; i++) {
+                        const [x, y, z] = strand[i];
+                        const nx = (x - cx) * norm;
+                        const ny = (y - cy) * norm;
+                        const nz = (z - cz) * norm;
+                        const rp = rotate(nx, ny, nz);
+                        pts2d.push(project(rp));
+                    }
+                    if (pts2d.length >= 2) {
+                        lines.push({ pts: pts2d, w: 0.5 });
+                    }
+                }
+            }
+
+            if (lines.length === 0) {
+                api.status("Integration kollabiert — anderen Attraktor wählen");
+                api.done([{ pts: [[40,40],[960,40],[960,960],[40,960],[40,40]], w: 1.2 }]);
+            } else {
+                api.status("3D-Attraktor — " + lines.length + " Pfade · " + type);
+                api.done(lines);
+            }
+        }
+    });
+    </script>
+</body>
+</html>

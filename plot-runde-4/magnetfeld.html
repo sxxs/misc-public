@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>92 · Magnetfeld — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>92 · Magnetfeld</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Elektrische Feldlinien zwischen Dipolen, Quadrupolen oder zufälligen Polverteilungen — unsichtbare Physik als fließendes Linienbild. Jede Linie startet an einem Pluspol und endet am Minuspol.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "magnetfeld",
+        params: [
+            { key: "anordnung", label: "Anordnung", value: "dipol", options: [
+                { value: "dipol",      label: "Dipol" },
+                { value: "quadrupol",  label: "Quadrupol" },
+                { value: "zufall",     label: "Zufall" },
+                { value: "kette",      label: "Kette" }
+            ]},
+            { key: "linesPerPole", label: "Feldlinien/Pol", min: 6, max: 24, step: 2, value: 12 },
+            { key: "scale",        label: "Bereich",        min: 200, max: 480, step: 10, value: 380 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const CX = 500, CY = 500;
+            const SC = values.scale;
+            const MIN_COORD = 40, MAX_COORD = 960;
+
+            // Build pole list: [{x, y, q}] where q = +1 or -1
+            let poles = [];
+            const anordnung = values.anordnung;
+
+            if (anordnung === "dipol") {
+                poles = [
+                    { x: CX - SC * 0.45, y: CY, q: +1 },
+                    { x: CX + SC * 0.45, y: CY, q: -1 }
+                ];
+            } else if (anordnung === "quadrupol") {
+                const d = SC * 0.38;
+                poles = [
+                    { x: CX - d, y: CY - d, q: +1 },
+                    { x: CX + d, y: CY - d, q: -1 },
+                    { x: CX + d, y: CY + d, q: +1 },
+                    { x: CX - d, y: CY + d, q: -1 }
+                ];
+            } else if (anordnung === "kette") {
+                const n = 6;
+                for (let i = 0; i < n; i++) {
+                    const t = (i / (n - 1)) - 0.5;
+                    poles.push({ x: CX + t * SC * 1.6, y: CY, q: (i % 2 === 0) ? +1 : -1 });
+                }
+            } else { // zufall
+                const nPoles = 3 + Math.floor(rnd() * 4); // 3-6
+                let posCount = 0;
+                for (let i = 0; i < nPoles; i++) {
+                    const angle = rnd() * Math.PI * 2;
+                    const r = rnd() * SC * 0.6;
+                    const q = (posCount === 0 || (i < nPoles - 1 && rnd() < 0.5)) ? +1 : -1;
+                    if (q > 0) posCount++;
+                    poles.push({ x: CX + r * Math.cos(angle), y: CY + r * Math.sin(angle), q });
+                }
+                // ensure at least one positive
+                if (!poles.some(p => p.q > 0)) poles[0].q = +1;
+                // ensure at least one negative
+                if (!poles.some(p => p.q < 0)) poles[poles.length - 1].q = -1;
+            }
+
+            // Electric field at (x,y): sum of contributions from all poles
+            function fieldAt(x, y) {
+                let ex = 0, ey = 0;
+                for (const pole of poles) {
+                    const dx = x - pole.x;
+                    const dy = y - pole.y;
+                    const d2 = dx * dx + dy * dy;
+                    if (d2 < 1e-6) continue;
+                    const d3 = Math.pow(d2, 1.5);
+                    ex += pole.q * dx / d3;
+                    ey += pole.q * dy / d3;
+                }
+                return [ex, ey];
+            }
+
+            // Integrate one field line from (x0, y0) using RK4
+            function integrateLine(x0, y0) {
+                const dt = 3.0;
+                const maxSteps = 1500;
+                const MIN_POLE_DIST = 9;
+                const pts = [[x0, y0]];
+
+                for (let s = 0; s < maxSteps; s++) {
+                    const [x, y] = pts[pts.length - 1];
+
+                    // RK4
+                    function step(px, py) {
+                        const [ex, ey] = fieldAt(px, py);
+                        const len = Math.hypot(ex, ey);
+                        if (len < 1e-12) return [0, 0];
+                        return [ex / len, ey / len];
+                    }
+
+                    const [k1x, k1y] = step(x, y);
+                    const [k2x, k2y] = step(x + k1x * dt / 2, y + k1y * dt / 2);
+                    const [k3x, k3y] = step(x + k2x * dt / 2, y + k2y * dt / 2);
+                    const [k4x, k4y] = step(x + k3x * dt, y + k3y * dt);
+
+                    const nx = x + (dt / 6) * (k1x + 2 * k2x + 2 * k3x + k4x);
+                    const ny = y + (dt / 6) * (k1y + 2 * k2y + 2 * k3y + k4y);
+
+                    // Check bounds
+                    if (nx < MIN_COORD || nx > MAX_COORD || ny < MIN_COORD || ny > MAX_COORD) break;
+
+                    // Check if we hit a negative pole (stop condition — field line ends)
+                    let hitNeg = false;
+                    for (const pole of poles) {
+                        if (pole.q < 0 && Math.hypot(nx - pole.x, ny - pole.y) < MIN_POLE_DIST) {
+                            pts.push([nx, ny]);
+                            hitNeg = true;
+                            break;
+                        }
+                    }
+                    if (hitNeg) break;
+
+                    // Check if we hit a positive pole (shouldn't happen in forward direction)
+                    let hitPos = false;
+                    for (const pole of poles) {
+                        if (pole.q > 0 && Math.hypot(nx - pole.x, ny - pole.y) < MIN_POLE_DIST) {
+                            hitPos = true;
+                            break;
+                        }
+                    }
+                    if (hitPos) break;
+
+                    pts.push([nx, ny]);
+                }
+
+                return pts;
+            }
+
+            const lines = [];
+            const linesPerPole = values.linesPerPole | 0;
+            const START_RADIUS = 14;
+
+            // Field lines from each positive pole
+            for (const pole of poles) {
+                if (pole.q <= 0) continue;
+                for (let k = 0; k < linesPerPole; k++) {
+                    const angle = (k / linesPerPole) * Math.PI * 2;
+                    const sx = pole.x + START_RADIUS * Math.cos(angle);
+                    const sy = pole.y + START_RADIUS * Math.sin(angle);
+                    const pts = integrateLine(sx, sy);
+                    if (pts.length >= 3) lines.push({ pts, w: 0.8 });
+                }
+            }
+
+            // Draw pole symbols
+            const POLE_R = 8;
+            const TICK = 5;
+            for (const pole of poles) {
+                // Circle
+                const circlePts = [];
+                for (let i = 0; i <= 64; i++) {
+                    const a = (i / 64) * Math.PI * 2;
+                    circlePts.push([pole.x + POLE_R * Math.cos(a), pole.y + POLE_R * Math.sin(a)]);
+                }
+                lines.push({ pts: circlePts, w: 1.2, closed: true });
+
+                if (pole.q > 0) {
+                    // Plus sign
+                    lines.push({ pts: [[pole.x - TICK, pole.y], [pole.x + TICK, pole.y]], w: 1.2 });
+                    lines.push({ pts: [[pole.x, pole.y - TICK], [pole.x, pole.y + TICK]], w: 1.2 });
+                } else {
+                    // Minus sign
+                    lines.push({ pts: [[pole.x - TICK, pole.y], [pole.x + TICK, pole.y]], w: 1.2 });
+                }
+            }
+
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>
