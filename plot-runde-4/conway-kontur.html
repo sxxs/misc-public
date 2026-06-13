@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>82 · Conway-Kontur — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>82 · Conway-Kontur</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Conway's Spiel des Lebens läuft still ab — was bleibt, ist die Topographie: Dichtefelder um Kolonien werden zu Höhenlinien, Cluster zu Bergen, Einsamkeit zu weißem Papier.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "conway-kontur",
+        params: [
+            { key: "cols",  label: "Spalten",       min: 20, max: 60,  step: 5,   value: 40 },
+            { key: "gens",  label: "Generationen",  min: 10, max: 200, step: 10,  value: 60 },
+            { key: "rings", label: "Konturringe",   min: 3,  max: 12,  step: 1,   value: 6  },
+            { key: "blur",  label: "Weichzeichnung",min: 1,  max: 6,   step: 0.5, value: 2.5}
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const N = values.cols;
+
+            // init grid ~30% live
+            let grid = new Uint8Array(N * N);
+            for (let i = 0; i < N * N; i++) grid[i] = rnd() < 0.3 ? 1 : 0;
+
+            // GoL step
+            function step(g) {
+                const next = new Uint8Array(N * N);
+                for (let y = 0; y < N; y++) {
+                    for (let x = 0; x < N; x++) {
+                        let nb = 0;
+                        for (let dy = -1; dy <= 1; dy++) {
+                            for (let dx = -1; dx <= 1; dx++) {
+                                if (dx === 0 && dy === 0) continue;
+                                const nx = (x + dx + N) % N;
+                                const ny = (y + dy + N) % N;
+                                nb += g[ny * N + nx];
+                            }
+                        }
+                        const alive = g[y * N + x];
+                        next[y * N + x] = alive ? (nb === 2 || nb === 3 ? 1 : 0) : (nb === 3 ? 1 : 0);
+                    }
+                }
+                return next;
+            }
+
+            for (let g = 0; g < values.gens; g++) grid = step(grid);
+
+            // compute density field on finer grid
+            const FINE = N * 3;
+            const sigma = values.blur;
+            const sig2 = sigma * sigma;
+            const radius = Math.ceil(sigma * 3);
+            const density = new Float32Array(FINE * FINE);
+
+            // for each live cell, splat Gaussian onto fine grid
+            for (let cy = 0; cy < N; cy++) {
+                for (let cx = 0; cx < N; cx++) {
+                    if (!grid[cy * N + cx]) continue;
+                    // cell center in fine-grid coords
+                    const fcx = (cx + 0.5) / N * FINE;
+                    const fcy = (cy + 0.5) / N * FINE;
+                    const cellRadius = radius / N * FINE;
+                    const fy0 = Math.max(0, Math.floor(fcy - cellRadius));
+                    const fy1 = Math.min(FINE - 1, Math.ceil(fcy + cellRadius));
+                    const fx0 = Math.max(0, Math.floor(fcx - cellRadius));
+                    const fx1 = Math.min(FINE - 1, Math.ceil(fcx + cellRadius));
+                    for (let fy = fy0; fy <= fy1; fy++) {
+                        for (let fx = fx0; fx <= fx1; fx++) {
+                            const ddx = (fx - fcx) / FINE * N;
+                            const ddy = (fy - fcy) / FINE * N;
+                            const d2 = ddx * ddx + ddy * ddy;
+                            density[fy * FINE + fx] += Math.exp(-d2 / (2 * sig2));
+                        }
+                    }
+                }
+            }
+
+            let dMin = Infinity, dMax = -Infinity;
+            for (let i = 0; i < density.length; i++) {
+                if (density[i] < dMin) dMin = density[i];
+                if (density[i] > dMax) dMax = density[i];
+            }
+
+            const lines = [];
+            const MARGIN = 40;
+            const SPAN = 920;
+
+            const sample = (ix, iy) => density[iy * FINE + ix];
+            const mapX = (ix) => MARGIN + (ix / (FINE - 1)) * SPAN;
+            const mapY = (iy) => MARGIN + (iy / (FINE - 1)) * SPAN;
+
+            const K = values.rings;
+            for (let k = 0; k < K; k++) {
+                const t = dMin + (dMax - dMin) * (k + 0.5) / K;
+                const cs = PR4.contourLines(sample, FINE, FINE, t, mapX, mapY);
+                const isOuter = k === 0;
+                const w = isOuter ? 1.2 : 0.6 + 0.5 * (k / (K - 1));
+                for (const c of cs) lines.push({ pts: c, w });
+            }
+
+            api.status(K + " Konturringe · " + N + "×" + N + " Zellen · " + values.gens + " Gen.");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

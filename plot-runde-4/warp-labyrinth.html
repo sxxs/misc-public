@@ -1,0 +1,152 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>78 · Warp-Labyrinth — Plot Runde 4</title><link rel="stylesheet" href="shared.css"></head>
+<body><header><a class="back" href="./">← Übersicht</a><h1>78 · Warp-Labyrinth</h1></header>
+<main><section class="paper"><canvas id="canvas"></canvas></section>
+<section class="panel"><div id="controls"></div>
+<div class="buttons"><button id="regen" class="primary">🎲 Neu</button><button id="download">⬇ SVG</button></div>
+<p id="status" class="status"></p>
+<p class="hint">Ein lösbares Labyrinth, dessen Gitter von einem <b>Rauschfeld verzerrt</b> ist — die Wände wogen wie auf einer gewellten Wasseroberfläche. Mathematisch korrekt, optisch organisch.</p>
+</section></main>
+<script src="shared.js"></script><script src="app.js"></script>
+<script>
+"use strict";
+PR4App({
+    svgName: "warp-labyrinth",
+    params: [
+        { key: "rings",    label: "Ringe",       min: 5, max: 18, step: 1,  value: 11 },
+        { key: "sectors",  label: "Sektoren",    min: 4, max: 12, step: 1,  value: 8  },
+        { key: "warpAmt",  label: "Verzerrstärke", min: 0, max: 80, step: 5, value: 35 },
+        { key: "warpSrc",  label: "Verzerrquelle", value: "noise", options: [
+            { value: "noise",  label: "Perlin Noise" },
+            { value: "radial", label: "Radial" },
+            { value: "flow",   label: "Strömung" }
+        ]}
+    ],
+    generate(api) {
+        const { rnd, values } = api;
+        const noise = PR4.makeNoise2D(rnd);
+        const no = rnd() * 40;
+        const lines = [];
+        const rings = values.rings;
+        const r0 = 70, rOut = 430;
+        const ringW = (rOut - r0) / rings;
+        const radius = (i) => r0 + i * ringW;
+
+        // cells per ring: double when arcs get too wide
+        const counts = [values.sectors];
+        for (let i = 1; i < rings; i++) {
+            const arc = 2 * Math.PI * radius(i) / counts[i - 1];
+            counts.push(counts[i - 1] * (arc > ringW * 1.7 ? 2 : 1));
+        }
+
+        const passages = new Set();
+        const pkey = (a, b) => {
+            const k1 = a[0]+"."+a[1], k2 = b[0]+"."+b[1];
+            return k1 < k2 ? k1+"|"+k2 : k2+"|"+k1;
+        };
+
+        function neighbors(i, j) {
+            const out = [], c = counts[i];
+            out.push([i, (j+1)%c]);
+            out.push([i, (j-1+c)%c]);
+            if (i > 0) { const ratio = counts[i]/counts[i-1]; out.push([i-1, Math.floor(j/ratio)]); }
+            if (i < rings-1) {
+                const ratio = counts[i+1]/counts[i];
+                if (ratio===1) out.push([i+1,j]);
+                else { out.push([i+1,2*j]); out.push([i+1,2*j+1]); }
+            }
+            return out;
+        }
+
+        const visited = counts.map(c => new Uint8Array(c));
+        const stack = [[0, Math.floor(rnd()*counts[0])]];
+        visited[0][stack[0][1]] = 1;
+        while (stack.length) {
+            const cur = stack[stack.length-1];
+            const unvis = neighbors(cur[0],cur[1]).filter(nb=>!visited[nb[0]][nb[1]]);
+            if (unvis.length===0) { stack.pop(); continue; }
+            const nb = unvis[Math.floor(rnd()*unvis.length)];
+            passages.add(pkey(cur, nb));
+            visited[nb[0]][nb[1]] = 1;
+            stack.push(nb);
+        }
+
+        // Warp function: displace a point in page space
+        function warpPt(x, y) {
+            if (values.warpAmt === 0) return [x, y];
+            const nx = (x - 40) / 920, ny = (y - 40) / 920;
+            let dx = 0, dy = 0;
+            if (values.warpSrc === "noise") {
+                dx = (noise.fbm(nx * 3 + no,      ny * 3 + no + 17, 3) - 0.5) * 2;
+                dy = (noise.fbm(nx * 3 + no + 31, ny * 3 + no + 53, 3) - 0.5) * 2;
+            } else if (values.warpSrc === "radial") {
+                const dx0 = x - 500, dy0 = y - 500;
+                const d = Math.hypot(dx0, dy0) / 460;
+                const angle = d * Math.PI * 0.5;
+                const rdx = dx0 * Math.cos(angle) - dy0 * Math.sin(angle) - dx0;
+                const rdy = dx0 * Math.sin(angle) + dy0 * Math.cos(angle) - dy0;
+                dx = rdx / 460;
+                dy = rdy / 460;
+            } else {
+                const flowA = noise.fbm(nx * 2 + no, ny * 2 + no, 3) * Math.PI * 2;
+                dx = Math.cos(flowA) * 0.5;
+                dy = Math.sin(flowA) * 0.5;
+            }
+            return [x + dx * values.warpAmt, y + dy * values.warpAmt];
+        }
+
+        const CX = 500, CY = 500;
+
+        function arc(r, a0, a1) {
+            const steps = Math.max(4, Math.ceil(r * Math.abs(a1-a0) / 7));
+            const pts = [];
+            for (let s=0;s<=steps;s++) {
+                const a = a0 + (a1-a0)*s/steps;
+                const raw = [CX + r*Math.cos(a), CY + r*Math.sin(a)];
+                pts.push(warpPt(raw[0], raw[1]));
+            }
+            return pts;
+        }
+        function radial(angle, rIn, rOutr) {
+            const steps = Math.max(2, Math.ceil((rOutr - rIn) / 10));
+            const pts = [];
+            for (let s=0;s<=steps;s++) {
+                const r = rIn + (rOutr - rIn) * s / steps;
+                const raw = [CX + r*Math.cos(angle), CY + r*Math.sin(angle)];
+                pts.push(warpPt(raw[0], raw[1]));
+            }
+            return pts;
+        }
+
+        // Radial walls
+        for (let i=0;i<rings;i++) {
+            const c=counts[i];
+            for (let j=0;j<c;j++) {
+                if (!passages.has(pkey([i,j],[i,(j+1)%c]))) {
+                    lines.push({pts: radial(2*Math.PI*(j+1)/c, radius(i), radius(i+1)), w: 1.0});
+                }
+            }
+        }
+        // Arc walls
+        for (let i=0;i<rings-1;i++) {
+            const ratio=counts[i+1]/counts[i], cOut=counts[i+1];
+            for (let k=0;k<cOut;k++) {
+                const j=Math.floor(k/ratio);
+                if (!passages.has(pkey([i,j],[i+1,k]))) {
+                    lines.push({pts: arc(radius(i+1), 2*Math.PI*k/cOut, 2*Math.PI*(k+1)/cOut), w: 1.0});
+                }
+            }
+        }
+        // Outer boundary
+        lines.push({pts: arc(rOut, 0, Math.PI * 2), closed: true, w: 1.2});
+        // Inner boundary
+        lines.push({pts: arc(r0, 0, Math.PI * 2), closed: true, w: 1.2});
+
+        const srcLabel = { noise: "Perlin Noise", radial: "Radial", flow: "Strömung" }[values.warpSrc] || values.warpSrc;
+        api.status("Fertig — Verzerrung " + values.warpAmt + " (" + srcLabel + ").");
+        api.done(lines);
+    }
+});
+</script>
+</body></html>

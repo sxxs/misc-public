@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>75 · Necker-Feld — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>75 · Necker-Feld</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Ein Raster <b>doppeldeutiger Necker-Würfel</b>: Springt der Würfel vor oder zurück? Schraffur-Dichten auf den drei Flächen lenken die Wahrnehmung — oder halten sie absichtlich in der Schwebe.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "necker-feld",
+        params: [
+            { key: "grid",     label: "Würfel je Reihe", min: 3,  max: 8,   step: 1,  value: 5 },
+            { key: "cubeSize", label: "Würfelgröße",     min: 60, max: 140, step: 10, value: 100 },
+            { key: "gap",      label: "Abstand",         min: 0,  max: 30,  step: 2,  value: 8 },
+            { key: "mode",     label: "Wahrnehmung",     value: "ambig", options: [
+                { value: "ambig",  label: "Doppeldeutig" },
+                { value: "out",    label: "Vorspringend" },
+                { value: "in",     label: "Versenkend" },
+                { value: "random", label: "Zufällig" }
+            ]}
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+
+            // Draw a single Necker cube centered at (cx, cy) with half-size S
+            // mode: "ambig" | "out" | "in" | "random"
+            function drawNecker(cx, cy, S, mode) {
+                // Isometric cube: flat-top hexagon with 3 rhombus faces
+                // The cube is defined by 7 key points:
+                //   T  = top vertex
+                //   UL = upper-left
+                //   UR = upper-right
+                //   C  = center (inner vertex where 3 faces meet)
+                //   LL = lower-left
+                //   LR = lower-right
+                //   Bv = bottom vertex
+
+                const h  = S * 0.866; // horizontal half-extent (cos 30°)
+                const v  = S * 0.5;   // vertical quarter-extent (sin 30°)
+
+                // 7 key vertices
+                const Tv  = [cx,     cy - S];
+                const ULv = [cx - h, cy - v];
+                const URv = [cx + h, cy - v];
+                const Cv  = [cx,     cy];
+                const LLv = [cx - h, cy + v];
+                const LRv = [cx + h, cy + v];
+                const Bv  = [cx,     cy + S];
+
+                // 3 visible faces (rhombuses):
+                //   TOP   face: Tv — URv — Cv — ULv
+                //   RIGHT face: URv — LRv — Bv — Cv
+                //   LEFT  face: ULv — Cv — Bv — LLv
+                const topFace   = [Tv,  URv, Cv,  ULv];
+                const rightFace = [URv, LRv, Bv,  Cv];
+                const leftFace  = [ULv, Cv,  Bv,  LLv];
+
+                const wEdge = 0.9;
+
+                // Draw the hexagonal outline + internal edges
+                // Outer hexagon:
+                lines.push({ pts: [Tv, URv, LRv, Bv, LLv, ULv, Tv], w: wEdge });
+                // Inner edges (the 3 ribs from corners to center):
+                lines.push({ pts: [Tv,  Cv], w: wEdge });
+                lines.push({ pts: [LRv, Cv], w: wEdge });
+                lines.push({ pts: [LLv, Cv], w: wEdge });
+
+                // Determine hatch spacing per face.
+                // Smaller spacing = more lines = darker = appears as shadow (receding).
+                // "ambig": all equal spacing → no depth cue → perceptually unstable.
+                // "out": top=light, sides medium/dark → top face is closest, protrudes.
+                // "in": top=dark, sides lighter → top face is farthest, recedes.
+
+                let topSpacing, rightSpacing, leftSpacing;
+
+                const resolvedMode = (mode === "random")
+                    ? (rnd() < 0.33 ? "out" : rnd() < 0.5 ? "in" : "ambig")
+                    : mode;
+
+                if (resolvedMode === "ambig") {
+                    topSpacing   = S * 0.18;
+                    rightSpacing = S * 0.18;
+                    leftSpacing  = S * 0.18;
+                } else if (resolvedMode === "out") {
+                    // Protruding: top is lightest (widest spacing), left medium, right darkest
+                    topSpacing   = S * 0.30;
+                    rightSpacing = S * 0.15;
+                    leftSpacing  = S * 0.22;
+                } else {
+                    // Recessing: top is darkest (narrowest spacing)
+                    topSpacing   = S * 0.11;
+                    rightSpacing = S * 0.22;
+                    leftSpacing  = S * 0.15;
+                }
+
+                // Hatch a rhombus face with lines parallel to its "horizontal" axis.
+                // face: array of 4 points [A, B, C, D] in order (e.g. top-left, top-right, bottom-right, bottom-left)
+                // spacing: distance between hatch lines in screen pixels
+                function hatchFace(face, spacing, wHatch) {
+                    const [A, B, C, D] = face;
+                    // Total vertical span of the face
+                    const dy = Math.abs(C[1] - A[1]);
+                    if (dy < 2 || spacing <= 0) return;
+                    const n = Math.max(1, Math.round(dy / spacing));
+                    for (let k = 1; k < n; k++) {
+                        const t = k / n;
+                        // Left edge: lerp from A to D
+                        const p1 = [A[0] + (D[0] - A[0]) * t, A[1] + (D[1] - A[1]) * t];
+                        // Right edge: lerp from B to C
+                        const p2 = [B[0] + (C[0] - B[0]) * t, B[1] + (C[1] - B[1]) * t];
+                        lines.push({ pts: [p1, p2], w: wHatch });
+                    }
+                }
+
+                hatchFace(topFace,   topSpacing,   wEdge * 0.55);
+                hatchFace(rightFace, rightSpacing, wEdge * 0.55);
+                hatchFace(leftFace,  leftSpacing,  wEdge * 0.55);
+            }
+
+            const G        = values.grid;
+            const cs       = values.cubeSize;
+            const gap      = values.gap;
+            const step     = cs + gap;
+
+            // The iso cube spans:
+            //   horizontally:  2 * cs * 0.866  wide
+            //   vertically:    2 * cs           tall
+            // For the grid layout we pack by the iso diamond dimensions.
+            // Each cube occupies (step) in horizontal and (step * 0.866) in vertical.
+
+            const colStep = step * 0.866 * 2;   // horizontal spacing between cube centers
+            const rowStep = step * 0.866;        // vertical spacing between rows (staggered hex)
+
+            // Total width and height of the grid
+            const totalW = (G - 1) * colStep;
+            const totalH = (G - 1) * rowStep;
+
+            // Half-size to pass into drawNecker (S = half the cube edge length)
+            const S = cs * 0.5;
+
+            // Center the grid
+            const startX = 500 - totalW * 0.5;
+            const startY = 500 - totalH * 0.5;
+
+            for (let row = 0; row < G; row++) {
+                for (let col = 0; col < G; col++) {
+                    const cx = startX + col * colStep + (row % 2) * colStep * 0.5;
+                    const cy = startY + row * rowStep;
+                    drawNecker(cx, cy, S, values.mode);
+                }
+            }
+
+            const modeLabel = {
+                ambig: "Doppeldeutig",
+                out:   "Vorspringend",
+                in:    "Versenkend",
+                random: "Zufällig"
+            }[values.mode] || values.mode;
+
+            api.status(G + "×" + G + " Würfel · " + modeLabel + " · " + lines.length + " Pfade");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

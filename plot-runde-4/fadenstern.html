@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>81 · Fadenstern — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>81 · Fadenstern</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Nägel auf einem Vieleck, verbunden nach mathematischer Regel: Punkt k mit Punkt (k×m) mod N — <b>Epicycloid-Muster via Faden-und-Nagel</b>. Zwei Schrittweiten ergeben vielschichtige Sterne.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "fadenstern",
+        params: [
+            { key: "nails", label: "Nägel (N)", min: 60, max: 360, step: 5, value: 180 },
+            { key: "step1", label: "Schrittweite m₁ (% von N)", min: 2, max: 49, step: 1, value: 11 },
+            { key: "step2", label: "Schrittweite m₂ (0=aus)", min: 0, max: 49, step: 1, value: 33 },
+            { key: "shape", label: "Grundform", value: "circle", options: [
+                { value: "circle", label: "Kreis" },
+                { value: "hex", label: "Sechseck" },
+                { value: "pentagon", label: "Fünfeck" },
+                { value: "star", label: "Stern" }
+            ]},
+            { key: "rings", label: "Überlagerte Ringe", min: 1, max: 4, step: 1, value: 1 }
+        ],
+        onRegen(rnd, params) {
+            for (const p of params) {
+                if (p.key === "step1") p._set(3 + Math.floor(rnd() * 46));
+                if (p.key === "step2") {
+                    const v = Math.floor(rnd() * 50);
+                    p._set(v < 5 ? 0 : v);
+                }
+            }
+        },
+        generate(api) {
+            const { values } = api;
+            const lines = [];
+            const CX = 500, CY = 500, R = 430;
+            const N = values.nails;
+
+            // Nail position on the chosen base shape
+            function nailPos(k, shape, r) {
+                const t = k / N * Math.PI * 2;
+                if (shape === "circle") {
+                    return [CX + r * Math.cos(t), CY + r * Math.sin(t)];
+                }
+                if (shape === "hex") {
+                    const side = Math.floor(k / N * 6);
+                    const frac = (k / N * 6) - side;
+                    const a0 = side / 6 * Math.PI * 2;
+                    const a1 = (side + 1) / 6 * Math.PI * 2;
+                    const v0 = [CX + r * Math.cos(a0), CY + r * Math.sin(a0)];
+                    const v1 = [CX + r * Math.cos(a1), CY + r * Math.sin(a1)];
+                    return [v0[0] + (v1[0] - v0[0]) * frac, v0[1] + (v1[1] - v0[1]) * frac];
+                }
+                if (shape === "pentagon") {
+                    const side = Math.floor(k / N * 5);
+                    const frac = (k / N * 5) - side;
+                    const a0 = side / 5 * Math.PI * 2 - Math.PI / 2;
+                    const a1 = (side + 1) / 5 * Math.PI * 2 - Math.PI / 2;
+                    const v0 = [CX + r * Math.cos(a0), CY + r * Math.sin(a0)];
+                    const v1 = [CX + r * Math.cos(a1), CY + r * Math.sin(a1)];
+                    return [v0[0] + (v1[0] - v0[0]) * frac, v0[1] + (v1[1] - v0[1]) * frac];
+                }
+                if (shape === "star") {
+                    const side = Math.floor(k / N * 10);
+                    const frac = (k / N * 10) - side;
+                    const outerR = r, innerR = r * 0.38;
+                    const a0 = side / 10 * Math.PI * 2 - Math.PI / 2;
+                    const a1 = (side + 1) / 10 * Math.PI * 2 - Math.PI / 2;
+                    const r0 = side % 2 === 0 ? outerR : innerR;
+                    const r1 = side % 2 === 0 ? innerR : outerR;
+                    const v0 = [CX + r0 * Math.cos(a0), CY + r0 * Math.sin(a0)];
+                    const v1 = [CX + r1 * Math.cos(a1), CY + r1 * Math.sin(a1)];
+                    return [v0[0] + (v1[0] - v0[0]) * frac, v0[1] + (v1[1] - v0[1]) * frac];
+                }
+                return [CX + r * Math.cos(t), CY + r * Math.sin(t)];
+            }
+
+            // Determine radii for concentric rings
+            const layerRadii = values.rings === 1
+                ? [R]
+                : Array.from({ length: values.rings }, (_, i) => R * (0.5 + 0.5 * (i + 1) / values.rings));
+
+            // Active step multipliers (step2=0 means disabled)
+            const steps = [values.step1];
+            if (values.step2 > 0) steps.push(values.step2);
+
+            for (const rLayer of layerRadii) {
+                // Nail positions for this ring radius
+                const layerNails = [];
+                for (let k = 0; k < N; k++) {
+                    layerNails.push(nailPos(k, values.shape, rLayer));
+                }
+
+                // Draw small tick marks at nail positions
+                for (const [x, y] of layerNails) {
+                    lines.push({ pts: [[x - 1.5, y], [x + 1.5, y]], w: 1.0 });
+                }
+
+                // For each multiplier, draw string art connections
+                for (const m of steps) {
+                    const w = rLayer === R ? 0.6 : 0.45;
+                    // Avoid duplicate edges: only draw k -> dest when k < dest
+                    const drawn = new Set();
+                    for (let k = 0; k < N; k++) {
+                        const dest = (k * m) % N;
+                        if (dest === k) continue;
+                        const lo = Math.min(k, dest), hi = Math.max(k, dest);
+                        const eKey = lo + "_" + hi;
+                        if (drawn.has(eKey)) continue;
+                        drawn.add(eKey);
+                        lines.push({ pts: [layerNails[k], layerNails[dest]], w });
+                    }
+                }
+
+                // Draw the continuous thread path for the first multiplier
+                // (walks k=0, m, 2m, 3m, ... mod N until cycle closes)
+                {
+                    const m = values.step1;
+                    const path = [];
+                    let k = 0;
+                    const maxSteps = N * 10;
+                    let count = 0;
+                    do {
+                        path.push(layerNails[k]);
+                        k = (k + m) % N;
+                        count++;
+                    } while (k !== 0 && count < maxSteps);
+                    path.push(layerNails[0]);
+                    if (path.length > 2) lines.push({ pts: path, closed: false, w: 0.35 });
+                }
+
+                // Draw the outline of the nail shape
+                const outlinePts = [];
+                for (let k = 0; k < N; k++) outlinePts.push(layerNails[k]);
+                outlinePts.push(layerNails[0]);
+                lines.push({ pts: outlinePts, w: 0.4 });
+            }
+
+            api.status(N + " Nägel · m₁=" + values.step1 + (values.step2 > 0 ? " m₂=" + values.step2 : ""));
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>
