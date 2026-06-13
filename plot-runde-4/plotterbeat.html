@@ -9,7 +9,12 @@
 <body>
     <header><a class="back" href="./">← Übersicht</a><h1>98 · Plotter-Beat</h1></header>
     <main>
-        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="paper" style="position:relative">
+            <canvas id="canvas"></canvas>
+            <div id="pen-dot" style="display:none;position:absolute;width:14px;height:14px;
+                border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);
+                box-shadow:0 0 4px rgba(0,0,0,.4)"></div>
+        </section>
         <section class="panel">
             <div id="controls"></div>
             <div class="buttons">
@@ -18,10 +23,9 @@
                 <button id="download">⬇ SVG</button>
             </div>
             <p id="status" class="status"></p>
-            <p class="hint">Der Plotter spielt Musik: Motorgeräusch beim Fahren,
-            Klicks beim Stift-Auf-/-Ab. Die Spirale kodiert einen Schlagzeug-Rhythmus —
-            aktive Schläge als Bögen (Stift unten), Pausen als Lücken (Stift oben, schnell).
-            ▶ Anhören simuliert genau diese Plotter-Klänge im Browser.</p>
+            <p class="hint">Motorgeräusch beim Fahren, Klick beim Stift-Auf/-Ab.
+            Stift-unten (langsam) = tiefer Ton · Stift-oben (schnell) = hoher Ton.
+            Tempo-Regler steuern Tonhöhe. ▶ Anhören zeigt den roten Stift live.</p>
         </section>
     </main>
     <script src="shared.js"></script>
@@ -79,13 +83,39 @@
     let _nodes = [];
     let _playing = false;
     let _stopTimer = null;
+    let _freqDownX = 168, _freqDownY = 154;
+    let _freqUpX   = 504, _freqUpY   = 462;
+    let _timeline = [];    // [{x, y, penDown}] per animation frame
+    let _audioT0  = 0;     // AudioContext time at playback start
+    let _animFrame = null;
 
     function stopAudio() {
         _nodes.forEach(n => { try { n.stop(0); } catch (_) {} });
         _nodes = [];
         _playing = false;
         clearTimeout(_stopTimer);
+        if (_animFrame) { cancelAnimationFrame(_animFrame); _animFrame = null; }
+        document.getElementById('pen-dot').style.display = 'none';
         document.getElementById('play').textContent = '▶ Anhören';
+    }
+
+    function animatePen() {
+        if (!_playing || !_ctx || _timeline.length === 0) { _animFrame = null; return; }
+        const elapsed = Math.max(0, _ctx.currentTime - _audioT0 - 0.06);
+        const totalSec = 4 * _pattern.length * 60 / _bpm;
+        const t = elapsed / totalSec;
+        const dot = document.getElementById('pen-dot');
+        if (t >= 1) { dot.style.display = 'none'; _animFrame = null; return; }
+        const idx = Math.min(Math.floor(t * _timeline.length), _timeline.length - 1);
+        const pos = _timeline[idx];
+        const canvas = document.getElementById('canvas');
+        const rect = canvas.getBoundingClientRect();
+        const scale = rect.width / 1000;
+        dot.style.display = 'block';
+        dot.style.left  = (pos.x * scale) + 'px';
+        dot.style.top   = (pos.y * scale) + 'px';
+        dot.style.background = pos.penDown ? '#cc2200' : '#888888';
+        _animFrame = requestAnimationFrame(animatePen);
     }
 
     function schedClick(t, vol) {
@@ -112,7 +142,7 @@
        by a slow LFO representing one full arc traversal. */
     function schedArcBuzz(t, dur, th0, th1, vol) {
         if (!_ctx) return;
-        const freqX = 168, freqY = 154; // slightly different for each axis
+        const freqX = _freqDownX, freqY = _freqDownY;
         // Average motor contributions over the arc
         const midTh = (th0 + th1) / 2;
         const ampX = 0.35 + 0.65 * Math.abs(Math.sin(midTh));
@@ -143,7 +173,7 @@
     function schedTravelBuzz(t, dur) {
         // Pen-up fast travel: both motors, higher speed → higher pitch
         if (!_ctx) return;
-        [182, 165].forEach(f => {
+        [_freqUpX, _freqUpY].forEach(f => {
             const osc = _ctx.createOscillator();
             osc.type = 'sawtooth';
             osc.frequency.value = f;
@@ -176,7 +206,9 @@
         const noteSec = beatSec * _noteDur;
         const measures = 4;
         const t0 = _ctx.currentTime + 0.06;
+        _audioT0 = _ctx.currentTime;
         const angles = _arcAngles;
+        _animFrame = requestAnimationFrame(animatePen);
 
         for (let rep = 0; rep < measures; rep++) {
             for (let i = 0; i < n; i++) {
@@ -212,8 +244,10 @@
             { key: 'n_steps', label: 'Schritte (n)',        min: 4,  max: 24, step: 1,    value: 8 },
             { key: 'beats_k', label: 'Aktive Schläge (k)',  min: 1,  max: 24, step: 1,    value: 5 },
             { key: 'runden',  label: 'Umläufe',             min: 4,  max: 16, step: 1,    value: 8 },
-            { key: 'bpm',     label: 'BPM (Vorschau)',      min: 60, max: 200, step: 4,   value: 120 },
-            { key: 'notedur', label: 'Notendauer',          min: 0.3, max: 0.92, step: 0.04, value: 0.72 },
+            { key: 'bpm',        label: 'BPM (Vorschau)',         min: 60, max: 200,  step: 4,    value: 120 },
+            { key: 'notedur',    label: 'Notendauer',             min: 0.3, max: 0.92, step: 0.04, value: 0.72 },
+            { key: 'speed_down', label: 'Tempo Stift-unten mm/s', min: 20, max: 80,   step: 2,    value: 40 },
+            { key: 'speed_up',   label: 'Tempo Stift-oben  mm/s', min: 60, max: 220,  step: 10,   value: 120 },
         ],
         generate(api) {
             const { values } = api;
@@ -221,6 +255,12 @@
             _pattern = pattern;
             _bpm = values.bpm;
             _noteDur = values.notedur;
+            /* motor Hz ≈ speed × 4.2 (steps/mm calibrated for NextDraw 2234) */
+            const HZ_PER_MMS = 4.2;
+            _freqDownX = values.speed_down * HZ_PER_MMS;
+            _freqDownY = values.speed_down * HZ_PER_MMS * 0.917;
+            _freqUpX   = values.speed_up   * HZ_PER_MMS;
+            _freqUpY   = values.speed_up   * HZ_PER_MMS * 0.917;
 
             const lines = [];
             const cx = 500, cy = 500;
@@ -236,6 +276,27 @@
                     beat * 2 * Math.PI / n - Math.PI / 2,
                     (beat + values.notedur) * 2 * Math.PI / n - Math.PI / 2
                 ]);
+            }
+
+            /* animation timeline: pen position at 60fps for 4 audio measures */
+            {
+                const TL_FPS = 60, measures = 4;
+                const totalSec = measures * n * 60 / values.bpm;
+                const totalFrames = Math.ceil(TL_FPS * totalSec);
+                _timeline = [];
+                for (let frame = 0; frame <= totalFrames; frame++) {
+                    const t = frame / totalFrames;
+                    const totalBeats = t * measures * n;
+                    const measure = Math.min(Math.floor(totalBeats / n), measures - 1);
+                    const bi = Math.floor(totalBeats % n);
+                    const frac = totalBeats % 1;
+                    const rev = Math.min(measure, R - 1);
+                    const gB = rev * n + bi;
+                    const th = (gB + frac) * 2 * Math.PI / n - Math.PI / 2;
+                    const r = r0 + (r1 - r0) * (gB + frac) / total;
+                    _timeline.push({ x: cx + r * Math.cos(th), y: cy + r * Math.sin(th),
+                                     penDown: pattern[bi] === 1 && frac < values.notedur });
+                }
             }
 
             /* ── Spiral arcs (active beats = pen down) ── */
