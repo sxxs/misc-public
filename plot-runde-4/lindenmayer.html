@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>95 · Lindenmayer-Farn — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>95 · Lindenmayer-Farn</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Lindenmayer-Systeme: botanische Fraktale aus Zeichenketten-Umschreibung. Farn, Baum, Busch, Drachenkurve, Schneeflocke — sechs Pflanzen aus fünf Regeln.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "lindenmayer",
+        params: [
+            { key: "plant", label: "Pflanze", value: "farn", options: [
+                { value: "farn", label: "Farn" },
+                { value: "pflanze1", label: "Pflanze" },
+                { value: "pflanze2", label: "Symmetriebaum" },
+                { value: "drache", label: "Drachenkurve" },
+                { value: "schnee", label: "Schneeflocke" },
+                { value: "busch", label: "Busch" }
+            ]},
+            { key: "iter", label: "Iterationen", min: 2, max: 8, step: 1, value: 5 },
+            { key: "angle", label: "Winkel δ", min: 10, max: 90, step: 1, value: 25 },
+            { key: "start", label: "Start", value: "unten", options: [
+                { value: "unten", label: "Unten Mitte" },
+                { value: "mitte", label: "Mitte" },
+                { value: "links", label: "Links Mitte" }
+            ]}
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+
+            const plant = values.plant;
+            const iter = Math.round(values.iter);
+            let delta = values.angle * Math.PI / 180;
+
+            // L-system definitions
+            const SYSTEMS = {
+                farn: {
+                    axiom: "X",
+                    rules: { X: "F+[[X]-X]-F[-FX]+X", F: "FF" },
+                    delta: null // use param
+                },
+                pflanze1: {
+                    axiom: "F",
+                    rules: { F: "F[+F]F[-F][F]" },
+                    delta: null
+                },
+                pflanze2: {
+                    axiom: "F",
+                    rules: { F: "FF-[-F+F+F]+[+F-F-F]" },
+                    delta: null
+                },
+                drache: {
+                    axiom: "FX",
+                    rules: { X: "X+YF+", Y: "-FX-Y" },
+                    delta: Math.PI / 2  // fixed 90°
+                },
+                schnee: {
+                    axiom: "F++F++F",
+                    rules: { F: "F-F++F-F" },
+                    delta: Math.PI / 3  // fixed 60°
+                },
+                busch: {
+                    axiom: "Y",
+                    rules: { Y: "YFX[+Y][-Y]", X: "X[-FFF][+FFF]FX" },
+                    delta: null
+                }
+            };
+
+            const sys = SYSTEMS[plant] || SYSTEMS.farn;
+            // Use fixed delta for drache and schnee, otherwise use param
+            if (sys.delta !== null) {
+                delta = sys.delta;
+            }
+
+            // Expand L-system string
+            const MAX_LEN = 500000;
+            let str = sys.axiom;
+            let truncated = false;
+            for (let i = 0; i < iter; i++) {
+                let next = "";
+                for (const ch of str) {
+                    const rule = sys.rules[ch];
+                    if (rule) {
+                        next += rule;
+                    } else {
+                        next += ch;
+                    }
+                    if (next.length > MAX_LEN) {
+                        truncated = true;
+                        break;
+                    }
+                }
+                str = next;
+                if (truncated) break;
+            }
+
+            // Turtle graphics interpretation
+            // State: x, y, angle (radians, 0=right, 90=up in math coords)
+            const STEP = 10; // will be auto-scaled
+
+            // Collect all drawn segments as polylines
+            // Each polyline is a sequence of points while pen is down
+            const allPolylines = []; // {pts: [[x,y],...], stackDepth: number}
+
+            let x = 0, y = 0;
+            // Start angle: pointing up in our coordinate system
+            // In canvas, y increases downward, so "up" means decreasing y
+            // We'll handle the flip in auto-scaling
+            let angle = Math.PI / 2; // pointing up (in math coords)
+
+            const stack = [];
+            let currentPts = [[x, y]];
+            let penDown = true;
+            let currentDepth = 0;
+
+            function commitLine() {
+                if (currentPts.length >= 2) {
+                    allPolylines.push({ pts: currentPts, stackDepth: currentDepth });
+                }
+                currentPts = [[x, y]];
+            }
+
+            for (const ch of str) {
+                switch (ch) {
+                    case 'F':
+                    case 'G': {
+                        const nx = x + STEP * Math.cos(angle);
+                        const ny = y + STEP * Math.sin(angle);
+                        if (penDown) {
+                            currentPts.push([nx, ny]);
+                        } else {
+                            commitLine();
+                            penDown = true;
+                        }
+                        x = nx; y = ny;
+                        break;
+                    }
+                    case 'f': {
+                        // Pen up move
+                        commitLine();
+                        penDown = false;
+                        x += STEP * Math.cos(angle);
+                        y += STEP * Math.sin(angle);
+                        currentPts = [[x, y]];
+                        break;
+                    }
+                    case '+':
+                        // Turn left (counter-clockwise in math coords = increase angle)
+                        commitLine();
+                        angle += delta;
+                        currentPts = [[x, y]];
+                        break;
+                    case '-':
+                        // Turn right (clockwise = decrease angle)
+                        commitLine();
+                        angle -= delta;
+                        currentPts = [[x, y]];
+                        break;
+                    case '[':
+                        commitLine();
+                        stack.push({ x, y, angle, depth: currentDepth });
+                        currentDepth++;
+                        currentPts = [[x, y]];
+                        break;
+                    case ']':
+                        commitLine();
+                        if (stack.length > 0) {
+                            const s = stack.pop();
+                            x = s.x; y = s.y; angle = s.angle;
+                            currentDepth = s.depth;
+                        }
+                        currentPts = [[x, y]];
+                        break;
+                    default:
+                        // Other uppercase letters: treat as F (draw forward)
+                        if (ch >= 'A' && ch <= 'Z') {
+                            const nx = x + STEP * Math.cos(angle);
+                            const ny = y + STEP * Math.sin(angle);
+                            if (penDown) {
+                                currentPts.push([nx, ny]);
+                            } else {
+                                commitLine();
+                                penDown = true;
+                            }
+                            x = nx; y = ny;
+                        }
+                        break;
+                }
+            }
+            commitLine();
+
+            if (allPolylines.length === 0) {
+                api.done(lines);
+                return;
+            }
+
+            // Compute bounding box of all points
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            for (const poly of allPolylines) {
+                for (const [px, py] of poly.pts) {
+                    if (px < minX) minX = px;
+                    if (px > maxX) maxX = px;
+                    if (py < minY) minY = py;
+                    if (py > maxY) maxY = py;
+                }
+            }
+
+            const w = maxX - minX || 1;
+            const h = maxY - minY || 1;
+            const MARGIN = 60;
+            const CANVAS = 1000;
+            const available = CANVAS - 2 * MARGIN;
+            const scale = Math.min(available / w, available / h);
+
+            // Center of bounding box in screen space
+            const offsetX = MARGIN + (available - w * scale) / 2 - minX * scale;
+
+            // Determine start position offset for y
+            // In turtle coords, y increases upward (math). In canvas, y increases downward.
+            // We'll flip y: screenY = (some reference) - turtleY * scale
+            // The bounding box in turtle coords: [minY, maxY], height h
+            // In screen: we want [MARGIN, CANVAS-MARGIN]
+            // screenY = offsetY - py * scale
+            // At py=minY: screenY = offsetY - minY*scale = CANVAS - MARGIN (bottom)
+            // At py=maxY: screenY = offsetY - maxY*scale = MARGIN (top)
+            // So offsetY = CANVAS - MARGIN + minY*scale
+            // But we also need to center: offsetY = MARGIN + (available - h*scale)/2 + maxY*scale
+            const offsetY = MARGIN + (available - h * scale) / 2 + maxY * scale;
+
+            // Starting position adjustment
+            // values.start affects turtle's initial position, but since we auto-scale,
+            // the start position mainly affects where in the bbox the root appears
+            // (already handled by bounding box centering — it'll naturally fit)
+
+            // Convert all polylines to screen coords
+            for (const poly of allPolylines) {
+                if (poly.pts.length < 2) continue;
+                const screenPts = poly.pts.map(([px, py]) => [
+                    offsetX + px * scale,
+                    offsetY - py * scale   // flip y
+                ]);
+                // Line weight: root segments heaviest, deeper = thinner
+                const depth = poly.stackDepth;
+                const w = Math.max(0.4, 1.2 - depth * 0.15);
+                lines.push({ pts: screenPts, w });
+            }
+
+            const statusMsg = (truncated ? "Gekürzt auf " + MAX_LEN + " Zeichen — " : "") +
+                allPolylines.length + " Pfade, " + str.length + " Zeichen";
+            api.status(statusMsg);
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>
