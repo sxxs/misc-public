@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>72 · Doppel-Chladni-Moiré — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>72 · Doppel-Chladni-Moiré</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Zwei Chladni-Klangfiguren mit verschiedenen Frequenzen überlagern sich wie <b>Moiré-Gitter aus Physik</b>: Interferenz stehender Wellen — eine Schwebung der Schwebungen.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "chladni-moire",
+        params: [
+            { key: "n1", label: "Modus n₁", min: 1, max: 9, step: 1, value: 3 },
+            { key: "m1", label: "Modus m₁", min: 1, max: 9, step: 1, value: 5 },
+            { key: "n2", label: "Modus n₂", min: 1, max: 9, step: 1, value: 4 },
+            { key: "m2", label: "Modus m₂", min: 1, max: 9, step: 1, value: 6 },
+            { key: "coupling", label: "Kopplung", value: "plus", options: [
+                { value: "plus",  label: "Symmetrisch" },
+                { value: "minus", label: "Antisymmetrisch" },
+                { value: "mixed", label: "Gemischt" }
+            ]},
+            { key: "bands", label: "Konturbänder", min: 1, max: 8, step: 1, value: 4 },
+            { key: "mode", label: "Interferenz", value: "product", options: [
+                { value: "product", label: "Produkt (×)" },
+                { value: "sum",     label: "Summe (±)" },
+                { value: "both",    label: "Beide Felder" }
+            ]}
+        ],
+        onRegen(rnd, params) {
+            for (const p of params) {
+                if (p.key === "n1" || p.key === "m1" || p.key === "n2" || p.key === "m2") {
+                    p._set(1 + Math.floor(rnd() * 9));
+                }
+            }
+        },
+        generate(api) {
+            const { values } = api;
+            const lines = [];
+            const M = 40, S = 920;
+            const G = 240; // grid resolution
+
+            const { n1, m1, n2, m2 } = values;
+
+            // Signs for the two coupling terms of each field
+            // field1 always uses sgn1 for both terms
+            // field2: "mixed" uses -1 for its antisymmetric term
+            const sgn1 = values.coupling === "minus" ? -1 : 1;
+            const sgn2 = values.coupling === "mixed" ? -1 : (values.coupling === "minus" ? -1 : 1);
+
+            // --- STEP 1: Compute the two Chladni fields ---
+            const field1 = new Float32Array(G * G);
+            const field2 = new Float32Array(G * G);
+
+            for (let gy = 0; gy < G; gy++) {
+                for (let gx = 0; gx < G; gx++) {
+                    const x = gx / (G - 1);
+                    const y = gy / (G - 1);
+                    field1[gy * G + gx] =
+                        Math.cos(n1 * Math.PI * x) * Math.cos(m1 * Math.PI * y) +
+                        sgn1 * Math.cos(m1 * Math.PI * x) * Math.cos(n1 * Math.PI * y);
+                    field2[gy * G + gx] =
+                        Math.cos(n2 * Math.PI * x) * Math.cos(m2 * Math.PI * y) +
+                        sgn2 * Math.cos(m2 * Math.PI * x) * Math.cos(n2 * Math.PI * y);
+                }
+            }
+
+            // Map from grid index to canvas coordinates
+            const mapC = (v) => M + v * (S / (G - 1));
+
+            // --- STEP 2: Draw contours based on selected interference mode ---
+            const B = values.bands;
+
+            if (values.mode === "product") {
+                // Product field: f1 * f2 — nodal lines of both fields simultaneously
+                const prodField = new Float32Array(G * G);
+                let lo = Infinity, hi = -Infinity;
+                for (let i = 0; i < G * G; i++) {
+                    prodField[i] = field1[i] * field2[i];
+                    if (prodField[i] < lo) lo = prodField[i];
+                    if (prodField[i] > hi) hi = prodField[i];
+                }
+                const range = hi - lo;
+                // Draw contours at evenly spaced levels
+                for (let b = 0; b < B; b++) {
+                    // Spread levels across the range, avoiding the extremes slightly
+                    const t = lo + range * (b + 0.5) / B;
+                    const cs = PR4.contourLines((x, y) => prodField[y * G + x], G, G, t, mapC, mapC);
+                    const w = (b === 0 || b === B - 1) ? 1.2 : 0.7;
+                    for (const c of cs) lines.push({ pts: c, w });
+                }
+                // Also draw the zero-level nodal line (where product = 0)
+                const csZero = PR4.contourLines((x, y) => prodField[y * G + x], G, G, 0, mapC, mapC);
+                for (const c of csZero) lines.push({ pts: c, w: 1.0 });
+
+            } else if (values.mode === "sum") {
+                // Sum and difference: draw nodal lines of f1+f2 and f1-f2
+                const sumField = new Float32Array(G * G);
+                const difField = new Float32Array(G * G);
+                for (let i = 0; i < G * G; i++) {
+                    sumField[i] = field1[i] + field2[i];
+                    difField[i] = field1[i] - field2[i];
+                }
+                for (const field of [sumField, difField]) {
+                    let lo = Infinity, hi = -Infinity;
+                    for (const v of field) {
+                        if (v < lo) lo = v;
+                        if (v > hi) hi = v;
+                    }
+                    for (let b = 0; b < B; b++) {
+                        const t = lo + (hi - lo) * (b + 0.5) / B;
+                        const cs = PR4.contourLines((x, y) => field[y * G + x], G, G, t, mapC, mapC);
+                        for (const c of cs) lines.push({ pts: c, w: 0.7 });
+                    }
+                }
+            } else {
+                // Both fields separately: visual moiré from overlap
+                for (const field of [field1, field2]) {
+                    let lo = Infinity, hi = -Infinity;
+                    for (const v of field) {
+                        if (v < lo) lo = v;
+                        if (v > hi) hi = v;
+                    }
+                    const Bh = Math.ceil(B / 2);
+                    for (let b = 0; b < Bh; b++) {
+                        const t = lo + (hi - lo) * (b + 0.5) / Bh;
+                        const cs = PR4.contourLines((x, y) => field[y * G + x], G, G, t, mapC, mapC);
+                        for (const c of cs) lines.push({ pts: c, w: 0.65 });
+                    }
+                }
+            }
+
+            // --- STEP 3: Plate frame ---
+            lines.push({ pts: [[M, M], [M + S, M], [M + S, M + S], [M, M + S]], closed: true, w: 1.2 });
+
+            // --- STEP 4: Formula caption at bottom ---
+            const coupLabel1 = sgn1 > 0 ? "+" : "-";
+            const coupLabel2 = sgn2 > 0 ? "+" : "-";
+            const f1str = "F1: COS(" + n1 + "πX)COS(" + m1 + "πY) " + coupLabel1 + " COS(" + m1 + "πX)COS(" + n1 + "πY)";
+            const f2str = "F2: COS(" + n2 + "πX)COS(" + m2 + "πY) " + coupLabel2 + " COS(" + m2 + "πX)COS(" + n2 + "πY)";
+            for (const s of PR4Font.textCentered(f1str, 500, 963, 13)) {
+                lines.push({ pts: s, w: 0.75 });
+            }
+            for (const s of PR4Font.textCentered(f2str, 500, 980, 13)) {
+                lines.push({ pts: s, w: 0.75 });
+            }
+
+            api.status("n₁=" + n1 + " m₁=" + m1 + " × n₂=" + n2 + " m₂=" + m2 + " · " + values.mode + " · " + lines.length + " Pfade");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>
