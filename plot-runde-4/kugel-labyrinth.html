@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>79 · Kugel-Labyrinth — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>79 · Kugel-Labyrinth</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Ein lösbares Labyrinth auf der <b>Oberfläche einer Kugel</b> — Wände folgen Großkreis-Bögen, orthografisch projiziert. Eingang am Pol, Ausgang am Äquator.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "kugel-labyrinth",
+        params: [
+            { key: "divs", label: "Unterteilung", min: 4, max: 12, step: 1, value: 7 },
+            { key: "projection", label: "Projektion", value: "ortho", options: [
+                { value: "ortho", label: "Orthografisch" },
+                { value: "stereo", label: "Stereografisch" }
+            ]},
+            { key: "hemi", label: "Hälfte", value: "front", options: [
+                { value: "front", label: "Vordere Halbkugel" },
+                { value: "full", label: "Ganze Kugel" }
+            ]},
+            { key: "solution", label: "Lösung", value: "aus", options: [
+                { value: "aus", label: "Versteckt" },
+                { value: "an", label: "Eingezeichnet" }
+            ]}
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+            const D = values.divs;
+            const CX = 500, CY = 500, R = 420;
+
+            // Build sector counts per latitude band
+            const sectors = [];
+            for (let lat = 0; lat < D; lat++) {
+                const theta = Math.PI * (lat + 0.5) / D;
+                const circumference = 2 * Math.PI * Math.sin(theta);
+                const arcLen = Math.PI / D;
+                const n = Math.max(3, Math.round(circumference / arcLen));
+                const nRound = Math.max(4, Math.round(n / 2) * 2);
+                sectors.push(nRound);
+            }
+
+            const passages = new Set();
+            const pkey = (a, b) => {
+                const k1 = a[0] + "." + a[1], k2 = b[0] + "." + b[1];
+                return k1 < k2 ? k1 + "|" + k2 : k2 + "|" + k1;
+            };
+
+            // Neighbors on the sphere lat-lon grid
+            function sphereNeighbors(lat, lon) {
+                const out = [];
+                const c = sectors[lat];
+                out.push([lat, (lon + 1) % c]);
+                out.push([lat, (lon - 1 + c) % c]);
+                // North (toward pole)
+                if (lat === 0) {
+                    out.push([-1, 0]);
+                } else {
+                    const prevC = sectors[lat - 1];
+                    const ratio = prevC / c;
+                    out.push([lat - 1, Math.floor(lon * ratio)]);
+                }
+                // South (toward equator)
+                if (lat < D - 1) {
+                    const nextC = sectors[lat + 1];
+                    const ratio = nextC / c;
+                    if (ratio <= 1) {
+                        out.push([lat + 1, Math.floor(lon * ratio)]);
+                    } else {
+                        const rInt = Math.round(ratio);
+                        for (let k = 0; k < rInt; k++) {
+                            out.push([lat + 1, lon * rInt + k]);
+                        }
+                    }
+                }
+                return out;
+            }
+
+            // Recursive backtracker
+            const visitedMap = new Map();
+            const setVisited = (lat, lon) => visitedMap.set(lat + "." + lon, true);
+            const isVisited = (lat, lon) => visitedMap.has(lat + "." + lon);
+
+            const stack = [[-1, 0]];
+            setVisited(-1, 0);
+
+            while (stack.length) {
+                const [lat, lon] = stack[stack.length - 1];
+                let neighbors;
+                if (lat === -1) {
+                    // North pole: connects to all cells at latitude 0
+                    neighbors = Array.from({ length: sectors[0] }, (_, k) => [0, k])
+                        .filter(([l, s]) => !isVisited(l, s));
+                } else {
+                    neighbors = sphereNeighbors(lat, lon)
+                        .filter(([l, s]) => l >= -1 && l < D && !isVisited(l, s));
+                }
+                if (neighbors.length === 0) { stack.pop(); continue; }
+                const nb = neighbors[Math.floor(rnd() * neighbors.length)];
+                passages.add(pkey([lat, lon], nb));
+                setVisited(nb[0], nb[1]);
+                stack.push(nb);
+            }
+
+            // 3D / projection helpers
+            function sphTo3D(theta, phi) {
+                return [Math.sin(theta) * Math.cos(phi), Math.sin(theta) * Math.sin(phi), Math.cos(theta)];
+            }
+
+            function orthoProject(p3d) {
+                const [x, y, z] = p3d;
+                return [CX + x * R, CY - z * R];
+            }
+
+            function stereoProject(p3d) {
+                const [x, y, z] = p3d;
+                const s = 1 / (1 + Math.max(0.01, y));
+                return [CX + x * s * R, CY - z * s * R];
+            }
+
+            function project(p3d) {
+                return values.projection === "stereo" ? stereoProject(p3d) : orthoProject(p3d);
+            }
+
+            function isVisible(p3d) {
+                if (values.hemi === "full") return true;
+                return p3d[1] > -0.1;
+            }
+
+            // Great-circle arc using slerp
+            function greatCircleArc(a3d, b3d, w) {
+                const steps = 20;
+                const dot = Math.max(-1, Math.min(1,
+                    a3d[0] * b3d[0] + a3d[1] * b3d[1] + a3d[2] * b3d[2]));
+                const angle = Math.acos(dot);
+                const pts = [];
+                for (let s = 0; s <= steps; s++) {
+                    const t = s / steps;
+                    let p3d;
+                    if (Math.abs(angle) < 1e-6) {
+                        p3d = a3d;
+                    } else {
+                        const sa = Math.sin(angle);
+                        const wa = Math.sin((1 - t) * angle) / sa;
+                        const wb = Math.sin(t * angle) / sa;
+                        p3d = [a3d[0] * wa + b3d[0] * wb,
+                               a3d[1] * wa + b3d[1] * wb,
+                               a3d[2] * wa + b3d[2] * wb];
+                        const len = Math.hypot(...p3d);
+                        if (len > 1e-9) p3d = p3d.map(v => v / len);
+                    }
+                    if (isVisible(p3d)) {
+                        pts.push(project(p3d));
+                    } else if (pts.length > 1) {
+                        lines.push({ pts: pts.slice(), w });
+                        pts.length = 0;
+                    } else {
+                        pts.length = 0;
+                    }
+                }
+                if (pts.length > 1) lines.push({ pts: pts.slice(), w });
+            }
+
+            // Latitude arc (constant theta) helper
+            function latArc(theta, phi0, phi1, w) {
+                const steps = 10;
+                const pts = [];
+                for (let s = 0; s <= steps; s++) {
+                    const phi = phi0 + (phi1 - phi0) * s / steps;
+                    const p3d = sphTo3D(theta, phi);
+                    if (isVisible(p3d)) {
+                        pts.push(project(p3d));
+                    } else if (pts.length > 1) {
+                        lines.push({ pts: pts.slice(), w });
+                        pts.length = 0;
+                    } else {
+                        pts.length = 0;
+                    }
+                }
+                if (pts.length > 1) lines.push({ pts: pts.slice(), w });
+            }
+
+            // Draw latitude walls (between latitude bands)
+            for (let lat = 0; lat < D - 1; lat++) {
+                const theta = Math.PI * (lat + 1) / D;
+                const c = sectors[lat];
+                const cNext = sectors[lat + 1];
+                for (let lon = 0; lon < cNext; lon++) {
+                    // parent cell in current latitude band
+                    const j = Math.floor(lon * c / cNext);
+                    if (!passages.has(pkey([lat, j], [lat + 1, lon]))) {
+                        const phi0 = 2 * Math.PI * lon / cNext;
+                        const phi1 = 2 * Math.PI * (lon + 1) / cNext;
+                        latArc(theta, phi0, phi1, 0.8);
+                    }
+                }
+            }
+
+            // Draw longitude walls (meridians within bands)
+            for (let lat = 0; lat < D; lat++) {
+                const theta0 = lat === 0 ? 1e-6 : Math.PI * lat / D;
+                const theta1 = Math.PI * (lat + 1) / D;
+                const c = sectors[lat];
+                for (let lon = 0; lon < c; lon++) {
+                    if (!passages.has(pkey([lat, lon], [lat, (lon + 1) % c]))) {
+                        const phi = 2 * Math.PI * (lon + 1) / c;
+                        greatCircleArc(sphTo3D(theta0, phi), sphTo3D(theta1, phi), 0.8);
+                    }
+                }
+            }
+
+            // Draw pole cap walls (boundary between pole and lat 0)
+            for (let lon = 0; lon < sectors[0]; lon++) {
+                if (!passages.has(pkey([-1, 0], [0, lon]))) {
+                    const theta0 = 1e-6;
+                    const theta1 = Math.PI / D;
+                    // arc along the first latitude boundary from phi0 to phi1
+                    const phi0 = 2 * Math.PI * lon / sectors[0];
+                    const phi1 = 2 * Math.PI * (lon + 1) / sectors[0];
+                    latArc(theta1, phi0, phi1, 0.8);
+                }
+            }
+
+            // Sphere outline
+            const outlinePts = [];
+            for (let i = 0; i <= 80; i++) {
+                const a = i / 80 * Math.PI * 2;
+                outlinePts.push([CX + R * Math.cos(a), CY + R * Math.sin(a)]);
+            }
+            lines.push({ pts: outlinePts, closed: true, w: 1.2 });
+
+            // Equator as reference
+            const eqPts = [];
+            for (let i = 0; i <= 80; i++) {
+                const phi = i / 80 * Math.PI * 2;
+                const p3d = sphTo3D(Math.PI / 2, phi);
+                if (isVisible(p3d)) {
+                    eqPts.push(project(p3d));
+                } else if (eqPts.length > 1) {
+                    lines.push({ pts: eqPts.slice(), w: 0.4 });
+                    eqPts.length = 0;
+                } else {
+                    eqPts.length = 0;
+                }
+            }
+            if (eqPts.length > 1) lines.push({ pts: eqPts.slice(), w: 0.4 });
+
+            // Solution path via BFS
+            if (values.solution === "an") {
+                // Build adjacency from passages
+                const adj = new Map();
+                const link = (a, b) => {
+                    if (!adj.has(a)) adj.set(a, []);
+                    adj.get(a).push(b);
+                };
+                for (const key of passages) {
+                    const [a, b] = key.split("|");
+                    link(a, b); link(b, a);
+                }
+                // Find a lat-D-1 cell (equator exit) reachable from pole
+                const start = "-1.0";
+                // pick the exit: any cell at lat=D-1
+                let goal = null;
+                const exitLon = Math.floor(rnd() * sectors[D - 1]);
+                goal = (D - 1) + "." + exitLon;
+
+                const prev = new Map([[start, null]]);
+                const q = [start];
+                while (q.length) {
+                    const cur = q.shift();
+                    if (cur === goal) break;
+                    for (const nb of adj.get(cur) || []) {
+                        if (!prev.has(nb)) { prev.set(nb, cur); q.push(nb); }
+                    }
+                }
+                // If goal unreachable, find any equator cell reachable
+                if (!prev.has(goal)) {
+                    for (let lon = 0; lon < sectors[D - 1]; lon++) {
+                        const g = (D - 1) + "." + lon;
+                        if (prev.has(g)) { goal = g; break; }
+                    }
+                }
+                if (prev.has(goal)) {
+                    // Trace path back
+                    const path = [];
+                    let cur = goal;
+                    while (cur !== null) {
+                        const [latS, lonS] = cur.split(".").map(Number);
+                        let p3d;
+                        if (latS === -1) {
+                            p3d = sphTo3D(0.05, 0);
+                        } else {
+                            const theta = Math.PI * (latS + 0.5) / D;
+                            const phi = 2 * Math.PI * (lonS + 0.5) / sectors[latS];
+                            p3d = sphTo3D(theta, phi);
+                        }
+                        if (isVisible(p3d)) path.push(project(p3d));
+                        cur = prev.get(cur);
+                    }
+                    path.reverse();
+                    // Draw dashed solution path
+                    for (let i = 0; i < path.length - 1; i++) {
+                        const a = path[i], b = path[i + 1];
+                        const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+                        const n = Math.max(1, Math.round(len / 14));
+                        for (let k = 0; k < n; k++) {
+                            const t0 = k / n, t1 = t0 + 0.55 / n;
+                            lines.push({ pts: [
+                                [a[0] + (b[0] - a[0]) * t0, a[1] + (b[1] - a[1]) * t0],
+                                [a[0] + (b[0] - a[0]) * Math.min(1, t1), a[1] + (b[1] - a[1]) * Math.min(1, t1)]
+                            ], w: 0.7 });
+                        }
+                    }
+                }
+            }
+
+            const totalPassages = passages.size;
+            api.status(D + " Breitengrade · " + sectors.reduce((s, c) => s + c, 0) + " Zellen · " + totalPassages + " Gänge");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

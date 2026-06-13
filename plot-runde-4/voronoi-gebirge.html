@@ -1,0 +1,172 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>76 · Voronoi-Gebirge — Plot Runde 4</title><link rel="stylesheet" href="shared.css"></head>
+<body><header><a class="back" href="./">← Übersicht</a><h1>76 · Voronoi-Gebirge</h1></header>
+<main><section class="paper"><canvas id="canvas"></canvas></section>
+<section class="panel"><div id="controls"></div>
+<div class="buttons"><button id="regen" class="primary">🎲 Neu</button><button id="download">⬇ SVG</button></div>
+<p id="status" class="status"></p>
+<p class="hint">Voronoi-Zellen werden als <b>isometrische Basaltsäulen</b> extrudiert — jede polygonale Zelle als eigenständiger Turm, Höhe nach Noise. Wie der Giant's Causeway, aber generiert.</p>
+</section></main>
+<script src="shared.js"></script><script src="app.js"></script>
+<script>
+"use strict";
+PR4App({
+    svgName: "voronoi-gebirge",
+    params: [
+        { key: "points", label: "Punkte", min: 20, max: 120, step: 5, value: 50 },
+        { key: "maxh", label: "Max. Höhe", min: 40, max: 200, step: 10, value: 120 },
+        { key: "field", label: "Höhenfeld", value: "noise", options: [
+            { value: "noise", label: "Noise" },
+            { value: "center", label: "Zentral" },
+            { value: "wave", label: "Welle" }
+        ]},
+        { key: "hatch", label: "Schraffur", value: "an", options: [
+            { value: "an", label: "An" },
+            { value: "aus", label: "Aus" }
+        ]}
+    ],
+    generate(api) {
+        const { rnd, values } = api;
+        const noise = PR4.makeNoise2D(rnd);
+        const no = rnd() * 40;
+        const lines = [];
+        const M = 40, S = 920;
+
+        // Generate N random points in page space
+        const pts = [];
+        for (let i = 0; i < values.points; i++) {
+            pts.push([M + rnd() * S, M + rnd() * S]);
+        }
+        // Add boundary points to ensure Voronoi cells fill the page
+        for (let i = 0; i < 8; i++) {
+            const a = i / 8 * Math.PI * 2;
+            pts.push([500 + Math.cos(a) * 700, 500 + Math.sin(a) * 700]);
+        }
+
+        const tris = PR4.delaunay(pts);
+
+        // For each Delaunay triangle, compute circumcenter
+        function circumcenter(a, b, c) {
+            const ax = a[0], ay = a[1], bx = b[0], by = b[1], cx = c[0], cy = c[1];
+            const D = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
+            if (Math.abs(D) < 1e-8) return [(ax+bx+cx)/3, (ay+by+cy)/3];
+            const ux = ((ax*ax+ay*ay)*(by-cy) + (bx*bx+by*by)*(cy-ay) + (cx*cx+cy*cy)*(ay-by)) / D;
+            const uy = ((ax*ax+ay*ay)*(cx-bx) + (bx*bx+by*by)*(ax-cx) + (cx*cx+cy*cy)*(bx-ax)) / D;
+            return [ux, uy];
+        }
+
+        // For each point, collect the Voronoi cell: circumcenters of all Delaunay triangles touching this point
+        const pointTris = new Map();
+        for (let ti = 0; ti < tris.length; ti++) {
+            const [a, b, c] = tris[ti];
+            for (const v of [a, b, c]) {
+                if (!pointTris.has(v)) pointTris.set(v, []);
+                pointTris.get(v).push(ti);
+            }
+        }
+
+        // Compute circumcenter for each triangle
+        const triCenters = tris.map(([a,b,c]) => circumcenter(pts[a], pts[b], pts[c]));
+
+        // Isometric projection
+        const CX = 500, CY = 600;
+        const XY_SCALE = 0.5;
+        function isoProject(wx, wy, wz) {
+            const rx = (wx - 500) * XY_SCALE;
+            const ry = (wy - 500) * XY_SCALE;
+            const sx = CX + (rx - ry) * 0.866;
+            const sy = CY + (rx + ry) * 0.5 - wz;
+            return [sx, sy];
+        }
+
+        // For each original point (not boundary), compute Voronoi cell polygon
+        const cells = [];
+        for (let pi = 0; pi < values.points; pi++) {
+            const site = pts[pi];
+            const adjTris = pointTris.get(pi) || [];
+            if (adjTris.length < 3) continue;
+
+            // Sort adjacent triangles by angle around the site
+            const centers = adjTris.map(ti => triCenters[ti]).filter(c =>
+                c[0] > M - 50 && c[0] < M + S + 50 && c[1] > M - 50 && c[1] < M + S + 50
+            );
+            if (centers.length < 3) continue;
+
+            centers.sort((a, b) =>
+                Math.atan2(a[1] - site[1], a[0] - site[0]) -
+                Math.atan2(b[1] - site[1], b[0] - site[0])
+            );
+
+            // Compute height for this cell
+            const fx = (site[0] - M) / S, fy = (site[1] - M) / S;
+            let h;
+            if (values.field === "center") {
+                const d = Math.hypot(fx - 0.5, fy - 0.5);
+                h = values.maxh * Math.max(0, 1 - d * 2);
+            } else if (values.field === "wave") {
+                h = values.maxh * (0.5 + 0.5 * Math.sin(fx * Math.PI * 3) * Math.cos(fy * Math.PI * 3));
+            } else {
+                h = values.maxh * noise.fbm(fx * 3 + no, fy * 3 + no, 3);
+            }
+
+            cells.push({ site, polygon: centers, height: Math.max(0, h) });
+        }
+
+        // Sort cells: draw back to front (cells further from camera first)
+        cells.sort((a, b) => (a.site[0] + a.site[1]) - (b.site[0] + b.site[1]));
+
+        for (const {site, polygon, height} of cells) {
+            const h = height;
+
+            // Project top polygon (z = h):
+            const topPoly = polygon.map(p => isoProject(p[0], p[1], h));
+            // Project bottom polygon (z = 0):
+            const botPoly = polygon.map(p => isoProject(p[0], p[1], 0));
+
+            // Draw side faces — only the "visible" sides
+            for (let k = 0; k < polygon.length; k++) {
+                const k2 = (k + 1) % polygon.length;
+                const p1 = polygon[k], p2 = polygon[k2];
+                // Face normal in XY plane:
+                const nx = p2[1] - p1[1];
+                const ny = -(p2[0] - p1[0]);
+                // Visible if normal points toward camera (camera direction ~[1,1])
+                const vis = nx + ny > 0;
+                if (!vis) continue;
+
+                // Draw side face: top[k] → top[k2] → bot[k2] → bot[k]
+                const face = [topPoly[k], topPoly[k2], botPoly[k2], botPoly[k]];
+                lines.push({pts: face, closed: true, w: 0.8});
+
+                // Hatch the side face
+                if (values.hatch === "an" && h > 5) {
+                    const spacing = nx + ny > 200 ? 7 : 12;
+                    for (let s = spacing; s < h; s += spacing) {
+                        const e1 = [topPoly[k][0], topPoly[k][1] + s];
+                        const e2 = [topPoly[k2][0], topPoly[k2][1] + s];
+                        lines.push({pts: [e1, e2], w: 0.4});
+                    }
+                }
+            }
+
+            // Draw top face (the polygon):
+            if (topPoly.length >= 3) {
+                lines.push({pts: topPoly, closed: true, w: 1.0});
+            }
+
+            // Draw bottom outlines that are visible:
+            for (let k = 0; k < polygon.length; k++) {
+                const k2 = (k + 1) % polygon.length;
+                const p1 = polygon[k], p2 = polygon[k2];
+                const nx = p2[1] - p1[1], ny = -(p2[0] - p1[0]);
+                if (nx + ny > 0) lines.push({pts: [botPoly[k], botPoly[k2]], w: 0.6});
+            }
+        }
+
+        api.status("Fertig — " + cells.length + " Zellen.");
+        api.done(lines);
+    }
+});
+</script>
+</body></html>

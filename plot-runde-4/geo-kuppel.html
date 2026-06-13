@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>83 · Geo-Kuppel — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>83 · Geo-Kuppel</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Ein geodätisches Netz — Icosaeder, vielfach unterteilt — wird isometrisch projiziert und nach Lichteinfallswinkel schraffiert. Jede dreieckige Fläche trägt ihre eigene Helligkeit.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "geo-kuppel",
+        params: [
+            { key: "freq",   label: "Frequenz", min: 1,   max: 5,   step: 1,  value: 3 },
+            { key: "radius", label: "Radius",   min: 200, max: 450, step: 10, value: 350 },
+            { key: "light",  label: "Licht",    value: "links", options: [
+                { value: "links",   label: "Links" },
+                { value: "rechts",  label: "Rechts" }
+            ]},
+            { key: "show",   label: "Zeige",    value: "upper", options: [
+                { value: "upper", label: "Halbkugel" },
+                { value: "full",  label: "Vollkugel" }
+            ]}
+        ],
+        generate(api) {
+            const { values } = api;
+            const R = values.radius;
+
+            // Icosahedron base vertices
+            const phi = (1 + Math.sqrt(5)) / 2;
+            const icoVerts = [
+                [0, 1, phi], [0, -1, phi], [0, 1, -phi], [0, -1, -phi],
+                [1, phi, 0], [-1, phi, 0], [1, -phi, 0], [-1, -phi, 0],
+                [phi, 0, 1], [-phi, 0, 1], [phi, 0, -1], [-phi, 0, -1]
+            ].map(v => { const l = Math.hypot(...v); return v.map(x => x / l); });
+
+            const icoFaces = [
+                [0,1,8],[0,8,4],[0,4,5],[0,5,9],[0,9,1],
+                [1,6,8],[8,6,10],[8,10,4],[4,10,2],[4,2,5],
+                [5,2,11],[5,11,9],[9,11,7],[9,7,1],[1,7,6],
+                [3,6,7],[3,7,11],[3,11,2],[3,2,10],[3,10,6]
+            ];
+
+            function normalize(v) {
+                const l = Math.hypot(...v); return v.map(x => x / l);
+            }
+            function midpoint(a, b) {
+                return normalize([a[0]+b[0], a[1]+b[1], a[2]+b[2]]);
+            }
+
+            // Subdivide triangles freq times
+            function subdivide(verts, faces, freq) {
+                let vs = verts.slice();
+                let fs = faces.slice();
+                for (let f = 0; f < freq; f++) {
+                    const edgeMap = new Map();
+                    const newFaces = [];
+                    function midIdx(a, b) {
+                        const key = a < b ? a + "," + b : b + "," + a;
+                        if (edgeMap.has(key)) return edgeMap.get(key);
+                        const idx = vs.length;
+                        vs.push(midpoint(vs[a], vs[b]));
+                        edgeMap.set(key, idx);
+                        return idx;
+                    }
+                    for (const [a, b, c] of fs) {
+                        const ab = midIdx(a, b);
+                        const bc = midIdx(b, c);
+                        const ca = midIdx(c, a);
+                        newFaces.push([a, ab, ca], [ab, b, bc], [ca, bc, c], [ab, bc, ca]);
+                    }
+                    fs = newFaces;
+                }
+                return { verts: vs, faces: fs };
+            }
+
+            const { verts, faces } = subdivide(icoVerts, icoFaces, values.freq);
+
+            // Isometric projection
+            const cos30 = Math.cos(Math.PI / 6);
+            const sin30 = Math.sin(Math.PI / 6);
+            function isoProject(v) {
+                const x = v[0], y = v[1], z = v[2];
+                // iso axes: i-axis = (cos30, sin30), j-axis = (-cos30, sin30), z up
+                const sx = 500 + (x * cos30 - y * cos30) * R;
+                const sy = 500 + (x * sin30 + y * sin30 - z) * R;
+                return [sx, sy];
+            }
+
+            // Light direction
+            const lx = values.light === "links" ? 0.5 : -0.5;
+            const lightDir = normalize([lx, 0.5, 0.7]);
+
+            function faceNormal(a, b, c) {
+                const ab = [b[0]-a[0], b[1]-a[1], b[2]-a[2]];
+                const ac = [c[0]-a[0], c[1]-a[1], c[2]-a[2]];
+                return normalize([
+                    ab[1]*ac[2] - ab[2]*ac[1],
+                    ab[2]*ac[0] - ab[0]*ac[2],
+                    ab[0]*ac[1] - ab[1]*ac[0]
+                ]);
+            }
+            function dot(a, b) { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]; }
+
+            // clip hatch line to triangle
+            function clipSegToTriangle(p0, p1, ta, tb, tc) {
+                // parametric clip on line p0+t*(p1-p0) inside triangle using 3 half-planes
+                let tMin = 0, tMax = 1;
+                const edges = [[ta,tb],[tb,tc],[tc,ta]];
+                const dx = p1[0]-p0[0], dy = p1[1]-p0[1];
+                for (const [ea, eb] of edges) {
+                    const ex = eb[0]-ea[0], ey = eb[1]-ea[1];
+                    const nx = -ey, ny = ex;
+                    const denom = nx*dx + ny*dy;
+                    const w0 = nx*(p0[0]-ea[0]) + ny*(p0[1]-ea[1]);
+                    if (Math.abs(denom) < 1e-9) {
+                        if (w0 < -1e-6) return null;
+                        continue;
+                    }
+                    const t = -w0 / denom;
+                    if (denom < 0) { if (t > tMin) tMin = t; }
+                    else           { if (t < tMax) tMax = t; }
+                }
+                if (tMin >= tMax - 1e-6) return null;
+                return [
+                    [p0[0]+tMin*dx, p0[1]+tMin*dy],
+                    [p0[0]+tMax*dx, p0[1]+tMax*dy]
+                ];
+            }
+
+            // Hatch a triangle in screen space along a direction
+            function hatchTriangle(sa, sb, sc, spacing) {
+                const lines = [];
+                // bounding box
+                const minX = Math.min(sa[0],sb[0],sc[0]);
+                const maxX = Math.max(sa[0],sb[0],sc[0]);
+                const minY = Math.min(sa[1],sb[1],sc[1]);
+                const maxY = Math.max(sa[1],sb[1],sc[1]);
+                // hatch horizontal lines
+                for (let y = minY + spacing; y < maxY; y += spacing) {
+                    const seg = clipSegToTriangle([minX-1,y],[maxX+1,y],sa,sb,sc);
+                    if (seg) lines.push(seg);
+                }
+                return lines;
+            }
+
+            // Build face list with metadata
+            const faceData = [];
+            for (const [ai, bi, ci] of faces) {
+                const va = verts[ai], vb = verts[bi], vc = verts[ci];
+                const avgZ = (va[2] + vb[2] + vc[2]) / 3;
+                if (values.show === "upper" && avgZ < -0.1) continue;
+                const normal = faceNormal(va, vb, vc);
+                const diffuse = dot(normal, lightDir);
+                const sa = isoProject(va), sb = isoProject(vb), sc = isoProject(vc);
+                const screenY = (sa[1]+sb[1]+sc[1])/3;
+                faceData.push({ sa, sb, sc, diffuse, screenY, normal });
+            }
+
+            // Sort back-to-front by centroid screenY
+            faceData.sort((a, b) => a.screenY - b.screenY);
+
+            const lines = [];
+            for (const { sa, sb, sc, diffuse } of faceData) {
+                // outline
+                lines.push({ pts: [sa, sb, sc, sa], w: 0.8, closed: false });
+                // hatch based on diffuse lighting
+                if (diffuse < 0.5) {
+                    const spacing = diffuse < 0.1 ? 6 : 12;
+                    for (const seg of hatchTriangle(sa, sb, sc, spacing)) {
+                        lines.push({ pts: seg, w: 0.5 });
+                    }
+                }
+            }
+
+            // circular base arc for upper hemisphere
+            if (values.show === "upper") {
+                const steps = 80;
+                const arcPts = [];
+                for (let i = 0; i <= steps; i++) {
+                    const angle = (i / steps) * Math.PI * 2;
+                    const v3 = [Math.cos(angle), Math.sin(angle), 0];
+                    arcPts.push(isoProject(v3));
+                }
+                lines.push({ pts: arcPts, w: 1.0 });
+            }
+
+            api.status(faceData.length + " Dreiecke · Frequenz " + values.freq);
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>
