@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>84 · Twill-Gewebe — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>84 · Twill-Gewebe</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Kett- und Schussfäden weben sich durch ein Raster nach klassischen Textilmustern — Köper, Fischgrat, Panama. Jede Kreuzung entscheidet: Wer geht oben, wer unten? Eine plotterfreundliche Stoff-Simulation.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "twill",
+        params: [
+            { key: "threads", label: "Faden-Anzahl", min: 10, max: 40, step: 2, value: 24 },
+            { key: "weave",   label: "Bindung",       value: "twill22", options: [
+                { value: "twill22",  label: "2/2-Köper" },
+                { value: "twill31",  label: "3/1-Köper" },
+                { value: "herring",  label: "Fischgrat" },
+                { value: "basket",   label: "Panama" },
+                { value: "plain",    label: "Leinwand" }
+            ]},
+            { key: "tilt",    label: "Neigung",        value: "iso", options: [
+                { value: "flat", label: "Plan" },
+                { value: "iso",  label: "Isometrisch" }
+            ]}
+        ],
+        generate(api) {
+            const { values } = api;
+            const N = values.threads;
+
+            // Weave pattern matrices
+            const WEAVES = {
+                plain:   [[1,0],[0,1]],
+                basket:  [[1,1,0,0],[1,1,0,0],[0,0,1,1],[0,0,1,1]],
+                twill22: [[1,1,0,0],[0,1,1,0],[0,0,1,1],[1,0,0,1]],
+                twill31: [[1,1,1,0],[0,1,1,1],[1,0,1,1],[1,1,0,1]],
+                herring: null // computed below
+            };
+
+            // Build herringbone: twill22 then reversed twill22
+            const tw = WEAVES.twill22;
+            const herring = [...tw, ...[...tw].reverse()];
+            WEAVES.herring = herring;
+
+            const matrix = WEAVES[values.weave];
+            const mh = matrix.length;
+            const mw = matrix[0].length;
+
+            function weaveAt(i, j) {
+                return matrix[j % mh][i % mw];
+            }
+
+            const GAP = 0.3; // gap fraction around intersection
+
+            const lines = [];
+
+            if (values.tilt === "flat") {
+                const MARGIN = 60;
+                const SPAN = 880;
+                const cell = SPAN / N;
+
+                // Draw warp threads (vertical, along i-axis)
+                for (let i = 0; i < N; i++) {
+                    const x = MARGIN + (i + 0.5) * cell;
+                    const segments = [];
+                    let segStart = null;
+
+                    for (let j = 0; j <= N; j++) {
+                        const y = MARGIN + j * cell;
+                        // warp visible when weaveAt(i,j) === 1
+                        const over = j < N ? weaveAt(i, j) === 1 : false;
+
+                        if (j < N) {
+                            // check if warp is over at this crossing
+                            const yCenter = MARGIN + (j + 0.5) * cell;
+                            const yGapStart = yCenter - GAP * cell;
+                            const yGapEnd   = yCenter + GAP * cell;
+
+                            if (over) {
+                                // warp on top: continuous through crossing
+                                if (segStart === null) segStart = MARGIN + j * cell;
+                            } else {
+                                // warp under: gap around intersection
+                                // emit segment up to gap start
+                                if (segStart !== null) {
+                                    const segEnd = yGapStart;
+                                    if (segEnd - segStart > 0.5) lines.push({ pts: [[x, segStart],[x, segEnd]], w: 0.8 });
+                                }
+                                segStart = yGapEnd;
+                            }
+                        } else {
+                            // end of column
+                            if (segStart !== null) {
+                                const segEnd = MARGIN + N * cell;
+                                if (segEnd - segStart > 0.5) lines.push({ pts: [[x, segStart],[x, segEnd]], w: 0.8 });
+                            }
+                            segStart = null;
+                        }
+                    }
+                }
+
+                // Draw weft threads (horizontal, along j-axis)
+                for (let j = 0; j < N; j++) {
+                    const y = MARGIN + (j + 0.5) * cell;
+                    const segments = [];
+                    let segStart = null;
+
+                    for (let i = 0; i <= N; i++) {
+                        const x = MARGIN + i * cell;
+                        const over = i < N ? weaveAt(i, j) === 0 : false; // weft over when warp under
+
+                        if (i < N) {
+                            const xCenter = MARGIN + (i + 0.5) * cell;
+                            const xGapStart = xCenter - GAP * cell;
+                            const xGapEnd   = xCenter + GAP * cell;
+
+                            if (over) {
+                                if (segStart === null) segStart = MARGIN + i * cell;
+                            } else {
+                                if (segStart !== null) {
+                                    const segEnd = xGapStart;
+                                    if (segEnd - segStart > 0.5) lines.push({ pts: [[segStart, y],[segEnd, y]], w: 0.8 });
+                                }
+                                segStart = xGapEnd;
+                            }
+                        } else {
+                            if (segStart !== null) {
+                                const segEnd = MARGIN + N * cell;
+                                if (segEnd - segStart > 0.5) lines.push({ pts: [[segStart, y],[segEnd, y]], w: 0.8 });
+                            }
+                            segStart = null;
+                        }
+                    }
+                }
+
+            } else {
+                // Isometric mode
+                // Unit cell in iso: i-axis = (AX, AY), j-axis = (BX, BY)
+                const MARGIN = 40;
+                const maxSpan = 920;
+                // Grid extends N cells in i and j
+                // Compute unit so that the full grid fits with margins
+                // width extent: N*(AX + BX_abs) = N*(0.866+0.866)*u, height: N*(AY + BY)*u
+                const u = Math.min(maxSpan / (N * 1.732), maxSpan / (N * 1.0));
+                const AX =  0.866 * u, AY = 0.5 * u;
+                const BX = -0.866 * u, BY = 0.5 * u;
+
+                // Origin centered
+                const OX = 500, OY = 500 - (N * AY + N * BY) / 2 + 40;
+
+                function iso(i, j) {
+                    return [OX + i * AX + j * BX, OY + i * AY + j * BY];
+                }
+
+                // Warp threads along i-axis (constant j, varying i)
+                for (let j = 0; j < N; j++) {
+                    // thread runs from i=0 to i=N at j+0.5
+                    // crossings at each i cell
+                    let segStart = null;
+
+                    for (let i = 0; i <= N; i++) {
+                        const over = i < N ? weaveAt(i, j) === 1 : false;
+
+                        if (i < N) {
+                            // crossing center at (i+0.5, j+0.5)
+                            if (over) {
+                                if (segStart === null) segStart = i;
+                            } else {
+                                if (segStart !== null) {
+                                    // emit from segStart to i+0.5-GAP
+                                    const p0 = iso(segStart, j + 0.5);
+                                    const p1 = iso(i + 0.5 - GAP, j + 0.5);
+                                    lines.push({ pts: [p0, p1], w: 0.8 });
+                                }
+                                segStart = i + 0.5 + GAP;
+                            }
+                        } else {
+                            if (segStart !== null) {
+                                const p0 = iso(segStart, j + 0.5);
+                                const p1 = iso(N, j + 0.5);
+                                lines.push({ pts: [p0, p1], w: 0.8 });
+                            }
+                            segStart = null;
+                        }
+                    }
+                }
+
+                // Weft threads along j-axis (constant i, varying j)
+                for (let i = 0; i < N; i++) {
+                    let segStart = null;
+
+                    for (let j = 0; j <= N; j++) {
+                        const over = j < N ? weaveAt(i, j) === 0 : false;
+
+                        if (j < N) {
+                            if (over) {
+                                if (segStart === null) segStart = j;
+                            } else {
+                                if (segStart !== null) {
+                                    const p0 = iso(i + 0.5, segStart);
+                                    const p1 = iso(i + 0.5, j + 0.5 - GAP);
+                                    lines.push({ pts: [p0, p1], w: 0.8 });
+                                }
+                                segStart = j + 0.5 + GAP;
+                            }
+                        } else {
+                            if (segStart !== null) {
+                                const p0 = iso(i + 0.5, segStart);
+                                const p1 = iso(i + 0.5, N);
+                                lines.push({ pts: [p0, p1], w: 0.8 });
+                            }
+                            segStart = null;
+                        }
+                    }
+                }
+            }
+
+            api.status(N + "×" + N + " Fäden · " + values.weave + " · " + lines.length + " Pfade");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>
