@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>63 · Vega × Japan — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>63 · Vega × Japan</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Vasarelys <b>Kugel-Wölbung</b> deformiert ein japanisches Muster — Seigaiha-Wellen oder Asanoha-Sterne bauschen sich auf wie ein Kimono über einer Kugel. Op-Art trifft Sashiko.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "vega-japan",
+        params: [
+            { key: "pattern", label: "Muster",       value: "seigaiha", options: [
+                { value: "seigaiha", label: "Seigaiha (Wellen)" },
+                { value: "asanoha",  label: "Asanoha (Hanfblatt)" },
+                { value: "shippo",   label: "Shippo (Kreise)" }
+            ]},
+            { key: "grid",    label: "Rasterdichte",  min: 12,  max: 28,  step: 1,    value: 18 },
+            { key: "bulge",   label: "Wölbung",        min: 0.2, max: 1.4, step: 0.05, value: 0.7 },
+            { key: "inner",   label: "Innenlinien",    min: 2,   max: 6,   step: 1,    value: 3 }
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+            const M = 40, S = 920;
+
+            // Vasarely warp — bulge center always at page center
+            const BX = 500, BY = 500;
+            const RB = 400;
+            function warpPt(px, py) {
+                const dx = px - BX, dy = py - BY;
+                const d = Math.hypot(dx, dy);
+                if (d > RB || d < 1e-6) return [px, py];
+                const t = d / RB;
+                const e = 1 / (1 + values.bulge * 0.45);
+                const nd = RB * Math.pow(t, e);
+                return [BX + dx / d * nd, BY + dy / d * nd];
+            }
+
+            function warpLine(pts) {
+                return pts.map(([x, y]) => warpPt(x, y));
+            }
+
+            function inBounds(p) {
+                return p[0] >= M - 10 && p[0] <= M + S + 10 && p[1] >= M - 10 && p[1] <= M + S + 10;
+            }
+
+            function pushWarped(pts, w) {
+                const warped = warpLine(pts);
+                // check if at least one point is in bounds
+                if (!warped.some(p => inBounds(p))) return;
+                lines.push({ pts: warped, w: w || 1.0 });
+            }
+
+            function arcPts(cx, cy, r, a0, a1, steps) {
+                const pts = [];
+                for (let i = 0; i <= steps; i++) {
+                    const a = a0 + (a1 - a0) * i / steps;
+                    pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+                }
+                return pts;
+            }
+
+            const G = values.grid;
+
+            if (values.pattern === "seigaiha") {
+                // fans drawn bottom-up, each fan is a half-circle
+                const R = S / G;
+                const dy = R * 0.5;
+                const dx = R;
+                const fanCentres = [];
+
+                // generate rows bottom to top so earlier rows occlude later ones
+                const rows = [];
+                for (let y = M + S + R; y >= M - R; y -= dy) rows.push(y);
+
+                let rowIdx = 0;
+                for (const fy of rows) {
+                    const off = (rowIdx % 2) * R;
+                    for (let fx = M - R + off; fx <= M + S + R; fx += dx * 2) {
+                        // outer arc + inner arcs
+                        for (let k = 0; k <= values.inner; k++) {
+                            const r = R * (1 - k / (values.inner + 1.5));
+                            // check if hidden by already-drawn fans
+                            const steps = 40;
+                            const pts = arcPts(fx, fy, r, Math.PI, Math.PI * 2, steps);
+                            // filter points not occluded by existing fan centres
+                            let run = null;
+                            for (const p of pts) {
+                                const hidden = fanCentres.some(f =>
+                                    (p[0] - f[0]) ** 2 + (p[1] - f[1]) ** 2 < (R - 1) ** 2);
+                                if (!hidden) {
+                                    if (!run) run = [];
+                                    run.push(p);
+                                } else if (run) {
+                                    if (run.length > 1) pushWarped(run, k === 0 ? 1.1 : 0.7);
+                                    run = null;
+                                }
+                            }
+                            if (run && run.length > 1) pushWarped(run, k === 0 ? 1.1 : 0.7);
+                        }
+                        fanCentres.push([fx, fy]);
+                    }
+                    rowIdx++;
+                }
+
+            } else if (values.pattern === "asanoha") {
+                // triangular grid with median lines from each vertex to centroid
+                const u = S / G;
+                const h = u * 0.866;
+                let row = 0;
+                for (let y = M - h; y <= M + S + h; y += h) {
+                    const off = (row % 2) * (u / 2);
+                    for (let x = M - u + off; x <= M + S + u; x += u) {
+                        // upward triangle
+                        const t1 = [[x, y + h], [x + u, y + h], [x + u / 2, y]];
+                        const c1 = [(t1[0][0] + t1[1][0] + t1[2][0]) / 3,
+                                    (t1[0][1] + t1[1][1] + t1[2][1]) / 3];
+                        for (let e = 0; e < 3; e++) {
+                            pushWarped([t1[e], t1[(e + 1) % 3]], 1.0);
+                            pushWarped([t1[e], c1], 0.65);
+                        }
+                        // downward triangle
+                        const t2 = [[x + u / 2, y], [x + u * 1.5, y], [x + u, y + h]];
+                        const c2 = [(t2[0][0] + t2[1][0] + t2[2][0]) / 3,
+                                    (t2[0][1] + t2[1][1] + t2[2][1]) / 3];
+                        for (let e = 0; e < 3; e++) {
+                            pushWarped([t2[e], t2[(e + 1) % 3]], 1.0);
+                            pushWarped([t2[e], c2], 0.65);
+                        }
+                    }
+                    row++;
+                }
+
+            } else {
+                // shippo: interlocking circles
+                const u = S / G;
+                for (let y = M; y <= M + S + u; y += u) {
+                    for (let x = M; x <= M + S + u; x += u) {
+                        for (let k = 0; k < Math.max(1, values.inner - 1); k++) {
+                            const r = u * (0.707 - k * 0.1);
+                            if (r <= 0) continue;
+                            const c = arcPts(x, y, r, 0, Math.PI * 2, 48);
+                            c.push(c[0]); // close
+                            pushWarped(c, k === 0 ? 1.0 : 0.65);
+                        }
+                    }
+                }
+            }
+
+            // add hatching inside bulge core for elements near center
+            // (done implicitly by the warp compression effect)
+
+            // border
+            lines.push({ pts: [[M, M], [M + S, M], [M + S, M + S], [M, M + S]], closed: true, w: 1.3 });
+
+            api.status("Muster: " + values.pattern + " · " + lines.length + " Pfade");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>62 · Iso-Stapel × Truchet — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>62 · Iso-Stapel × Truchet</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Isometrische Säulen, deren <b>Deckflächen Truchet-Kacheln</b> tragen — höhere Türme mit feineren Bögen, flache Blöcke mit groben. Eine Stadt, in der jedes Dach ein anderes Muster hat.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "iso-truchet",
+        svgOpts: { width: 0.9 },
+        drawOpts: { width: 1.1 },
+        params: [
+            { key: "grid",    label: "Raster",        min: 6,   max: 16,  step: 1,    value: 10 },
+            { key: "maxh",    label: "Max. Höhe",      min: 40,  max: 220, step: 10,   value: 140 },
+            { key: "field",   label: "Höhenfeld",      value: "noise", options: [
+                { value: "noise", label: "Noise" },
+                { value: "dome",  label: "Kuppel" },
+                { value: "wave",  label: "Welle" }
+            ]},
+            { key: "truchet", label: "Truchet-Stil",   value: "arcs", options: [
+                { value: "arcs", label: "Bögen" },
+                { value: "diag", label: "Diagonalen" }
+            ]},
+            { key: "subdiv",  label: "Unterteilung",   min: 0,   max: 1,   step: 0.05, value: 0.45 }
+        ],
+        generate(api) {
+            const { rnd, values, seed } = api;
+            const noise = PR4.makeNoise2D(rnd);
+            const no = rnd() * 30;
+            const lines = [];
+
+            const G = values.grid;
+            const u = 700 / G;
+            const AX = 0.866 * u, AY = 0.5 * u;
+            const BX = -0.866 * u, BY = 0.5 * u;
+            const OX = 500, OY = 240;
+            const P = (i, j, h) => [OX + i * AX + j * BX, OY + i * AY + j * BY - h];
+
+            function height(i, j) {
+                const fi = i / (G - 1), fj = j / (G - 1);
+                if (values.field === "dome") {
+                    const d = Math.hypot(fi - 0.5, fj - 0.5) * 2;
+                    return values.maxh * Math.max(0.05, 1 - d * d);
+                }
+                if (values.field === "wave") {
+                    return values.maxh * (0.5 + 0.5 * Math.sin(fi * Math.PI * 2) * Math.cos(fj * Math.PI * 2));
+                }
+                return values.maxh * Math.pow(noise.fbm(fi * 3 + no, fj * 3 + no, 3), 0.8);
+            }
+
+            // occluder tracking for hidden line removal
+            const occ = [];
+            function addQuad(q) {
+                let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+                for (const p of q) {
+                    x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]);
+                    y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]);
+                }
+                occ.push({ q, x0, x1, y0, y1 });
+            }
+            function isHidden(p) {
+                for (const o of occ) {
+                    if (p[0] < o.x0 || p[0] > o.x1 || p[1] < o.y0 || p[1] > o.y1) continue;
+                    let inside = true;
+                    const q = o.q;
+                    for (let k = 0; k < 4; k++) {
+                        const a = q[k], b = q[(k + 1) % 4];
+                        if ((b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]) < -0.35) {
+                            inside = false; break;
+                        }
+                    }
+                    if (inside) return true;
+                }
+                return false;
+            }
+            function drawClipped(a, b, w) {
+                const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+                const n = Math.max(1, Math.ceil(len / 3));
+                let run = null;
+                for (let s = 0; s <= n; s++) {
+                    const t = s / n;
+                    const p = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+                    if (!isHidden(p)) {
+                        if (!run) run = [];
+                        run.push(p);
+                    } else if (run) {
+                        if (run.length > 1) lines.push({ pts: [run[0], run[run.length - 1]], w: w || 0.7 });
+                        run = null;
+                    }
+                }
+                if (run && run.length > 1) lines.push({ pts: [run[0], run[run.length - 1]], w: w || 0.7 });
+            }
+
+            // bilinear interpolation on a top-face quadrilateral
+            function bilin(TL, TR, BR, BL, s, t) {
+                return [
+                    TL[0] * (1 - s) * (1 - t) + TR[0] * s * (1 - t) + BR[0] * s * t + BL[0] * (1 - s) * t,
+                    TL[1] * (1 - s) * (1 - t) + TR[1] * s * (1 - t) + BR[1] * s * t + BL[1] * (1 - s) * t
+                ];
+            }
+
+            function arcPts(TL, TR, BR, BL, cs, ct, r, a0, a1, steps) {
+                const pts = [];
+                for (let k = 0; k <= steps; k++) {
+                    const a = a0 + (a1 - a0) * k / steps;
+                    const s = cs + r * Math.cos(a);
+                    const t = ct + r * Math.sin(a);
+                    if (s < -0.05 || s > 1.05 || t < -0.05 || t > 1.05) {
+                        if (pts.length > 1) return pts;
+                        pts.length = 0;
+                        continue;
+                    }
+                    pts.push(bilin(TL, TR, BR, BL, s, t));
+                }
+                return pts;
+            }
+
+            function truchetOnFace(TL, TR, BR, BL, flip, w) {
+                const steps = 12;
+                if (values.truchet === "arcs") {
+                    if (!flip) {
+                        // arcs at top-left (0,0) and bottom-right (1,1)
+                        const p1 = arcPts(TL, TR, BR, BL, 0, 0, 0.5, 0, Math.PI / 2, steps);
+                        if (p1.length > 1) lines.push({ pts: p1, w });
+                        const p2 = arcPts(TL, TR, BR, BL, 1, 1, 0.5, Math.PI, Math.PI * 1.5, steps);
+                        if (p2.length > 1) lines.push({ pts: p2, w });
+                    } else {
+                        // arcs at top-right (1,0) and bottom-left (0,1)
+                        const p1 = arcPts(TL, TR, BR, BL, 1, 0, 0.5, Math.PI / 2, Math.PI, steps);
+                        if (p1.length > 1) lines.push({ pts: p1, w });
+                        const p2 = arcPts(TL, TR, BR, BL, 0, 1, 0.5, Math.PI * 1.5, Math.PI * 2, steps);
+                        if (p2.length > 1) lines.push({ pts: p2, w });
+                    }
+                } else {
+                    // diagonal lines
+                    if (!flip) {
+                        // top-mid to left-mid, right-mid to bottom-mid
+                        lines.push({ pts: [bilin(TL, TR, BR, BL, 0.5, 0), bilin(TL, TR, BR, BL, 0, 0.5)], w });
+                        lines.push({ pts: [bilin(TL, TR, BR, BL, 1, 0.5), bilin(TL, TR, BR, BL, 0.5, 1)], w });
+                    } else {
+                        // top-mid to right-mid, left-mid to bottom-mid
+                        lines.push({ pts: [bilin(TL, TR, BR, BL, 0.5, 0), bilin(TL, TR, BR, BL, 1, 0.5)], w });
+                        lines.push({ pts: [bilin(TL, TR, BR, BL, 0, 0.5), bilin(TL, TR, BR, BL, 0.5, 1)], w });
+                    }
+                }
+            }
+
+            // draw in painter's order: back to front (large i+j first, decreasing)
+            const order = [];
+            for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) order.push([i, j]);
+            order.sort((a, b) => (b[0] + b[1]) - (a[0] + a[1]));
+
+            for (const [i, j] of order) {
+                const h = height(i, j);
+
+                const T00 = P(i,     j,     h);
+                const T10 = P(i + 1, j,     h);
+                const T11 = P(i + 1, j + 1, h);
+                const T01 = P(i,     j + 1, h);
+                const B10 = P(i + 1, j,     0);
+                const B11 = P(i + 1, j + 1, 0);
+                const B01 = P(i,     j + 1, 0);
+
+                // structural edges of the 3 visible faces
+                // top face edges
+                for (const [a, b] of [[T00, T10], [T10, T11], [T11, T01], [T01, T00]]) {
+                    drawClipped(a, b, 1.0);
+                }
+                // right face (i+1 side): T10, T11, B11, B10
+                for (const [a, b] of [[T10, B10], [T11, B11], [B10, B11]]) {
+                    drawClipped(a, b, 0.8);
+                }
+                // left face (j+1 side): T01, T11, B11, B01
+                for (const [a, b] of [[T01, B01], [T11, B11], [B01, B11]]) {
+                    drawClipped(a, b, 0.8);
+                }
+
+                // hatch the right face (denser = darker)
+                const hRight = h;
+                const spacing_r = 7;
+                for (let s = spacing_r; s < hRight; s += spacing_r) {
+                    drawClipped([T10[0], T10[1] + s], [T11[0], T11[1] + s], 0.5);
+                }
+                // hatch the left face (sparser = lighter)
+                const spacing_l = 13;
+                for (let s = spacing_l; s < hRight; s += spacing_l) {
+                    drawClipped([T01[0], T01[1] + s], [T11[0], T11[1] + s], 0.5);
+                }
+
+                // Truchet on top face — deterministic flip based on cell position
+                const flip = ((i * 13 + j * 7) ^ (seed % 31)) % 2 === 0;
+                const trW = values.subdiv > 0.5 ? 0.7 : 0.9;
+
+                // subdivide if subdiv param is high enough
+                if (values.subdiv > 0 && rnd() < values.subdiv) {
+                    // 2×2 sub-tiles
+                    const mids = [
+                        [0.5, 0], [1, 0.5], [0.5, 1], [0, 0.5], [0.5, 0.5]
+                    ].map(([s, t]) => bilin(T00, T10, T11, T01, s, t));
+                    const [mT, mR, mB, mL, mC] = mids;
+                    const subTiles = [
+                        [T00, mT, mC, mL],   // TL sub
+                        [mT, T10, mR, mC],   // TR sub
+                        [mC, mR, T11, mB],   // BR sub
+                        [mL, mC, mB, T01]    // BL sub
+                    ];
+                    for (let si = 0; si < 4; si++) {
+                        const [stl, str, sbr, sbl] = subTiles[si];
+                        const sf = ((i * 13 + j * 7 + si * 5) ^ (seed % 31)) % 2 === 0;
+                        truchetOnFace(stl, str, sbr, sbl, sf, trW * 0.8);
+                    }
+                } else {
+                    truchetOnFace(T00, T10, T11, T01, flip, trW);
+                }
+
+                // register occluders
+                addQuad([T00, T10, T11, T01]);
+                addQuad([T10, B10, B11, T11]);
+                addQuad([T01, T11, B11, B01]);
+            }
+
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

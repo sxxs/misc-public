@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>70 · Apollon-Patchwork — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>70 · Apollon-Patchwork</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Apollonisches Kreispacking als Makro — jeder Kreis nach Größe anders gefüllt: <b>große Kreise Spirale, mittlere Dreiecksgitter, kleine Hilbert-Pfad, winzige nur Kreislinie</b>. Fraktale Textur-Hierarchie.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "apollon-patchwork",
+        params: [
+            { key: "minR", label: "Kleinster Radius", min: 3, max: 16, step: 1, value: 6 },
+            { key: "ratio", label: "Aufteilung", min: 0.3, max: 0.5, step: 0.02, value: 0.45 },
+            { key: "spiralRings", label: "Spiralringe", min: 3, max: 12, step: 1, value: 6 }
+        ],
+        generate(api) {
+            const { values } = api;
+            const lines = [];
+            const CX = 500, CY = 500, R = 452;
+            const minR = values.minR;
+
+            // Complex number helpers
+            const cadd = (a, b) => [a[0] + b[0], a[1] + b[1]];
+            const csub = (a, b) => [a[0] - b[0], a[1] - b[1]];
+            const cmul = (a, b) => [a[0]*b[0] - a[1]*b[1], a[0]*b[1] + a[1]*b[0]];
+            const cscale = (a, s) => [a[0]*s, a[1]*s];
+            const csqrt = (a) => {
+                const m = Math.hypot(a[0], a[1]);
+                const re = Math.sqrt(Math.max(0, (m + a[0]) / 2));
+                let im = Math.sqrt(Math.max(0, (m - a[0]) / 2));
+                if (a[1] < 0) im = -im;
+                return [re, im];
+            };
+            // circle: { b: curvature (signed), z: centre, K: b*z }
+            const mk = (b, z) => ({ b, z, K: cscale(z, b) });
+
+            const all = [];
+            const seen = new Set();
+            const keyOf = (c) =>
+                Math.round(c.z[0]) + "," + Math.round(c.z[1]) + "," +
+                Math.round(Math.abs(1 / c.b));
+
+            function tryAdd(c) {
+                const r = Math.abs(1 / c.b);
+                if (!isFinite(r) || r < minR || r > R + 1) return false;
+                const k = keyOf(c);
+                if (seen.has(k)) return false;
+                seen.add(k);
+                all.push(c);
+                return true;
+            }
+
+            // Initial config: outer circle + two inner circles
+            const r1 = values.ratio * R, r2 = R - r1;
+            const c0 = mk(-1 / R, [CX, CY]);
+            const c1 = mk(1 / r1, [CX - (R - r1), CY]);
+            const c2 = mk(1 / r2, [CX + (R - r2), CY]);
+
+            // Descartes 4th circle of (c0,c1,c2)
+            const sumB = c0.b + c1.b + c2.b;
+            const rootB = 2 * Math.sqrt(Math.abs(c0.b * c1.b + c1.b * c2.b + c2.b * c0.b));
+            const sumK = cadd(cadd(c0.K, c1.K), c2.K);
+            const rootK = cscale(csqrt(cadd(cadd(cmul(c0.K, c1.K), cmul(c1.K, c2.K)), cmul(c2.K, c0.K))), 2);
+
+            for (const c of [c0, c1, c2]) tryAdd(c);
+            const seeds3 = [];
+            for (const sb of [sumB + rootB, sumB - rootB]) {
+                for (const sk of [cadd(sumK, rootK), csub(sumK, rootK)]) {
+                    const z = cscale(sk, 1 / sb);
+                    const cc = mk(sb, z);
+                    const r = Math.abs(1 / sb);
+                    const dd = Math.hypot(z[0] - CX, z[1] - CY);
+                    if (Math.abs(dd - (R - r)) < 1.5 && r < R) {
+                        if (tryAdd(cc)) seeds3.push(cc);
+                    }
+                }
+            }
+
+            // Reflective recursion: 4th-other = 2(K1+K2+K3) - K4
+            let count = 0;
+            function other(a, b, c, d) {
+                const nb = 2 * (a.b + b.b + c.b) - d.b;
+                const nK = csub(cscale(cadd(cadd(a.K, b.K), c.K), 2), d.K);
+                return mk(nb, cscale(nK, 1 / nb));
+            }
+            function quad(q1, q2, q3, q4) {
+                if (count > 9000) return;
+                for (const [a, b, c, d] of [[q2, q3, q4, q1], [q1, q3, q4, q2], [q1, q2, q4, q3]]) {
+                    const nc = other(a, b, c, d);
+                    if (Math.abs(1 / nc.b) < minR) continue;
+                    if (tryAdd(nc)) { count++; quad(a, b, c, nc); }
+                }
+            }
+            for (const s3 of seeds3) quad(c0, c1, c2, s3);
+
+            // Draw each circle with fill based on its radius
+            for (const circ of all) {
+                const r = Math.abs(1 / circ.b);
+                const x = circ.z[0], y = circ.z[1];
+                if (r < 0 || !isFinite(r)) continue;
+
+                // Draw circle outline
+                const seg = Math.max(8, Math.round(r * 0.9));
+                const circPts = [];
+                for (let i = 0; i <= seg; i++) {
+                    const a = i / seg * Math.PI * 2;
+                    circPts.push([x + r * Math.cos(a), y + r * Math.sin(a)]);
+                }
+                lines.push({ pts: circPts, closed: true, w: r > 40 ? 1.2 : r > 15 ? 0.9 : 0.6 });
+
+                if (r > 40) {
+                    // LARGE circles: Archimedean spiral fill
+                    const rings = values.spiralRings;
+                    const sp = r / (rings + 0.5);
+                    const pts = [];
+                    const totalAngle = rings * Math.PI * 2;
+                    const steps = Math.round(totalAngle * r / 8);
+                    for (let s = 0; s <= steps; s++) {
+                        const a = s / steps * totalAngle;
+                        const rr = sp * a / (Math.PI * 2);
+                        pts.push([x + rr * Math.cos(a), y + rr * Math.sin(a)]);
+                    }
+                    if (pts.length > 1) lines.push({ pts, w: 0.7 });
+                } else if (r > 15) {
+                    // MEDIUM circles: horizontal hatching + diagonal overlay for triangle grid effect
+                    const spacing = r * 0.35;
+                    for (let dy = -r + spacing / 2; dy < r; dy += spacing) {
+                        const half = Math.sqrt(Math.max(0, r * r - dy * dy));
+                        if (half > 1) {
+                            lines.push({ pts: [[x - half * 0.9, y + dy], [x + half * 0.9, y + dy]], w: 0.55 });
+                        }
+                    }
+                    // Diagonal lines for triangle effect
+                    for (let dy = -r + spacing / 2; dy < r; dy += spacing) {
+                        const half = Math.sqrt(Math.max(0, r * r - dy * dy));
+                        if (half > 1) {
+                            const sl = half * 0.6;
+                            lines.push({ pts: [[x - sl, y + dy - r * 0.3], [x + sl, y + dy + r * 0.3]], w: 0.4 });
+                        }
+                    }
+                } else if (r > 6) {
+                    // SMALL circles: Hilbert-like zigzag raster
+                    const rows = 3;
+                    const step = (2 * r * 0.8) / (rows + 1);
+                    const segs = [];
+                    for (let ri = 0; ri < rows; ri++) {
+                        const yy = y - r * 0.6 + (ri + 0.5) * step;
+                        const dy = yy - y;
+                        const half = Math.sqrt(Math.max(0, r * r - dy * dy)) * 0.85;
+                        if (half < 0.5) continue;
+                        if (ri % 2 === 0) {
+                            segs.push([x - half, yy]);
+                            segs.push([x + half, yy]);
+                        } else {
+                            segs.push([x + half, yy]);
+                            segs.push([x - half, yy]);
+                        }
+                    }
+                    if (segs.length > 1) lines.push({ pts: segs, w: 0.5 });
+                }
+                // TINY circles (r <= 6): just the circle outline, already drawn above
+            }
+
+            // Outer boundary circle
+            const outerC = [];
+            for (let i = 0; i <= 80; i++) {
+                const a = i / 80 * Math.PI * 2;
+                outerC.push([CX + R * Math.cos(a), CY + R * Math.sin(a)]);
+            }
+            lines.push({ pts: outerC, closed: true, w: 1.5 });
+
+            api.status(all.length + " Kreise");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

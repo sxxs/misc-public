@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>64 · Penrose-Tunnel — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>64 · Penrose-Tunnel</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Das aperiodische Penrose-Parkett schrumpft konzentrisch zum Fluchtpunkt — jede Generation um den goldenen Winkel gedreht. Ein Tunnel, der sich nie exakt wiederholt.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "penrose-tunnel",
+        params: [
+            { key: "gen",   label: "Penrose-Tiefe",     min: 3,  max: 6,   step: 1,   value: 5 },
+            { key: "steps", label: "Echo-Schritte",      min: 4,  max: 16,  step: 1,   value: 8 },
+            { key: "twist", label: "Drehung (°)",         min: 0,  max: 36,  step: 0.5, value: 8 },
+            { key: "drift", label: "Fluchtpunkt-Versatz", min: 0,  max: 200, step: 10,  value: 80 },
+            { key: "rays",  label: "Verbindungslinien",   value: "on", options: [
+                { value: "on",  label: "An" },
+                { value: "off", label: "Aus" }
+            ]}
+        ],
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+            const CX = 500, CY = 500, SC = 470;
+            const PHI = (1 + Math.sqrt(5)) / 2;
+
+            // --- Penrose P3 via Robinson triangle subdivision ---
+            const rect = (r, th) => [r * Math.cos(th), r * Math.sin(th)];
+            const add  = (a, b) => [a[0] + b[0], a[1] + b[1]];
+            const sub  = (a, b) => [a[0] - b[0], a[1] - b[1]];
+            const mul  = (a, s) => [a[0] * s, a[1] * s];
+
+            // initial wheel of 10 Robinson triangles [color, A, B, C]
+            let tris = [];
+            for (let i = 0; i < 10; i++) {
+                let b = rect(1, (2 * i - 1) * Math.PI / 10);
+                let c = rect(1, (2 * i + 1) * Math.PI / 10);
+                if (i % 2 === 0) { const t = b; b = c; c = t; }
+                tris.push([0, [0, 0], b, c]);
+            }
+
+            // deflation (subdivision)
+            for (let g = 0; g < values.gen; g++) {
+                const next = [];
+                for (const [col, A, B, Bc] of tris) {
+                    if (col === 0) {
+                        const Pv = add(A, mul(sub(B, A), 1 / PHI));
+                        next.push([0, Bc, Pv, B]);
+                        next.push([1, Pv, Bc, A]);
+                    } else {
+                        const Q = add(B, mul(sub(A, B), 1 / PHI));
+                        const R = add(B, mul(sub(Bc, B), 1 / PHI));
+                        next.push([1, R, Bc, A]);
+                        next.push([1, Q, R, B]);
+                        next.push([0, R, Q, A]);
+                    }
+                }
+                tris = next;
+            }
+
+            // collect unique edges in unit-radius space
+            const seen = new Set();
+            const key = (p, q) => {
+                const a = Math.round(p[0] * 1e4) + "," + Math.round(p[1] * 1e4);
+                const b = Math.round(q[0] * 1e4) + "," + Math.round(q[1] * 1e4);
+                return a < b ? a + "|" + b : b + "|" + a;
+            };
+            const baseEdges = []; // [[p, q], ...] in unit space
+            for (const [col, A, B, Bc] of tris) {
+                for (const [p, q] of [[A, B], [A, Bc]]) {
+                    const k = key(p, q);
+                    if (seen.has(k)) continue;
+                    seen.add(k);
+                    baseEdges.push([p, q]);
+                }
+            }
+
+            // also collect unique vertices for "rays" mode
+            const vertSet = new Set();
+            const verts = [];
+            for (const [p] of baseEdges) {
+                const k = Math.round(p[0] * 1e4) + "," + Math.round(p[1] * 1e4);
+                if (!vertSet.has(k)) { vertSet.add(k); verts.push(p); }
+            }
+            // only keep boundary-ish vertices (near radius 1)
+            const outerVerts = verts.filter(v => Math.hypot(v[0], v[1]) > 0.85);
+
+            // vanishing point
+            const va = rnd() * Math.PI * 2;
+            const VP = [500 + Math.cos(va) * values.drift, 500 + Math.sin(va) * values.drift];
+
+            const N = values.steps;
+            const shrink = 0.88;
+            const twistRad = values.twist * Math.PI / 180;
+            const M = 40;
+
+            // rotate a unit-space point by angle
+            function rotPt(p, angle) {
+                const cos = Math.cos(angle), sin = Math.sin(angle);
+                return [p[0] * cos - p[1] * sin, p[0] * sin + p[1] * cos];
+            }
+
+            // transform a unit-space point to screen coords for layer k
+            function transformPt(p, k) {
+                const f = Math.pow(shrink, k);
+                const rotated = rotPt(p, twistRad * k);
+                const sx = CX + rotated[0] * SC * f;
+                const sy = CY + rotated[1] * SC * f;
+                // pull toward vanishing point
+                const cx = sx + (VP[0] - sx) * (1 - f);
+                const cy = sy + (VP[1] - sy) * (1 - f);
+                return [cx, cy];
+            }
+
+            function inBounds(p) {
+                return p[0] >= M && p[0] <= 1000 - M && p[1] >= M && p[1] <= 1000 - M;
+            }
+
+            // draw each echo layer
+            for (let k = 0; k < N; k++) {
+                const f = Math.pow(shrink, k);
+                const w = Math.max(0.4, 1.5 * f + 0.2);
+                for (const [p, q] of baseEdges) {
+                    const sp = transformPt(p, k);
+                    const sq = transformPt(q, k);
+                    if (!inBounds(sp) && !inBounds(sq)) continue;
+                    lines.push({ pts: [sp, sq], w });
+                }
+            }
+
+            // wireframe rays: connect outer vertices across all layers
+            if (values.rays === "on") {
+                // sample a subset of outer vertices to avoid clutter
+                const maxRays = 20;
+                const step = Math.max(1, Math.floor(outerVerts.length / maxRays));
+                for (let vi = 0; vi < outerVerts.length; vi += step) {
+                    const v = outerVerts[vi];
+                    const rayPts = [];
+                    for (let k = 0; k < N; k++) {
+                        const sp = transformPt(v, k);
+                        if (inBounds(sp)) rayPts.push(sp);
+                        else if (rayPts.length > 0) break; // stop when it exits bounds
+                    }
+                    if (rayPts.length > 1) lines.push({ pts: rayPts, w: 0.5 });
+                }
+            }
+
+            api.status(tris.length + " Dreiecke · " + N + " Echos · " + lines.length + " Pfade");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

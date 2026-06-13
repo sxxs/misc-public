@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chladni-Pflanzgarten — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>58 · Chladni-Pflanzgarten</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Blumen wachsen nur auf den <b>Knotenlinien</b> einer Chladni-Figur — wo echte Körner auf einer schwingenden Platte landen. Die Frequenzmoden (n, m) bestimmen die Geometrie des Gartens.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+    PR4App({
+        svgName: "chladni-pflanzen",
+        params: [
+            { key: "n", label: "Mode n", min: 1, max: 8, step: 1, value: 3 },
+            { key: "m", label: "Mode m", min: 1, max: 8, step: 1, value: 5 },
+            { key: "coupling", label: "Kopplung", value: "plus", options: [
+                { value: "plus", label: "Symmetrisch (+)" },
+                { value: "minus", label: "Antisymmetrisch (−)" }
+            ]},
+            { key: "flowers", label: "Blumen", min: 40, max: 240, step: 10, value: 120 },
+            { key: "wind", label: "Neigung", min: 0, max: 1.5, step: 0.1, value: 0.5 }
+        ],
+        onRegen(rnd, params) {
+            for (const p of params) {
+                if (p.key === "n") p._set(1 + Math.floor(rnd() * 8));
+                if (p.key === "m") p._set(1 + Math.floor(rnd() * 8));
+            }
+        },
+        generate(api) {
+            const { rnd, values } = api;
+            const lines = [];
+            const M = 40, S = 920;
+
+            const n = values.n, m = values.m;
+            const sgn = values.coupling === "plus" ? 1 : -1;
+
+            // Build Chladni field on 120x120 grid
+            const G = 120;
+            const field = new Float32Array(G * G);
+            for (let gy = 0; gy < G; gy++) {
+                for (let gx = 0; gx < G; gx++) {
+                    const x = gx / (G - 1), y = gy / (G - 1);
+                    field[gy * G + gx] =
+                        Math.cos(n * Math.PI * x) * Math.cos(m * Math.PI * y) +
+                        sgn * Math.cos(m * Math.PI * x) * Math.cos(n * Math.PI * y);
+                }
+            }
+
+            // Find nodal candidates: points where |f| < 0.12
+            const threshold = 0.12;
+            const candidates = [];
+            for (let gy = 0; gy < G; gy++) {
+                for (let gx = 0; gx < G; gx++) {
+                    if (Math.abs(field[gy * G + gx]) < threshold) {
+                        const px = M + gx * (S / (G - 1));
+                        const py = M + gy * (S / (G - 1));
+                        candidates.push([px, py]);
+                    }
+                }
+            }
+
+            // Shuffle candidates using seeded rng
+            for (let i = candidates.length - 1; i > 0; i--) {
+                const j = Math.floor(rnd() * (i + 1));
+                const tmp = candidates[i];
+                candidates[i] = candidates[j];
+                candidates[j] = tmp;
+            }
+
+            const flowerCount = Math.min(values.flowers, candidates.length);
+            const windAngle = values.wind; // lean direction
+
+            function daisy(fx, fy, R, petals, ang, w) {
+                for (let p = 0; p < petals; p++) {
+                    const a = ang + (p / petals) * Math.PI * 2;
+                    const po = [];
+                    for (let s = 0; s <= 10; s++) {
+                        const u = s / 10;
+                        const r = Math.sin(u * Math.PI) * R * 0.32;
+                        const d = R * 0.35 + u * R * 0.65;
+                        po.push([fx + Math.cos(a) * d - Math.sin(a) * r,
+                                  fy + Math.sin(a) * d + Math.cos(a) * r]);
+                    }
+                    lines.push({ pts: po, closed: true, w });
+                }
+                // center circle
+                const c = [];
+                for (let i = 0; i <= 16; i++) {
+                    const a = i / 16 * Math.PI * 2;
+                    c.push([fx + R * 0.3 * Math.cos(a), fy + R * 0.3 * Math.sin(a)]);
+                }
+                lines.push({ pts: c, closed: true, w });
+            }
+
+            function dandelion(fx, fy, R, rays, w) {
+                for (let p = 0; p < rays; p++) {
+                    const a = (p / rays) * Math.PI * 2 + rnd() * 0.1;
+                    const ex = fx + Math.cos(a) * R, ey = fy + Math.sin(a) * R;
+                    lines.push({ pts: [[fx, fy], [ex, ey]], w: w * 0.7 });
+                    for (const da of [-0.35, 0.35]) {
+                        lines.push({ pts: [[ex, ey],
+                            [ex + Math.cos(a + da) * R * 0.18,
+                             ey + Math.sin(a + da) * R * 0.18]], w: w * 0.6 });
+                    }
+                }
+            }
+
+            let placed = 0;
+            for (let fi = 0; fi < flowerCount; fi++) {
+                const [fx, fy] = candidates[fi];
+                // random flower size
+                const R = 12 + rnd() * 10;
+                // wind bends the flower angle slightly
+                const tang = -Math.PI / 2 + (rnd() - 0.5) * 0.5 + windAngle * 0.3;
+
+                // draw stem downward
+                const stemLen = 20 + rnd() * 20;
+                const bendX = Math.sin(windAngle) * stemLen * 0.4;
+                const stemPts = [];
+                for (let s = 0; s <= 8; s++) {
+                    const t = s / 8;
+                    stemPts.push([
+                        fx + bendX * t * t,
+                        fy + stemLen * t
+                    ]);
+                }
+                lines.push({ pts: stemPts, w: 0.8 });
+
+                // alternate daisy and dandelion
+                if (rnd() < 0.55) {
+                    const petals = 6 + Math.floor(rnd() * 4); // 6-9
+                    daisy(fx, fy, R, petals, tang, 0.7);
+                } else {
+                    const rays = 12 + Math.floor(rnd() * 7); // 12-18
+                    dandelion(fx, fy, R + 3, rays, 0.7);
+                }
+                placed++;
+            }
+
+            // outer frame
+            lines.push({ pts: [[M, M], [M + S, M], [M + S, M + S], [M, M + S]], closed: true, w: 1.2 });
+
+            api.status(placed + " Blumen auf Knotenlinien (n=" + n + ", m=" + m + ")");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>
