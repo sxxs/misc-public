@@ -121,10 +121,6 @@
                 const ve = vertexEdges.get(k);
                 if (!ve) return 0;
                 const { p1, p2 } = edges[ei];
-                // Determine which end of edge ei is at p, then find the other end
-                const other = (Math.abs(p1[0] - p[0]) < 2 && Math.abs(p1[1] - p[1]) < 2) ? p2 : p1;
-                const myAng = Math.atan2(other[1] - p[1], other[0] - p[0]);
-
                 const sorted = ve.edgeIndices.map(i => {
                     const e = edges[i];
                     const q = (Math.abs(e.p1[0] - p[0]) < 2 && Math.abs(e.p1[1] - p[1]) < 2) ? e.p2 : e.p1;
@@ -147,8 +143,7 @@
                 const len = Math.hypot(dx, dy);
                 if (len < 2) continue;
 
-                const ux = dx / len, uy = dy / len; // unit along edge
-                const nx = -uy, ny = ux;             // perpendicular (band width direction)
+                const nx = -dy / len, ny = dx / len; // perpendicular (band width direction)
 
                 // Determine over/under at each endpoint using angle rank parity
                 const rankStart = edgeAngleRank(p1, ei);
