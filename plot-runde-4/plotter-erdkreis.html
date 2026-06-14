@@ -35,14 +35,14 @@
         </section>
         <section class="panel">
             <div class="msg-wrap">
-                <label>Botschaft (füllt als Bit-Punkte die Kontinente):</label>
+                <label>Botschaft (färbt jeden Dot: 0 = schwarz, 1 = Akzent):</label>
                 <textarea id="msg" rows="1" maxlength="64" spellcheck="false">Welt</textarea>
             </div>
             <div id="bit-preview" class="bit-preview">…</div>
             <p class="legend">
                 <span class="sw" style="background:#16213e"></span> 0-Bit (schwarzer Stift) ·
                 <span class="sw" id="lg1" style="background:#cc2200"></span> 1-Bit (Farbstift) ·
-                schwarze Linien = Kontinente &amp; Gradnetz</p>
+                dichtes Stippling = Land, dünnes = Meer, Rand dunkler (3D)</p>
             <div id="info" class="info">…</div>
             <div id="controls"></div>
             <div class="buttons">
@@ -51,13 +51,15 @@
                 <button id="download">⬇ SVG (2 Farben)</button>
             </div>
             <p id="status" class="status"></p>
-            <p class="hint">Ein <b>Globus</b> (orthografisch, Blick von vorn-oben, Europa
-            zentral) wird mit Bit-Punkten über die Kontinente gefüllt. Dein Wort wird zu
-            ASCII-Bits; die Punkte tragen es zeilenweise — <b>0</b> in Schwarz, <b>1</b> in
-            der Akzentfarbe. Beim Plotten zwei Stifte: Schwarz für Karte + 0-Punkte, Farbe
-            für die 1-Punkte. Die ganze Erde wird so zur Textur deines Wortes — und beim
-            Abspielen zu seinem Rhythmus. <i>(Küstenlinien sind stilisiert/grob — als
-            Vorschlag gedacht.)</i></p>
+            <p class="hint">Die <b>ganze Erdkugel</b> wird mit tausenden winzigen Dots
+            gefüllt (Stippling). Die Punkte sitzen gleichmäßig auf der <b>Kugeloberfläche</b>
+            und werden orthografisch projiziert — dadurch rücken sie <b>zum Rand hin dichter</b>
+            zusammen, genau wie bei einer echten Kugel: der 3D-Effekt entsteht aus der
+            Geometrie, nicht aus flachem Dithern. Die Punktdichte bildet zusätzlich Land
+            (dicht) und Meer (dünn) ab, Lichtschattierung macht eine Seite heller. Jeder Dot
+            bekommt der Reihe nach ein Bit deines Wortes — <b>0 → schwarzer Stift, 1 →
+            Farbstift</b>. So wird die ganze Welt zweifarbig geplottet, und der 0/1-Anteil
+            deines Wortes bestimmt die Gesamtfarbe.</p>
         </section>
     </main>
     <script src="shared.js"></script>
@@ -65,10 +67,10 @@
     <script src="app.js"></script>
     <script>
     "use strict";
-    const D2R = Math.PI/180;
+    const D2R=Math.PI/180;
 
-    /* ─── Stylised continent outlines [lon,lat] ─── */
-    const CONT = {
+    /* ─── Stylised continent outlines [lon,lat] (land mask via point-in-poly) ─── */
+    const CONT={
      africa:[[-6,36],[10,37],[20,33],[33,31],[43,12],[51,12],[42,-1],[40,-10],[35,-20],[27,-34],[20,-35],[15,-28],[12,-17],[9,-1],[8,4],[-5,5],[-12,8],[-17,15],[-17,21],[-13,28],[-10,30],[-6,36]],
      europe:[[-9,43],[-2,43],[-1,46],[-4,48],[0,49],[4,52],[8,54],[8,57],[5,59],[7,63],[12,65],[16,68],[24,71],[28,70],[30,66],[24,60],[27,57],[24,54],[20,54],[19,49],[28,46],[28,41],[24,40],[19,42],[13,45],[18,40],[12,38],[8,44],[3,43],[-2,37],[-6,36],[-9,39],[-9,43]],
      britain:[[-5,50],[1,51],[-1,54],[-3,55],[-5,57],[-6,58],[-8,57],[-5,54],[-5,52],[-5,50]],
@@ -92,67 +94,49 @@
         return c; }
     function isLand(lat,lon){ for(const k in CONT) if(pip(lon,lat,CONT[k])) return true; return false; }
 
-    /* ─── Orthographic projection ─── */
-    const CX=500, CY=512, R=372;
+    /* ─── Orthographic globe + inverse ─── */
+    const CX=500, CY=500, R=384;
     let _lat0=20*D2R, _lon0=18*D2R;
-    function proj(lat,lon){
-        const la=lat*D2R, lo=lon*D2R;
+    function proj(lat,lon){ const la=lat*D2R, lo=lon*D2R;
         const cosc=Math.sin(_lat0)*Math.sin(la)+Math.cos(_lat0)*Math.cos(la)*Math.cos(lo-_lon0);
-        if(cosc<0) return null; // far side
-        const x=Math.cos(la)*Math.sin(lo-_lon0);
-        const y=Math.cos(_lat0)*Math.sin(la)-Math.sin(_lat0)*Math.cos(la)*Math.cos(lo-_lon0);
-        return [CX+R*x, CY-R*y];
-    }
+        if(cosc<0) return null;
+        return [CX+R*Math.cos(la)*Math.sin(lo-_lon0),
+                CY-R*(Math.cos(_lat0)*Math.sin(la)-Math.sin(_lat0)*Math.cos(la)*Math.cos(lo-_lon0))]; }
 
-    /* ─── Markers ─── */
-    function marker(style, x, y, r){
-        if(style==='ring'){ const p=[]; for(let i=0;i<=14;i++){const a=i/14*2*Math.PI;
-            p.push([x+r*Math.cos(a),y+r*Math.sin(a)]);} return [p]; }
-        if(style==='punkt'){ const rr=r*0.55,p=[]; for(let i=0;i<=10;i++){const a=i/10*2*Math.PI;
-            p.push([x+rr*Math.cos(a),y+rr*Math.sin(a)]);} return [p]; }
-        if(style==='kreuz') return [[[x-r,y],[x+r,y]],[[x,y-r],[x,y+r]]];
-        if(style==='strich') return [[[x-r,y],[x+r,y]]];
-        if(style==='raute') return [[[x,y-r],[x+r,y],[x,y+r],[x-r,y],[x,y-r]]];
-        return [[[x-r,y],[x+r,y]]];
-    }
+    function hash(a,b,k){ const h=Math.sin(a*12.9898+b*78.233+k*37.719)*43758.5453; return h-Math.floor(h); }
+
+    function dotPoly(x,y,r){ const p=[]; for(let i=0;i<=6;i++){ const a=i/6*2*Math.PI;
+        p.push([x+r*Math.cos(a), y+r*Math.sin(a)]); } return p; }
 
     const ACCENTS={ rot:'#cc2200', blau:'#1b5fbf', gruen:'#1e8a4c', magenta:'#c01b8a', orange:'#e07000' };
-    const DEMOS=['Welt','Erde','Frieden','Hallo','Bamberg','wiai','Globus','42'];
+    const BLACK='#16213e';
+    const DEMOS=['Welt','Erde','Frieden','Hallo','Bamberg','wiai','Globus','42','Liebe'];
 
-    /* ─── Bit preview ─── */
-    function msgBits(text){ const bits=[];
-        for(const ch of text){ const code=ch.charCodeAt(0)&0xFF;
-            for(let b=7;b>=0;b--) bits.push((code>>b)&1); } return bits; }
-    function updatePreview(text){
-        const showN=Math.min(text.length,12); let html='';
+    function msgBits(text){ const bits=[]; for(const ch of text){ const code=ch.charCodeAt(0)&0xFF;
+        for(let b=7;b>=0;b--) bits.push((code>>b)&1); } return bits; }
+    function updatePreview(text){ const showN=Math.min(text.length,12); let html='';
         for(let ci=0;ci<showN;ci++){ if(ci>0)html+=`<span class="bk">·</span>`;
             const code=text.charCodeAt(ci),ch=text[ci]===' '?'_':text[ci];
             html+=`<span style="opacity:.5">${ch.replace('<','&lt;')}=</span>`;
             for(let b=7;b>=0;b--)html+=`<span class="b${(code>>b)&1}">${(code>>b)&1}</span>`; }
         if(text.length>showN)html+=`<span style="opacity:.4"> …</span>`;
-        document.getElementById('bit-preview').innerHTML=html||'(leer)';
-    }
+        document.getElementById('bit-preview').innerHTML=html||'(leer)'; }
 
     const PARAMS=[
         { key:'accent', label:'Akzentfarbe (1-Bit)', value:'rot', options:[
             {value:'rot',label:'Rot'},{value:'blau',label:'Blau'},{value:'gruen',label:'Grün'},
-            {value:'magenta',label:'Magenta'},{value:'orange',label:'Orange'},
-        ]},
-        { key:'sym_0', label:'0-Symbol', value:'punkt', options:[
-            {value:'punkt',label:'● Punkt'},{value:'ring',label:'○ Ring'},
-            {value:'kreuz',label:'+ Kreuz'},{value:'strich',label:'— Strich'},{value:'raute',label:'◇ Raute'},
-        ]},
-        { key:'sym_1', label:'1-Symbol', value:'ring', options:[
-            {value:'ring',label:'○ Ring'},{value:'punkt',label:'● Punkt'},
-            {value:'kreuz',label:'+ Kreuz'},{value:'strich',label:'— Strich'},{value:'raute',label:'◇ Raute'},
-        ]},
-        { key:'density', label:'Punkt-Dichte (°)', min:3, max:9, step:1, value:5 },
-        { key:'msize',   label:'Punktgröße %',     min:25,max:70,step:5, value:42 },
-        { key:'lon0',    label:'Drehung Ost (°)',  min:-40,max:120,step:5, value:18 },
-        { key:'lat0',    label:'Neigung (°)',      min:0, max:45, step:5,  value:20 },
-        { key:'graticule', label:'Gradnetz', value:'an', options:[{value:'an',label:'an'},{value:'aus',label:'aus'}] },
-        { key:'coast',     label:'Küsten', value:'an', options:[{value:'an',label:'an'},{value:'aus',label:'aus'}] },
-        { key:'feed_0',  label:'Tempo 0 mm/s', min:8, max:60, step:2, value:20 },
+            {value:'magenta',label:'Magenta'},{value:'orange',label:'Orange'}]},
+        { key:'verteilung', label:'Verteilung', value:'kugel', options:[
+            {value:'kugel',label:'Kugel (Rand dichter, 3D)'},{value:'flach',label:'Flach (gleichmäßig 2D)'}]},
+        { key:'spacing', label:'Punkt-Abstand px', min:6, max:18, step:1, value:10 },
+        { key:'dotsize', label:'Punktgröße %',      min:30,max:120,step:10,value:70 },
+        { key:'land_ink',label:'Land-Dichte %',     min:50,max:100,step:5, value:92 },
+        { key:'sea_ink', label:'Meer-Dichte %',     min:0, max:50, step:5, value:15 },
+        { key:'shade',   label:'Licht-Schattierung %', min:0, max:90, step:10,value:45 },
+        { key:'lon0',    label:'Drehung Ost °',     min:-40,max:120,step:5,value:18 },
+        { key:'lat0',    label:'Neigung °',         min:0, max:45, step:5, value:20 },
+        { key:'coast',   label:'Küstenlinie', value:'aus', options:[{value:'aus',label:'aus'},{value:'an',label:'an'}] },
+        { key:'feed_0',  label:'Tempo 0 mm/s', min:8, max:60, step:2, value:22 },
         { key:'feed_1',  label:'Tempo 1 mm/s', min:20,max:160,step:5, value:55 },
         { key:'feed_travel', label:'Tempo Sprung mm/s', min:60,max:200,step:10,value:150 },
         { key:'grundton', label:'Grundton Hz', min:80,max:200,step:5, value:110 },
@@ -170,97 +154,123 @@
             _lat0=(v.lat0||20)*D2R; _lon0=(v.lon0||18)*D2R;
             const accent=ACCENTS[v.accent]||'#cc2200';
             document.getElementById('lg1').style.background=accent;
-            const BLACK='#16213e';
 
             const text=document.getElementById('msg').value || ' ';
             updatePreview(text);
-            const bits=msgBits(text);
-            const bl=bits.length||8;
+            const bits=msgBits(text), bl=bits.length||8;
 
-            const lines=[], tour=[];
+            const sp=Math.max(3,Math.round(v.spacing));
+            const r=sp*0.34*(v.dotsize/100);
+            const landInk=v.land_ink/100, seaInk=v.sea_ink/100, shadeStr=v.shade/100;
+            const dist=v.verteilung;
+            const Ln=(()=>{const L=[-0.35,0.45,0.82];const m=Math.hypot(L[0],L[1],L[2]);return [L[0]/m,L[1]/m,L[2]/m];})();
 
-            /* ── Map layer (black): outline, graticule, coastlines ── */
-            const outline=[]; for(let i=0;i<=72;i++){const a=i/72*2*Math.PI;
+            const lines=[];
+
+            /* globe outline */
+            const outline=[]; for(let i=0;i<=80;i++){const a=i/80*2*Math.PI;
                 outline.push([CX+R*Math.cos(a),CY+R*Math.sin(a)]);}
-            lines.push({pts:outline, w:1.2, closed:true, color:BLACK});
+            lines.push({pts:outline,w:1.0,closed:true,color:BLACK});
 
-            function projPolyline(pts, step){
-                /* project a lat/lon polyline, splitting at the horizon */
-                const out=[]; let run=[];
-                for(const [lon,lat] of pts){ const p=proj(lat,lon);
-                    if(p){ run.push(p); } else { if(run.length>1) out.push(run); run=[]; } }
-                if(run.length>1) out.push(run);
-                return out;
-            }
-            if(v.graticule==='an'){
-                for(let lat=-60;lat<=60;lat+=30){ const ring=[];
-                    for(let lon=-180;lon<=180;lon+=3) ring.push([lon,lat]);
-                    for(const seg of projPolyline(ring)) lines.push({pts:seg,w:0.4,color:BLACK}); }
-                for(let k=-6;k<=6;k++){ const lon=k*30; const mer=[];
-                    for(let lat=-80;lat<=80;lat+=3) mer.push([lon,lat]);
-                    for(const seg of projPolyline(mer)) lines.push({pts:seg,w:0.4,color:BLACK}); }
-            }
             if(v.coast==='an'){
-                for(const k in CONT){ const poly=CONT[k].slice();
-                    for(const seg of projPolyline(poly)) lines.push({pts:seg,w:0.9,color:BLACK}); }
+                for(const k in CONT){ const poly=CONT[k]; let run=[];
+                    for(const [lon,lat] of poly){ const p=proj(lat,lon);
+                        if(p){run.push(p);} else { if(run.length>1)lines.push({pts:run,w:0.5,color:BLACK}); run=[]; } }
+                    if(run.length>1)lines.push({pts:run,w:0.5,color:BLACK}); }
             }
 
-            /* ── Bit-dot layer: sample land lattice, reading order ── */
-            const d=Math.max(2,Math.round(v.density));
-            const r=R*(v.density/9)*(v.msize/100)*0.5;  // marker radius scales with spacing
+            /* ─── fill the whole disc with stipple dots ─── */
             const dots=[];
-            for(let lat=84;lat>=-84;lat-=d){
-                for(let lon=-180;lon<=180;lon+=d){
-                    if(!isLand(lat,lon)) continue;
-                    const p=proj(lat,lon); if(!p) continue;
-                    dots.push(p);
+            const inkAt=(land,x,y,z)=>{
+                const bright=Math.max(0, x*Ln[0]+y*Ln[1]+z*Ln[2]);  // 0..1 lit
+                return Math.max(0,Math.min(1,(land?landInk:seaInk)*(1-shadeStr*(bright-0.5))));
+            };
+            if(dist==='flach'){
+                /* naive 2D stipple — even density on PAPER (flat look) */
+                let rowi=0;
+                for(let py=CY-R; py<=CY+R; py+=sp){
+                    const xs=[]; for(let px=CX-R; px<=CX+R; px+=sp) xs.push(px);
+                    if(rowi%2) xs.reverse();
+                    for(const px of xs){
+                        const jx=px+(hash(px,py,1)-0.5)*sp*0.85, jy=py+(hash(px,py,2)-0.5)*sp*0.85;
+                        const x=(jx-CX)/R, y=(CY-jy)/R, rho2=x*x+y*y;
+                        if(rho2>1) continue;
+                        const z=Math.sqrt(1-rho2), rho=Math.sqrt(rho2);
+                        let lat,lon;
+                        if(rho<1e-9){ lat=_lat0; lon=_lon0; }
+                        else { const c=Math.asin(Math.min(1,rho));
+                            lat=Math.asin(Math.cos(c)*Math.sin(_lat0)+(y*Math.sin(c)*Math.cos(_lat0))/rho);
+                            lon=_lon0+Math.atan2(x*Math.sin(c), rho*Math.cos(c)*Math.cos(_lat0)-y*Math.sin(c)*Math.sin(_lat0)); }
+                        if(hash(px,py,7) < inkAt(isLand(lat/D2R,lon/D2R), x,y,z)) dots.push([jx,jy]);
+                    }
+                    rowi++;
                 }
+            } else {
+                /* Kugel: equal-AREA points ON the sphere (Fibonacci lattice). Projected
+                 * orthographically they crowd toward the limb exactly as a real sphere's
+                 * surface foreshortens onto paper → the 3D roundness is preserved. */
+                const ga=Math.PI*(3-Math.sqrt(5));
+                let N=Math.round(4*Math.PI*R*R/(sp*sp)); N=Math.max(2000,Math.min(42000,N));
+                for(let i=0;i<N;i++){
+                    const zc=1-(2*i+1)/N, la=Math.asin(zc);
+                    let lo=(i*ga)%(2*Math.PI); if(lo>Math.PI) lo-=2*Math.PI;
+                    const cosc=Math.sin(_lat0)*Math.sin(la)+Math.cos(_lat0)*Math.cos(la)*Math.cos(lo-_lon0);
+                    if(cosc<0) continue;                       // back of the globe
+                    const sx=CX+R*Math.cos(la)*Math.sin(lo-_lon0);
+                    const sy=CY-R*(Math.cos(_lat0)*Math.sin(la)-Math.sin(_lat0)*Math.cos(la)*Math.cos(lo-_lon0));
+                    const x=(sx-CX)/R, y=(CY-sy)/R, z=cosc;    // surface normal (z toward viewer)
+                    if(hash(i*0.732+1.3, i*1.913+0.7, 7) < inkAt(isLand(la/D2R,lo/D2R), x,y,z))
+                        dots.push([sx,sy]);
+                }
+                dots.sort((a,b)=> (a[1]-b[1]) || (a[0]-b[0]));  // reading order for pen path + bits
             }
-            /* reading order: top→bottom (screen y), then left→right */
-            dots.sort((a,b)=> (a[1]-b[1]) || (a[0]-b[0]));
 
-            const fd0=v.feed_0, fd1=v.feed_1, ft=v.feed_travel;
-            const sym0=v.sym_0, sym1=v.sym_1;
-            let cur=null, ones=0;
+            /* assign bits → colour, draw dots */
+            let ones=0;
             for(let i=0;i<dots.length;i++){
                 const bit=bits[i%bl]; if(bit)ones++;
-                const polys=marker(bit?sym1:sym0, dots[i][0], dots[i][1], r);
+                const poly=dotPoly(dots[i][0],dots[i][1],r);
                 const col=bit?accent:BLACK;
-                for(const poly of polys){
-                    if(cur) tour.push({pts:[cur,poly[0]], pen:'up', feed:ft});
-                    tour.push({pts:poly, pen:'down', feed:bit?fd1:fd0});
-                    cur=poly[poly.length-1];
-                    lines.push({pts:poly, w:bit?1.3:1.0, color:col});
-                }
+                lines.push({pts:poly, w:bit?1.0:0.85, color:col, fill:col, closed:true});
             }
 
+            /* audio: sample up to ~450 dots so playback stays finite */
+            const fd0=v.feed_0, fd1=v.feed_1, ft=v.feed_travel;
+            const step=Math.max(1,Math.ceil(dots.length/450));
+            const tour=[]; let cur=null;
+            for(let i=0;i<dots.length;i+=step){
+                const bit=bits[i%bl];
+                const poly=dotPoly(dots[i][0],dots[i][1],Math.max(r,1.4));
+                if(cur) tour.push({pts:[cur,poly[0]],pen:'up',feed:ft});
+                tour.push({pts:poly,pen:'down',feed:bit?fd1:fd0});
+                cur=poly[poly.length-1];
+            }
             _tour=tour; _tour._FB=v.grundton; _tour._K=v.tonlage;
 
-            for(const st of PR4Font.textCentered('ERDKREIS',500,952,20))
+            for(const st of PR4Font.textCentered('ERDKREIS',500,958,18))
                 lines.push({pts:st,w:1.0,color:BLACK});
 
+            const pct=dots.length?Math.round(100*ones/dots.length):0;
             document.getElementById('info').innerHTML=
-                `Wort "<b>${text}</b>" = ${bl} Bits · <b>${dots.length}</b> Land-Punkte `+
-                `(${dots.length-ones}× schwarz, ${ones}× ${v.accent}) · `+
-                `${Math.ceil(dots.length/bl)}× wiederholt`;
-            api.status(`"${text}" · ${dots.length} Punkte auf Land · Dichte ${d}° · `+
-                `2 Stifte: schwarz + ${v.accent}`);
+                `Wort "<b>${text}</b>" = ${bl} Bits · <b>${dots.length}</b> Dots `+
+                `(${dots.length-ones}× schwarz, ${ones}× ${v.accent} = ${pct}%) · `+
+                `${dist==='kugel'?'Kugel-Projektion':'flach'}`;
+            api.status(`"${text}" · ${dots.length} Dots · Abstand ${sp}px · `+
+                `${pct}% farbig · 2 Stifte: schwarz + ${v.accent}`);
             api.done(lines);
         }
     });
     _appRef=app;
 
-    const _deb=PR4.debounce(()=>_appRef.start(),280);
+    const _deb=PR4.debounce(()=>_appRef.start(),300);
     document.getElementById('msg').addEventListener('input',_deb);
 
     /* ─── Playback ─── */
     const dot=document.getElementById('pen-dot'), canvas=document.getElementById('canvas');
-    function showDot(x,y,pen){
-        if(x==null){dot.style.display='none';return;}
+    function showDot(x,y,pen){ if(x==null){dot.style.display='none';return;}
         const rc=canvas.getBoundingClientRect(),sc=rc.width/1000;
         dot.style.display='block';dot.style.left=(x*sc)+'px';dot.style.top=(y*sc)+'px';
-        dot.style.background=pen==='up'?'#999':'#cc2200';
-    }
+        dot.style.background=pen==='up'?'#999':'#cc2200'; }
     const playBtn=document.getElementById('play'); let _playing=false;
     function endPlay(){_playing=false;playBtn.textContent='▶ Anhören';dot.style.display='none';}
     playBtn.addEventListener('click',()=>{
