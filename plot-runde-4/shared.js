@@ -31,7 +31,7 @@ const PR4 = (() => {
         ctx.save();
         ctx.fillStyle = opts.bg || "#fff";
         ctx.fillRect(0, 0, SIZE, SIZE);
-        ctx.strokeStyle = opts.stroke || "#16213e";
+        const defStroke = opts.stroke || "#16213e";
         ctx.lineJoin = "round";
         ctx.lineCap = "round";
         const baseW = opts.width || 1.6;
@@ -43,6 +43,8 @@ const PR4 = (() => {
             ctx.moveTo(pts[0][0], pts[0][1]);
             for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
             if (line.closed) ctx.closePath();
+            if (line.fill) { ctx.fillStyle = line.fill; ctx.fill(); }
+            ctx.strokeStyle = line.color || defStroke;
             ctx.stroke();
         }
         ctx.restore();
@@ -55,7 +57,8 @@ const PR4 = (() => {
     function linesToSvg(lines, opts = {}) {
         const mm = opts.mm || 200;
         const sw = opts.width || 1.2;
-        // group paths by stroke width (line.w overrides the default)
+        // group paths by colour + stroke width (line.color / line.w override defaults)
+        const defColor = opts.stroke || "#000";
         const groups = new Map();
         for (const line of lines) {
             const pts = line.pts || line;
@@ -66,12 +69,14 @@ const PR4 = (() => {
             }
             if (line.closed) d += "Z";
             const w = line.w || sw;
-            if (!groups.has(w)) groups.set(w, []);
-            groups.get(w).push('<path d="' + d + '"/>');
+            const col = line.color || defColor;
+            const key = col + "|" + w;
+            if (!groups.has(key)) groups.set(key, { col, w, parts: [] });
+            groups.get(key).parts.push('<path d="' + d + '"/>');
         }
         let body = "";
-        for (const [w, parts] of groups) {
-            body += '<g fill="none" stroke="#000" stroke-width="' + w +
+        for (const { col, w, parts } of groups.values()) {
+            body += '<g fill="none" stroke="' + col + '" stroke-width="' + w +
                 '" stroke-linecap="round" stroke-linejoin="round">\n' +
                 parts.join("\n") + "\n</g>\n";
         }
