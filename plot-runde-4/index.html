@@ -727,11 +727,14 @@
     <p class="intro" style="margin-top:2rem">Runde 8 — <b>Klang &amp; Interaktion</b>:
     Plots, die beim Plotten Musik machen. Der Klang wird <i>physikalisch</i> simuliert:
     jede Achse hat ihren eigenen Schrittmotor, dessen Tonhöhe von der Geschwindigkeit
-    <i>entlang dieser Achse</i> abhängt (X links, Y rechts im Stereobild). Drei
-    Editoren-Ansätze: Step-Sequencer auf raumfüllender Kurve (<b>Komponist</b>),
-    durchgehende Linie (<b>Welle</b>) und Spirale (<b>Spirale</b>).
-    Texturen — gerade, Welle, Zickzack — verändern den Klang: ein Zickzack lässt den
-    Quer-Motor mitbrummen. Kein Rückweg, keine Leerstrecken — jede Bewegung klingt.</p>
+    <i>entlang dieser Achse</i> abhängt (X links, Y rechts im Stereobild). Ansätze:
+    Step-Sequencer auf raumfüllender Kurve (<b>Komponist</b>), durchgehende Linie
+    (<b>Welle</b>), Spirale (<b>Spirale</b>) sowie zwei Daten-Visualisierungen, bei denen
+    der Besucher entscheidet, <i>wie</i> seine Bits kodiert werden: ein Wort als Bit-Symbole
+    auf einer Kurve (<b>Botschaft</b>) oder als 2-farbige Punkte über den Globus
+    (<b>Erdkreis</b>). Texturen — gerade, Welle, Zickzack — verändern den Klang: ein
+    Zickzack lässt den Quer-Motor mitbrummen. Kein Rückweg, keine Leerstrecken — jede
+    Bewegung klingt.</p>
     <div class="grid">
         <a href="plotter-komponist.html">
             <div class="num">VARIANTE 101</div>
@@ -760,11 +763,19 @@
         </a>
         <a href="plotter-botschaft.html">
             <div class="num">VARIANTE 104</div>
-            <div class="name">Botschaft — ASCII-Code als Plotter-Musik</div>
-            <div class="desc">Text eingeben → ASCII-Bits auf raumfüllender Kurve: 0-Bit =
-            langsamer Strich (tiefer Ton, dicker), 1-Bit = schneller Strich (hoch, dünn),
-            Klack zwischen Zeichen. Gleicher Text = immer dasselbe Muster und dieselbe
-            Melodie. Mit Bit-Vorschau und Demo-Texten.</div>
+            <div class="name">Botschaft — Wort als Bit-Symbole</div>
+            <div class="desc">Text → ASCII-Bits auf wählbarer raumfüllender Kurve. Für 0
+            und 1 wählst du je ein Symbol: Strich, Welle, Zickzack, Kreis, Stern oder Punkt.
+            Jedes klingt anders (Kreis = beide Motoren, Stern = Zack-Zack, Welle = Vibrato).
+            Gleiches Wort, andere Symbole → ganz anderes Bild und anderer Klang.</div>
+        </a>
+        <a href="plotter-erdkreis.html">
+            <div class="num">VARIANTE 105</div>
+            <div class="name">Erdkreis — Wort als 2-farbige Bit-Punkte auf dem Globus</div>
+            <div class="desc">Ein orthografischer Globus (Europa zentral) wird mit Bit-Punkten
+            über die Kontinente gefüllt: 0 in Schwarz, 1 in der Akzentfarbe — beim Plotten
+            zwei Stifte. Dein Wort wiederholt sich als Textur über die ganze Erde, Karte und
+            Gradnetz in Schwarz. Stilisierte Küsten, 2-Farben-SVG-Export.</div>
         </a>
         <a href="motoren-duett.html">
             <div class="num">VARIANTE 100</div>
