@@ -18,9 +18,10 @@
                 align-items:center; justify-content:center; background:#f4f4f4;
                 color:#bbb; user-select:none; }
         .cell.active { outline:2px solid #e96000; outline-offset:1px; z-index:1; }
-        .cell.t-draw { background:#16213e; color:#fff; font-size:15px; }
-        .cell.t-diag { background:#1a3d6a; color:#c8daff; font-size:16px; }
-        .cell.t-circ { background:#1a4d2a; color:#a8ffb0; font-size:13px; }
+        .cell.t-line { background:#16213e; color:#fff; font-size:15px; }
+        .cell.t-wave { background:#1a3d6a; color:#bfe0ff; }
+        .cell.t-zig  { background:#7a1f5a; color:#ffd0f0; }
+        .cell.t-fast { background:#e8f0e8; color:#3a7a3a; font-size:12px; }
         .cell.t-dot  { background:#e7d3a1; color:#a23; }
         .bpm-info  { font-size:.73rem; color:#555; margin:.15rem 0 .3rem; font-variant-numeric:tabular-nums; }
         .bpm-info b { color:#222; }
@@ -42,18 +43,18 @@
         </section>
         <section class="panel">
             <p class="legend">
-                <span class="sw" style="background:#16213e;color:#fff">▬</span> Malen (Motor je Achse) ·
-                <span class="sw" style="background:#1a3d6a;color:#c8daff">╱</span> Diagonal (Intervall) ·
-                <span class="sw" style="background:#1a4d2a;color:#a8ffb0">○</span> Kreis (Sweep) ·
+                <span class="sw" style="background:#16213e;color:#fff">—</span> Linie (klarer Motorton) ·
+                <span class="sw" style="background:#1a3d6a;color:#bfe0ff">∿</span> Welle (Vibrato) ·
+                <span class="sw" style="background:#7a1f5a;color:#ffd0f0">⋀</span> Zickzack (Buzz) ·
                 <span class="sw" style="background:#e7d3a1;color:#a23">●</span> Klack ·
-                <span class="sw" style="background:#f4f4f4;color:#aaa;border:1px solid #ccc">_</span> Pause
+                <span class="sw" style="background:#e8f0e8;color:#3a7a3a;border:1px solid #9a9">↑</span> Schnell (hoch)
             </p>
             <div id="bpm-info" class="bpm-info">…</div>
             <div id="seq-wrap" tabindex="0"></div>
             <p class="shortcuts">
-                <kbd>D</kbd> Malen &nbsp; <kbd>X</kbd> Diagonal &nbsp; <kbd>C</kbd> Kreis &nbsp;
-                <kbd>K</kbd>/<kbd>.</kbd> Klack &nbsp; <kbd>Space</kbd> Pause &nbsp;&nbsp;
-                <kbd>←</kbd><kbd>→</kbd> Cursor &nbsp; <kbd>↑</kbd><kbd>↓</kbd> ±Takt &nbsp; <kbd>⌫</kbd> löschen
+                <kbd>D</kbd>/<kbd>L</kbd> Linie &nbsp; <kbd>W</kbd> Welle &nbsp; <kbd>Z</kbd> Zickzack &nbsp;
+                <kbd>K</kbd>/<kbd>.</kbd> Klack &nbsp; <kbd>F</kbd>/<kbd>Space</kbd> Schnell &nbsp;&nbsp;
+                <kbd>←</kbd><kbd>→</kbd> Cursor &nbsp; <kbd>↑</kbd><kbd>↓</kbd> ±Takt
             </p>
             <div id="controls"></div>
             <div class="buttons">
@@ -63,10 +64,12 @@
             </div>
             <p id="status" class="status"></p>
             <p class="hint">Das Muster (Takte × Schläge) läuft über eine wählbare
-            <b>raumfüllende Kurve</b> (Hilbert, Moore, Gosper, Peano). Mit <b>Textur</b>
-            werden Malen-Striche zu Wellen oder Zickzack — dann „brummt" der Quer-Motor
-            mit (unruhiger Klang). Der <b>Tastgrad</b> macht jeden Schlag staccato (mit
-            Klack-Lücke) statt zu einem gehaltenen Ton zu verschmelzen.</p>
+            <b>raumfüllende Kurve</b> (Hilbert, Moore, Gosper, Peano). Jede Zelle ist ein
+            Klang: <b>Linie</b> = klarer Motorton (links/rechts je Richtung), <b>Welle</b> =
+            Vibrato (Quer-Motor schwingt mit = zweite Tonhöhe), <b>Zickzack</b> = Buzz,
+            <b>Klack</b> = Schlag, <b>Schnell</b> = kurzer hoher Ton (Pen-up). Mit den
+            <b>Rhythmus-Vorlagen</b> lädst du bekannte Grooves (Clave, Techno, Reich).
+            Der Stift bleibt fast immer unten — keine Stille, nur Tonhöhen-Wechsel.</p>
         </section>
     </main>
     <script src="shared.js"></script>
@@ -75,19 +78,31 @@
     <script>
     "use strict";
 
-    /* Shape types: 0=rest 1=draw 2=diag 3=circle 4=klack */
+    /* Cell types: 0=schnell(pen-up,hoch) 1=linie 2=welle 3=zickzack 4=klack */
     const NUM_TYPES = 5;
     const CTYPE = [
-        { sym:'',  cls:'',       label:'Pause'    },
-        { sym:'▬', cls:'t-draw', label:'Malen'    },
-        { sym:'╱', cls:'t-diag', label:'Diagonal' },
-        { sym:'○', cls:'t-circ', label:'Kreis'    },
-        { sym:'●', cls:'t-dot',  label:'Klack'    },
+        { sym:'↑', cls:'t-fast', label:'Schnell (pen-up)' },
+        { sym:'—', cls:'t-line', label:'Linie'            },
+        { sym:'∿', cls:'t-wave', label:'Welle'            },
+        { sym:'⋀', cls:'t-zig',  label:'Zickzack'        },
+        { sym:'●', cls:'t-dot',  label:'Klack'            },
     ];
 
-    let GRID = [1,0,1,4, 1,0,2,1, 1,4,0,1];
+    /* ─── Known grooves. char→type: X=klack L=linie w=welle z=zickzack .=schnell ─── */
+    function parsePat(s){ const map={X:4,L:1,w:2,z:3,'.':0};
+        return [...s].map(c=>map[c] ?? 1); }
+    const PRESETS = {
+        clave32:  { takt:4, takte:4, grid:parsePat('XLLXLLXLLLXLXLLL') }, // Son Clave 3-2
+        tresillo: { takt:4, takte:2, grid:parsePat('XLLXLLXL') },          // Tresillo 3+3+2
+        bossa:    { takt:4, takte:4, grid:parsePat('XLLXLLXLLLXLLXLL') },  // Bossa clave
+        techno:   { takt:4, takte:4, grid:parsePat('XLzLXLzLXLzLXLzL') },  // 4/4 + offbeat hats
+        reich:    { takt:3, takte:4, grid:parsePat('XXXLXXLXLXXL') },      // Reich Clapping (12)
+    };
+
+    let GRID = [1,0,1,4, 1,2,3,1, 1,4,0,1];
     let _tour = [], _K = 1.5, _FB = 130;
     let _appRef = null, _lastM = -1, _lastTakt = -1, _cursor = 0, _takt = 4;
+    let _appliedVorlage = 'frei';
 
     /* ─── L-system space-filling curves ─── */
     const CURVES = {
@@ -150,7 +165,7 @@
 
     /* ─── Texture: replace a straight stroke with wave / zigzag ─── */
     function texturePath(ax, ay, bx, by, mode, amp, waves) {
-        if (mode === 'gerade' || amp <= 0) return [[ax,ay],[bx,by]];
+        if (mode === 'linie' || amp <= 0) return [[ax,ay],[bx,by]];
         const dx = bx-ax, dy = by-ay, len = Math.hypot(dx,dy);
         if (len < 1e-6) return [[ax,ay],[bx,by]];
         const ux = dx/len, uy = dy/len, nx = -uy, ny = ux;
@@ -208,7 +223,7 @@
     function ensureGrid(M, takt) {
         if (GRID.length !== M) {
             const old = GRID.slice();
-            GRID = Array.from({length:M}, (_,i)=>old[i%old.length] ?? 0);
+            GRID = Array.from({length:M}, (_,i)=>old[i%old.length] ?? 1);
             _cursor = Math.min(_cursor, M-1);
         }
         if (M!==_lastM || takt!==_lastTakt){ buildEditor(M,takt); _lastM=M; _lastTakt=takt; }
@@ -219,12 +234,12 @@
         else if (e.key==='ArrowLeft') { e.preventDefault(); moveCursor(-1); }
         else if (e.key==='ArrowDown') { e.preventDefault(); moveCursor(_takt); }
         else if (e.key==='ArrowUp')   { e.preventDefault(); moveCursor(-_takt); }
-        else if (key==='d'){ e.preventDefault(); setType(1); }
-        else if (key==='x'){ e.preventDefault(); setType(2); }
-        else if (key==='c'){ e.preventDefault(); setType(3); }
+        else if (key==='d'||key==='l'){ e.preventDefault(); setType(1); }
+        else if (key==='w'){ e.preventDefault(); setType(2); }
+        else if (key==='z'){ e.preventDefault(); setType(3); }
         else if (key==='k'||key==='.'){ e.preventDefault(); setType(4); }
-        else if (key===' '||key==='r'||key==='t'){ e.preventDefault(); setType(0); }
-        else if (e.key==='Backspace'){ e.preventDefault(); GRID[_cursor]=0;
+        else if (key==='f'||key===' '){ e.preventDefault(); setType(0); }
+        else if (e.key==='Backspace'){ e.preventDefault(); GRID[_cursor]=1;
             moveCursor(_cursor>0?-1:0); if(_appRef)_appRef.start(); }
     });
 
@@ -232,46 +247,70 @@
         p.push([x+r*Math.cos(a), y+r*Math.sin(a)]); } return p; }
 
     /* ─── App ─── */
+    const PARAMS = [
+        { key:'takt', label:'Takt', value:'4', options:[{value:'3',label:'3/4'},{value:'4',label:'4/4'}] },
+        { key:'takte', label:'Takte (Muster)', min:2, max:8, step:1, value:3 },
+        { key:'vorlage', label:'Rhythmus-Vorlage', value:'frei', options:[
+            { value:'frei',     label:'— frei —' },
+            { value:'clave32',  label:'Son Clave 3-2' },
+            { value:'tresillo', label:'Tresillo' },
+            { value:'bossa',    label:'Bossa Clave' },
+            { value:'techno',   label:'Techno 4/4 + Hats' },
+            { value:'reich',    label:'Reich Clapping' },
+        ]},
+        { key:'curve', label:'Kurve', value:'hilbert', options:[
+            { value:'hilbert', label:'Hilbert' },
+            { value:'moore',   label:'Moore (Schleife)' },
+            { value:'gosper',  label:'Gosper (6-eck)' },
+            { value:'peano',   label:'Peano' },
+        ]},
+        { key:'order', label:'Kurven-Ordnung', min:2, max:4, step:1, value:4 },
+        { key:'tex_amp',   label:'Textur-Tiefe %', min:5, max:60, step:5, value:28 },
+        { key:'tex_freq',  label:'Textur-Wellen',  min:1, max:8, step:1, value:4 },
+        { key:'duty',      label:'Tastgrad (Staccato)', min:0.4, max:1, step:0.05, value:0.8 },
+        { key:'feed_draw', label:'Tempo malen mm/s', min:14, max:80, step:2, value:24 },
+        { key:'feed_travel', label:'Tempo schnell/Leerfahrt mm/s', min:60, max:200, step:10, value:130 },
+        { key:'grundton', label:'Grundton Hz', min:80, max:200, step:5, value:130 },
+        { key:'tonlage',  label:'Tonhub', min:0.5, max:4, step:0.25, value:1.5 },
+    ];
+    const getDef = k => PARAMS.find(p=>p.key===k);
+
     const app = PR4App({
         svgName: 'plotter-komponist',
-        params: [
-            { key:'takt', label:'Takt', value:'4', options:[{value:'3',label:'3/4'},{value:'4',label:'4/4'}] },
-            { key:'takte', label:'Takte (Muster)', min:2, max:8, step:1, value:3 },
-            { key:'curve', label:'Kurve', value:'hilbert', options:[
-                { value:'hilbert', label:'Hilbert' },
-                { value:'moore',   label:'Moore (Schleife)' },
-                { value:'gosper',  label:'Gosper (6-eck)' },
-                { value:'peano',   label:'Peano' },
-            ]},
-            { key:'order', label:'Kurven-Ordnung', min:2, max:4, step:1, value:4 },
-            { key:'textur', label:'Textur (Malen)', value:'gerade', options:[
-                { value:'gerade',   label:'Gerade ▬' },
-                { value:'welle',    label:'Welle ∿' },
-                { value:'zickzack', label:'Zickzack ⋀⋁' },
-            ]},
-            { key:'tex_amp',   label:'Textur-Tiefe %', min:0, max:45, step:5, value:22 },
-            { key:'tex_freq',  label:'Textur-Wellen',  min:1, max:8, step:1, value:3 },
-            { key:'duty',      label:'Tastgrad (Staccato)', min:0.4, max:1, step:0.05, value:0.8 },
-            { key:'feed_draw', label:'Tempo malen mm/s', min:14, max:80, step:2, value:24 },
-            { key:'feed_travel', label:'Tempo Leerfahrt mm/s', min:60, max:200, step:10, value:130 },
-            { key:'grundton', label:'Grundton Hz', min:80, max:200, step:5, value:130 },
-            { key:'tonlage',  label:'Tonhub', min:0.5, max:4, step:0.25, value:1.5 },
-        ],
+        params: PARAMS,
         onRegen(rnd) {
+            /* random groove: keep it sparse & rhythmic */
             for (let i=0;i<GRID.length;i++){
                 const r=rnd();
-                GRID[i] = r<0.25?0 : r<0.62?1 : r<0.78?2 : r<0.89?3 : 4;
+                GRID[i] = r<0.10?0 : r<0.50?1 : r<0.68?2 : r<0.82?3 : 4;
             }
+            const vd = getDef('vorlage'); if (vd._set) vd._set('frei');
+            _appliedVorlage = 'frei';
             buildEditor(GRID.length, _takt);
         },
         generate(api) {
             const { values } = api;
+
+            /* apply a rhythm preset when the dropdown changes */
+            if (values.vorlage !== _appliedVorlage && values.vorlage !== 'frei') {
+                const p = PRESETS[values.vorlage];
+                if (p) {
+                    getDef('takt')._set(String(p.takt));
+                    getDef('takte')._set(p.takte);
+                    GRID = p.grid.slice();
+                    _cursor = 0;
+                }
+                _appliedVorlage = values.vorlage;
+            } else if (values.vorlage === 'frei') {
+                _appliedVorlage = 'frei';
+            }
+
             const takt  = parseInt(values.takt)||4;
             const takte = Math.round(values.takte);
             const M     = takt*takte;
             const order = Math.round(values.order);
             const fd = values.feed_draw, ft = values.feed_travel;
-            const duty = values.duty, texMode = values.textur;
+            const duty = values.duty;
             _K = values.tonlage; _FB = values.grundton;
 
             ensureGrid(M, takt);
@@ -279,72 +318,69 @@
             const cp = curvePoints(values.curve, order);
             const totalSegs = cp.length - 1;
             const segLenPx = Math.hypot(cp[1][0]-cp[0][0], cp[1][1]-cp[0][1]);
-            const shapeS = segLenPx * 0.60;
-            const dotR   = Math.max(2.4, shapeS*0.10);
-            const texAmp = segLenPx * (values.tex_amp/100);
+            const dotR   = Math.max(2.4, segLenPx*0.10);
+            const texAmp = segLenPx * (values.tex_amp/100) * 0.5;
             const texFreq = Math.round(values.tex_freq);
+            const KLACK = 4; // px pen lift
 
-            /* BPM: one beat = one segment, drawn for `duty` of its length */
-            const beat_mm = segLenPx/5 * duty;
-            const bpm = Math.round(60 * fd / Math.max(0.5, beat_mm));
+            /* BPM: one beat = one curve segment. With staccato the beat is drawn
+             * for `duty` at draw-feed, the rest at travel-feed (a higher tick — no
+             * silence, just a pitch step). */
+            const seg_mm = segLenPx/5;
+            const beatDur = seg_mm*(duty/fd + (1-duty)/ft);
+            const bpm = Math.round(60 / Math.max(0.05, beatDur));
             document.getElementById('bpm-info').innerHTML =
                 `<b>~${bpm} BPM</b> · ${values.curve} Ord.${order} · ${totalSegs} Seg. · ` +
-                `Muster ${M} (${takt}/4×${takte}) · Textur: ${texMode}`;
+                `Muster ${M} (${takt}/4×${takte})` +
+                (values.vorlage!=='frei' ? ` · Vorlage: ${getDef('vorlage').options.find(o=>o.value===values.vorlage).label}` : '');
 
-            const lines = [], strokes = [];
-            function pushDot(x,y){ const d=dotPolyline(x,y,dotR); strokes.push(d);
-                lines.push({pts:d, w:0.9, closed:true}); }
-
-            pushDot(cp[0][0], cp[0][1]);   // start anchor
-
-            let run = null;
-            const legato = duty >= 0.99 && texMode === 'gerade';
-            const closeRun = ()=>{ if(run){ strokes.push(run); lines.push({pts:run, w:1.3}); run=null; } };
+            const lines = [], tour = [];
 
             for (let i=0;i<totalSegs;i++){
                 const p0 = cp[i], p1 = cp[i+1];
                 const type = GRID[i%M];
-                const cx=(p0[0]+p1[0])/2, cy=(p0[1]+p1[1])/2;
+                const dx = p1[0]-p0[0], dy = p1[1]-p0[1];
+                const ex = p0[0]+dx*duty, ey = p0[1]+dy*duty;
 
-                if (i>0 && i%M===0){ closeRun(); pushDot(p0[0], p0[1]); }   // pattern anchor
-
-                if (type === 1) {
-                    if (legato) {
-                        if (!run) run=[p0.slice()]; run.push(p1.slice());
-                    } else {
-                        /* staccato dash for `duty` of the segment, textured */
-                        const ex = p0[0]+(p1[0]-p0[0])*duty, ey = p0[1]+(p1[1]-p0[1])*duty;
-                        const seg = texturePath(p0[0],p0[1], ex,ey, texMode, texAmp, texFreq);
-                        strokes.push(seg); lines.push({pts:seg, w:1.2});
-                    }
+                if (type === 0) {
+                    /* schnell: whole segment pen-up → high tone */
+                    tour.push({pts:[p0.slice(),p1.slice()], pen:'up', feed:ft});
+                    lines.push({pts:[p0.slice(),p1.slice()], w:0.12});
+                } else if (type === 4) {
+                    /* klack: draw to mid, brief pen-lift, continue */
+                    const mx=(p0[0]+p1[0])/2, my=(p0[1]+p1[1])/2;
+                    tour.push({pts:[p0.slice(),[mx,my]], pen:'down', feed:fd});
+                    tour.push({pts:[[mx,my],[mx,my-KLACK]], pen:'up', feed:ft});
+                    tour.push({pts:[[mx,my-KLACK],[mx,my]], pen:'down', feed:ft});
+                    tour.push({pts:[[mx,my],p1.slice()], pen:'down', feed:fd});
+                    lines.push({pts:[p0.slice(),p1.slice()], w:1.0});
+                    lines.push({pts:dotPolyline(mx,my,dotR), w:0.8, closed:true});
                 } else {
-                    closeRun();
-                    if (type === 2) {
-                        const h = shapeS*0.5;
-                        const seg = [[cx-h,cy+h],[cx+h,cy-h]];
-                        strokes.push(seg); lines.push({pts:seg, w:1.2});
-                    } else if (type === 3) {
-                        const r = shapeS*0.42, pts=[];
-                        for(let j=0;j<=36;j++){ const a=j/36*2*Math.PI;
-                            pts.push([cx+r*Math.cos(a), cy+r*Math.sin(a)]); }
-                        strokes.push(pts); lines.push({pts, w:1.2, closed:true});
-                    } else if (type === 4) {
-                        pushDot(cx, cy);
+                    /* linie / welle / zickzack — drawn, optional staccato tail */
+                    const mode = type===2?'welle':type===3?'zickzack':'linie';
+                    if (duty >= 0.99) {
+                        const seg = texturePath(p0[0],p0[1], p1[0],p1[1], mode, texAmp, texFreq);
+                        tour.push({pts:seg, pen:'down', feed:fd});
+                        lines.push({pts:seg, w:1.3});
+                    } else {
+                        const seg = texturePath(p0[0],p0[1], ex,ey, mode, texAmp, texFreq);
+                        tour.push({pts:seg, pen:'down', feed:fd});
+                        /* fast tail stays pen-DOWN (no click) → pitch rises = articulation */
+                        tour.push({pts:[[ex,ey],p1.slice()], pen:'down', feed:ft});
+                        lines.push({pts:seg, w:1.3});
+                        lines.push({pts:[[ex,ey],p1.slice()], w:0.4});
                     }
                 }
             }
-            closeRun();
-            pushDot(cp[totalSegs][0], cp[totalSegs][1]);   // end anchor
-
-            _tour = PR4Audio.tourFromPolylines(strokes, fd, ft);
+            _tour = tour;
 
             for (const st of PR4Font.textCentered('PLOTTER-KOMPONIST', 500, 60, 20))
                 lines.push({ pts:st, w:1.0 });
             lines.push({ pts:[[55,88],[945,88],[945,945],[55,945]], w:0.6, closed:true });
 
             const cnt = t=>GRID.filter(x=>x===t).length;
-            api.status(`${cnt(1)}×▬ ${cnt(2)}×╱ ${cnt(3)}×○ ${cnt(4)}×● ${cnt(0)}×_ · `+
-                `${M} Muster · ~${bpm} BPM · ${strokes.length} Elemente`);
+            api.status(`${cnt(1)}×— ${cnt(2)}×∿ ${cnt(3)}×⋀ ${cnt(4)}×● ${cnt(0)}×↑ · `+
+                `${M} Muster · ~${bpm} BPM · ${tour.length} Abschnitte`);
             api.done(lines);
         }
     });
