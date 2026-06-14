@@ -23,12 +23,11 @@
                 <button id="download">⬇ SVG</button>
             </div>
             <p id="status" class="status"></p>
-            <p class="hint">Partitur-Notation: jede Zeile = ein Takt.
-            Balken (Stift unten, langsam) = tiefer Ton.
-            Lücke (Stift oben, schnell) = hoher Ton.
-            Zeilenwechsel = diagonale Schwungbewegung.
-            Tempo-Regler steuern beide Tonhöhen.
-            ▶ zeigt den Stift live auf dem Blatt.</p>
+            <p class="hint">Der Stift wandert als <b>Schlange</b> (Boustrophedon) Zeile
+            für Zeile — nie zurück zum Anfang. Pro Zeile bewegt er sich nur waagerecht,
+            also singt nur der <b>X-Motor</b>: gezeichneter Balken = langsam = <b>tiefer
+            Ton</b>, Lücke = schnelle Leerfahrt = <b>hoher Ton</b>. Der Zeilenwechsel ist
+            eine senkrechte Bewegung → kurzer <b>Y-Motor</b>-Ton (rechts im Stereobild).</p>
         </section>
     </main>
     <script src="shared.js"></script>
@@ -71,7 +70,7 @@
         samba:    euclid(3, 16),
         gnawa:    euclid(7, 16),
         gerade:   [1,0,1,0,1,0,1,0],
-        walzer:   [1,0,0,1,0,0,1,0,0,1,0,0],
+        clave:    [1,0,0,1,0,0,1,0,0,0,1,0,1,0,0,0],
     };
 
     function getPattern(values) {
@@ -80,119 +79,22 @@
         return PRESETS[values.muster] || PRESETS.tresillo;
     }
 
-    /* Return evolved {pat, noteDur} for measure m */
-    function evolvePattern(base, m, entwicklung, baseDur) {
+    function evolvePattern(base, m, mode) {
         const n = base.length;
-        let pat = [...base], dur = baseDur;
-        if (entwicklung === 'rotieren') {
-            const shift = m % n;
-            pat = [...base.slice(shift), ...base.slice(0, shift)];
-        } else if (entwicklung === 'invertieren' && m % 2 === 1) {
-            pat = base.map(b => 1 - b);
-        } else if (entwicklung === 'verjuengen') {
-            dur = Math.max(0.12, baseDur - m * 0.04);
-        } else if (entwicklung === 'wachsen') {
+        if (mode === 'rotieren') {
+            const s = m % n;
+            return [...base.slice(s), ...base.slice(0, s)];
+        }
+        if (mode === 'invertieren' && m % 2 === 1) return base.map(b => 1 - b);
+        if (mode === 'wachsen') {
             const k = Math.min(base.filter(Boolean).length + m, n);
-            pat = euclid(k, n);
+            return euclid(k, n);
         }
-        return { pat, dur };
+        return [...base];
     }
 
-    /* ── Audio state ── */
-    let _ctx = null, _nodes = [], _playing = false, _stopTimer = null;
-    let _freqDownX = 168, _freqDownY = 154;
-    let _freqUpX   = 504, _freqUpY   = 462;
-    let _events = [], _timeline = [], _audioT0 = 0, _animFrame = null;
+    let _tour = [], _feedDraw = 35, _feedTravel = 110, _K = 5;
 
-    function stopAudio() {
-        _nodes.forEach(n => { try { n.stop(0); } catch (_) {} });
-        _nodes = []; _playing = false;
-        clearTimeout(_stopTimer);
-        if (_animFrame) { cancelAnimationFrame(_animFrame); _animFrame = null; }
-        document.getElementById('pen-dot').style.display = 'none';
-        document.getElementById('play').textContent = '▶ Anhören';
-    }
-
-    function animatePen() {
-        if (!_playing || !_ctx || _timeline.length === 0) { _animFrame = null; return; }
-        const elapsed = Math.max(0, _ctx.currentTime - _audioT0 - 0.06);
-        const dot = document.getElementById('pen-dot');
-        const lastT = _timeline[_timeline.length - 1].t;
-        if (elapsed >= lastT) { dot.style.display = 'none'; _animFrame = null; return; }
-        /* binary search */
-        let lo = 0, hi = _timeline.length - 1;
-        while (lo < hi - 1) {
-            const mid = (lo + hi) >> 1;
-            if (_timeline[mid].t <= elapsed) lo = mid; else hi = mid;
-        }
-        const pos = _timeline[lo];
-        const canvas = document.getElementById('canvas');
-        const rect = canvas.getBoundingClientRect();
-        const scale = rect.width / 1000;
-        dot.style.display = 'block';
-        dot.style.left = (pos.x * scale) + 'px';
-        dot.style.top  = (pos.y * scale) + 'px';
-        dot.style.background = pos.penDown ? '#cc2200' : '#999';
-        _animFrame = requestAnimationFrame(animatePen);
-    }
-
-    function schedClick(t, vol) {
-        if (!_ctx) return;
-        const len = Math.ceil(_ctx.sampleRate * 0.018);
-        const buf = _ctx.createBuffer(1, len, _ctx.sampleRate);
-        const d = buf.getChannelData(0);
-        for (let i = 0; i < len; i++)
-            d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.14));
-        const src = _ctx.createBufferSource();
-        const g = _ctx.createGain(); g.gain.value = vol;
-        src.buffer = buf; src.connect(g); g.connect(_ctx.destination);
-        src.start(t); _nodes.push(src);
-    }
-
-    function schedBuzz(t, dur, fX, fY, vol, th) {
-        if (!_ctx || dur < 0.004) return;
-        const aX = 0.35 + 0.65 * Math.abs(Math.sin(th));
-        const aY = 0.35 + 0.65 * Math.abs(Math.cos(th));
-        [{ f: fX, a: aX }, { f: fY, a: aY }].forEach(({ f, a }) => {
-            const osc = _ctx.createOscillator();
-            osc.type = 'sawtooth'; osc.frequency.value = f;
-            const g = _ctx.createGain();
-            const ramp = Math.min(0.012, dur * 0.1);
-            g.gain.setValueAtTime(0, t);
-            g.gain.linearRampToValueAtTime(vol * a, t + ramp);
-            g.gain.setValueAtTime(vol * a, t + dur - ramp);
-            g.gain.linearRampToValueAtTime(0, t + dur);
-            osc.connect(g); g.connect(_ctx.destination);
-            osc.start(t); osc.stop(t + dur + 0.01);
-            _nodes.push(osc);
-        });
-    }
-
-    function playScore() {
-        if (_playing) { stopAudio(); return; }
-        if (!_ctx) _ctx = new AudioContext();
-        if (_ctx.state === 'suspended') _ctx.resume();
-        _playing = true;
-        document.getElementById('play').textContent = '■ Stop';
-        const t0 = _ctx.currentTime + 0.06;
-        _audioT0 = _ctx.currentTime;
-        for (const ev of _events) {
-            const ta = t0 + ev.t;
-            const th = Math.atan2(ev.y1 - ev.y0, ev.x1 - ev.x0);
-            if (ev.penDown) {
-                schedBuzz(ta, ev.dur, _freqDownX, _freqDownY, 0.16, th);
-                schedClick(ta, 0.5);
-                schedClick(ta + ev.dur, 0.28);
-            } else {
-                schedBuzz(ta, ev.dur, _freqUpX, _freqUpY, 0.022, th);
-            }
-        }
-        const lastT = _events.length ? _events[_events.length-1].t + _events[_events.length-1].dur : 2;
-        _stopTimer = setTimeout(stopAudio, (lastT + 0.8) * 1000);
-        _animFrame = requestAnimationFrame(animatePen);
-    }
-
-    /* ── Visual generator ── */
     const app = PR4App({
         svgName: 'plotter-partitur',
         params: [
@@ -202,126 +104,143 @@
                 { value: 'samba',     label: 'Samba  E(3,16)' },
                 { value: 'gnawa',     label: 'Gnawa  E(7,16)' },
                 { value: 'gerade',    label: 'Gerade Achtel' },
-                { value: 'walzer',    label: 'Walzer (3/4)' },
+                { value: 'clave',     label: 'Son Clave' },
                 { value: 'euklid',    label: 'Euklid  k / n' },
                 { value: 'alle',      label: 'Alle Schläge' },
             ]},
-            { key: 'n_steps',    label: 'Schläge (n)',          min: 4,  max: 24,  step: 1,    value: 8 },
-            { key: 'beats_k',    label: 'Aktiv (k)',            min: 1,  max: 24,  step: 1,    value: 5 },
-            { key: 'n_measures', label: 'Takte',                min: 4,  max: 20,  step: 1,    value: 10 },
-            { key: 'note_dur',   label: 'Notendauer',           min: 0.15, max: 0.9, step: 0.05, value: 0.6 },
+            { key: 'n_steps',     label: 'Schläge (n)',  min: 4,  max: 24, step: 1,   value: 8 },
+            { key: 'beats_k',     label: 'Aktiv (k)',    min: 1,  max: 24, step: 1,   value: 5 },
+            { key: 'n_measures',  label: 'Zeilen',       min: 3,  max: 16, step: 1,   value: 8 },
+            { key: 'note_dur',    label: 'Balkenlänge',  min: 0.2, max: 0.85, step: 0.05, value: 0.55 },
             { key: 'entwicklung', label: 'Entwicklung', value: 'keine', options: [
                 { value: 'keine',       label: 'Keine' },
                 { value: 'rotieren',    label: 'Rotieren' },
-                { value: 'invertieren', label: 'Invertieren (ungerade)' },
-                { value: 'verjuengen',  label: 'Verjüngen' },
+                { value: 'invertieren', label: 'Invertieren' },
                 { value: 'wachsen',     label: 'Wachsen' },
             ]},
-            { key: 'bpm',        label: 'BPM',                  min: 60, max: 200, step: 4,    value: 120 },
-            { key: 'speed_down', label: 'Tempo Stift-unten mm/s', min: 20, max: 80,  step: 2,  value: 40 },
-            { key: 'speed_up',   label: 'Tempo Stift-oben  mm/s', min: 60, max: 220, step: 10, value: 120 },
+            { key: 'feed_draw',   label: 'Tempo Zeichnen mm/s', min: 18, max: 60,  step: 2,  value: 32 },
+            { key: 'feed_travel', label: 'Tempo Leerfahrt mm/s', min: 60, max: 200, step: 10, value: 120 },
+            { key: 'tonlage',     label: 'Tonlage',      min: 3, max: 9, step: 0.5, value: 5 },
         ],
         generate(api) {
             const { values } = api;
             const base = getPattern(values);
-            const HZ = 4.2; // Hz per mm/s, calibrated for NextDraw 2234
-            _freqDownX = values.speed_down * HZ;
-            _freqDownY = values.speed_down * HZ * 0.917;
-            _freqUpX   = values.speed_up   * HZ;
-            _freqUpY   = values.speed_up   * HZ * 0.917;
+            _feedDraw = values.feed_draw;
+            _feedTravel = values.feed_travel;
+            _K = values.tonlage;
 
             const n = base.length;
             const M = Math.round(values.n_measures);
-            const beatSec = 60 / values.bpm;
-            const PX_PER_MM = 5; // 1000 canvas units / 200 mm
             const lines = [];
-            _events = []; _timeline = [];
+            const tour = [];
 
-            /* layout */
-            const L = 85, R = 940, T = 90, B = 930;
-            const cellW = (R - L) / n;
+            const L = 95, Rg = 935, T = 130, B = 905;
+            const cellW = (Rg - L) / n;
             const rowH = (B - T) / M;
-            const barH = Math.min(rowH * 0.55, 40);
+            const baseBarH = Math.min(rowH * 0.42, 34);
 
-            let prevX = L, prevY = T, curTime = 0;
-
-            /* record one plotter move; updates prevX/Y and curTime */
-            function addEvent(x0, y0, x1, y1, penDown, dur) {
-                prevX = x1; prevY = y1;
-                if (dur < 0.001) return;
-                _events.push({ t: curTime, dur, x0, y0, x1, y1, penDown });
-                const steps = Math.max(2, Math.ceil(dur * 40));
-                for (let s = 0; s <= steps; s++) {
-                    const f = s / steps;
-                    _timeline.push({
-                        t: curTime + f * dur,
-                        x: x0 + (x1-x0)*f, y: y0 + (y1-y0)*f,
-                        penDown
-                    });
-                }
-                curTime += dur;
+            /* ── build the serpentine path (visual ink + audio tour) ── */
+            let penX = L, penY = T + 0.5 * rowH; // pen starts top-left
+            function move(x1, y1, pen, feed) {
+                tour.push({ pts: [[penX, penY], [x1, y1]], pen, feed });
+                penX = x1; penY = y1;
             }
 
             for (let m = 0; m < M; m++) {
-                const { pat, dur: noteDur } = evolvePattern(base, m, values.entwicklung, values.note_dur);
-                const y   = T + (m + 0.5) * rowH;
-                const yT  = y - barH / 2;
-                const yB  = y + barH / 2;
+                const pat = evolvePattern(base, m, values.entwicklung);
+                const y = T + (m + 0.5) * rowH;
+                const dir = m % 2 === 0 ? 1 : -1;
 
-                /* row separator */
-                if (m > 0) {
-                    const ySep = T + m * rowH;
-                    lines.push({ pts: [[L-20, ySep],[R+5, ySep]], w: 0.3 });
+                /* vertical step into this row (Y-motor blip), except first row */
+                if (m > 0) move(penX, y, 'up', values.feed_travel);
+
+                /* faint staff line + beat grid */
+                lines.push({ pts: [[L, y], [Rg, y]], w: 0.3 });
+                for (let b = 0; b <= n; b++) {
+                    const gx = L + b * cellW;
+                    lines.push({ pts: [[gx, y - baseBarH * 0.62], [gx, y + baseBarH * 0.62]],
+                                 w: b % 4 === 0 ? 0.45 : 0.18 });
                 }
-                /* measure number */
-                for (const st of PR4Font.textCentered(String(m+1), L-33, y+4, 11))
-                    lines.push({ pts: st, w: 0.5 });
 
-                for (let b = 0; b < n; b++) {
-                    const x0 = L + b * cellW;
-                    const x1 = x0 + cellW * noteDur;
+                /* visit cells in travel direction */
+                for (let step = 0; step < n; step++) {
+                    const cell = dir === 1 ? step : (n - 1 - step);
+                    const lead = dir === 1 ? L + cell * cellW : L + (cell + 1) * cellW;
+                    const trail = dir === 1 ? L + (cell + 1) * cellW : L + cell * cellW;
+                    const accent = cell % 4 === 0;
 
-                    if (pat[b]) {
-                        /* pen-up travel to bar start */
-                        const dist = Math.hypot(x0 - prevX, y - prevY);
-                        addEvent(prevX, prevY, x0, y, false, dist / (values.speed_up * PX_PER_MM));
-                        /* pen-down: draw bar */
-                        addEvent(x0, y, x1, y, true, beatSec * noteDur);
-                        /* bar outline + centre spine */
-                        lines.push({ pts: [[x0,yT],[x1,yT],[x1,yB],[x0,yB]], w: 0.75, closed: true });
-                        lines.push({ pts: [[x0,y],[x1,y]], w: 1.2 });
+                    if (pat[cell]) {
+                        const barEnd = lead + dir * cellW * values.note_dur;
+                        /* draw bar (pen down, slow → low X tone) */
+                        move(barEnd, y, 'down', values.feed_draw);
+                        /* ink: a rectangle bar centred on the staff line */
+                        const x0 = Math.min(lead, barEnd), x1 = Math.max(lead, barEnd);
+                        const h = accent ? baseBarH : baseBarH * 0.66;
+                        lines.push({ pts: [[x0, y - h/2], [x1, y - h/2], [x1, y + h/2],
+                                           [x0, y + h/2]], w: accent ? 1.3 : 0.9, closed: true });
+                        lines.push({ pts: [[x0, y], [x1, y]], w: accent ? 1.6 : 1.1 });
+                        /* travel rest of cell (pen up, fast → high X tone) */
+                        move(trail, y, 'up', values.feed_travel);
                     } else {
-                        /* rest: small tick */
-                        const xm = x0 + cellW / 2;
-                        lines.push({ pts: [[xm, y-4],[xm, y+4]], w: 0.35 });
+                        /* whole cell is a fast leer-fahrt */
+                        move(trail, y, 'up', values.feed_travel);
+                        const xm = (lead + trail) / 2;
+                        lines.push({ pts: [[xm, y - 3], [xm, y + 3]], w: 0.3 });
                     }
                 }
 
-                /* diagonal sweep to next row */
-                if (m < M - 1) {
-                    const nextY = T + (m + 1.5) * rowH;
-                    const dist = Math.hypot(L - prevX, nextY - prevY);
-                    addEvent(prevX, prevY, L, nextY, false, dist / (values.speed_up * PX_PER_MM));
-                }
+                /* measure number on the leading side */
+                const numX = dir === 1 ? L - 42 : Rg + 12;
+                for (const st of PR4Font.textCentered(String(m + 1), numX + 14, y + 4, 12))
+                    lines.push({ pts: st, w: 0.55 });
+                /* direction arrow */
+                const ay = T + m * rowH + 8;
+                const arrow = dir === 1
+                    ? [[Rg - 20, ay], [Rg - 6, ay], [Rg - 12, ay - 5]]
+                    : [[L + 20, ay], [L + 6, ay], [L + 12, ay - 5]];
+                lines.push({ pts: arrow, w: 0.4 });
             }
 
-            /* beat column numbers */
+            _tour = tour;
+
+            /* beat numbers along the top */
             for (let b = 0; b < n; b++) {
                 const xm = L + (b + 0.5) * cellW;
-                for (const st of PR4Font.textCentered(String(b+1), xm, T-20, 10))
+                for (const st of PR4Font.textCentered(String(b + 1), xm, T - 28, 11))
                     lines.push({ pts: st, w: 0.45 });
             }
 
-            /* outer frame */
-            lines.push({ pts: [[L-20, T-40],[R+5, T-40],[R+5, B+10],[L-20, B+10]], w: 0.55, closed: true });
+            /* title + frame */
+            for (const st of PR4Font.textCentered('PLOTTER-PARTITUR', 500, 62, 22))
+                lines.push({ pts: st, w: 1.0 });
+            lines.push({ pts: [[55, 90], [945, 90], [945, 945], [55, 945]], w: 0.6, closed: true });
 
             const activeN = base.filter(Boolean).length;
-            api.status(`${activeN}/${n} Schläge · ${M} Takte · ${values.entwicklung}`);
+            api.status(`${activeN}/${n} Schläge · ${M} Zeilen · Schlange (Boustrophedon)`);
             api.done(lines);
         }
     });
 
-    document.getElementById('play').addEventListener('click', playScore);
+    const dot = document.getElementById('pen-dot');
+    const canvas = document.getElementById('canvas');
+    function showDot(x, y, pen) {
+        if (x == null) { dot.style.display = 'none'; return; }
+        const rect = canvas.getBoundingClientRect();
+        const sc = rect.width / 1000;
+        dot.style.display = 'block';
+        dot.style.left = (x * sc) + 'px';
+        dot.style.top  = (y * sc) + 'px';
+        dot.style.background = pen === 'up' ? '#999' : '#cc2200';
+    }
+
+    const playBtn = document.getElementById('play');
+    let _playing = false;
+    function endPlay() { _playing = false; playBtn.textContent = '▶ Anhören'; dot.style.display = 'none'; }
+    playBtn.addEventListener('click', () => {
+        if (_playing) { PR4Audio.stop(); return; }
+        _playing = true; playBtn.textContent = '■ Stop';
+        PR4Audio.play(_tour, { freqPerMmS: _K, onPos: showDot, onEnd: endPlay });
+    });
     </script>
 </body>
 </html>

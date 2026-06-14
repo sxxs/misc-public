@@ -293,3 +293,198 @@ const PR4 = (() => {
 
     return { SIZE, mulberry32, randomSeed, fitCanvas, drawPolylines, linesToSvg, downloadSvg, buildControls, debounce, makeNoise2D, contourLines, delaunay };
 })();
+
+/* ──────────────────────────────────────────────────────────────────────
+ * PR4Audio — physically-grounded plotter motor synthesis.
+ *
+ * A pen plotter (e.g. NextDraw 2234) is driven by two independent stepper
+ * motors: one for X, one for Y. Each motor emits a tone whose PITCH is
+ * proportional to its STEP RATE — i.e. to the speed of the pen ALONG THAT
+ * AXIS (mm/s), not the total speed. Consequences this engine reproduces:
+ *
+ *   • Straight horizontal line  → only X-motor sings (steady pitch), Y silent.
+ *   • Straight vertical line     → only Y-motor sings, X silent.
+ *   • Diagonal line              → both motors, pitch ∝ |cosα| and |sinα|
+ *                                  → a two-note chord whose interval = angle.
+ *   • Circle at constant feed    → fX ∝ |sinφ|, fY ∝ |cosφ|, 90° out of phase
+ *                                  → the motors "sing", gliding in pitch.
+ *   • Bigger circle, same feed   → longer arc → the note lasts LONGER.
+ *
+ * The X motor is panned left, the Y motor right, so on a circle you literally
+ * hear the sound rotate between the speakers.
+ *
+ * A "tour" is an ordered list of moves: { pts:[[x,y]…], pen:'down'|'up', feed }
+ * where pts are in the 1000×1000 page space and feed is in mm/s.
+ * ────────────────────────────────────────────────────────────────────── */
+const PR4Audio = (() => {
+    const PX_PER_MM = 5;          // 1000 px = 200 mm
+    const MAX_STEP  = 0.018;      // s — automation granularity (also = motor ramp)
+    let _ctx = null;
+    let _live = null;             // current playback controller
+
+    function ctx() {
+        if (!_ctx) _ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (_ctx.state === "suspended") _ctx.resume();
+        return _ctx;
+    }
+
+    /* audibility of a motor running at f Hz: a slowly-stepping motor is a quiet
+     * low rumble that fades to nothing as it stops. */
+    function audible(f) {
+        const t = Math.max(0, Math.min(1, (f - 8) / 34));
+        return t * t * (3 - 2 * t);
+    }
+
+    function makeNoiseBurst(c, t, dur, vol, cutoff) {
+        const len = Math.max(1, Math.ceil(c.sampleRate * dur));
+        const buf = c.createBuffer(1, len, c.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++)
+            d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.18));
+        const src = c.createBufferSource(); src.buffer = buf;
+        const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = cutoff;
+        const g = c.createGain(); g.gain.value = vol;
+        src.connect(lp); lp.connect(g);
+        return { src, g, start: () => src.start(t), stop: () => { try { src.stop(0); } catch (_) {} } };
+    }
+
+    function stop() {
+        if (!_live) return;
+        const l = _live; _live = null;
+        l.cancelled = true;
+        if (l.animFrame) cancelAnimationFrame(l.animFrame);
+        clearTimeout(l.endTimer);
+        l.nodes.forEach(n => { try { n.stop(0); } catch (_) {} });
+        if (l.onEnd) l.onEnd();
+    }
+
+    /* Schedule a tour and start playing. opts:
+     *   freqPerMmS  Hz per (mm/s)            default 5
+     *   baseGain    peak per-motor gain      default 0.14
+     *   onPos(x,y,pen)  per-frame pen callback (canvas coords)
+     *   onEnd()     called when playback finishes or is stopped
+     * Returns { duration, stop }. */
+    function play(tour, opts = {}) {
+        stop();
+        const c = ctx();
+        const K        = opts.freqPerMmS != null ? opts.freqPerMmS : 5;
+        const baseGain = opts.baseGain   != null ? opts.baseGain   : 0.14;
+
+        /* one persistent oscillator per axis, panned L / R, through a shared
+         * gentle lowpass + master gain. */
+        const master = c.createGain(); master.gain.value = 0.9;
+        const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 3200;
+        lp.connect(master); master.connect(c.destination);
+
+        function axis(pan) {
+            const osc = c.createOscillator(); osc.type = "sawtooth";
+            const g = c.createGain(); g.gain.value = 0;
+            const p = c.createStereoPanner ? c.createStereoPanner() : null;
+            if (p) { p.pan.value = pan; osc.connect(g); g.connect(p); p.connect(lp); }
+            else { osc.connect(g); g.connect(lp); }
+            return { osc, g };
+        }
+        const ax = axis(-0.6), ay = axis(0.6);
+
+        const live = { nodes: [ax.osc, ay.osc], cancelled: false,
+                       onEnd: opts.onEnd, animFrame: null, endTimer: null,
+                       timeline: [] };
+        _live = live;
+
+        const t0 = c.currentTime + 0.06;
+        let T = t0;
+        ax.osc.frequency.setValueAtTime(1, t0);
+        ay.osc.frequency.setValueAtTime(1, t0);
+        ax.g.gain.setValueAtTime(0, t0);
+        ay.g.gain.setValueAtTime(0, t0);
+
+        const penDownGain = 1.0, penUpGain = 0.62;
+        let prevPen = null;
+
+        function schedClick(t, pen) {
+            const burst = pen === "down"
+                ? makeNoiseBurst(c, t, 0.022, 0.5,  1400)   // pen drop: lower thud
+                : makeNoiseBurst(c, t, 0.012, 0.28, 4200);  // pen lift: brighter tick
+            burst.g.connect(master); burst.start();
+            live.nodes.push(burst.src);
+        }
+
+        const tl = live.timeline;
+        for (const move of tour) {
+            const pts = move.pts; if (!pts || pts.length < 2) continue;
+            const feed = move.feed || 40;
+            const penG = move.pen === "up" ? penUpGain : penDownGain;
+            if (move.pen !== prevPen) { schedClick(T, move.pen); prevPen = move.pen; }
+
+            for (let i = 1; i < pts.length; i++) {
+                const x0 = pts[i - 1][0], y0 = pts[i - 1][1];
+                const x1 = pts[i][0],     y1 = pts[i][1];
+                const dxmm = (x1 - x0) / PX_PER_MM, dymm = (y1 - y0) / PX_PER_MM;
+                const lenmm = Math.hypot(dxmm, dymm);
+                if (lenmm < 1e-6) continue;
+                const segDt = lenmm / feed;
+                const nSub = Math.max(1, Math.ceil(segDt / MAX_STEP));
+                const vx = Math.abs(dxmm) / segDt, vy = Math.abs(dymm) / segDt; // mm/s per axis
+                const fX = Math.max(1, K * vx), fY = Math.max(1, K * vy);
+                const gX = baseGain * audible(fX) * penG;
+                const gY = baseGain * audible(fY) * penG;
+                for (let s = 1; s <= nSub; s++) {
+                    const tt = T + segDt * s / nSub;
+                    ax.osc.frequency.linearRampToValueAtTime(fX, tt);
+                    ay.osc.frequency.linearRampToValueAtTime(fY, tt);
+                    ax.g.gain.linearRampToValueAtTime(gX, tt);
+                    ay.g.gain.linearRampToValueAtTime(gY, tt);
+                    const f = s / nSub;
+                    tl.push({ t: (T - t0) + segDt * f,
+                              x: x0 + (x1 - x0) * f, y: y0 + (y1 - y0) * f,
+                              pen: move.pen });
+                }
+                T += segDt;
+            }
+        }
+        const duration = T - t0;
+        /* fade out */
+        ax.g.gain.linearRampToValueAtTime(0, T + 0.04);
+        ay.g.gain.linearRampToValueAtTime(0, T + 0.04);
+        ax.osc.start(t0); ay.osc.start(t0);
+        ax.osc.stop(T + 0.1); ay.osc.stop(T + 0.1);
+
+        /* pen-position animation */
+        if (opts.onPos && tl.length) {
+            const animate = () => {
+                if (live.cancelled) return;
+                const el = c.currentTime - t0;
+                if (el >= duration) { opts.onPos(null); return; }
+                let lo = 0, hi = tl.length - 1;
+                while (lo < hi - 1) {
+                    const mid = (lo + hi) >> 1;
+                    if (tl[mid].t <= el) lo = mid; else hi = mid;
+                }
+                opts.onPos(tl[lo].x, tl[lo].y, tl[lo].pen);
+                live.animFrame = requestAnimationFrame(animate);
+            };
+            live.animFrame = requestAnimationFrame(animate);
+        }
+
+        live.endTimer = setTimeout(stop, (duration + 0.4) * 1000);
+        return { duration, stop };
+    }
+
+    /* Build a plotter tour from a list of draw-polylines, inserting fast
+     * pen-up travel moves between them (and from an optional home point).
+     * lines: [[ [x,y],… ], …] or [{pts:[…]}].  Returns a tour for play(). */
+    function tourFromPolylines(lines, feedDraw, feedTravel, home) {
+        const tour = [];
+        let cur = home || null;
+        for (const ln of lines) {
+            const pts = ln.pts || ln;
+            if (!pts || pts.length < 2) continue;
+            if (cur) tour.push({ pts: [cur, pts[0]], pen: "up", feed: feedTravel });
+            tour.push({ pts, pen: "down", feed: feedDraw });
+            cur = pts[pts.length - 1];
+        }
+        return tour;
+    }
+
+    return { ctx, play, stop, tourFromPolylines, PX_PER_MM };
+})();

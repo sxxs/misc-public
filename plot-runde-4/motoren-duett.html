@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100 · Motoren-Duett — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>100 · Motoren-Duett</h1></header>
+    <main>
+        <section class="paper" style="position:relative">
+            <canvas id="canvas"></canvas>
+            <div id="pen-dot" style="display:none;position:absolute;width:13px;height:13px;
+                border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);
+                box-shadow:0 0 5px rgba(0,0,0,.45)"></div>
+        </section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="play">▶ Anhören</button>
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Der Plotter hat <b>zwei getrennte Motoren</b>: X (links im
+            Stereobild) und Y (rechts). Jeder klingt so hoch, wie schnell sich der Stift
+            <i>entlang seiner Achse</i> bewegt. <b>Quadrat</b>: jede Seite nur ein Motor
+            (Ton wandert L↔R). <b>Kreis</b>: beide Motoren „singen" als Sinus/Cosinus,
+            90° versetzt — der Klang rotiert. <b>Diagonalen</b>: zwei Töne = ein Intervall.
+            <b>Lissajous</b>: harmonisches Duett im Verhältnis p:q.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+
+    let _tour = [], _feed = 45, _K = 5;
+
+    function circlePts(cx, cy, r, n) {
+        const p = [];
+        for (let i = 0; i <= n; i++) {
+            const th = i * 2 * Math.PI / n;
+            p.push([cx + r * Math.cos(th), cy + r * Math.sin(th)]);
+        }
+        return p;
+    }
+
+    const app = PR4App({
+        svgName: 'motoren-duett',
+        params: [
+            { key: 'form', label: 'Figur', value: 'kreis', options: [
+                { value: 'kreis',      label: 'Kreis (Motoren singen)' },
+                { value: 'quadrat',    label: 'Quadrat (je Seite 1 Motor)' },
+                { value: 'diagonalen', label: 'Diagonalen (Intervalle)' },
+                { value: 'lissajous',  label: 'Lissajous (Duett p:q)' },
+                { value: 'rosette',    label: 'Rosette (gleitende Blätter)' },
+            ]},
+            { key: 'p',       label: 'Parameter p', min: 1, max: 8,  step: 1, value: 3 },
+            { key: 'q',       label: 'Parameter q', min: 1, max: 8,  step: 1, value: 2 },
+            { key: 'tempo',   label: 'Tempo mm/s',  min: 15, max: 90, step: 5, value: 40 },
+            { key: 'tonlage', label: 'Tonlage',     min: 3, max: 9,  step: 0.5, value: 5 },
+        ],
+        generate(api) {
+            const { values } = api;
+            const cx = 500, cy = 500, S = 400;
+            const lines = [];
+            let drawLines = [];     // polylines in plot order (pen down)
+            _feed = values.tempo;
+            _K = values.tonlage;
+
+            const p = Math.round(values.p), q = Math.round(values.q);
+            let info = '';
+
+            if (values.form === 'kreis') {
+                const count = Math.max(1, Math.min(p, 5));
+                for (let i = 0; i < count; i++) {
+                    const r = S * (0.32 + 0.68 * (count === 1 ? 1 : i / (count - 1)));
+                    const c = circlePts(cx, cy, r, 200);
+                    lines.push({ pts: c, w: 1.1, closed: true });
+                    drawLines.push(c);
+                }
+                info = count + ' Kreis(e) · innen schnelle, außen langsame Vibration';
+            } else if (values.form === 'quadrat') {
+                const count = Math.max(1, Math.min(p, 5));
+                for (let i = 0; i < count; i++) {
+                    const r = S * (0.34 + 0.66 * (count === 1 ? 1 : i / (count - 1)));
+                    const sq = [[cx-r,cy-r],[cx+r,cy-r],[cx+r,cy+r],[cx-r,cy+r],[cx-r,cy-r]];
+                    lines.push({ pts: sq, w: 1.1 });
+                    drawLines.push(sq);
+                }
+                info = 'Seiten wechseln den Motor: ↔ = X (links), ↕ = Y (rechts)';
+            } else if (values.form === 'diagonalen') {
+                const count = Math.max(2, p + q);
+                for (let i = 0; i < count; i++) {
+                    const a = (i + 1) / (count + 1) * Math.PI / 2; // 0..90°
+                    const dx = Math.cos(a) * S, dy = Math.sin(a) * S;
+                    const ln = [[cx - dx, cy - dy], [cx + dx, cy + dy]];
+                    lines.push({ pts: ln, w: 1.0 });
+                    drawLines.push(ln);
+                }
+                info = count + ' Linien · flach = X-Ton hoch, steil = Y-Ton hoch';
+            } else if (values.form === 'lissajous') {
+                const a = p, b = q, delta = Math.PI / 2;
+                const c = [];
+                const N = 1400;
+                for (let i = 0; i <= N; i++) {
+                    const t = i / N * 2 * Math.PI;
+                    c.push([cx + S * Math.sin(a * t + delta), cy + S * Math.sin(b * t)]);
+                }
+                lines.push({ pts: c, w: 1.0 });
+                drawLines.push(c);
+                info = 'Lissajous ' + a + ':' + b + ' — Motoren spielen ein harmonisches Verhältnis';
+            } else { // rosette
+                const k = Math.max(1, p);
+                const c = [];
+                const N = 1400;
+                for (let i = 0; i <= N; i++) {
+                    const th = i / N * 2 * Math.PI;
+                    const r = S * Math.cos(k * th);
+                    c.push([cx + r * Math.cos(th), cy + r * Math.sin(th)]);
+                }
+                lines.push({ pts: c, w: 1.0 });
+                drawLines.push(c);
+                info = 'Rosette mit ' + (k % 2 ? k : 2 * k) + ' Blättern · gleitende Töne';
+            }
+
+            /* build the plotter tour (travel between separate strokes) */
+            _tour = PR4Audio.tourFromPolylines(
+                drawLines, values.tempo, values.tempo * 2.6, [cx, cy]);
+
+            /* faint frame + axis legend */
+            lines.push({ pts: [[60,60],[940,60],[940,940],[60,940]], w: 0.4, closed: true });
+
+            api.status(info);
+            api.done(lines);
+        }
+    });
+
+    const dot = document.getElementById('pen-dot');
+    const canvas = document.getElementById('canvas');
+    function showDot(x, y, pen) {
+        if (x == null) { dot.style.display = 'none'; return; }
+        const rect = canvas.getBoundingClientRect();
+        const sc = rect.width / 1000;
+        dot.style.display = 'block';
+        dot.style.left = (x * sc) + 'px';
+        dot.style.top  = (y * sc) + 'px';
+        dot.style.background = pen === 'up' ? '#999' : '#cc2200';
+    }
+
+    const playBtn = document.getElementById('play');
+    let _playing = false;
+    function endPlay() { _playing = false; playBtn.textContent = '▶ Anhören'; dot.style.display = 'none'; }
+    playBtn.addEventListener('click', () => {
+        if (_playing) { PR4Audio.stop(); return; }
+        _playing = true; playBtn.textContent = '■ Stop';
+        PR4Audio.play(_tour, { freqPerMmS: _K, onPos: showDot, onEnd: endPlay });
+    });
+    </script>
+</body>
+</html>
