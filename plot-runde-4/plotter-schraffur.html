@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>103 · Schraffur-Sequencer — Plot Runde 4</title>
+    <title>103 · Spirale — Plot Runde 4</title>
     <link rel="stylesheet" href="shared.css">
     <style>
         #seq-wrap { display:flex; flex-wrap:wrap; gap:5px; margin:.15rem 0 .4rem; outline:none; }
@@ -21,8 +21,9 @@
         .cell.t-line { background:#16213e; color:#fff; }
         .cell.t-wave { background:#1a3d6a; color:#bfe0ff; }
         .cell.t-zig  { background:#7a1f5a; color:#ffd0f0; }
+        .cell.t-fast { background:#e8f0e8; color:#3a7a3a; font-size:12px; }
         .cell.t-dot  { background:#e7d3a1; color:#a23; }
-        .bpm-info  { font-size:.73rem; color:#555; margin:.15rem 0 .3rem; font-variant-numeric:tabular-nums; }
+        .bpm-info { font-size:.73rem; color:#555; margin:.15rem 0 .3rem; font-variant-numeric:tabular-nums; }
         .bpm-info b { color:#222; }
         .shortcuts { font-size:.70rem; color:#666; margin:.05rem 0 .4rem; line-height:1.9; }
         kbd { display:inline-block; padding:1px 5px; border:1px solid #bbb; border-radius:3px;
@@ -32,7 +33,7 @@
     </style>
 </head>
 <body>
-    <header><a class="back" href="./">← Übersicht</a><h1>103 · Schraffur-Sequencer</h1></header>
+    <header><a class="back" href="./">← Übersicht</a><h1>103 · Spirale</h1></header>
     <main>
         <section class="paper" style="position:relative">
             <canvas id="canvas"></canvas>
@@ -42,18 +43,18 @@
         </section>
         <section class="panel">
             <p class="legend">
-                <span class="sw" style="background:#16213e;color:#fff">▬</span> Gerade (klar) ·
+                <span class="sw" style="background:#16213e;color:#fff">—</span> Linie (klar) ·
                 <span class="sw" style="background:#1a3d6a;color:#bfe0ff">∿</span> Welle (Vibrato) ·
                 <span class="sw" style="background:#7a1f5a;color:#ffd0f0">⋀</span> Zickzack (Buzz) ·
                 <span class="sw" style="background:#e7d3a1;color:#a23">●</span> Klack ·
-                <span class="sw" style="background:#f4f4f4;color:#aaa;border:1px solid #ccc">_</span> Pause
+                <span class="sw" style="background:#e8f0e8;color:#3a7a3a;border:1px solid #9a9">↑</span> Schnell (hoch)
             </p>
             <div id="bpm-info" class="bpm-info">…</div>
             <div id="seq-wrap" tabindex="0"></div>
             <p class="shortcuts">
-                <kbd>G</kbd> Gerade &nbsp; <kbd>W</kbd> Welle &nbsp; <kbd>Z</kbd> Zickzack &nbsp;
-                <kbd>K</kbd>/<kbd>.</kbd> Klack &nbsp; <kbd>Space</kbd> Pause &nbsp;&nbsp;
-                <kbd>←</kbd><kbd>→</kbd> Cursor &nbsp; <kbd>↑</kbd><kbd>↓</kbd> ±Takt &nbsp; <kbd>⌫</kbd> löschen
+                <kbd>G</kbd>/<kbd>L</kbd> Linie &nbsp; <kbd>W</kbd> Welle &nbsp; <kbd>Z</kbd> Zickzack &nbsp;
+                <kbd>K</kbd>/<kbd>.</kbd> Klack &nbsp; <kbd>F</kbd>/<kbd>Space</kbd> Schnell &nbsp;&nbsp;
+                <kbd>←</kbd><kbd>→</kbd> Cursor &nbsp; <kbd>↑</kbd><kbd>↓</kbd> ±Takt
             </p>
             <div id="controls"></div>
             <div class="buttons">
@@ -62,12 +63,11 @@
                 <button id="download">⬇ SVG</button>
             </div>
             <p id="status" class="status"></p>
-            <p class="hint">Klassische <b>Schraffur füllt das Blatt</b> — aber jeder Strich
-            ist ein Rhythmus aus Textur-Zellen: <b>gerade</b> klingt klar (ein Motor),
-            <b>Welle</b> lässt den Quer-Motor mitschwingen (Vibrato), <b>Zickzack</b>
-            brummt (Buzz). Das Muster wiederholt sich Zeile für Zeile; mit Versatz
-            wandert es diagonal. Richtung waagrecht = X-Ton, senkrecht = Y-Ton, schräg =
-            Intervall.</p>
+            <p class="hint">Eine <b>rechteckige Spirale</b> von außen nach innen — Stift immer
+            unten. An den Ecken schalten die Motoren ab: horizontal = X-Ton (links), vertikal =
+            Y-Ton (rechts). Das Muster läuft in einer Schleife durch die ganze Spirale.
+            <b>Schnell</b> = kurzer Pen-up (hoher Ton), <b>Klack</b> = Stifthub in der Mitte.
+            Kein Rückweg, keine Leerstrecken.</p>
         </section>
     </main>
     <script src="shared.js"></script>
@@ -76,209 +76,210 @@
     <script>
     "use strict";
 
-    /* Cell types: 0=rest 1=line(straight) 2=wave 3=zigzag 4=klack */
+    /* Types: 0=schnell(pen-up,hoch)  1=linie  2=welle  3=zickzack  4=klack */
     const NUM_TYPES = 5;
     const CTYPE = [
-        { sym:'',  cls:'',       label:'Pause'    },
-        { sym:'▬', cls:'t-line', label:'Gerade'   },
-        { sym:'∿', cls:'t-wave', label:'Welle'    },
-        { sym:'⋀', cls:'t-zig',  label:'Zickzack' },
-        { sym:'●', cls:'t-dot',  label:'Klack'    },
+        { sym:'↑', cls:'t-fast', label:'Schnell (pen-up)' },
+        { sym:'—', cls:'t-line', label:'Linie'            },
+        { sym:'∿', cls:'t-wave', label:'Welle'            },
+        { sym:'⋀', cls:'t-zig',  label:'Zickzack'        },
+        { sym:'●', cls:'t-dot',  label:'Klack'            },
     ];
 
-    let GRID = [1,1,2,0, 1,3,1,0, 2,1,3,4];
+    let GRID = [1,2,1,1, 3,1,2,0, 1,4,1,1];
     let _tour = [], _K = 1.5, _FB = 130;
     let _appRef = null, _lastM = -1, _lastTakt = -1, _cursor = 0, _takt = 4;
 
-    /* texture: perpendicular oscillation along a→b */
     function texturePath(ax, ay, bx, by, mode, amp, waves) {
-        if (mode === 'gerade' || amp <= 0) return [[ax,ay],[bx,by]];
-        const dx = bx-ax, dy = by-ay, len = Math.hypot(dx,dy);
-        if (len < 1e-6) return [[ax,ay],[bx,by]];
-        const ux = dx/len, uy = dy/len, nx = -uy, ny = ux;
-        const cyc = Math.max(1, Math.round(waves));
-        const steps = mode === 'zickzack' ? cyc*2 : cyc*14;
-        const pts = [];
-        for (let i=0;i<=steps;i++){
-            const t = i/steps, ph = t*cyc*2*Math.PI;
-            let off;
-            if (mode === 'welle') off = Math.sin(ph);
-            else { const fr = (t*cyc) % 1; off = fr<0.5 ? (fr*4-1) : (3-fr*4); }
-            pts.push([ax+ux*len*t + nx*amp*off, ay+uy*len*t + ny*amp*off]);
+        if (mode === 'linie' || amp < 1) return [[ax,ay],[bx,by]];
+        const dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy); if(len<1e-6) return [[ax,ay],[bx,by]];
+        const ux=dx/len,uy=dy/len,nx=-uy,ny=ux;
+        const cyc=Math.max(1,Math.round(waves));
+        const steps=mode==='zickzack'?cyc*2:cyc*14;
+        const pts=[];
+        for(let i=0;i<=steps;i++){
+            const t=i/steps,ph=t*cyc*2*Math.PI;
+            const off=mode==='welle'?Math.sin(ph):((t*cyc%1)<0.5?(t*cyc%1)*4-1:3-(t*cyc%1)*4);
+            pts.push([ax+ux*len*t+nx*amp*off, ay+uy*len*t+ny*amp*off]);
         }
         return pts;
     }
-    const TEXMODE = { 1:'gerade', 2:'welle', 3:'zickzack' };
+
+    function dotPolyline(x,y,r){ const p=[]; for(let s=0;s<=7;s++){ const a=s/7*2*Math.PI;
+        p.push([x+r*Math.cos(a),y+r*Math.sin(a)]); } return p; }
 
     /* ─── Editor ─── */
-    function styleCell(btn, i) {
-        const t = CTYPE[GRID[i]] || CTYPE[0];
-        btn.className = 'cell' + (t.cls?' '+t.cls:'') + (i===_cursor?' active':'');
-        btn.textContent = t.sym;
-        btn.title = t.label + ' (Schritt ' + (i+1) + ')';
+    function styleCell(btn,i){
+        const t=CTYPE[GRID[i]]||CTYPE[0];
+        btn.className='cell'+(t.cls?' '+t.cls:'')+(i===_cursor?' active':'');
+        btn.textContent=t.sym; btn.title=t.label+' (Schritt '+(i+1)+')';
     }
-    function buildEditor(M, takt) {
-        _takt = takt;
-        const wrap = document.getElementById('seq-wrap'); wrap.innerHTML = '';
-        const nbars = Math.ceil(M/takt);
-        for (let bar=0; bar<nbars; bar++) {
-            const block = document.createElement('div'); block.className='bar-block';
-            const bnum = document.createElement('div'); bnum.className='bar-num';
-            bnum.textContent = 'T'+(bar+1); block.appendChild(bnum);
-            const bcells = document.createElement('div'); bcells.className='bar-cells';
-            const bnums = document.createElement('div'); bnums.className='beat-nums';
-            for (let beat=0; beat<takt; beat++) {
-                const i = bar*takt+beat; if (i>=M) break;
-                const b = document.createElement('button'); b.dataset.idx=i; styleCell(b,i);
-                b.addEventListener('mousedown', e=>e.preventDefault());
-                b.addEventListener('click', ()=>{ GRID[i]=(GRID[i]+1)%NUM_TYPES; _cursor=i;
+    function buildEditor(M,takt){
+        _takt=takt;
+        const wrap=document.getElementById('seq-wrap'); wrap.innerHTML='';
+        for(let bar=0;bar<Math.ceil(M/takt);bar++){
+            const block=document.createElement('div'); block.className='bar-block';
+            const bn=document.createElement('div'); bn.className='bar-num';
+            bn.textContent='T'+(bar+1); block.appendChild(bn);
+            const bc=document.createElement('div'); bc.className='bar-cells';
+            const bns=document.createElement('div'); bns.className='beat-nums';
+            for(let beat=0;beat<takt;beat++){
+                const i=bar*takt+beat; if(i>=M) break;
+                const b=document.createElement('button'); b.dataset.idx=i; styleCell(b,i);
+                b.addEventListener('mousedown',e=>e.preventDefault());
+                b.addEventListener('click',()=>{ GRID[i]=(GRID[i]+1)%NUM_TYPES; _cursor=i;
                     refreshEditor(); wrap.focus(); if(_appRef)_appRef.start(); });
-                bcells.appendChild(b);
-                const bn = document.createElement('div'); bn.className='beat-num';
-                bn.textContent = beat+1; bnums.appendChild(bn);
+                bc.appendChild(b);
+                const bnt=document.createElement('div'); bnt.className='beat-num';
+                bnt.textContent=beat+1; bns.appendChild(bnt);
             }
-            block.appendChild(bcells); block.appendChild(bnums); wrap.appendChild(block);
+            block.appendChild(bc); block.appendChild(bns); wrap.appendChild(block);
         }
     }
-    function refreshEditor() {
+    function refreshEditor(){
         document.querySelectorAll('#seq-wrap .cell').forEach((b,i)=>styleCell(b,i));
-        const act = document.querySelector('#seq-wrap .cell.active');
-        if (act) act.scrollIntoView({ block:'nearest', inline:'nearest' });
+        const a=document.querySelector('#seq-wrap .cell.active');
+        if(a) a.scrollIntoView({block:'nearest',inline:'nearest'});
     }
     function moveCursor(d){ _cursor=Math.max(0,Math.min(GRID.length-1,_cursor+d)); refreshEditor(); }
     function setType(t){ GRID[_cursor]=t; moveCursor(1); if(_appRef)_appRef.start(); }
-    function ensureGrid(M, takt) {
-        if (GRID.length !== M) {
-            const old = GRID.slice();
-            GRID = Array.from({length:M}, (_,i)=>old[i%old.length] ?? 0);
-            _cursor = Math.min(_cursor, M-1);
-        }
-        if (M!==_lastM || takt!==_lastTakt){ buildEditor(M,takt); _lastM=M; _lastTakt=takt; }
+    function ensureGrid(M,takt){
+        if(GRID.length!==M){ const old=GRID.slice();
+            GRID=Array.from({length:M},(_,i)=>old[i%old.length]??1);
+            _cursor=Math.min(_cursor,M-1); }
+        if(M!==_lastM||takt!==_lastTakt){ buildEditor(M,takt); _lastM=M; _lastTakt=takt; }
     }
-    document.getElementById('seq-wrap').addEventListener('keydown', e=>{
+    document.getElementById('seq-wrap').addEventListener('keydown',e=>{
         const key=e.key.toLowerCase();
-        if      (e.key==='ArrowRight'){ e.preventDefault(); moveCursor(1); }
-        else if (e.key==='ArrowLeft') { e.preventDefault(); moveCursor(-1); }
-        else if (e.key==='ArrowDown') { e.preventDefault(); moveCursor(_takt); }
-        else if (e.key==='ArrowUp')   { e.preventDefault(); moveCursor(-_takt); }
-        else if (key==='g'){ e.preventDefault(); setType(1); }
-        else if (key==='w'){ e.preventDefault(); setType(2); }
-        else if (key==='z'){ e.preventDefault(); setType(3); }
-        else if (key==='k'||key==='.'){ e.preventDefault(); setType(4); }
-        else if (key===' '||key==='r'){ e.preventDefault(); setType(0); }
-        else if (e.key==='Backspace'){ e.preventDefault(); GRID[_cursor]=0;
-            moveCursor(_cursor>0?-1:0); if(_appRef)_appRef.start(); }
+        if(e.key==='ArrowRight'){e.preventDefault();moveCursor(1);}
+        else if(e.key==='ArrowLeft'){e.preventDefault();moveCursor(-1);}
+        else if(e.key==='ArrowDown'){e.preventDefault();moveCursor(_takt);}
+        else if(e.key==='ArrowUp'){e.preventDefault();moveCursor(-_takt);}
+        else if(key==='g'||key==='l'){e.preventDefault();setType(1);}
+        else if(key==='w'){e.preventDefault();setType(2);}
+        else if(key==='z'){e.preventDefault();setType(3);}
+        else if(key==='k'||key==='.'){e.preventDefault();setType(4);}
+        else if(key==='f'||key===' '){e.preventDefault();setType(0);}
+        else if(e.key==='Backspace'){e.preventDefault();GRID[_cursor]=1;
+            moveCursor(_cursor>0?-1:0);if(_appRef)_appRef.start();}
     });
 
-    function dotPolyline(x,y,r){ const p=[]; for(let s=0;s<=7;s++){ const a=s/7*2*Math.PI;
-        p.push([x+r*Math.cos(a), y+r*Math.sin(a)]); } return p; }
+    /* ─── Spiral path builder ─── */
+    /* Returns array of (x,y) waypoints tracing a rectangular spiral inward.
+       Consecutive points are exactly cellPx apart (horizontal or vertical).
+       The path fills from outside→inside without lifting the pen. */
+    function buildSpiralWaypoints(X0, Y0, X1, Y1, cellPx) {
+        const pts = [[X0, Y0]];
+        /* Use integer cell grid; convert back to px when pushing */
+        const W = Math.floor((X1 - X0) / cellPx);
+        const H = Math.floor((Y1 - Y0) / cellPx);
+        const cw = (X1 - X0) / W;
+        const ch = (Y1 - Y0) / H;
+        const px = gx => X0 + gx * cw;
+        const py = gy => Y0 + gy * ch;
+
+        let left = 0, right = W, top = 0, bottom = H;
+        let cx = 0, cy = 0;
+
+        while (right > left && bottom > top) {
+            /* → right along top */
+            while (cx < right) { cx++; pts.push([px(cx), py(cy)]); }
+            top++;
+            /* ↓ down along right */
+            while (cy < bottom) { cy++; pts.push([px(cx), py(cy)]); }
+            right--;
+            if (left >= right) break;
+            /* ← left along bottom */
+            while (cx > left) { cx--; pts.push([px(cx), py(cy)]); }
+            bottom--;
+            if (top >= bottom) break;
+            /* ↑ up along left */
+            while (cy > top) { cy--; pts.push([px(cx), py(cy)]); }
+            left++;
+        }
+        return pts;
+    }
 
     /* ─── App ─── */
     const app = PR4App({
-        svgName: 'plotter-schraffur',
+        svgName: 'spirale',
         params: [
-            { key:'takt', label:'Takt', value:'4', options:[{value:'3',label:'3/4'},{value:'4',label:'4/4'}] },
-            { key:'takte', label:'Takte (Muster)', min:2, max:8, step:1, value:3 },
-            { key:'dir', label:'Richtung', value:'h', options:[
-                { value:'h', label:'Waagrecht (X)' },
-                { value:'v', label:'Senkrecht (Y)' },
-                { value:'d', label:'Diagonal (Intervall)' },
-            ]},
-            { key:'rows', label:'Zeilen', min:4, max:24, step:1, value:12 },
-            { key:'shift', label:'Versatz / Zeile', min:0, max:8, step:1, value:1 },
-            { key:'tex_amp',  label:'Textur-Tiefe %', min:5, max:60, step:5, value:30 },
-            { key:'tex_freq', label:'Textur-Wellen',  min:1, max:8, step:1, value:3 },
-            { key:'feed_draw', label:'Tempo malen mm/s', min:14, max:80, step:2, value:26 },
-            { key:'feed_travel', label:'Tempo Leerfahrt mm/s', min:60, max:200, step:10, value:130 },
-            { key:'grundton', label:'Grundton Hz', min:80, max:200, step:5, value:130 },
-            { key:'tonlage',  label:'Tonhub', min:0.5, max:4, step:0.25, value:1.5 },
+            { key:'takt',       label:'Takt',              value:'4', options:[{value:'3',label:'3/4'},{value:'4',label:'4/4'}] },
+            { key:'takte',      label:'Takte (Muster)',     min:2, max:8,   step:1,   value:3   },
+            { key:'cell_mm',    label:'Zellgröße mm',       min:8, max:30,  step:1,   value:14  },
+            { key:'tex_amp',    label:'Textur-Tiefe %',     min:5, max:60,  step:5,   value:28  },
+            { key:'tex_freq',   label:'Textur-Wellen',      min:1, max:8,   step:1,   value:4   },
+            { key:'feed_draw',  label:'Tempo malen mm/s',   min:14, max:80, step:2,   value:26  },
+            { key:'feed_travel',label:'Tempo pen-up mm/s',  min:60, max:200,step:10,  value:130 },
+            { key:'grundton',   label:'Grundton Hz',        min:80, max:200,step:5,   value:130 },
+            { key:'tonlage',    label:'Tonhub',             min:0.5,max:4,  step:.25, value:1.5 },
         ],
-        onRegen(rnd) {
-            for (let i=0;i<GRID.length;i++){
+        onRegen(rnd){
+            for(let i=0;i<GRID.length;i++){
                 const r=rnd();
-                GRID[i] = r<0.22?0 : r<0.5?1 : r<0.7?2 : r<0.88?3 : 4;
+                GRID[i]=r<0.10?0:r<0.50?1:r<0.70?2:r<0.88?3:4;
             }
-            buildEditor(GRID.length, _takt);
+            buildEditor(GRID.length,_takt);
         },
-        generate(api) {
-            const { values } = api;
+        generate(api){
+            const {values}=api;
             const takt  = parseInt(values.takt)||4;
             const takte = Math.round(values.takte);
             const M     = takt*takte;
-            const rows  = Math.round(values.rows);
-            const shift = Math.round(values.shift);
-            const dir   = values.dir;
+            const cellMM = Math.max(1, values.cell_mm);
+            const cellPx = cellMM * 5;           // PX_PER_MM = 5
             const fd = values.feed_draw, ft = values.feed_travel;
             _K = values.tonlage; _FB = values.grundton;
-
             ensureGrid(M, takt);
 
-            const X0 = 90, X1 = 910, Y0 = 150, Y1 = 905;
-            const lines = [], strokes = [];
-
-            /* geometry per direction: each row is a line of M cells.
-             * `along` advances the cell, `perp` is the texture axis. */
-            const rowH = (Y1 - Y0) / rows;
-            const cellLenH = (X1 - X0) / M;            // horizontal cell width
-            const cellLenV = (Y1 - Y0) / M;            // vertical cell height (for 'v')
-            let cellLen, texAmp, dotR, bpmLen;
-
-            if (dir === 'h') { cellLen = cellLenH; }
-            else if (dir === 'v') { cellLen = cellLenV; }
-            else { cellLen = Math.hypot(cellLenH, rowH) * 0.92; }
-            texAmp = cellLen * (values.tex_amp/100);
-            dotR   = Math.max(2.4, cellLen*0.11);
+            const X0=82, X1=918, Y0=150, Y1=905;
+            const bpm = Math.round(60 * fd / cellMM);
+            const texAmp = cellPx * (values.tex_amp / 100) * 0.45;
             const texFreq = Math.round(values.tex_freq);
-            bpmLen = cellLen / 5;                       // mm per cell
-            const bpm = Math.round(60 * fd / Math.max(0.5, bpmLen));
+            const KLACK = 4; // px lift
 
             document.getElementById('bpm-info').innerHTML =
-                `<b>~${bpm} BPM</b> · ${rows} Zeilen × ${M} Zellen · ` +
-                `Richtung ${dir==='h'?'waagrecht':dir==='v'?'senkrecht':'diagonal'} · Versatz ${shift}`;
+                `<b>~${bpm} BPM</b> · Zelle ${cellMM} mm · ${takt}/4 × ${takte} · ~${Math.floor((X1-X0)/cellPx)}×${Math.floor((Y1-Y0)/cellPx)} Zellen`;
 
-            /* For each row, walk M cells (boustrophedon to avoid return travel) */
-            for (let r = 0; r < rows; r++) {
-                const rev = (r % 2 !== 0);
-                /* base point + step vectors */
-                let baseX, baseY, stepX, stepY;
-                if (dir === 'v') {
-                    baseX = X0 + (X1 - X0) * (rows === 1 ? 0.5 : r/(rows-1));
-                    baseY = Y0; stepX = 0; stepY = cellLenV;
-                } else if (dir === 'd') {
-                    baseX = X0; baseY = Y0 + (r + 0.5) * rowH;
-                    const L = cellLen; stepX = L*Math.cos(-0.5); stepY = L*Math.sin(-0.5);
+            const lines = [], tour = [];
+            const waypts = buildSpiralWaypoints(X0, Y0, X1, Y1, cellPx);
+            let cellIdx = 0;
+
+            for (let i = 0; i < waypts.length - 1; i++) {
+                const [ax, ay] = waypts[i];
+                const [bx, by] = waypts[i + 1];
+                const type = GRID[cellIdx % M];
+                cellIdx++;
+
+                if (type === 0) {
+                    /* schnell: pen-up travel → high pitch, no mark */
+                    tour.push({pts:[[ax,ay],[bx,by]], pen:'up', feed:ft});
+                    lines.push({pts:[[ax,ay],[bx,by]], w:0.10});
+                } else if (type === 4) {
+                    /* klack: draw to mid, brief pen lift, continue */
+                    const mx=(ax+bx)/2, my=(ay+by)/2;
+                    tour.push({pts:[[ax,ay],[mx,my]], pen:'down', feed:fd});
+                    tour.push({pts:[[mx,my],[mx,my-KLACK]], pen:'up', feed:ft});
+                    tour.push({pts:[[mx,my-KLACK],[mx,my]], pen:'down', feed:ft});
+                    tour.push({pts:[[mx,my],[bx,by]], pen:'down', feed:fd});
+                    lines.push({pts:[[ax,ay],[bx,by]], w:1.0});
+                    lines.push({pts:dotPolyline(mx,my,Math.max(2,cellPx*0.08)), w:0.8, closed:true});
                 } else {
-                    baseX = X0; baseY = Y0 + (r + 0.5) * rowH; stepX = cellLenH; stepY = 0;
-                }
-
-                for (let ci = 0; ci < M; ci++) {
-                    const cell = rev ? M-1-ci : ci;
-                    const type = GRID[(cell + r*shift) % M];
-                    if (type === 0) continue;
-                    let ax = baseX + stepX*cell, ay = baseY + stepY*cell;
-                    let bx = baseX + stepX*(cell+1), by = baseY + stepY*(cell+1);
-                    if (rev) { const tx=ax,ty=ay; ax=bx; ay=by; bx=tx; by=ty; } // draw in travel dir
-                    const cx = (ax+bx)/2, cy = (ay+by)/2;
-
-                    if (type === 4) {
-                        const d = dotPolyline(cx, cy, dotR);
-                        strokes.push(d); lines.push({ pts:d, w:0.9, closed:true });
-                    } else {
-                        const seg = texturePath(ax,ay, bx,by, TEXMODE[type], texAmp, texFreq);
-                        strokes.push(seg); lines.push({ pts:seg, w:1.2 });
-                    }
+                    const mode = type===2?'welle':type===3?'zickzack':'linie';
+                    const seg = texturePath(ax,ay,bx,by,mode,texAmp,texFreq);
+                    tour.push({pts:seg, pen:'down', feed:fd});
+                    lines.push({pts:seg, w:1.2});
                 }
             }
+            _tour = tour;
 
-            _tour = PR4Audio.tourFromPolylines(strokes, fd, ft);
+            for(const st of PR4Font.textCentered('SPIRALE', 500, 60, 20))
+                lines.push({pts:st, w:1.0});
+            lines.push({pts:[[55,88],[945,88],[945,945],[55,945]], w:0.6, closed:true});
 
-            for (const st of PR4Font.textCentered('SCHRAFFUR-SEQUENCER', 500, 60, 18))
-                lines.push({ pts:st, w:1.0 });
-            lines.push({ pts:[[55,88],[945,88],[945,945],[55,945]], w:0.6, closed:true });
-
-            const cnt = t=>GRID.filter(x=>x===t).length;
-            api.status(`${cnt(1)}×▬ ${cnt(2)}×∿ ${cnt(3)}×⋀ ${cnt(4)}×● ${cnt(0)}×_ · `+
-                `${rows}×${M} · ~${bpm} BPM · ${strokes.length} Striche`);
+            const cnt = t => GRID.filter(x=>x===t).length;
+            api.status(`${cnt(1)}×— ${cnt(2)}×∿ ${cnt(3)}×⋀ ${cnt(4)}×● ${cnt(0)}×↑ · `+
+                `${M} Muster · ~${bpm} BPM · ${waypts.length-1} Zellen gesamt`);
             api.done(lines);
         }
     });
@@ -287,18 +288,18 @@
     const dot = document.getElementById('pen-dot');
     const canvas = document.getElementById('canvas');
     function showDot(x,y,pen){
-        if (x==null){ dot.style.display='none'; return; }
-        const rect = canvas.getBoundingClientRect(), sc = rect.width/1000;
+        if(x==null){dot.style.display='none';return;}
+        const rect=canvas.getBoundingClientRect(),sc=rect.width/1000;
         dot.style.display='block'; dot.style.left=(x*sc)+'px'; dot.style.top=(y*sc)+'px';
-        dot.style.background = pen==='up' ? '#999' : '#cc2200';
+        dot.style.background=pen==='up'?'#999':'#cc2200';
     }
     const playBtn = document.getElementById('play');
     let _playing = false;
-    function endPlay(){ _playing=false; playBtn.textContent='▶ Anhören'; dot.style.display='none'; }
-    playBtn.addEventListener('click', ()=>{
-        if (_playing){ PR4Audio.stop(); return; }
+    function endPlay(){_playing=false;playBtn.textContent='▶ Anhören';dot.style.display='none';}
+    playBtn.addEventListener('click',()=>{
+        if(_playing){PR4Audio.stop();return;}
         _playing=true; playBtn.textContent='■ Stop';
-        PR4Audio.play(_tour, { freqBase:_FB, freqPerMmS:_K, onPos:showDot, onEnd:endPlay });
+        PR4Audio.play(_tour,{freqBase:_FB,freqPerMmS:_K,onPos:showDot,onEnd:endPlay});
     });
     </script>
 </body>
