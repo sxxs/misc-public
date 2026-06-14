@@ -729,9 +729,9 @@
     jede Achse hat ihren eigenen Schrittmotor, dessen Tonhöhe von der Geschwindigkeit
     <i>entlang dieser Achse</i> abhängt (X links, Y rechts im Stereobild). Drei
     Editoren-Ansätze: Step-Sequencer auf raumfüllender Kurve (<b>Komponist</b>),
-    2D-Drum-Machine (<b>Schlagzeug</b>) und texturierte Schraffur (<b>Schraffur</b>).
+    durchgehende Linie (<b>Welle</b>) und Spirale (<b>Spirale</b>).
     Texturen — gerade, Welle, Zickzack — verändern den Klang: ein Zickzack lässt den
-    Quer-Motor mitbrummen.</p>
+    Quer-Motor mitbrummen. Kein Rückweg, keine Leerstrecken — jede Bewegung klingt.</p>
     <div class="grid">
         <a href="plotter-komponist.html">
             <div class="num">VARIANTE 101</div>
@@ -743,19 +743,19 @@
         </a>
         <a href="plotter-schlagzeug.html">
             <div class="num">VARIANTE 102</div>
-            <div class="name">Plotter-Schlagzeug — Drum-Machine</div>
-            <div class="desc">2D-Step-Sequencer wie eine TR-808: jede Zeile ein
-            Instrument (X-Strich links, Y-Strich rechts, Diagonale, Kreis, Klack), jede
-            Spalte ein Schlag. Der Plotter liest Spalte für Spalte mit stetem Grundpuls —
-            das Bild wird zur Lochkarten-Partitur.</div>
+            <div class="name">Laufende Welle — Mäander-Sequencer</div>
+            <div class="desc">Eine einzige durchgehende Linie mäandert über das Blatt —
+            Stift fast immer unten. Zeilen wechseln die Richtung (Boustrophedon), Randstücke
+            verbinden sie (Y-Ton). Textur pro Zelle bestimmt den Klang: Linie, Welle,
+            Zickzack, Klack oder Schnell (Pen-up = hoher Ton).</div>
         </a>
         <a href="plotter-schraffur.html">
             <div class="num">VARIANTE 103</div>
-            <div class="name">Schraffur-Sequencer — Textur-Klang</div>
-            <div class="desc">Klassische Schraffur füllt das Blatt; jeder Strich ist ein
-            Rhythmus aus Textur-Zellen: gerade klingt klar, Welle gibt Vibrato, Zickzack
-            brummt. Waagrecht = X-Ton, senkrecht = Y, diagonal = Intervall. Versatz lässt
-            das Muster diagonal wandern.</div>
+            <div class="name">Spirale — Spiral-Sequencer</div>
+            <div class="desc">Eine rechteckige Spirale von außen nach innen — kein Rückweg,
+            kein Pen-up-Sprung. An den Ecken wechselt der Ton von X (links) zu Y (rechts).
+            Das Muster läuft als Loop durch alle Zellen: Linie, Welle, Zickzack, Klack,
+            Schnell.</div>
         </a>
         <a href="motoren-duett.html">
             <div class="num">VARIANTE 100</div>
