@@ -727,16 +727,35 @@
     <p class="intro" style="margin-top:2rem">Runde 8 — <b>Klang &amp; Interaktion</b>:
     Plots, die beim Plotten Musik machen. Der Klang wird <i>physikalisch</i> simuliert:
     jede Achse hat ihren eigenen Schrittmotor, dessen Tonhöhe von der Geschwindigkeit
-    <i>entlang dieser Achse</i> abhängt (X links, Y rechts im Stereobild). Beim
-    <b>Komponist</b> gibst du die Musik vor (malen = tief, Leerfahrt = hoch, Tippen =
-    Klack) und bekommst das bildfüllende Muster, das genau diese Musik erzeugt.</p>
+    <i>entlang dieser Achse</i> abhängt (X links, Y rechts im Stereobild). Drei
+    Editoren-Ansätze: Step-Sequencer auf raumfüllender Kurve (<b>Komponist</b>),
+    2D-Drum-Machine (<b>Schlagzeug</b>) und texturierte Schraffur (<b>Schraffur</b>).
+    Texturen — gerade, Welle, Zickzack — verändern den Klang: ein Zickzack lässt den
+    Quer-Motor mitbrummen.</p>
     <div class="grid">
         <a href="plotter-komponist.html">
             <div class="num">VARIANTE 101</div>
-            <div class="name">Plotter-Komponist — Musik-Editor</div>
-            <div class="desc">Komponiere eine Tonfolge im Step-Editor; daraus entsteht
-            ein bildfüllendes Linien-/Punktmuster (Schlange oder Spirale), das beim Plotten
-            genau diese Musik spielt. Verankernde Punkte sorgen für ehrliche Plotter-Wege.</div>
+            <div class="name">Plotter-Komponist — Kurven-Sequencer</div>
+            <div class="desc">Step-Sequencer (Takte × Schläge) auf einer wählbaren
+            raumfüllenden Kurve (Hilbert, Moore, Gosper, Peano) — alle Segmente gleich
+            lang, also gleichmäßige Notendauern. Textur (Welle/Zickzack) und Staccato-
+            Tastgrad gegen den Drone. Malen, Diagonale, Kreis, Klack, Pause.</div>
+        </a>
+        <a href="plotter-schlagzeug.html">
+            <div class="num">VARIANTE 102</div>
+            <div class="name">Plotter-Schlagzeug — Drum-Machine</div>
+            <div class="desc">2D-Step-Sequencer wie eine TR-808: jede Zeile ein
+            Instrument (X-Strich links, Y-Strich rechts, Diagonale, Kreis, Klack), jede
+            Spalte ein Schlag. Der Plotter liest Spalte für Spalte mit stetem Grundpuls —
+            das Bild wird zur Lochkarten-Partitur.</div>
+        </a>
+        <a href="plotter-schraffur.html">
+            <div class="num">VARIANTE 103</div>
+            <div class="name">Schraffur-Sequencer — Textur-Klang</div>
+            <div class="desc">Klassische Schraffur füllt das Blatt; jeder Strich ist ein
+            Rhythmus aus Textur-Zellen: gerade klingt klar, Welle gibt Vibrato, Zickzack
+            brummt. Waagrecht = X-Ton, senkrecht = Y, diagonal = Intervall. Versatz lässt
+            das Muster diagonal wandern.</div>
         </a>
         <a href="motoren-duett.html">
             <div class="num">VARIANTE 100</div>
