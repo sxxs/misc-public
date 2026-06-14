@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>104 · Botschaft — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+    <style>
+        .msg-wrap { margin:.1rem 0 .25rem; }
+        .msg-wrap label { display:block; font-size:.75rem; color:#555; margin-bottom:.25rem; font-weight:600; }
+        #msg { width:100%; box-sizing:border-box; font-family:monospace; font-size:.9rem;
+               padding:7px 9px; border:1px solid #ccc; border-radius:4px; resize:none;
+               background:#f8f8f8; line-height:1.4; }
+        #msg:focus { outline:none; border-color:#e96000; background:#fff; }
+        .capacity { font-size:.70rem; color:#666; margin:.15rem 0 .1rem; }
+        .capacity b { color:#222; }
+        .capacity.warn b { color:#c80; }
+        .capacity.over  b { color:#c00; }
+        .bit-preview { font-family:monospace; font-size:.62rem; line-height:1.7;
+                       color:#aaa; margin:.1rem 0 .35rem; word-break:break-all; }
+        .bit-preview .b0 { color:#1a5a9a; }
+        .bit-preview .b1 { color:#c05000; }
+        .bit-preview .bk { color:#c00; margin:0 1px; }
+        .bpm-info { font-size:.73rem; color:#555; margin:.15rem 0 .3rem; font-variant-numeric:tabular-nums; }
+        .bpm-info b { color:#222; }
+        .legend { font-size:.76rem; color:#555; margin:.1rem 0 .25rem; line-height:1.7; }
+        .sw { padding:0 3px; border-radius:2px; font-weight:bold; }
+    </style>
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>104 · Botschaft</h1></header>
+    <main>
+        <section class="paper" style="position:relative">
+            <canvas id="canvas"></canvas>
+            <div id="pen-dot" style="display:none;position:absolute;width:12px;height:12px;
+                border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);
+                box-shadow:0 0 4px rgba(0,0,0,.4)"></div>
+        </section>
+        <section class="panel">
+            <div class="msg-wrap">
+                <label>Botschaft eingeben (ASCII → Bits):</label>
+                <textarea id="msg" rows="2" maxlength="128" spellcheck="false">Hallo Welt</textarea>
+            </div>
+            <div id="capacity" class="capacity">…</div>
+            <div id="bit-preview" class="bit-preview">…</div>
+            <div id="bpm-info" class="bpm-info">…</div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="play">▶ Anhören</button>
+                <button id="regen" class="primary">🎲 Demo-Text</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint" id="hint-text">…</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+
+    /* ─── L-system curves ─── */
+    const CURVES = {
+        hilbert: { angle:90, draw:'F', axiom:'A',
+            rules:{ A:'-BF+AFA+FB-', B:'+AF-BFB-FA+' }, iters:o=>o },
+        moore:   { angle:90, draw:'F', axiom:'LFL+F+LFL',
+            rules:{ L:'-RF+LFL+FR-', R:'+LF-RFR-FL+' }, iters:o=>o },
+        peano:   { angle:90, draw:'F', axiom:'L',
+            rules:{ L:'LFRFL-F-RFLFR+F+LFRFL', R:'RFLFR+F+LFRFL-F-RFLFR' }, iters:o=>Math.min(o,3) },
+        gosper:  { angle:60, draw:'AB', axiom:'A',
+            rules:{ A:'A-B--B+A++AA+B-', B:'+A-BB--B-A++A+B' }, iters:o=>Math.min(o,3) },
+    };
+    function expandL(def,n){ let s=def.axiom;
+        for(let k=0;k<n;k++){let o='';for(const c of s)o+=(def.rules[c]??c);s=o;}return s; }
+    function turtlePts(def,n){
+        const str=expandL(def,n),a=def.angle*Math.PI/180;
+        let x=0,y=0,ang=0;const pts=[[0,0]];
+        for(const ch of str){
+            if(def.draw.indexOf(ch)>=0){x+=Math.cos(ang);y+=Math.sin(ang);pts.push([x,y]);}
+            else if(ch==='+')ang+=a;else if(ch==='-')ang-=a;}
+        return pts;}
+    function curvePoints(name,order){
+        const def=CURVES[name]||CURVES.hilbert;
+        let it=def.iters(order); let pts=turtlePts(def,it);
+        while(pts.length>2600&&it>1) pts=turtlePts(def,--it);
+        let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+        for(const[px,py]of pts){if(px<x0)x0=px;if(px>x1)x1=px;if(py<y0)y0=py;if(py>y1)y1=py;}
+        const w=x1-x0||1,h=y1-y0||1,m=115,box=1000-2*m,sc=box/Math.max(w,h);
+        const ox=m+(box-w*sc)/2,oy=m+(box-h*sc)/2;
+        return pts.map(([px,py])=>[ox+(px-x0)*sc,oy+(py-y0)*sc]);}
+
+    /* ─── Symbols: return array of polylines for one bit cell ─── */
+    function makeSymbol(type, cx, cy, sz) {
+        const r = sz * 0.40;
+        if (type === 'strich')  return [[[cx-r,cy],[cx+r,cy]]];
+        if (type === 'senkrecht') return [[[cx,cy-r],[cx,cy+r]]];
+        if (type === 'diagonal') return [[[cx-r,cy+r],[cx+r,cy-r]]];
+        if (type === 'kreuz')   return [[[cx-r,cy],[cx+r,cy]],[[cx,cy-r],[cx,cy+r]]];
+        if (type === 'kreis') {
+            const pts=[];for(let i=0;i<=28;i++){const a=i/28*2*Math.PI;pts.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);}
+            return [pts];
+        }
+        if (type === 'stern') {  /* 6 radial spokes from center */
+            const pts=[];
+            for(let i=0;i<6;i++){const a=i*Math.PI/3;pts.push([cx,cy],[cx+r*Math.cos(a),cy+r*Math.sin(a)]);}
+            return [pts];
+        }
+        if (type === 'punkt') {
+            const pts=[];for(let i=0;i<=8;i++){const a=i/8*2*Math.PI;pts.push([cx+r*0.18*Math.cos(a),cy+r*0.18*Math.sin(a)]);}
+            return [pts];
+        }
+        return [];
+    }
+
+    /* ─── Isometric tile faces ─── */
+    /* Grid: col c = char index (→ right+down), row r = bit index (→ left+down).
+     * Viewer looks from south-east. Raised tiles show top + two south-facing walls. */
+    function isoFaces(c, r, h, tW, tH, ox, oy) {
+        const x = ox + c * tW/2 + (7-r) * tW/2;
+        const y = oy + c * tH/2 + (7-r) * tH/2;  // r=0 (MSB) at back, r=7 (LSB) at front
+        // Wait - let me use: c increases left→right, r increases top→bottom in the iso view
+        // Let me redo: column c = char, goes right&down; row r = bit, goes left&down
+        // So tile (c,r): screenX = ox + c*tW - r*tW/2; screenY = oy + c*tH/2 + r*tH/2
+        const sx = ox + c * tW - r * tW/2;
+        const sy = oy + c * tH/2 + r * tH/2;
+        const lift = h * tH * 1.4; // how high the raised tile is
+
+        /* top face rhombus (raised by lift) */
+        const N = [sx,       sy - lift];
+        const E = [sx+tW/2,  sy+tH/2 - lift];
+        const S = [sx,       sy+tH - lift];
+        const W = [sx-tW/2,  sy+tH/2 - lift];
+        /* base level for walls */
+        const Sb = [sx,      sy+tH];
+        const Wb = [sx-tW/2, sy+tH/2];
+        const Eb = [sx+tW/2, sy+tH/2];
+
+        const faces = [[N, E, S, W, N]]; // top rhombus (closed)
+        if (h > 0) {
+            faces.push([W, S, Sb, Wb, W]);  // left wall
+            faces.push([S, E, Eb, Sb, S]);  // right wall
+        }
+        return faces;
+    }
+
+    /* ─── Dot ring for klack marker ─── */
+    function dotRing(x,y,r){ const p=[];
+        for(let i=0;i<=8;i++){const a=i/8*2*Math.PI;p.push([x+r*Math.cos(a),y+r*Math.sin(a)]);}
+        return p; }
+
+    /* ─── Bit info display ─── */
+    let _values = {};
+    function updateBitPreview() {
+        const text = document.getElementById('msg').value;
+        const mode = _values.darstellung||'linie';
+        let capacity;
+        if (mode === 'linie') {
+            const cp = curvePoints(_values.curve||'hilbert', parseInt(_values.order)||4);
+            capacity = Math.floor((cp.length-1)/8);
+        } else {
+            capacity = 64; // symbol/iso modes show up to 64 chars on canvas
+        }
+
+        const capEl = document.getElementById('capacity');
+        const over = text.length > capacity;
+        capEl.className = 'capacity'+(over?' over':text.length>capacity*0.75?' warn':'');
+        capEl.innerHTML = `<b>${text.length}</b> Zeichen · <b>${text.length*8}</b> Bits`+
+            (mode==='linie'?` · Hilbert Ord.${_values.order||4}: <b>${capacity}</b> passen`:'  (max 64)  ')+
+            (over?` · ⚠ <b>${text.length-capacity} zu viele</b>`:'');
+
+        const showN = Math.min(text.length, Math.min(capacity, 20));
+        let html = '';
+        for(let ci=0;ci<showN;ci++){
+            if(ci>0) html+=`<span class="bk">·</span>`;
+            const code=text.charCodeAt(ci);
+            const ch=text[ci]===' '?'_':text[ci];
+            html+=`<span style="opacity:.5">${ch.replace('<','&lt;')}=</span>`;
+            for(let b=7;b>=0;b--) html+=`<span class="b${(code>>b)&1}">${(code>>b)&1}</span>`;
+        }
+        if(text.length>showN) html+=`<span style="opacity:.4"> …+${text.length-showN}</span>`;
+        document.getElementById('bit-preview').innerHTML = html||'(leer)';
+    }
+
+    const DEMOS = ['Hallo Welt','42','Kunst kommt von Können','Plot Runde 4',
+        'Dein Muster','Plotter','Ich denke also bin ich','bits','ASCII','wiai'];
+
+    const HINTS = {
+        linie: 'Jedes Bit = ein Segment der raumfüllenden Kurve. <b>0-Bit</b> = langsam/tief/dick, <b>1-Bit</b> = schnell/hoch/dünn. Klack zwischen Zeichen. Gleicher Text = immer dasselbe Bild.',
+        symbole: 'Jedes Bit bekommt ein Symbol in einem Raster (Zeichen = Spalten, 8 Bits = Zeilen). <b>0-Bit</b> und <b>1-Bit</b> haben verschiedene Formen — Punkt, Strich, Kreis, Stern. Jedes Symbol klingt anders: Kreis = beide Motoren singen, Stern = Schreibkopf zack-zack-zack.',
+        iso: '8 Bits pro Zeichen = 8 isometrische Kacheln pro Spalte. <b>0-Bit</b> = flache Kachel (nur Rahmen), <b>1-Bit</b> = hohes Rechteck (3D-Box). Das Ergebnis ist eine Bit-Skyline — jedes Wort hat seine eigene Silhouette.',
+    };
+
+    const PARAMS = [
+        { key:'darstellung', label:'Darstellung', value:'linie', options:[
+            {value:'linie',    label:'Linie (Hilbert-Kurve)'},
+            {value:'symbole',  label:'Symbole (Raster)'},
+            {value:'iso',      label:'Isometrisch (3D-Kacheln)'},
+        ]},
+        { key:'sym_0', label:'0-Bit Symbol', value:'strich', options:[
+            {value:'strich',    label:'— Strich'},
+            {value:'senkrecht', label:'| Senkrecht'},
+            {value:'diagonal',  label:'╲ Diagonal'},
+            {value:'punkt',     label:'∙ Punkt'},
+        ]},
+        { key:'sym_1', label:'1-Bit Symbol', value:'kreis', options:[
+            {value:'kreis',  label:'○ Kreis'},
+            {value:'stern',  label:'✱ Stern (6 Strahlen)'},
+            {value:'kreuz',  label:'+ Kreuz'},
+            {value:'diagonal',label:'╲ Diagonal'},
+        ]},
+        { key:'cell_mm',    label:'Zellgröße mm',          min:8, max:28, step:1, value:16 },
+        { key:'iso_lift',   label:'Iso: Höhe der 1-Kachel',min:0.5,max:3,step:.25,value:1.4},
+        { key:'curve', label:'Kurve (Linie-Modus)', value:'hilbert', options:[
+            {value:'hilbert',label:'Hilbert'},{value:'moore',label:'Moore'},
+            {value:'gosper', label:'Gosper'},{value:'peano', label:'Peano'},
+        ]},
+        { key:'order',       label:'Ordnung (Linie)',       min:2, max:5, step:1, value:4 },
+        { key:'feed_0',      label:'Tempo 0-Bit mm/s',      min:8, max:60,  step:2, value:16  },
+        { key:'feed_1',      label:'Tempo 1-Bit mm/s',      min:20,max:200, step:5, value:80  },
+        { key:'feed_travel', label:'Tempo pen-up mm/s',     min:60,max:200, step:10,value:150 },
+        { key:'grundton',    label:'Grundton Hz',           min:80,max:200, step:5, value:110 },
+        { key:'tonlage',     label:'Tonhub',                min:0.5,max:6,  step:.25,value:2.5},
+    ];
+    const getDef = k => PARAMS.find(p=>p.key===k);
+
+    let _tour = [], _appRef = null;
+
+    const app = PR4App({
+        svgName: 'botschaft',
+        params: PARAMS,
+        onRegen(rnd) {
+            const idx = Math.floor(rnd() * DEMOS.length);
+            document.getElementById('msg').value = DEMOS[idx];
+        },
+        generate(api) {
+            _values = api.values;
+            updateBitPreview();
+
+            const text   = document.getElementById('msg').value;
+            const mode   = api.values.darstellung || 'linie';
+            const fd0    = api.values.feed_0;
+            const fd1    = api.values.feed_1;
+            const ft     = api.values.feed_travel;
+            const KLACK  = 4;     // px pen lift
+            const lines  = [], tour = [];
+
+            document.getElementById('hint-text').innerHTML = HINTS[mode] || '';
+
+            /* ── MODE: LINIE ─────────────────────────────────────── */
+            if (mode === 'linie') {
+                const cp     = curvePoints(api.values.curve, parseInt(api.values.order)||4);
+                const maxCh  = Math.floor((cp.length-1)/8);
+                const safe   = text.slice(0, maxCh);
+                const segPx  = Math.hypot(cp[1][0]-cp[0][0], cp[1][1]-cp[0][1]);
+                const segMM  = segPx/5;
+                document.getElementById('bpm-info').innerHTML =
+                    `0-Bit <b>~${Math.round(60*fd0/segMM)} BPM</b> (~${Math.round(1000*segMM/fd0)}ms) · `+
+                    `1-Bit <b>~${Math.round(60*fd1/segMM)} BPM</b> (~${Math.round(1000*segMM/fd1)}ms)`;
+
+                let si = 0;
+                for(let ci=0; ci<safe.length; ci++){
+                    if(ci>0 && si<cp.length){
+                        const [kx,ky]=cp[si];
+                        tour.push({pts:[[kx,ky],[kx,ky-KLACK]],pen:'up',feed:ft});
+                        tour.push({pts:[[kx,ky-KLACK],[kx,ky]],pen:'down',feed:ft});
+                        lines.push({pts:dotRing(kx,ky,Math.max(3,segPx*0.12)),w:.8,closed:true});
+                    }
+                    const code=safe.charCodeAt(ci);
+                    for(let b=7;b>=0;b--){
+                        if(si>=cp.length-1) break;
+                        const bit=(code>>b)&1;
+                        const p0=cp[si],p1=cp[si+1];
+                        tour.push({pts:[p0.slice(),p1.slice()],pen:'down',feed:bit?fd1:fd0});
+                        lines.push({pts:[p0.slice(),p1.slice()],w:bit?0.45:2.2});
+                        si++;
+                    }
+                }
+                if(si<cp.length-1) lines.push({pts:cp.slice(si),w:0.08});
+                _tour = tour;
+                const ones=safe.split('').reduce((n,c)=>{let v=c.charCodeAt(0),k=0;for(let b=0;b<8;b++)k+=(v>>b)&1;return n+k;},0);
+                api.status(`"${safe}" · ${safe.length} Zeichen · ${safe.length*8-ones}×0 ${ones}×1 · ${safe.length-1} Klacks`+
+                    (text.length>maxCh?` · ⚠ ${text.length-maxCh} abgeschnitten`:''));
+
+            /* ── MODE: SYMBOLE ───────────────────────────────────── */
+            } else if (mode === 'symbole') {
+                const safe = text.slice(0, 64);
+                const nCols = safe.length, nRows = 8;
+                /* Fit into canvas: square cells */
+                const X0=90,X1=910,Y0=155,Y1=910;
+                const cellW=(X1-X0)/nCols, cellH=(Y1-Y0)/nRows;
+                const cellSz = Math.min(cellW, cellH);
+                const ox = (X0+X1)/2 - nCols*cellSz/2;
+                const oy = (Y0+Y1)/2 - nRows*cellSz/2;
+                const sym0 = api.values.sym_0||'strich';
+                const sym1 = api.values.sym_1||'kreis';
+                const segMM = cellSz * 0.8 / 5;
+                document.getElementById('bpm-info').innerHTML =
+                    `Raster ${nCols}×${nRows} · Zelle ${(cellSz/5).toFixed(1)} mm · `+
+                    `0-Bit: <b>${sym0}</b> · 1-Bit: <b>${sym1}</b>`;
+
+                for(let ci=0; ci<safe.length; ci++){
+                    const code = safe.charCodeAt(ci);
+                    const cx0 = ox + (ci+0.5)*cellSz;
+                    for(let r=0; r<8; r++){
+                        const bit = (code>>(7-r))&1;
+                        const cy0 = oy + (r+0.5)*cellSz;
+                        const syms = makeSymbol(bit?sym1:sym0, cx0, cy0, cellSz);
+                        let first = true;
+                        for(const poly of syms){
+                            if(poly.length<2) continue;
+                            if(first && ci>0 && r===0){
+                                /* klack at start of new char */
+                                tour.push({pts:[[poly[0][0],poly[0][1]],[poly[0][0],poly[0][1]-KLACK]],pen:'up',feed:ft});
+                                tour.push({pts:[[poly[0][0],poly[0][1]-KLACK],[poly[0][0],poly[0][1]]],pen:'down',feed:ft});
+                                lines.push({pts:dotRing(cx0,cy0,cellSz*0.08),w:.7,closed:true});
+                            }
+                            tour.push({pts:poly,pen:'down',feed:bit?fd1:fd0});
+                            lines.push({pts:poly, w:bit?0.8:1.8});
+                            first=false;
+                        }
+                    }
+                }
+                _tour = tour;
+                api.status(`"${safe}" · ${nCols}×${nRows} Raster · 0="${sym0}" 1="${sym1}"`);
+
+            /* ── MODE: ISOMETRISCH ───────────────────────────────── */
+            } else {
+                const safe  = text.slice(0, 40);
+                const nCh   = safe.length;
+                const tW    = (api.values.cell_mm||16) * 5;  // tile width in px
+                const tH    = tW * 0.5;                       // isometric height (2:1 ratio)
+                const lift  = api.values.iso_lift||1.4;
+
+                /* Grid spans: cols go +x+y direction, rows go -x+y direction.
+                 * Bounding box: width = (nCh + 8) * tW/2, height = (nCh + 8) * tH/2 + lift*tH */
+                const gridW = (nCh + 8) * tW/2;
+                const gridH = (nCh + 8) * tH/2 + lift * tH;
+                const ox = 500 - gridW/2 + 8 * tW/2;  // origin for tile (0,0)
+                const oy = 500 - gridH/2;
+
+                document.getElementById('bpm-info').innerHTML =
+                    `Isometrisch · ${nCh} Zeichen · ${nCh}×8 Kacheln · Kachel ${tW/5}×${tH/5} mm`;
+
+                /* Build tiles list and sort back→front (c+r ascending = draw back first) */
+                const tiles = [];
+                for(let c=0; c<nCh; c++){
+                    const code = safe.charCodeAt(c);
+                    for(let r=0; r<8; r++){
+                        const bit = (code>>(7-r))&1;
+                        tiles.push({c, r, h:bit?lift:0});
+                    }
+                }
+                tiles.sort((a,b)=>(a.c+a.r)-(b.c+b.r));
+
+                for(const {c, r, h} of tiles){
+                    const faces = isoFaces(c, r, h, tW, tH, ox, oy);
+                    for(const f of faces) lines.push({pts:f, w:h>0?1.4:0.55, closed:false});
+                }
+
+                /* Tour: traverse column by column (char by char), row by row within each char */
+                let prevPt = null;
+                for(let c=0; c<nCh; c++){
+                    const code = safe.charCodeAt(c);
+                    /* klack at start of each char (except first) */
+                    if(c>0 && prevPt){
+                        tour.push({pts:[prevPt,[prevPt[0],prevPt[1]-KLACK]],pen:'up',feed:ft});
+                        tour.push({pts:[[prevPt[0],prevPt[1]-KLACK],prevPt],pen:'down',feed:ft});
+                    }
+                    /* traverse bits in this column back→front (r=0 first = back of iso) */
+                    for(let r=0; r<8; r++){
+                        const bit = (code>>(7-r))&1;
+                        const h   = bit?lift:0;
+                        const fcs = isoFaces(c, r, h, tW, tH, ox, oy);
+                        for(const fc of fcs){
+                            if(fc.length<2) continue;
+                            if(prevPt) tour.push({pts:[prevPt,fc[0]],pen:'up',feed:ft});
+                            tour.push({pts:fc,pen:'down',feed:bit?fd1:fd0});
+                            prevPt = fc[fc.length-1];
+                        }
+                    }
+                }
+                _tour = tour;
+                api.status(`"${safe}" · Isometrisch · ${nCh}×8 Kacheln · ${nCh-1} Klacks`);
+            }
+
+            /* common */
+            _tour._FB = api.values.grundton;
+            _tour._K  = api.values.tonlage;
+            for(const st of PR4Font.textCentered('BOTSCHAFT',500,62,20))
+                lines.push({pts:st,w:1.0});
+            lines.push({pts:[[55,88],[945,88],[945,945],[55,945]],w:0.6,closed:true});
+            api.done(lines);
+        }
+    });
+    _appRef = app;
+
+    const _debRegen = PR4.debounce(()=>{ updateBitPreview(); _appRef.start(); }, 280);
+    document.getElementById('msg').addEventListener('input', _debRegen);
+
+    /* ─── Playback ─── */
+    const dot = document.getElementById('pen-dot');
+    const canvas = document.getElementById('canvas');
+    function showDot(x,y,pen){
+        if(x==null){dot.style.display='none';return;}
+        const rect=canvas.getBoundingClientRect(),sc=rect.width/1000;
+        dot.style.display='block';dot.style.left=(x*sc)+'px';dot.style.top=(y*sc)+'px';
+        dot.style.background=pen==='up'?'#999':'#cc2200';
+    }
+    const playBtn=document.getElementById('play');
+    let _playing=false;
+    function endPlay(){_playing=false;playBtn.textContent='▶ Anhören';dot.style.display='none';}
+    playBtn.addEventListener('click',()=>{
+        if(_playing){PR4Audio.stop();return;}
+        _playing=true;playBtn.textContent='■ Stop';
+        PR4Audio.play(_tour,{freqBase:_tour._FB||110,freqPerMmS:_tour._K||2.5,
+            onPos:showDot,onEnd:endPlay});
+    });
+    </script>
+</body>
+</html>
