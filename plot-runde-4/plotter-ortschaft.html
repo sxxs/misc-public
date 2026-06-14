@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>106 · Ortschaft — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+    <style>
+        .field-wrap { margin:.15rem 0 .35rem; }
+        .field-wrap label { display:block; font-size:.75rem; color:#555; margin-bottom:.25rem; font-weight:600; }
+        .field-wrap input[type=text] { width:100%; box-sizing:border-box; font-family:monospace;
+               font-size:.9rem; padding:7px 9px; border:1px solid #ccc; border-radius:4px;
+               background:#f8f8f8; }
+        .field-wrap input[type=text]:focus { outline:none; border-color:#e96000; background:#fff; }
+        .info { font-size:.73rem; color:#555; margin:.15rem 0 .3rem; font-variant-numeric:tabular-nums; }
+        .info b { color:#222; }
+        .legend { font-size:.76rem; color:#555; margin:.1rem 0 .25rem; line-height:1.7; }
+        .sw { display:inline-block; width:11px; height:11px; border-radius:50%;
+              vertical-align:-1px; margin-right:1px; }
+    </style>
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>106 · Ortschaft</h1></header>
+    <main>
+        <section class="paper" style="position:relative">
+            <canvas id="canvas"></canvas>
+            <div id="pen-dot" style="display:none;position:absolute;width:12px;height:12px;
+                border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);
+                box-shadow:0 0 4px rgba(0,0,0,.4)"></div>
+        </section>
+        <section class="panel">
+            <div class="field-wrap">
+                <label>Ortsname (erscheint im Vordergrund in Plottersch­rift):</label>
+                <input type="text" id="ortsname" maxlength="24" value="Bamberg" spellcheck="false">
+            </div>
+            <div class="field-wrap">
+                <label>Wort (färbt Dots als Bits: 0 = schwarz, 1 = Akzent):</label>
+                <input type="text" id="wort" maxlength="64" value="Frankenland" spellcheck="false">
+            </div>
+            <p class="legend">
+                <span class="sw" style="background:#16213e"></span> 0-Bit (schwarzer Stift) ·
+                <span class="sw" id="lg1" style="background:#cc2200"></span> 1-Bit (Farbstift)</p>
+            <div id="info" class="info">…</div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="play">▶ Anhören</button>
+                <button id="regen" class="primary">🎲 Demo-Ort</button>
+                <button id="download">⬇ SVG (2 Farben)</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Google-Earth-Blick: <b>gestippeltes Höhenprofil</b> mit leicht
+            gekrümmter Horizontlinie und Ortsname in Plotter-Schrift im Vordergrund. Die
+            Punkt-Dichte bildet Bergkämme (dichter) und Täler (dünner) ab — Lichtstimmung
+            durch Hangneigung. Jeder Dot bekommt ein Bit des Wortes —
+            <b>0 → schwarzer Stift, 1 → Farbstift</b>. SVG exportiert zwei Farb-Gruppen.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+
+    const ACCENTS = { rot:'#cc2200', blau:'#1b5fbf', gruen:'#1e8a4c', magenta:'#c01b8a', orange:'#e07000' };
+    const BLACK = '#16213e';
+
+    const DEMOS = [
+        { name:'Bamberg',     lat:49.9, lon:10.9, wort:'Frankenland', gel:'huegel'  },
+        { name:'Berlin',      lat:52.5, lon:13.4, wort:'Hauptstadt',  gel:'flach'   },
+        { name:'München',     lat:48.1, lon:11.6, wort:'Isar',        gel:'huegel'  },
+        { name:'Zugspitze',   lat:47.4, lon:10.9, wort:'Gipfel',      gel:'berge'   },
+        { name:'Hamburg',     lat:53.5, lon:10.0, wort:'Elbhafen',    gel:'flach'   },
+        { name:'Wien',        lat:48.2, lon:16.4, wort:'Donau',       gel:'huegel'  },
+        { name:'Nordsee',     lat:54.5, lon:8.5,  wort:'Wellen',      gel:'kuesste' },
+        { name:'Schwarzwald', lat:48.0, lon:8.2,  wort:'Tannen',      gel:'berge'   },
+        { name:'Heidelberg',  lat:49.4, lon:8.7,  wort:'Schloss',     gel:'huegel'  },
+        { name:'Alpen',       lat:46.8, lon:10.5, wort:'Firn',        gel:'berge'   },
+        { name:'Nordsee',     lat:54.5, lon:8.5,  wort:'Gezeiten',    gel:'kuesste' },
+        { name:'Ruhrgebiet',  lat:51.5, lon:7.2,  wort:'Stahl',       gel:'flach'   },
+    ];
+
+    function msgBits(text) {
+        const bits = [];
+        for (const ch of text) {
+            const code = ch.charCodeAt(0) & 0xFF;
+            for (let b = 7; b >= 0; b--) bits.push((code >> b) & 1);
+        }
+        return bits;
+    }
+
+    function dotPoly(x, y, r) {
+        const p = [];
+        for (let i = 0; i <= 6; i++) {
+            const a = i / 6 * 2 * Math.PI;
+            p.push([x + r * Math.cos(a), y + r * Math.sin(a)]);
+        }
+        return p;
+    }
+
+    const PARAMS = [
+        { key:'accent',  label:'Akzentfarbe (1-Bit)', value:'rot', options:[
+            {value:'rot',label:'Rot'},{value:'blau',label:'Blau'},{value:'gruen',label:'Grün'},
+            {value:'magenta',label:'Magenta'},{value:'orange',label:'Orange'}] },
+        { key:'gel',     label:'Geländetyp', value:'huegel', options:[
+            {value:'huegel',label:'Hügelland'},{value:'berge',label:'Hochgebirge'},
+            {value:'flach',label:'Flachland'},{value:'kuesste',label:'Küste'}] },
+        { key:'lat',     label:'Breitengrad °',     min:-60,  max:75,   step:1,   value:49  },
+        { key:'lon',     label:'Längengrad °',      min:-150, max:150,  step:1,   value:10  },
+        { key:'horiz',   label:'Horizont % Bild',   min:28,   max:58,   step:2,   value:42  },
+        { key:'sp',      label:'Punkt-Abstand px',  min:5,    max:18,   step:1,   value:8   },
+        { key:'dotsize', label:'Punktgröße %',      min:30,   max:120,  step:10,  value:70  },
+        { key:'sky',     label:'Himmel-Dichte %',   min:0,    max:25,   step:1,   value:6   },
+        { key:'shade',   label:'Licht-Modulation %',min:0,    max:80,   step:10,  value:55  },
+        { key:'feed_0',  label:'Tempo 0 mm/s',      min:8,    max:60,   step:2,   value:22  },
+        { key:'feed_1',  label:'Tempo 1 mm/s',      min:20,   max:160,  step:5,   value:55  },
+        { key:'feed_t',  label:'Tempo Sprung mm/s', min:60,   max:200,  step:10,  value:150 },
+        { key:'grundton',label:'Grundton Hz',       min:80,   max:200,  step:5,   value:110 },
+        { key:'tonlage', label:'Tonhub',            min:0.5,  max:6,    step:.25, value:2.5 },
+    ];
+
+    let _tour = [], _appRef = null;
+
+    const app = PR4App({
+        svgName: 'ortschaft',
+        params: PARAMS,
+        onRegen(rnd) {
+            const demo = DEMOS[Math.floor(rnd() * DEMOS.length)];
+            document.getElementById('ortsname').value = demo.name;
+            document.getElementById('wort').value = demo.wort;
+            PARAMS.forEach(p => {
+                if (p.key === 'lat'  && p._set) p._set(demo.lat);
+                if (p.key === 'lon'  && p._set) p._set(demo.lon);
+                if (p.key === 'gel'  && p._set) p._set(demo.gel);
+            });
+        },
+        generate(api) {
+            const v = api.values;
+            const accent    = ACCENTS[v.accent] || '#cc2200';
+            document.getElementById('lg1').style.background = accent;
+
+            const ortsname  = (document.getElementById('ortsname').value || 'Ort').toUpperCase();
+            const wort      = document.getElementById('wort').value || 'Plotter';
+            const bits = msgBits(wort), bl = bits.length || 8;
+
+            const sp        = Math.max(3, Math.round(v.sp));
+            const dotR      = sp * 0.35 * ((v.dotsize || 70) / 100);
+            const lat       = +(v.lat) || 49;
+            const lon       = +(v.lon) || 10;
+            const gel       = v.gel || 'huegel';
+            const skyD      = (v.sky || 6) / 100;
+            const shadeStr  = (v.shade || 55) / 100;
+            const horizFrac = (v.horiz || 42) / 100;
+
+            // Seeded noise keyed to location
+            const seed = ((Math.round(lat * 997 + lon * 383 + 7919)) >>> 0);
+            const rngA = PR4.mulberry32(seed);
+            const N    = PR4.makeNoise2D(rngA);
+            const rngB = PR4.mulberry32(seed ^ 0xdeadbeef);  // jitter / sampling
+
+            const W = 1000, H = 1000;
+            const HY   = Math.round(H * horizFrac);  // horizon centre y
+            const HBOW = 24;    // horizon curves: centre is HBOW px higher than edges
+            const GY   = 795;   // terrain bottom / text top
+            const TH   = GY - HY;  // usable terrain height
+
+            // Horizon line: gentle upward bow at centre (Earth-curvature illusion)
+            function horizY(x) {
+                const t = (x / W - 0.5) * 2;
+                return HY - HBOW * (1 - t * t);
+            }
+
+            // Terrain profile configs per type
+            const CFG = {
+                //         far scale  mid scale  near scale   far amp  mid amp  near amp
+                huegel:  { sc:[2.5, 4.2, 7.5], am:[0.38, 0.65, 0.95] },
+                berge:   { sc:[3.2, 5.5, 9.0], am:[0.55, 0.82, 1.00] },
+                flach:   { sc:[1.4, 2.2, 3.8], am:[0.20, 0.34, 0.50] },
+                kuesste: { sc:[2.0, 3.5, 6.0], am:[0.30, 0.50, 0.75] },
+            };
+            const { sc, am } = CFG[gel] || CFG.huegel;
+
+            // Build terrain profile arrays (400 samples each, different noise slices)
+            const COLS = 400;
+            function makeProfile(yOff, scale, amp) {
+                const h = new Array(COLS);
+                for (let i = 0; i < COLS; i++)
+                    h[i] = N.fbm(i / COLS * scale, yOff, 6) * amp;
+                let mn = h[0], mx = h[0];
+                for (const v of h) { if (v < mn) mn = v; if (v > mx) mx = v; }
+                const rng = mx - mn || 1;
+                return h.map(v => (v - mn) / rng);
+            }
+
+            const pFar  = makeProfile(0.18, sc[0], am[0]);  // distant mountains
+            const pMid  = makeProfile(0.74, sc[1], am[1]);  // mid-ground hills
+            const pNear = makeProfile(1.43, sc[2], am[2]);  // foreground terrain
+
+            function ci(x) { return Math.max(0, Math.min(COLS - 1, Math.round(x / W * (COLS - 1)))); }
+
+            // Surface Y for each layer (smaller y = higher on screen = further away)
+            // Far mountains: peaks can reach horizon, valleys at 35% of TH below
+            function surfFar(x)  { return horizY(x) + (1 - pFar [ci(x)]) * TH * 0.36; }
+            // Mid hills: always below far (min offset 20%), peaks at 22%, valleys at 66%
+            function surfMid(x)  { return horizY(x) + TH * 0.22 + (1 - pMid [ci(x)]) * TH * 0.44; }
+            // Near terrain: always below mid (min offset 50%), peaks at 53%, valleys at 94%
+            function surfNear(x) { return horizY(x) + TH * 0.50 + (1 - pNear[ci(x)]) * TH * 0.44; }
+
+            // Topmost visible surface at each x (determines where dots can start)
+            function surfaceY(x) { return Math.min(surfFar(x), surfMid(x), surfNear(x)); }
+
+            // Which band does a dot belong to? (used for density)
+            function bandDensity(x, y) {
+                const sf = surfFar(x), sm = surfMid(x), sn = surfNear(x);
+                if      (y >= sn) return 0.85;   // near band: very dense
+                else if (y >= sm) return 0.48;   // mid band: medium
+                else              return 0.18;   // far band: sparse
+            }
+
+            // Slope-based light modulation (light from upper-left)
+            function lightMod(x) {
+                const dx = 12;
+                const s1 = surfaceY(Math.max(0, x - dx));
+                const s2 = surfaceY(Math.min(W, x + dx));
+                const slope = (s2 - s1) / (2 * dx);  // + = slopes down-right (left-facing = lit)
+                return Math.max(-1, Math.min(1, slope * 3.5));
+            }
+
+            // Collect dots
+            const dots = [];
+
+            // ── Sky dots ──
+            for (let row = 0; row * sp < HY + HBOW + sp; row++) {
+                const y0 = row * sp + sp * 0.4;
+                for (let col = 0; col * sp < W; col++) {
+                    const x  = col * sp + sp * 0.5 + (rngB() - 0.5) * sp * 0.7;
+                    const y  = y0 + (rngB() - 0.5) * sp * 0.7;
+                    if (x < 4 || x > W - 4 || y < 4) continue;
+                    if (y >= horizY(x)) continue;
+                    // denser near horizon, very sparse high up
+                    const frac = y / HY;
+                    if (rngB() < skyD * (0.12 + 0.88 * frac * frac)) dots.push([x, y]);
+                }
+            }
+
+            // ── Terrain dots ──
+            const rowStart = Math.max(0, Math.floor((HY - HBOW - sp) / sp));
+            for (let row = rowStart; row * sp < GY + sp; row++) {
+                const y0 = row * sp + sp * 0.4;
+                if (y0 >= GY) break;
+                for (let col = 0; col * sp < W; col++) {
+                    const x = col * sp + sp * 0.5 + (rngB() - 0.5) * sp * 0.7;
+                    const y = y0 + (rngB() - 0.5) * sp * 0.7;
+                    if (x < 4 || x > W - 4) continue;
+                    if (y < horizY(x) || y >= GY) continue;
+                    if (y < surfaceY(x)) continue;
+
+                    const base   = bandDensity(x, y);
+                    const light  = lightMod(x);
+                    const density = base * (1 + shadeStr * light * 0.6);
+
+                    if (rngB() < Math.max(0.04, Math.min(0.96, density))) dots.push([x, y]);
+                }
+            }
+
+            // Reading order: top→bottom, left→right (also the plotter's preferred path)
+            dots.sort((a, b) => (a[1] - b[1]) || (a[0] - b[0]));
+
+            // Assign bits → colors → tiny dot polygons
+            const lines = [];
+            let ones = 0;
+            for (let i = 0; i < dots.length; i++) {
+                const bit = bits[i % bl];
+                if (bit) ones++;
+                const col  = bit ? accent : BLACK;
+                const poly = dotPoly(dots[i][0], dots[i][1], dotR);
+                lines.push({ pts: poly, w: bit ? 1.0 : 0.85, color: col, fill: col, closed: true });
+            }
+
+            // ── Horizon line ──
+            const hpts = [];
+            for (let x = 0; x <= W; x += 3) hpts.push([x, horizY(x)]);
+            lines.push({ pts: hpts, w: 0.7, color: BLACK });
+
+            // ── Location name in Hershey plotter font ──
+            const fontSize = Math.min(75, Math.round(1100 / Math.max(1, ortsname.length)));
+            for (const s of PR4Font.textCentered(ortsname, W / 2, 912, fontSize))
+                lines.push({ pts: s, w: 1.4, color: BLACK });
+
+            // ── Decorative coordinate label (small, below name) ──
+            const coordStr = `${lat >= 0 ? lat + '°N' : Math.abs(lat) + '°S'} ${lon >= 0 ? lon + '°E' : Math.abs(lon) + '°W'}`;
+            for (const s of PR4Font.textCentered(coordStr, W / 2, 965, 14))
+                lines.push({ pts: s, w: 0.7, color: BLACK });
+
+            // ── Audio tour (sample up to ~450 dots) ──
+            const fd0 = v.feed_0, fd1 = v.feed_1, ft = v.feed_t;
+            const step = Math.max(1, Math.ceil(dots.length / 450));
+            const tour = []; let cur = null;
+            for (let i = 0; i < dots.length; i += step) {
+                const bit  = bits[i % bl];
+                const poly = dotPoly(dots[i][0], dots[i][1], Math.max(dotR, 1.4));
+                if (cur) tour.push({ pts: [cur, poly[0]], pen: 'up', feed: ft });
+                tour.push({ pts: poly, pen: 'down', feed: bit ? fd1 : fd0 });
+                cur = poly[poly.length - 1];
+            }
+            _tour = tour; _tour._FB = v.grundton; _tour._K = v.tonlage;
+
+            const pct = dots.length ? Math.round(100 * ones / dots.length) : 0;
+            document.getElementById('info').innerHTML =
+                `Ort <b>${ortsname}</b> · Wort "<b>${wort}</b>" = ${bl} Bits · ` +
+                `<b>${dots.length}</b> Dots (${dots.length - ones}× schwarz, ${ones}× ${v.accent} = ${pct}%)`;
+            api.status(`"${ortsname}" · ${dots.length} Dots · 2 Stifte: schwarz + ${v.accent}`);
+            api.done(lines);
+        }
+    });
+    _appRef = app;
+
+    const _deb = PR4.debounce(() => _appRef.start(), 300);
+    document.getElementById('ortsname').addEventListener('input', _deb);
+    document.getElementById('wort').addEventListener('input', _deb);
+
+    /* ─── Playback ─── */
+    const dot = document.getElementById('pen-dot');
+    const canvas = document.getElementById('canvas');
+    function showDot(x, y, pen) {
+        if (x == null) { dot.style.display = 'none'; return; }
+        const rc = canvas.getBoundingClientRect(), sc = rc.width / 1000;
+        dot.style.display = 'block';
+        dot.style.left = (x * sc) + 'px'; dot.style.top = (y * sc) + 'px';
+        dot.style.background = pen === 'up' ? '#999' : '#cc2200';
+    }
+    const playBtn = document.getElementById('play'); let _playing = false;
+    function endPlay() { _playing = false; playBtn.textContent = '▶ Anhören'; dot.style.display = 'none'; }
+    playBtn.addEventListener('click', () => {
+        if (_playing) { PR4Audio.stop(); return; }
+        _playing = true; playBtn.textContent = '■ Stop';
+        PR4Audio.play(_tour, { freqBase: _tour._FB || 110, freqPerMmS: _tour._K || 2.5, onPos: showDot, onEnd: endPlay });
+    });
+    </script>
+</body>
+</html>
