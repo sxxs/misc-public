@@ -37,7 +37,7 @@
     <script>
     "use strict";
 
-    let _tour = [], _feed = 45, _K = 5;
+    let _tour = [], _feed = 40, _K = 2.25, _FB = 130;
 
     function circlePts(cx, cy, r, n) {
         const p = [];
@@ -46,6 +46,49 @@
             p.push([cx + r * Math.cos(th), cy + r * Math.sin(th)]);
         }
         return p;
+    }
+
+    /* split a polyline into `beats` dashes (draw for `duty`, then a fast gap),
+       so the figure plays as a rhythm while the motors still sing. */
+    function dashByArc(pts, beats, duty) {
+        if (beats <= 0 || duty >= 0.999) return [{ pts, pen: 'down' }];
+        const cum = [0];
+        for (let i = 1; i < pts.length; i++)
+            cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i-1][0], pts[i][1] - pts[i-1][1]));
+        const total = cum[cum.length - 1];
+        if (total < 1e-6) return [{ pts, pen: 'down' }];
+        let ptr = 0;
+        const at = (s) => {
+            while (ptr < cum.length - 2 && cum[ptr + 1] < s) ptr++;
+            const a = cum[ptr], b = cum[ptr + 1], f = (s - a) / ((b - a) || 1);
+            return [pts[ptr][0] + (pts[ptr+1][0] - pts[ptr][0]) * f,
+                    pts[ptr][1] + (pts[ptr+1][1] - pts[ptr][1]) * f];
+        };
+        const range = (s0, s1) => {
+            const out = []; const sub = Math.max(2, Math.ceil((s1 - s0) / 6));
+            for (let k = 0; k <= sub; k++) out.push(at(s0 + (s1 - s0) * k / sub));
+            return out;
+        };
+        const moves = [], cell = total / beats;
+        for (let b = 0; b < beats; b++) {
+            const s0 = b * cell, sMid = s0 + cell * duty, s1 = (b + 1) * cell;
+            moves.push({ pts: range(s0, sMid), pen: 'down' });
+            moves.push({ pts: range(sMid, s1), pen: 'up' });
+        }
+        return moves;
+    }
+
+    function buildTour(drawLines, beats, duty, feedDraw, feedTravel, home) {
+        const tour = []; let cur = home || null;
+        for (const dl of drawLines) {
+            if (cur) tour.push({ pts: [cur, dl[0]], pen: 'up', feed: feedTravel });
+            for (const m of dashByArc(dl, beats, duty)) {
+                m.feed = m.pen === 'down' ? feedDraw : feedTravel;
+                tour.push(m);
+            }
+            cur = dl[dl.length - 1];
+        }
+        return tour;
     }
 
     const app = PR4App({
@@ -60,8 +103,11 @@
             ]},
             { key: 'p',       label: 'Parameter p', min: 1, max: 8,  step: 1, value: 3 },
             { key: 'q',       label: 'Parameter q', min: 1, max: 8,  step: 1, value: 2 },
-            { key: 'tempo',   label: 'Tempo mm/s',  min: 15, max: 90, step: 5, value: 40 },
-            { key: 'tonlage', label: 'Tonlage',     min: 3, max: 9,  step: 0.5, value: 5 },
+            { key: 'rhythmus', label: 'Schläge (0 = durchgehend)', min: 0, max: 16, step: 1, value: 8 },
+            { key: 'fuelle',   label: 'Tondauer',    min: 0.3, max: 1, step: 0.05, value: 0.6 },
+            { key: 'tempo',    label: 'Tempo mm/s',  min: 15, max: 90, step: 5, value: 40 },
+            { key: 'grundton', label: 'Grundton Hz', min: 80, max: 200, step: 5, value: 130 },
+            { key: 'tonlage',  label: 'Tonhub',      min: 1, max: 4,  step: 0.25, value: 2.25 },
         ],
         generate(api) {
             const { values } = api;
@@ -69,7 +115,7 @@
             const lines = [];
             let drawLines = [];     // polylines in plot order (pen down)
             _feed = values.tempo;
-            _K = values.tonlage;
+            _K = values.tonlage; _FB = values.grundton;
 
             const p = Math.round(values.p), q = Math.round(values.q);
             let info = '';
@@ -127,9 +173,9 @@
                 info = 'Rosette mit ' + (k % 2 ? k : 2 * k) + ' Blättern · gleitende Töne';
             }
 
-            /* build the plotter tour (travel between separate strokes) */
-            _tour = PR4Audio.tourFromPolylines(
-                drawLines, values.tempo, values.tempo * 2.6, [cx, cy]);
+            /* build the plotter tour — optionally dashed into a rhythm */
+            _tour = buildTour(drawLines, Math.round(values.rhythmus), values.fuelle,
+                values.tempo, values.tempo * 2.8, [cx, cy]);
 
             /* faint frame + axis legend */
             lines.push({ pts: [[60,60],[940,60],[940,940],[60,940]], w: 0.4, closed: true });
@@ -157,7 +203,7 @@
     playBtn.addEventListener('click', () => {
         if (_playing) { PR4Audio.stop(); return; }
         _playing = true; playBtn.textContent = '■ Stop';
-        PR4Audio.play(_tour, { freqPerMmS: _K, onPos: showDot, onEnd: endPlay });
+        PR4Audio.play(_tour, { freqBase: _FB, freqPerMmS: _K, onPos: showDot, onEnd: endPlay });
     });
     </script>
 </body>

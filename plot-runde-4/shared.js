@@ -328,10 +328,10 @@ const PR4Audio = (() => {
         return _ctx;
     }
 
-    /* audibility of a motor running at f Hz: a slowly-stepping motor is a quiet
-     * low rumble that fades to nothing as it stops. */
-    function audible(f) {
-        const t = Math.max(0, Math.min(1, (f - 8) / 34));
+    /* how audible a motor is, given the pen's speed ALONG ITS AXIS (mm/s).
+     * A still axis is silent; it fades in quickly once it starts moving. */
+    function audibleSpeed(v) {
+        const t = Math.max(0, Math.min(1, (v - 1) / 8));
         return t * t * (3 - 2 * t);
     }
 
@@ -359,21 +359,25 @@ const PR4Audio = (() => {
     }
 
     /* Schedule a tour and start playing. opts:
-     *   freqPerMmS  Hz per (mm/s)            default 5
-     *   baseGain    peak per-motor gain      default 0.14
+     *   freqBase    idle pitch of a just-moving motor (Hz)   default 130
+     *   freqPerMmS  added Hz per (mm/s) of axis speed        default 2.2
+     *   baseGain    peak per-motor gain                      default 0.10
      *   onPos(x,y,pen)  per-frame pen callback (canvas coords)
      *   onEnd()     called when playback finishes or is stopped
+     * A stepper's audible pitch sits around freqBase and only rises modestly
+     * with speed, so the "singing" on curves is a gentle wobble, not a sweep.
      * Returns { duration, stop }. */
     function play(tour, opts = {}) {
         stop();
         const c = ctx();
-        const K        = opts.freqPerMmS != null ? opts.freqPerMmS : 5;
-        const baseGain = opts.baseGain   != null ? opts.baseGain   : 0.14;
+        const FB       = opts.freqBase   != null ? opts.freqBase   : 130;
+        const K        = opts.freqPerMmS != null ? opts.freqPerMmS : 2.2;
+        const baseGain = opts.baseGain   != null ? opts.baseGain   : 0.10;
 
         /* one persistent oscillator per axis, panned L / R, through a shared
          * gentle lowpass + master gain. */
-        const master = c.createGain(); master.gain.value = 0.9;
-        const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 3200;
+        const master = c.createGain(); master.gain.value = 0.85;
+        const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2000;
         lp.connect(master); master.connect(c.destination);
 
         function axis(pan) {
@@ -384,7 +388,7 @@ const PR4Audio = (() => {
             else { osc.connect(g); g.connect(lp); }
             return { osc, g };
         }
-        const ax = axis(-0.6), ay = axis(0.6);
+        const ax = axis(-0.35), ay = axis(0.35);
 
         const live = { nodes: [ax.osc, ay.osc], cancelled: false,
                        onEnd: opts.onEnd, animFrame: null, endTimer: null,
@@ -393,18 +397,18 @@ const PR4Audio = (() => {
 
         const t0 = c.currentTime + 0.06;
         let T = t0;
-        ax.osc.frequency.setValueAtTime(1, t0);
-        ay.osc.frequency.setValueAtTime(1, t0);
+        ax.osc.frequency.setValueAtTime(FB, t0);
+        ay.osc.frequency.setValueAtTime(FB, t0);
         ax.g.gain.setValueAtTime(0, t0);
         ay.g.gain.setValueAtTime(0, t0);
 
-        const penDownGain = 1.0, penUpGain = 0.62;
+        const penDownGain = 1.0, penUpGain = 0.6;
         let prevPen = null;
 
         function schedClick(t, pen) {
             const burst = pen === "down"
-                ? makeNoiseBurst(c, t, 0.022, 0.5,  1400)   // pen drop: lower thud
-                : makeNoiseBurst(c, t, 0.012, 0.28, 4200);  // pen lift: brighter tick
+                ? makeNoiseBurst(c, t, 0.018, 0.34, 1300)   // pen drop: soft thud
+                : makeNoiseBurst(c, t, 0.009, 0.18, 3800);  // pen lift: light tick
             burst.g.connect(master); burst.start();
             live.nodes.push(burst.src);
         }
@@ -425,9 +429,9 @@ const PR4Audio = (() => {
                 const segDt = lenmm / feed;
                 const nSub = Math.max(1, Math.ceil(segDt / MAX_STEP));
                 const vx = Math.abs(dxmm) / segDt, vy = Math.abs(dymm) / segDt; // mm/s per axis
-                const fX = Math.max(1, K * vx), fY = Math.max(1, K * vy);
-                const gX = baseGain * audible(fX) * penG;
-                const gY = baseGain * audible(fY) * penG;
+                const fX = FB + K * vx, fY = FB + K * vy;       // pitch floors at freqBase
+                const gX = baseGain * audibleSpeed(vx) * penG;  // idle axis stays silent
+                const gY = baseGain * audibleSpeed(vy) * penG;
                 for (let s = 1; s <= nSub; s++) {
                     const tt = T + segDt * s / nSub;
                     ax.osc.frequency.linearRampToValueAtTime(fX, tt);
