@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>104 · Botschaft — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+    <style>
+        .msg-wrap { margin:.1rem 0 .25rem; }
+        .msg-wrap label { display:block; font-size:.75rem; color:#555; margin-bottom:.25rem; font-weight:600; }
+        #msg { width:100%; box-sizing:border-box; font-family:monospace; font-size:.9rem;
+               padding:7px 9px; border:1px solid #ccc; border-radius:4px; resize:none;
+               background:#f8f8f8; line-height:1.4; }
+        #msg:focus { outline:none; border-color:#e96000; background:#fff; }
+        .capacity { font-size:.70rem; color:#666; margin:.15rem 0 .1rem; }
+        .capacity b { color:#222; }
+        .capacity.warn b { color:#c80; }
+        .capacity.over  b { color:#c00; }
+        .bit-preview { font-family:monospace; font-size:.62rem; line-height:1.7;
+                       color:#aaa; margin:.1rem 0 .35rem; word-break:break-all; }
+        .bit-preview .b0 { color:#1a5a9a; }
+        .bit-preview .b1 { color:#c05000; }
+        .bit-preview .bk { color:#c00; margin:0 1px; }
+        .bpm-info { font-size:.73rem; color:#555; margin:.15rem 0 .3rem; font-variant-numeric:tabular-nums; }
+        .bpm-info b { color:#222; }
+        .legend { font-size:.76rem; color:#555; margin:.1rem 0 .25rem; line-height:1.7; }
+        .sw { padding:0 3px; border-radius:2px; font-weight:bold; }
+    </style>
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>104 · Botschaft</h1></header>
+    <main>
+        <section class="paper" style="position:relative">
+            <canvas id="canvas"></canvas>
+            <div id="pen-dot" style="display:none;position:absolute;width:12px;height:12px;
+                border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);
+                box-shadow:0 0 4px rgba(0,0,0,.4)"></div>
+        </section>
+        <section class="panel">
+            <div class="msg-wrap">
+                <label>Botschaft eingeben:</label>
+                <textarea id="msg" rows="2" maxlength="128" spellcheck="false">Hallo Welt</textarea>
+            </div>
+            <div id="capacity" class="capacity">…</div>
+            <div id="bit-preview" class="bit-preview">…</div>
+            <p class="legend">
+                <span class="sw" style="background:#16213e;color:#fff;border:2px solid #16213e">&nbsp;&nbsp;</span> 0-Bit (langsam, tief, dicker Strich) ·
+                <span class="sw" style="background:#fff;color:#aaa;border:1px solid #ccc">&thinsp;–&thinsp;</span> 1-Bit (schnell, hoch, dünn) ·
+                <span class="sw" style="background:#e7d3a1;color:#a23">●</span> Klack (Zeichengrenze)
+            </p>
+            <div id="bpm-info" class="bpm-info">…</div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="play">▶ Anhören</button>
+                <button id="regen" class="primary">🎲 Demo-Text</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Jedes Zeichen wird als 8-Bit-ASCII-Zahl auf die raumfüllende
+            Kurve gemalt. Ein <b>0-Bit</b> = langsamer Strich (tiefer Motorton, dicke Linie),
+            ein <b>1-Bit</b> = schneller Strich (hoher Ton, dünne Linie). Zwischen zwei
+            Zeichen ertönt ein <b>Klack</b> (kurzer Stifthub = Percussion-Schlag). Die
+            Botschaft wird buchstäblich hörbar und sichtbar — gleicher Text ergibt immer
+            dasselbe Muster.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+
+    /* ─── L-system curves (same as V101) ─── */
+    const CURVES = {
+        hilbert: { angle:90, draw:'F', axiom:'A',
+            rules:{ A:'-BF+AFA+FB-', B:'+AF-BFB-FA+' }, iters:o=>o },
+        moore:   { angle:90, draw:'F', axiom:'LFL+F+LFL',
+            rules:{ L:'-RF+LFL+FR-', R:'+LF-RFR-FL+' }, iters:o=>o },
+        peano:   { angle:90, draw:'F', axiom:'L',
+            rules:{ L:'LFRFL-F-RFLFR+F+LFRFL', R:'RFLFR+F+LFRFL-F-RFLFR' },
+            iters:o=>Math.min(o,3) },
+        gosper:  { angle:60, draw:'AB', axiom:'A',
+            rules:{ A:'A-B--B+A++AA+B-', B:'+A-BB--B-A++A+B' },
+            iters:o=>Math.min(o,3) },
+    };
+    function expandL(def,iters){ let s=def.axiom;
+        for(let k=0;k<iters;k++){ let o='';
+            for(const c of s) o+=(def.rules[c]??c); s=o; } return s; }
+    function turtlePts(def,iters){
+        const str=expandL(def,iters), a=def.angle*Math.PI/180;
+        let x=0,y=0,ang=0; const pts=[[0,0]];
+        for(const ch of str){
+            if(def.draw.indexOf(ch)>=0){ x+=Math.cos(ang);y+=Math.sin(ang);pts.push([x,y]); }
+            else if(ch==='+') ang+=a; else if(ch==='-') ang-=a; }
+        return pts; }
+    function curvePoints(name,order){
+        const def=CURVES[name]||CURVES.hilbert;
+        let iters=def.iters(order);
+        let pts=turtlePts(def,iters);
+        while(pts.length>2600&&iters>1) pts=turtlePts(def,--iters);
+        let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+        for(const[px,py]of pts){ if(px<minX)minX=px;if(px>maxX)maxX=px;
+                                  if(py<minY)minY=py;if(py>maxY)maxY=py; }
+        const w=maxX-minX||1,h=maxY-minY||1,margin=115,box=1000-2*margin;
+        const sc=box/Math.max(w,h),ox=margin+(box-w*sc)/2,oy=margin+(box-h*sc)/2;
+        return pts.map(([px,py])=>[ox+(px-minX)*sc, oy+(py-minY)*sc]); }
+
+    function dotRing(x,y,r){ const p=[];
+        for(let s=0;s<=8;s++){const a=s/8*2*Math.PI;p.push([x+r*Math.cos(a),y+r*Math.sin(a)]);}
+        return p; }
+
+    /* ─── Bit preview + capacity display ─── */
+    let _values = {};
+    function updateBitPreview() {
+        const text = document.getElementById('msg').value;
+        const order = parseInt(_values.order)||4;
+        const name  = _values.curve||'hilbert';
+        const cp    = curvePoints(name, order);
+        const capacity = Math.floor((cp.length-1)/8); // chars that fit
+
+        const capEl = document.getElementById('capacity');
+        const over  = text.length > capacity;
+        capEl.className = 'capacity' + (over?' over':text.length>capacity*0.75?' warn':'');
+        capEl.innerHTML = `<b>${text.length}</b> Zeichen · <b>${text.length*8}</b> Bits · `+
+            `${name} Ord.${order}: ${cp.length-1} Segmente → <b>${capacity}</b> Zeichen passen`+
+            (over?` · ⚠ <b>${text.length-capacity} zu viele</b>`:'');
+
+        // bit preview (first 20 chars to avoid giant walls)
+        const showN = Math.min(text.length, Math.min(capacity, 20));
+        let html = '';
+        for(let ci=0;ci<showN;ci++){
+            if(ci>0) html+=`<span class="bk">·</span>`;
+            const code=text.charCodeAt(ci);
+            const ch=text[ci]===' '?'_':text[ci];
+            html+=`<span style="opacity:.5">${ch.replace('<','&lt;')}=</span>`;
+            for(let b=7;b>=0;b--){
+                const bit=(code>>b)&1;
+                html+=`<span class="b${bit}">${bit}</span>`;
+            }
+        }
+        if(text.length>showN) html+=`<span style="opacity:.4"> …+${text.length-showN} Zeichen</span>`;
+        document.getElementById('bit-preview').innerHTML = html||'(leer)';
+    }
+
+    /* ─── Demo texts ─── */
+    const DEMOS = ['Hallo Welt','42','Kunst kommt von Können',
+        'Plot Runde 4','Dein Muster','Plotter','Ich denke also bin ich',
+        'bits','wiai','ASCII'];
+
+    const PARAMS = [
+        { key:'curve', label:'Kurve', value:'hilbert', options:[
+            {value:'hilbert',label:'Hilbert'},{value:'moore',label:'Moore'},
+            {value:'gosper', label:'Gosper'},{value:'peano', label:'Peano'},
+        ]},
+        { key:'order',        label:'Ordnung',              min:2, max:5, step:1,  value:4   },
+        { key:'feed_0',       label:'Tempo 0-Bit mm/s',     min:8, max:60,step:2,  value:16  },
+        { key:'feed_1',       label:'Tempo 1-Bit mm/s',     min:20,max:200,step:5, value:80  },
+        { key:'feed_travel',  label:'Tempo pen-up mm/s',    min:60,max:200,step:10,value:150 },
+        { key:'grundton',     label:'Grundton Hz',          min:80,max:200,step:5, value:110 },
+        { key:'tonlage',      label:'Tonhub',               min:0.5,max:6,step:.25,value:2.5 },
+    ];
+
+    let _tour = [], _appRef = null;
+
+    const app = PR4App({
+        svgName: 'botschaft',
+        params: PARAMS,
+        onRegen(rnd) {
+            const idx = Math.floor(rnd() * DEMOS.length);
+            document.getElementById('msg').value = DEMOS[idx];
+        },
+        generate(api) {
+            _values = api.values;
+            updateBitPreview();
+
+            const text   = document.getElementById('msg').value;
+            const fd0    = api.values.feed_0;
+            const fd1    = api.values.feed_1;
+            const ft     = api.values.feed_travel;
+            const FB     = api.values.grundton;
+            const K      = api.values.tonlage;
+            const order  = parseInt(api.values.order)||4;
+
+            const cp     = curvePoints(api.values.curve, order);
+            const maxChars = Math.floor((cp.length-1)/8);
+            const safeText = text.slice(0, maxChars);
+            const segsNeeded = safeText.length * 8;
+            const segLenPx = Math.hypot(cp[1][0]-cp[0][0], cp[1][1]-cp[0][1]);
+            const segMM = segLenPx / 5;  // PX_PER_MM = 5
+            const KLACK = 4;             // px pen lift
+
+            // BPM: one beat = one 0-bit (the "slow" reference)
+            const bpm0 = Math.round(60*fd0/segMM);
+            const bpm1 = Math.round(60*fd1/segMM);
+            document.getElementById('bpm-info').innerHTML =
+                `0-Bit: <b>~${bpm0} BPM</b> (~${Math.round(1000*segMM/fd0)}ms) · `+
+                `1-Bit: <b>~${bpm1} BPM</b> (~${Math.round(1000*segMM/fd1)}ms) · `+
+                `Klack = Zeichengrenze`;
+
+            const lines = [], tour = [];
+            let segIdx = 0;
+
+            for(let ci=0; ci<safeText.length; ci++){
+                /* klack between characters */
+                if(ci>0 && segIdx < cp.length){
+                    const [kx,ky] = cp[segIdx];
+                    tour.push({pts:[[kx,ky],[kx,ky-KLACK]], pen:'up',   feed:ft});
+                    tour.push({pts:[[kx,ky-KLACK],[kx,ky]], pen:'down', feed:ft});
+                    lines.push({pts:dotRing(kx,ky,Math.max(3,segLenPx*0.12)), w:0.8, closed:true});
+                }
+
+                const code = safeText.charCodeAt(ci);
+                for(let b=7; b>=0; b--){
+                    if(segIdx >= cp.length-1) break;
+                    const bit = (code>>b)&1;
+                    const p0 = cp[segIdx], p1 = cp[segIdx+1];
+                    tour.push({pts:[p0.slice(),p1.slice()], pen:'down', feed:bit?fd1:fd0});
+                    /* 0-bit: thick dark; 1-bit: thin light */
+                    lines.push({pts:[p0.slice(),p1.slice()], w:bit?0.45:2.2});
+                    segIdx++;
+                }
+            }
+
+            /* show remaining curve as faint guide */
+            if(segIdx < cp.length-1)
+                lines.push({pts:cp.slice(segIdx), w:0.08});
+
+            _tour = tour;
+            // store audio params for playback
+            _tour._FB = FB; _tour._K = K;
+
+            for(const st of PR4Font.textCentered('BOTSCHAFT',500,62,20))
+                lines.push({pts:st, w:1.0});
+            lines.push({pts:[[55,88],[945,88],[945,945],[55,945]], w:0.6, closed:true});
+
+            const ones  = safeText.split('').reduce((n,c)=>{
+                let code=c.charCodeAt(0),cnt=0;
+                for(let b=0;b<8;b++) cnt+=((code>>b)&1); return n+cnt; }, 0);
+            const zeros = safeText.length*8 - ones;
+            api.status(`"${safeText}" · ${safeText.length} Zeichen · `+
+                `${zeros}×0 ${ones}×1 · ${safeText.length-1} Klacks`+
+                (text.length>maxChars?` · ⚠ ${text.length-maxChars} Zeichen abgeschnitten`:''));
+            api.done(lines);
+        }
+    });
+    _appRef = app;
+
+    /* trigger regeneration when the textarea changes */
+    const _debRegen = PR4.debounce(()=>{ updateBitPreview(); _appRef.start(); }, 300);
+    document.getElementById('msg').addEventListener('input', _debRegen);
+
+    /* ─── Playback ─── */
+    const dot = document.getElementById('pen-dot');
+    const canvas = document.getElementById('canvas');
+    function showDot(x,y,pen){
+        if(x==null){dot.style.display='none';return;}
+        const rect=canvas.getBoundingClientRect(),sc=rect.width/1000;
+        dot.style.display='block'; dot.style.left=(x*sc)+'px'; dot.style.top=(y*sc)+'px';
+        dot.style.background=pen==='up'?'#999':'#cc2200';
+    }
+    const playBtn=document.getElementById('play');
+    let _playing=false;
+    function endPlay(){_playing=false;playBtn.textContent='▶ Anhören';dot.style.display='none';}
+    playBtn.addEventListener('click',()=>{
+        if(_playing){PR4Audio.stop();return;}
+        _playing=true; playBtn.textContent='■ Stop';
+        PR4Audio.play(_tour,{
+            freqBase:_tour._FB||110, freqPerMmS:_tour._K||2.5,
+            onPos:showDot, onEnd:endPlay
+        });
+    });
+    </script>
+</body>
+</html>
