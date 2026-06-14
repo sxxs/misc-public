@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>98 · Plotter-Beat — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>98 · Plotter-Beat</h1></header>
+    <main>
+        <section class="paper" style="position:relative">
+            <canvas id="canvas"></canvas>
+            <div id="pen-dot" style="display:none;position:absolute;width:14px;height:14px;
+                border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);
+                box-shadow:0 0 4px rgba(0,0,0,.4)"></div>
+        </section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="play">▶ Anhören</button>
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Motorgeräusch beim Fahren, Klick beim Stift-Auf/-Ab.
+            Stift-unten (langsam) = tiefer Ton · Stift-oben (schnell) = hoher Ton.
+            Tempo-Regler steuern Tonhöhe. ▶ Anhören zeigt den roten Stift live.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+
+    /* Bjorklund/Euclidean rhythm: k active beats in n steps */
+    function euclid(k, n) {
+        k = Math.max(0, Math.min(k, n));
+        if (k === 0) return new Array(n).fill(0);
+        if (k === n) return new Array(n).fill(1);
+        let counts = [], remainders = [], level = 0;
+        remainders.push(k);
+        let divisor = n - k;
+        do {
+            counts.push(Math.floor(divisor / remainders[level]));
+            remainders.push(divisor % remainders[level]);
+            divisor = remainders[level];
+            level++;
+        } while (remainders[level] > 1);
+        counts.push(divisor);
+        const pattern = [];
+        function build(l) {
+            if (l === -1) pattern.push(0);
+            else if (l === -2) pattern.push(1);
+            else {
+                for (let i = 0; i < counts[l]; i++) build(l - 1);
+                if (remainders[l] !== 0) build(l - 2);
+            }
+        }
+        build(level);
+        const first = pattern.indexOf(1);
+        return first > 0 ? [...pattern.slice(first), ...pattern.slice(0, first)] : pattern;
+    }
+
+    const PRESETS = {
+        tresillo: euclid(3, 8),
+        bossa:    [1, 0, 1, 0, 1, 1, 0, 1],
+        samba:    euclid(3, 16),
+        gnawa:    euclid(7, 16),
+        gerade:   [1, 0, 1, 0, 1, 0, 1, 0],
+        walzer:   [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0],
+    };
+
+    function getPattern(values) {
+        if (values.muster === 'euklid') return euclid(Math.round(values.beats_k), Math.round(values.n_steps));
+        if (values.muster === 'alle') return new Array(Math.round(values.n_steps)).fill(1);
+        return PRESETS[values.muster] || PRESETS.tresillo;
+    }
+
+    /* ── Audio synthesis ─────────────────────────────────── */
+    let _ctx = null;
+    let _nodes = [];
+    let _playing = false;
+    let _stopTimer = null;
+    let _freqDownX = 168, _freqDownY = 154;
+    let _freqUpX   = 504, _freqUpY   = 462;
+    let _timeline = [];    // [{x, y, penDown}] per animation frame
+    let _audioT0  = 0;     // AudioContext time at playback start
+    let _animFrame = null;
+
+    function stopAudio() {
+        _nodes.forEach(n => { try { n.stop(0); } catch (_) {} });
+        _nodes = [];
+        _playing = false;
+        clearTimeout(_stopTimer);
+        if (_animFrame) { cancelAnimationFrame(_animFrame); _animFrame = null; }
+        document.getElementById('pen-dot').style.display = 'none';
+        document.getElementById('play').textContent = '▶ Anhören';
+    }
+
+    function animatePen() {
+        if (!_playing || !_ctx || _timeline.length === 0) { _animFrame = null; return; }
+        const elapsed = Math.max(0, _ctx.currentTime - _audioT0 - 0.06);
+        const totalSec = 4 * _pattern.length * 60 / _bpm;
+        const t = elapsed / totalSec;
+        const dot = document.getElementById('pen-dot');
+        if (t >= 1) { dot.style.display = 'none'; _animFrame = null; return; }
+        const idx = Math.min(Math.floor(t * _timeline.length), _timeline.length - 1);
+        const pos = _timeline[idx];
+        const canvas = document.getElementById('canvas');
+        const rect = canvas.getBoundingClientRect();
+        const scale = rect.width / 1000;
+        dot.style.display = 'block';
+        dot.style.left  = (pos.x * scale) + 'px';
+        dot.style.top   = (pos.y * scale) + 'px';
+        dot.style.background = pos.penDown ? '#cc2200' : '#888888';
+        _animFrame = requestAnimationFrame(animatePen);
+    }
+
+    function schedClick(t, vol) {
+        if (!_ctx) return;
+        const len = Math.ceil(_ctx.sampleRate * 0.018);
+        const buf = _ctx.createBuffer(1, len, _ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++)
+            d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.14));
+        const src = _ctx.createBufferSource();
+        const g = _ctx.createGain();
+        g.gain.value = vol;
+        src.buffer = buf;
+        src.connect(g);
+        g.connect(_ctx.destination);
+        src.start(t);
+        _nodes.push(src);
+    }
+
+    /* Two-motor arc simulation:
+       On an arc the X-motor runs at speed ∝ |sin θ| and Y-motor ∝ |cos θ|.
+       They alternate loudly/quietly as θ sweeps — the "singing" effect.
+       We model this with two detuned oscillators whose gains are modulated
+       by a slow LFO representing one full arc traversal. */
+    function schedArcBuzz(t, dur, th0, th1, vol) {
+        if (!_ctx) return;
+        const freqX = _freqDownX, freqY = _freqDownY;
+        // Average motor contributions over the arc
+        const midTh = (th0 + th1) / 2;
+        const ampX = 0.35 + 0.65 * Math.abs(Math.sin(midTh));
+        const ampY = 0.35 + 0.65 * Math.abs(Math.cos(midTh));
+
+        [{ f: freqX, a: ampX }, { f: freqY, a: ampY }].forEach(({ f, a }) => {
+            const osc = _ctx.createOscillator();
+            osc.type = 'sawtooth';
+            osc.frequency.value = f;
+            const g = _ctx.createGain();
+            g.gain.setValueAtTime(0, t);
+            g.gain.linearRampToValueAtTime(vol * a, t + 0.008);
+            g.gain.setValueAtTime(vol * a, t + dur - 0.012);
+            g.gain.linearRampToValueAtTime(0, t + dur);
+            osc.connect(g); g.connect(_ctx.destination);
+            osc.start(t); osc.stop(t + dur + 0.01);
+            _nodes.push(osc);
+        });
+        // Add slight "beating" LFO between the two motors
+        const lfo = _ctx.createOscillator();
+        lfo.type = 'sine';
+        lfo.frequency.value = Math.abs(freqX - freqY); // beat frequency
+        const lfoGain = _ctx.createGain();
+        lfoGain.gain.value = 0.025;
+        // (feeding back into destination adds subtle tremolo — keep it subtle)
+    }
+
+    function schedTravelBuzz(t, dur) {
+        // Pen-up fast travel: both motors, higher speed → higher pitch
+        if (!_ctx) return;
+        [_freqUpX, _freqUpY].forEach(f => {
+            const osc = _ctx.createOscillator();
+            osc.type = 'sawtooth';
+            osc.frequency.value = f;
+            const g = _ctx.createGain();
+            g.gain.setValueAtTime(0, t);
+            g.gain.linearRampToValueAtTime(0.028, t + 0.01);
+            g.gain.setValueAtTime(0.028, t + dur - 0.01);
+            g.gain.linearRampToValueAtTime(0, t + dur);
+            osc.connect(g); g.connect(_ctx.destination);
+            osc.start(t); osc.stop(t + dur + 0.01);
+            _nodes.push(osc);
+        });
+    }
+
+    let _pattern = [1, 0, 0, 1, 0, 0, 1, 0];
+    let _bpm = 120;
+    let _noteDur = 0.72;
+    let _arcAngles = []; // [th0, th1] per beat (for audio)
+
+    function playPattern() {
+        if (_playing) { stopAudio(); return; }
+        if (!_ctx) _ctx = new AudioContext();
+        if (_ctx.state === 'suspended') _ctx.resume();
+        _playing = true;
+        document.getElementById('play').textContent = '■ Stop';
+
+        const pat = _pattern;
+        const n = pat.length;
+        const beatSec = 60 / _bpm;
+        const noteSec = beatSec * _noteDur;
+        const measures = 4;
+        const t0 = _ctx.currentTime + 0.06;
+        _audioT0 = _ctx.currentTime;
+        const angles = _arcAngles;
+        _animFrame = requestAnimationFrame(animatePen);
+
+        for (let rep = 0; rep < measures; rep++) {
+            for (let i = 0; i < n; i++) {
+                const t = t0 + (rep * n + i) * beatSec;
+                const [th0, th1] = angles[i] || [0, 2 * Math.PI / n];
+                if (pat[i]) {
+                    schedArcBuzz(t, noteSec, th0, th1, 0.16);
+                    schedClick(t, 0.55);               // pen-down click
+                    schedClick(t + noteSec, 0.28);     // pen-up click
+                } else {
+                    schedTravelBuzz(t, beatSec * 0.85); // fast quiet travel
+                }
+            }
+        }
+
+        _stopTimer = setTimeout(stopAudio, (measures * n * beatSec + 0.8) * 1000);
+    }
+
+    /* ── Visual generator ────────────────────────────────── */
+    const app = PR4App({
+        svgName: 'plotterbeat',
+        params: [
+            { key: 'muster',   label: 'Rhythmus',          value: 'tresillo', options: [
+                { value: 'tresillo', label: 'Tresillo  E(3,8)' },
+                { value: 'bossa',    label: 'Bossa Nova' },
+                { value: 'samba',    label: 'Samba  E(3,16)' },
+                { value: 'gnawa',    label: 'Gnawa  E(7,16)' },
+                { value: 'gerade',   label: 'Gerade Achtel' },
+                { value: 'walzer',   label: 'Walzer (3/4)' },
+                { value: 'euklid',   label: 'Euklid  k / n' },
+                { value: 'alle',     label: 'Alle Schläge' },
+            ]},
+            { key: 'n_steps', label: 'Schritte (n)',        min: 4,  max: 24, step: 1,    value: 8 },
+            { key: 'beats_k', label: 'Aktive Schläge (k)',  min: 1,  max: 24, step: 1,    value: 5 },
+            { key: 'runden',  label: 'Umläufe',             min: 4,  max: 16, step: 1,    value: 8 },
+            { key: 'bpm',        label: 'BPM (Vorschau)',         min: 60, max: 200,  step: 4,    value: 120 },
+            { key: 'notedur',    label: 'Notendauer',             min: 0.3, max: 0.92, step: 0.04, value: 0.72 },
+            { key: 'speed_down', label: 'Tempo Stift-unten mm/s', min: 20, max: 80,   step: 2,    value: 40 },
+            { key: 'speed_up',   label: 'Tempo Stift-oben  mm/s', min: 60, max: 220,  step: 10,   value: 120 },
+        ],
+        generate(api) {
+            const { values } = api;
+            const pattern = getPattern(values);
+            _pattern = pattern;
+            _bpm = values.bpm;
+            _noteDur = values.notedur;
+            /* motor Hz ≈ speed × 4.2 (steps/mm calibrated for NextDraw 2234) */
+            const HZ_PER_MMS = 4.2;
+            _freqDownX = values.speed_down * HZ_PER_MMS;
+            _freqDownY = values.speed_down * HZ_PER_MMS * 0.917;
+            _freqUpX   = values.speed_up   * HZ_PER_MMS;
+            _freqUpY   = values.speed_up   * HZ_PER_MMS * 0.917;
+
+            const lines = [];
+            const cx = 500, cy = 500;
+            const r0 = 150, r1 = 455;
+            const n = pattern.length;
+            const R = values.runden;
+            const total = n * R;
+
+            /* arc angles per beat slot (for audio scheduling) */
+            _arcAngles = [];
+            for (let beat = 0; beat < n; beat++) {
+                _arcAngles.push([
+                    beat * 2 * Math.PI / n - Math.PI / 2,
+                    (beat + values.notedur) * 2 * Math.PI / n - Math.PI / 2
+                ]);
+            }
+
+            /* animation timeline: pen position at 60fps for 4 audio measures */
+            {
+                const TL_FPS = 60, measures = 4;
+                const totalSec = measures * n * 60 / values.bpm;
+                const totalFrames = Math.ceil(TL_FPS * totalSec);
+                _timeline = [];
+                for (let frame = 0; frame <= totalFrames; frame++) {
+                    const t = frame / totalFrames;
+                    const totalBeats = t * measures * n;
+                    const measure = Math.min(Math.floor(totalBeats / n), measures - 1);
+                    const bi = Math.floor(totalBeats % n);
+                    const frac = totalBeats % 1;
+                    const rev = Math.min(measure, R - 1);
+                    const gB = rev * n + bi;
+                    const th = (gB + frac) * 2 * Math.PI / n - Math.PI / 2;
+                    const r = r0 + (r1 - r0) * (gB + frac) / total;
+                    _timeline.push({ x: cx + r * Math.cos(th), y: cy + r * Math.sin(th),
+                                     penDown: pattern[bi] === 1 && frac < values.notedur });
+                }
+            }
+
+            /* ── Spiral arcs (active beats = pen down) ── */
+            for (let rev = 0; rev < R; rev++) {
+                for (let beat = 0; beat < n; beat++) {
+                    if (!pattern[beat]) continue;
+                    const gBeat = rev * n + beat;
+                    const th0 = gBeat * 2 * Math.PI / n - Math.PI / 2;
+                    const th1 = (gBeat + values.notedur) * 2 * Math.PI / n - Math.PI / 2;
+                    const nPts = Math.max(3, Math.ceil(Math.abs(th1 - th0) * 55));
+                    const pts = [];
+                    for (let s = 0; s <= nPts; s++) {
+                        const th = th0 + (th1 - th0) * s / nPts;
+                        const frac = (gBeat + s / nPts * values.notedur) / total;
+                        const r = r0 + (r1 - r0) * frac;
+                        pts.push([cx + r * Math.cos(th), cy + r * Math.sin(th)]);
+                    }
+                    /* taper line weight: thicker at start (inner), thinner at end (outer) */
+                    const w = 1.5 - 0.7 * (gBeat / total);
+                    lines.push({ pts, w });
+                }
+            }
+
+            /* ── Outer reference ring ── */
+            const rOuter = r1 + 24;
+            const outerPts = [];
+            for (let s = 0; s <= 120; s++) {
+                const th = s * 2 * Math.PI / 120 - Math.PI / 2;
+                outerPts.push([cx + rOuter * Math.cos(th), cy + rOuter * Math.sin(th)]);
+            }
+            lines.push({ pts: outerPts, w: 0.8, closed: true });
+
+            /* ── Inner reference ring ── */
+            const rInner = r0 - 24;
+            const innerPts = [];
+            for (let s = 0; s <= 120; s++) {
+                const th = s * 2 * Math.PI / 120 - Math.PI / 2;
+                innerPts.push([cx + rInner * Math.cos(th), cy + rInner * Math.sin(th)]);
+            }
+            lines.push({ pts: innerPts, w: 0.8, closed: true });
+
+            /* ── Centre circle ── */
+            const centPts = [];
+            for (let s = 0; s <= 80; s++) {
+                const th = s * 2 * Math.PI / 80;
+                centPts.push([cx + 52 * Math.cos(th), cy + 52 * Math.sin(th)]);
+            }
+            lines.push({ pts: centPts, w: 0.7, closed: true });
+
+            /* ── Tick marks on outer ring ── */
+            for (let b = 0; b < n; b++) {
+                const th = b * 2 * Math.PI / n - Math.PI / 2;
+                const major = b % 4 === 0;
+                const inner = rOuter - (major ? 20 : 11);
+                lines.push({ pts: [
+                    [cx + inner * Math.cos(th),       cy + inner * Math.sin(th)],
+                    [cx + (rOuter + 6) * Math.cos(th), cy + (rOuter + 6) * Math.sin(th)],
+                ], w: major ? 1.1 : 0.5 });
+            }
+
+            /* ── Pattern indicator dots on inner ring ── */
+            const rDot = rInner - 8;
+            for (let b = 0; b < n; b++) {
+                const th = b * 2 * Math.PI / n - Math.PI / 2;
+                const dotR = pattern[b] ? 5.5 : 3;
+                const pts = [];
+                for (let s = 0; s <= 14; s++) {
+                    const a = s * 2 * Math.PI / 14;
+                    pts.push([cx + rDot * Math.cos(th) + dotR * Math.cos(a),
+                              cy + rDot * Math.sin(th) + dotR * Math.sin(a)]);
+                }
+                lines.push({ pts, w: pattern[b] ? 1.0 : 0.35, closed: true });
+            }
+
+            /* ── BPM label in centre ── */
+            const bpmStr = String(values.bpm);
+            for (const st of PR4Font.textCentered(bpmStr, cx, cy - 10, 36))
+                lines.push({ pts: st, w: 1.1 });
+            for (const st of PR4Font.textCentered('BPM', cx, cy + 26, 14))
+                lines.push({ pts: st, w: 0.65 });
+
+            /* ── Pattern name below centre ring ── */
+            const label = values.muster === 'euklid'
+                ? 'E(' + Math.min(Math.round(values.beats_k), Math.round(values.n_steps)) + '/' + Math.round(values.n_steps) + ')'
+                : values.muster.toUpperCase();
+            for (const st of PR4Font.textCentered(label, cx, cy + rInner + 24, 13))
+                lines.push({ pts: st, w: 0.6 });
+
+            api.status('Beat: ' + pattern.filter(Boolean).length + ' Schläge / ' + n + ' Schritte · ' + R + ' Umläufe');
+            api.done(lines);
+        }
+    });
+
+    document.getElementById('play').addEventListener('click', playPattern);
+    </script>
+</body>
+</html>
