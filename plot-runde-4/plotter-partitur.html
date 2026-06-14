@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>99 · Plotter-Partitur — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>99 · Plotter-Partitur</h1></header>
+    <main>
+        <section class="paper" style="position:relative">
+            <canvas id="canvas"></canvas>
+            <div id="pen-dot" style="display:none;position:absolute;width:12px;height:12px;
+                border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);
+                box-shadow:0 0 4px rgba(0,0,0,.4)"></div>
+        </section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="play">▶ Anhören</button>
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Partitur-Notation: jede Zeile = ein Takt.
+            Balken (Stift unten, langsam) = tiefer Ton.
+            Lücke (Stift oben, schnell) = hoher Ton.
+            Zeilenwechsel = diagonale Schwungbewegung.
+            Tempo-Regler steuern beide Tonhöhen.
+            ▶ zeigt den Stift live auf dem Blatt.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+
+    function euclid(k, n) {
+        k = Math.max(0, Math.min(k, n));
+        if (k === 0) return new Array(n).fill(0);
+        if (k === n) return new Array(n).fill(1);
+        let counts = [], remainders = [], level = 0;
+        remainders.push(k);
+        let divisor = n - k;
+        do {
+            counts.push(Math.floor(divisor / remainders[level]));
+            remainders.push(divisor % remainders[level]);
+            divisor = remainders[level];
+            level++;
+        } while (remainders[level] > 1);
+        counts.push(divisor);
+        const pattern = [];
+        function build(l) {
+            if (l === -1) pattern.push(0);
+            else if (l === -2) pattern.push(1);
+            else {
+                for (let i = 0; i < counts[l]; i++) build(l - 1);
+                if (remainders[l] !== 0) build(l - 2);
+            }
+        }
+        build(level);
+        const first = pattern.indexOf(1);
+        return first > 0 ? [...pattern.slice(first), ...pattern.slice(0, first)] : pattern;
+    }
+
+    const PRESETS = {
+        tresillo: euclid(3, 8),
+        bossa:    [1,0,1,0,1,1,0,1],
+        samba:    euclid(3, 16),
+        gnawa:    euclid(7, 16),
+        gerade:   [1,0,1,0,1,0,1,0],
+        walzer:   [1,0,0,1,0,0,1,0,0,1,0,0],
+    };
+
+    function getPattern(values) {
+        if (values.muster === 'euklid') return euclid(Math.round(values.beats_k), Math.round(values.n_steps));
+        if (values.muster === 'alle') return new Array(Math.round(values.n_steps)).fill(1);
+        return PRESETS[values.muster] || PRESETS.tresillo;
+    }
+
+    /* Return evolved {pat, noteDur} for measure m */
+    function evolvePattern(base, m, entwicklung, baseDur) {
+        const n = base.length;
+        let pat = [...base], dur = baseDur;
+        if (entwicklung === 'rotieren') {
+            const shift = m % n;
+            pat = [...base.slice(shift), ...base.slice(0, shift)];
+        } else if (entwicklung === 'invertieren' && m % 2 === 1) {
+            pat = base.map(b => 1 - b);
+        } else if (entwicklung === 'verjuengen') {
+            dur = Math.max(0.12, baseDur - m * 0.04);
+        } else if (entwicklung === 'wachsen') {
+            const k = Math.min(base.filter(Boolean).length + m, n);
+            pat = euclid(k, n);
+        }
+        return { pat, dur };
+    }
+
+    /* ── Audio state ── */
+    let _ctx = null, _nodes = [], _playing = false, _stopTimer = null;
+    let _freqDownX = 168, _freqDownY = 154;
+    let _freqUpX   = 504, _freqUpY   = 462;
+    let _events = [], _timeline = [], _audioT0 = 0, _animFrame = null;
+
+    function stopAudio() {
+        _nodes.forEach(n => { try { n.stop(0); } catch (_) {} });
+        _nodes = []; _playing = false;
+        clearTimeout(_stopTimer);
+        if (_animFrame) { cancelAnimationFrame(_animFrame); _animFrame = null; }
+        document.getElementById('pen-dot').style.display = 'none';
+        document.getElementById('play').textContent = '▶ Anhören';
+    }
+
+    function animatePen() {
+        if (!_playing || !_ctx || _timeline.length === 0) { _animFrame = null; return; }
+        const elapsed = Math.max(0, _ctx.currentTime - _audioT0 - 0.06);
+        const dot = document.getElementById('pen-dot');
+        const lastT = _timeline[_timeline.length - 1].t;
+        if (elapsed >= lastT) { dot.style.display = 'none'; _animFrame = null; return; }
+        /* binary search */
+        let lo = 0, hi = _timeline.length - 1;
+        while (lo < hi - 1) {
+            const mid = (lo + hi) >> 1;
+            if (_timeline[mid].t <= elapsed) lo = mid; else hi = mid;
+        }
+        const pos = _timeline[lo];
+        const canvas = document.getElementById('canvas');
+        const rect = canvas.getBoundingClientRect();
+        const scale = rect.width / 1000;
+        dot.style.display = 'block';
+        dot.style.left = (pos.x * scale) + 'px';
+        dot.style.top  = (pos.y * scale) + 'px';
+        dot.style.background = pos.penDown ? '#cc2200' : '#999';
+        _animFrame = requestAnimationFrame(animatePen);
+    }
+
+    function schedClick(t, vol) {
+        if (!_ctx) return;
+        const len = Math.ceil(_ctx.sampleRate * 0.018);
+        const buf = _ctx.createBuffer(1, len, _ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++)
+            d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.14));
+        const src = _ctx.createBufferSource();
+        const g = _ctx.createGain(); g.gain.value = vol;
+        src.buffer = buf; src.connect(g); g.connect(_ctx.destination);
+        src.start(t); _nodes.push(src);
+    }
+
+    function schedBuzz(t, dur, fX, fY, vol, th) {
+        if (!_ctx || dur < 0.004) return;
+        const aX = 0.35 + 0.65 * Math.abs(Math.sin(th));
+        const aY = 0.35 + 0.65 * Math.abs(Math.cos(th));
+        [{ f: fX, a: aX }, { f: fY, a: aY }].forEach(({ f, a }) => {
+            const osc = _ctx.createOscillator();
+            osc.type = 'sawtooth'; osc.frequency.value = f;
+            const g = _ctx.createGain();
+            const ramp = Math.min(0.012, dur * 0.1);
+            g.gain.setValueAtTime(0, t);
+            g.gain.linearRampToValueAtTime(vol * a, t + ramp);
+            g.gain.setValueAtTime(vol * a, t + dur - ramp);
+            g.gain.linearRampToValueAtTime(0, t + dur);
+            osc.connect(g); g.connect(_ctx.destination);
+            osc.start(t); osc.stop(t + dur + 0.01);
+            _nodes.push(osc);
+        });
+    }
+
+    function playScore() {
+        if (_playing) { stopAudio(); return; }
+        if (!_ctx) _ctx = new AudioContext();
+        if (_ctx.state === 'suspended') _ctx.resume();
+        _playing = true;
+        document.getElementById('play').textContent = '■ Stop';
+        const t0 = _ctx.currentTime + 0.06;
+        _audioT0 = _ctx.currentTime;
+        for (const ev of _events) {
+            const ta = t0 + ev.t;
+            const th = Math.atan2(ev.y1 - ev.y0, ev.x1 - ev.x0);
+            if (ev.penDown) {
+                schedBuzz(ta, ev.dur, _freqDownX, _freqDownY, 0.16, th);
+                schedClick(ta, 0.5);
+                schedClick(ta + ev.dur, 0.28);
+            } else {
+                schedBuzz(ta, ev.dur, _freqUpX, _freqUpY, 0.022, th);
+            }
+        }
+        const lastT = _events.length ? _events[_events.length-1].t + _events[_events.length-1].dur : 2;
+        _stopTimer = setTimeout(stopAudio, (lastT + 0.8) * 1000);
+        _animFrame = requestAnimationFrame(animatePen);
+    }
+
+    /* ── Visual generator ── */
+    const app = PR4App({
+        svgName: 'plotter-partitur',
+        params: [
+            { key: 'muster', label: 'Rhythmus', value: 'tresillo', options: [
+                { value: 'tresillo',  label: 'Tresillo  E(3,8)' },
+                { value: 'bossa',     label: 'Bossa Nova' },
+                { value: 'samba',     label: 'Samba  E(3,16)' },
+                { value: 'gnawa',     label: 'Gnawa  E(7,16)' },
+                { value: 'gerade',    label: 'Gerade Achtel' },
+                { value: 'walzer',    label: 'Walzer (3/4)' },
+                { value: 'euklid',    label: 'Euklid  k / n' },
+                { value: 'alle',      label: 'Alle Schläge' },
+            ]},
+            { key: 'n_steps',    label: 'Schläge (n)',          min: 4,  max: 24,  step: 1,    value: 8 },
+            { key: 'beats_k',    label: 'Aktiv (k)',            min: 1,  max: 24,  step: 1,    value: 5 },
+            { key: 'n_measures', label: 'Takte',                min: 4,  max: 20,  step: 1,    value: 10 },
+            { key: 'note_dur',   label: 'Notendauer',           min: 0.15, max: 0.9, step: 0.05, value: 0.6 },
+            { key: 'entwicklung', label: 'Entwicklung', value: 'keine', options: [
+                { value: 'keine',       label: 'Keine' },
+                { value: 'rotieren',    label: 'Rotieren' },
+                { value: 'invertieren', label: 'Invertieren (ungerade)' },
+                { value: 'verjuengen',  label: 'Verjüngen' },
+                { value: 'wachsen',     label: 'Wachsen' },
+            ]},
+            { key: 'bpm',        label: 'BPM',                  min: 60, max: 200, step: 4,    value: 120 },
+            { key: 'speed_down', label: 'Tempo Stift-unten mm/s', min: 20, max: 80,  step: 2,  value: 40 },
+            { key: 'speed_up',   label: 'Tempo Stift-oben  mm/s', min: 60, max: 220, step: 10, value: 120 },
+        ],
+        generate(api) {
+            const { values } = api;
+            const base = getPattern(values);
+            const HZ = 4.2; // Hz per mm/s, calibrated for NextDraw 2234
+            _freqDownX = values.speed_down * HZ;
+            _freqDownY = values.speed_down * HZ * 0.917;
+            _freqUpX   = values.speed_up   * HZ;
+            _freqUpY   = values.speed_up   * HZ * 0.917;
+
+            const n = base.length;
+            const M = Math.round(values.n_measures);
+            const beatSec = 60 / values.bpm;
+            const PX_PER_MM = 5; // 1000 canvas units / 200 mm
+            const lines = [];
+            _events = []; _timeline = [];
+
+            /* layout */
+            const L = 85, R = 940, T = 90, B = 930;
+            const cellW = (R - L) / n;
+            const rowH = (B - T) / M;
+            const barH = Math.min(rowH * 0.55, 40);
+
+            let prevX = L, prevY = T, curTime = 0;
+
+            /* record one plotter move; updates prevX/Y and curTime */
+            function addEvent(x0, y0, x1, y1, penDown, dur) {
+                prevX = x1; prevY = y1;
+                if (dur < 0.001) return;
+                _events.push({ t: curTime, dur, x0, y0, x1, y1, penDown });
+                const steps = Math.max(2, Math.ceil(dur * 40));
+                for (let s = 0; s <= steps; s++) {
+                    const f = s / steps;
+                    _timeline.push({
+                        t: curTime + f * dur,
+                        x: x0 + (x1-x0)*f, y: y0 + (y1-y0)*f,
+                        penDown
+                    });
+                }
+                curTime += dur;
+            }
+
+            for (let m = 0; m < M; m++) {
+                const { pat, dur: noteDur } = evolvePattern(base, m, values.entwicklung, values.note_dur);
+                const y   = T + (m + 0.5) * rowH;
+                const yT  = y - barH / 2;
+                const yB  = y + barH / 2;
+
+                /* row separator */
+                if (m > 0) {
+                    const ySep = T + m * rowH;
+                    lines.push({ pts: [[L-20, ySep],[R+5, ySep]], w: 0.3 });
+                }
+                /* measure number */
+                for (const st of PR4Font.textCentered(String(m+1), L-33, y+4, 11))
+                    lines.push({ pts: st, w: 0.5 });
+
+                for (let b = 0; b < n; b++) {
+                    const x0 = L + b * cellW;
+                    const x1 = x0 + cellW * noteDur;
+
+                    if (pat[b]) {
+                        /* pen-up travel to bar start */
+                        const dist = Math.hypot(x0 - prevX, y - prevY);
+                        addEvent(prevX, prevY, x0, y, false, dist / (values.speed_up * PX_PER_MM));
+                        /* pen-down: draw bar */
+                        addEvent(x0, y, x1, y, true, beatSec * noteDur);
+                        /* bar outline + centre spine */
+                        lines.push({ pts: [[x0,yT],[x1,yT],[x1,yB],[x0,yB]], w: 0.75, closed: true });
+                        lines.push({ pts: [[x0,y],[x1,y]], w: 1.2 });
+                    } else {
+                        /* rest: small tick */
+                        const xm = x0 + cellW / 2;
+                        lines.push({ pts: [[xm, y-4],[xm, y+4]], w: 0.35 });
+                    }
+                }
+
+                /* diagonal sweep to next row */
+                if (m < M - 1) {
+                    const nextY = T + (m + 1.5) * rowH;
+                    const dist = Math.hypot(L - prevX, nextY - prevY);
+                    addEvent(prevX, prevY, L, nextY, false, dist / (values.speed_up * PX_PER_MM));
+                }
+            }
+
+            /* beat column numbers */
+            for (let b = 0; b < n; b++) {
+                const xm = L + (b + 0.5) * cellW;
+                for (const st of PR4Font.textCentered(String(b+1), xm, T-20, 10))
+                    lines.push({ pts: st, w: 0.45 });
+            }
+
+            /* outer frame */
+            lines.push({ pts: [[L-20, T-40],[R+5, T-40],[R+5, B+10],[L-20, B+10]], w: 0.55, closed: true });
+
+            const activeN = base.filter(Boolean).length;
+            api.status(`${activeN}/${n} Schläge · ${M} Takte · ${values.entwicklung}`);
+            api.done(lines);
+        }
+    });
+
+    document.getElementById('play').addEventListener('click', playScore);
+    </script>
+</body>
+</html>
