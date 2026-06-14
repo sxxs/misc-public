@@ -402,6 +402,74 @@
         _playing=true; playBtn.textContent='■ Stop';
         PR4Audio.play(_tour, { freqBase:_FB, freqPerMmS:_K, onPos:showDot, onEnd:endPlay });
     });
+
+    /* ─── Zeichen-Klang-Gag: Maus auf Canvas = Plotter-Motorton ─── */
+    /* Horizontale Mausbewegung → X-Motor (links), vertikal → Y-Motor (rechts).
+     * Geschwindigkeit → Tonhöhe, genau wie beim echten Plotter. */
+    (function(){
+        const PX_PER_MM = 5;
+        let _ac = null, _xOsc, _yOsc, _xG, _yG, _fade;
+        let _lx = null, _ly = null, _lt = null;
+
+        function boot() {
+            if (_ac) return;
+            _ac = new (window.AudioContext || window.webkitAudioContext)();
+            const master = _ac.createGain(); master.gain.value = 0.65;
+            const lp = _ac.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=2200;
+            lp.connect(master); master.connect(_ac.destination);
+            function mkAxis(pan) {
+                const osc=_ac.createOscillator(); osc.type='sawtooth';
+                const g=_ac.createGain(); g.gain.value=0;
+                const p=_ac.createStereoPanner(); p.pan.value=pan;
+                osc.connect(g); g.connect(p); p.connect(lp); osc.start();
+                return {osc,g};
+            }
+            const ax=mkAxis(-0.35), ay=mkAxis(0.35);
+            _xOsc=ax.osc; _xG=ax.g; _yOsc=ay.osc; _yG=ay.g;
+        }
+        function audible(v){ const t=Math.max(0,Math.min(1,(v-1)/8)); return t*t*(3-2*t); }
+        function onMove(cx,cy){
+            boot(); if(_ac.state==='suspended')_ac.resume();
+            const now=performance.now();
+            if(_lx!==null){
+                const dt=(now-_lt)/1000;
+                if(dt>0.001){
+                    const vx=Math.abs((cx-_lx)/dt/PX_PER_MM);
+                    const vy=Math.abs((cy-_ly)/dt/PX_PER_MM);
+                    const t=_ac.currentTime;
+                    _xOsc.frequency.setTargetAtTime(_FB+_K*vx, t, 0.025);
+                    _yOsc.frequency.setTargetAtTime(_FB+_K*vy, t, 0.025);
+                    _xG.gain.setTargetAtTime(0.085*audible(vx), t, 0.025);
+                    _yG.gain.setTargetAtTime(0.085*audible(vy), t, 0.025);
+                }
+            }
+            _lx=cx; _ly=cy; _lt=now;
+            clearTimeout(_fade);
+            _fade=setTimeout(()=>{
+                const t=_ac.currentTime;
+                _xG.gain.setTargetAtTime(0,t,0.07);
+                _yG.gain.setTargetAtTime(0,t,0.07);
+            }, 120);
+        }
+        canvas.addEventListener('mousemove', e=>{
+            if(_playing) return;  // don't clash with playback
+            const r=canvas.getBoundingClientRect(), sc=1000/r.width;
+            onMove((e.clientX-r.left)*sc, (e.clientY-r.top)*sc);
+        });
+        canvas.addEventListener('mouseleave', ()=>{
+            if(!_ac) return;
+            _xG.gain.setTargetAtTime(0,_ac.currentTime,0.07);
+            _yG.gain.setTargetAtTime(0,_ac.currentTime,0.07);
+        });
+        canvas.addEventListener('touchmove', e=>{
+            if(_playing) return;
+            const r=canvas.getBoundingClientRect(), sc=1000/r.width, t=e.touches[0];
+            onMove((t.clientX-r.left)*sc, (t.clientY-r.top)*sc);
+            e.preventDefault();
+        }, {passive:false});
+        canvas.style.cursor='crosshair';
+        canvas.title='Maus bewegen = Plotter-Sound hören';
+    })();
     </script>
 </body>
 </html>
