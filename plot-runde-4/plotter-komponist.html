@@ -9,39 +9,35 @@
         /* ── Sequencer editor ── */
         #seq-wrap {
             display: flex; flex-wrap: wrap; gap: 5px;
-            margin: .2rem 0 .4rem; outline: none;
+            margin: .15rem 0 .4rem; outline: none;
         }
-        .bar-block { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-        .bar-num   { font-size: .60rem; color: #999; line-height: 1; }
-        .bar-cells { display: flex; gap: 2px; padding: 3px; border: 1px solid #ccc;
-                     border-radius: 4px; background: #f8f8f8; }
-        .beat-nums { display: flex; gap: 2px; }
-        .beat-num  { width: 28px; text-align: center; font-size: .55rem; color: #bbb; }
+        .bar-block  { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .bar-num    { font-size: .60rem; color: #999; line-height: 1; }
+        .bar-cells  { display: flex; gap: 2px; padding: 3px;
+                      border: 1px solid #ccc; border-radius: 4px; background: #f8f8f8; }
+        .beat-nums  { display: flex; gap: 2px; }
+        .beat-num   { width: 28px; text-align: center; font-size: .53rem; color: #bbb; }
 
         .cell {
             width: 28px; height: 30px; border: 1px solid #ccc; border-radius: 3px;
             font-size: 14px; cursor: pointer; padding: 0;
             display: flex; align-items: center; justify-content: center;
-            background: #f4f4f4; color: #bbb;
-            user-select: none;
+            background: #f4f4f4; color: #bbb; user-select: none;
         }
         .cell.active { outline: 2px solid #e96000; outline-offset: 1px; z-index: 1; }
-        .cell.t-h    { background: #16213e; color: #fff; font-size: 17px; letter-spacing: -.05em; }
-        .cell.t-v    { background: #16213e; color: #fff; font-size: 17px; }
-        .cell.t-d    { background: #1a3d6a; color: #c8daff; font-size: 16px; }
-        .cell.t-c    { background: #1a4d2a; color: #a8ffb0; font-size: 13px; }
-        .cell.t-k    { background: #e7d3a1; color: #a23; font-size: 14px; }
+        .cell.t-draw { background: #16213e; color: #fff; font-size: 15px; }
+        .cell.t-diag { background: #1a3d6a; color: #c8daff; font-size: 16px; }
+        .cell.t-circ { background: #1a4d2a; color: #a8ffb0; font-size: 13px; }
+        .cell.t-dot  { background: #e7d3a1; color: #a23; }
 
-        .bpm-info {
-            font-size: .74rem; color: #555; margin: .15rem 0 .35rem;
-            font-variant-numeric: tabular-nums;
-        }
+        .bpm-info  { font-size: .73rem; color: #555; margin: .15rem 0 .3rem;
+                     font-variant-numeric: tabular-nums; }
         .bpm-info b { color: #222; }
         .shortcuts { font-size: .70rem; color: #666; margin: .05rem 0 .4rem; line-height: 1.9; }
         kbd { display: inline-block; padding: 1px 5px; border: 1px solid #bbb;
               border-radius: 3px; background: #f8f8f8; font-size: .65rem; font-family: monospace; }
-        .legend { font-size: .76rem; color: #555; margin: .1rem 0 .35rem; line-height: 1.7; }
-        .legend .swatch { padding: 0 3px; border-radius: 2px; font-weight: bold; }
+        .legend { font-size: .76rem; color: #555; margin: .1rem 0 .3rem; line-height: 1.7; }
+        .sw { padding: 0 3px; border-radius: 2px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -55,18 +51,17 @@
         </section>
         <section class="panel">
             <p class="legend">
-                <span class="swatch" style="background:#16213e;color:#fff">— |</span> X- oder Y-Motor allein ·
-                <span class="swatch" style="background:#1a3d6a;color:#c8daff">╱</span> Intervall (beide Motoren) ·
-                <span class="swatch" style="background:#1a4d2a;color:#a8ffb0">○</span> Sweep (kurzer Kreis) ·
-                <span class="swatch" style="background:#e7d3a1;color:#a23">●</span> Klack ·
-                <span class="swatch" style="background:#f4f4f4;color:#aaa;border:1px solid #ccc">_</span> Pause
+                <span class="sw" style="background:#16213e;color:#fff">▬</span> Malen (H/V-Motor) ·
+                <span class="sw" style="background:#1a3d6a;color:#c8daff">╱</span> Diagonal (Intervall) ·
+                <span class="sw" style="background:#1a4d2a;color:#a8ffb0">○</span> Kreis (Sweep) ·
+                <span class="sw" style="background:#e7d3a1;color:#a23">●</span> Klack ·
+                <span class="sw" style="background:#f4f4f4;color:#aaa;border:1px solid #ccc">_</span> Pause
             </p>
             <div id="bpm-info" class="bpm-info">…</div>
             <div id="seq-wrap" tabindex="0"></div>
             <p class="shortcuts">
-                <kbd>H</kbd> Horiz &nbsp;
-                <kbd>V</kbd> Vert &nbsp;
-                <kbd>D</kbd> Diagonal &nbsp;
+                <kbd>D</kbd> Malen &nbsp;
+                <kbd>X</kbd> Diagonal &nbsp;
                 <kbd>C</kbd> Kreis &nbsp;
                 <kbd>K</kbd>/<kbd>.</kbd> Klack &nbsp;
                 <kbd>Space</kbd> Pause &nbsp;&nbsp;
@@ -81,11 +76,11 @@
                 <button id="download">⬇ SVG</button>
             </div>
             <p id="status" class="status"></p>
-            <p class="hint">Sechs Klang-Formen auf einem <b>M × N Raster</b>: horizontale
-            Striche setzen nur den X-Motor in Gang (links im Stereobild), vertikale nur Y
-            (rechts), Diagonalen beide gleichzeitig (Intervall), kleine Kreise erzeugen
-            einen kurzen Sweep. Das Muster wiederholt sich zeilenweise — mit Versatz
-            entsteht ein diagonales Muster. Der rote Stift fährt beim Anhören mit.</p>
+            <p class="hint">Das Muster (Takte × Schläge) wiederholt sich über die
+            <b>Hilbert-Kurve</b>: Malen-Segmente erzeugen Linien entlang der Kurve,
+            Diagonalen und Kreise erscheinen als kompakte Formen an den
+            Segmentmittelpunkten. Der rote Stift fährt beim Anhören mit.
+            Ord. 3 ≈ 65–130 BPM, Ord. 4 ≈ 140 BPM bei 24 mm/s.</p>
         </section>
     </main>
     <script src="shared.js"></script>
@@ -96,28 +91,41 @@
 
     /*
      * Shape types:
-     *   0 = rest     (Pause, pen-up travel)
-     *   1 = horiz    (— horizontal dash, X motor only)
-     *   2 = vert     (| vertical dash, Y motor only)
-     *   3 = diag     (╱ diagonal /, both motors → interval)
-     *   4 = circle   (○ small circle, brief sweep)
-     *   5 = klack    (● dot click)
+     *   0 = rest   (Pause — pen-up, fast travel)
+     *   1 = draw   (▬ Malen — follows Hilbert segment, H or V motor)
+     *   2 = diag   (╱ Diagonal — compact 45° shape at midpoint, both motors → interval)
+     *   3 = circle (○ Kreis — small circle at midpoint, brief sweep)
+     *   4 = klack  (● dot click at midpoint)
      */
-    const NUM_TYPES = 6;
+    const NUM_TYPES = 5;
     const CTYPE = [
-        { sym: '',   cls: '',    label: 'Pause'    },  // 0
-        { sym: '—',  cls: 't-h', label: 'Horiz —'  },  // 1
-        { sym: '|',  cls: 't-v', label: 'Vert |'   },  // 2
-        { sym: '╱',  cls: 't-d', label: 'Diag ╱'   },  // 3
-        { sym: '○',  cls: 't-c', label: 'Kreis ○'  },  // 4
-        { sym: '●',  cls: 't-k', label: 'Klack ●'  },  // 5
+        { sym: '',   cls: '',       label: 'Pause'    },  // 0
+        { sym: '▬',  cls: 't-draw', label: 'Malen'   },  // 1
+        { sym: '╱',  cls: 't-diag', label: 'Diagonal' }, // 2
+        { sym: '○',  cls: 't-circ', label: 'Kreis'   },  // 3
+        { sym: '●',  cls: 't-dot',  label: 'Klack'   },  // 4
     ];
 
     /* default: 4/4 × 3 bars = 12 steps */
-    let GRID = [1,0,1,5, 3,0,1,0, 2,1,0,1];
+    let GRID = [1,0,1,4, 1,0,2,1, 1,4,0,1];
     let _tour = [], _K = 1.5, _FB = 130;
     let _appRef = null, _lastM = -1, _lastTakt = -1;
     let _cursor = 0, _takt = 4;
+
+    /* ─── Hilbert curve ─── */
+    function hilbertPts(order) {
+        const N = 1 << order, pts = [];
+        for (let d = 0; d < N * N; d++) {
+            let x = 0, y = 0, t = d;
+            for (let s = 1; s < N; s <<= 1) {
+                const rx = (t >> 1) & 1, ry = (t ^ rx) & 1;
+                if (!ry) { if (rx) { x = s-1-x; y = s-1-y; } const tmp=x; x=y; y=tmp; }
+                x += rx * s; y += ry * s; t >>= 2;
+            }
+            pts.push([x, y]);
+        }
+        return pts;
+    }
 
     /* ─── Editor ─── */
     function styleCell(btn, i) {
@@ -143,7 +151,6 @@
 
             const bcells = document.createElement('div');
             bcells.className = 'bar-cells';
-
             const bnums = document.createElement('div');
             bnums.className = 'beat-nums';
 
@@ -174,14 +181,10 @@
         }
     }
 
-    function getAllCells() {
-        return document.querySelectorAll('#seq-wrap .cell');
-    }
-
     function refreshEditor() {
-        getAllCells().forEach((b, i) => styleCell(b, i));
-        const active = document.querySelector('#seq-wrap .cell.active');
-        if (active) active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        document.querySelectorAll('#seq-wrap .cell').forEach((b, i) => styleCell(b, i));
+        const act = document.querySelector('#seq-wrap .cell.active');
+        if (act) act.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     }
 
     function moveCursor(delta) {
@@ -213,11 +216,10 @@
         else if (e.key === 'ArrowLeft')  { e.preventDefault(); moveCursor(-1); }
         else if (e.key === 'ArrowDown')  { e.preventDefault(); moveCursor(_takt); }
         else if (e.key === 'ArrowUp')    { e.preventDefault(); moveCursor(-_takt); }
-        else if (key === 'h')            { e.preventDefault(); setType(1); }
-        else if (key === 'v')            { e.preventDefault(); setType(2); }
-        else if (key === 'd')            { e.preventDefault(); setType(3); }
-        else if (key === 'c')            { e.preventDefault(); setType(4); }
-        else if (key === 'k' || key === '.') { e.preventDefault(); setType(5); }
+        else if (key === 'd')            { e.preventDefault(); setType(1); }
+        else if (key === 'x')            { e.preventDefault(); setType(2); }
+        else if (key === 'c')            { e.preventDefault(); setType(3); }
+        else if (key === 'k' || key === '.') { e.preventDefault(); setType(4); }
         else if (key === ' ' || key === 'r' || key === 't') { e.preventDefault(); setType(0); }
         else if (e.key === 'Backspace') {
             e.preventDefault();
@@ -227,32 +229,14 @@
         }
     });
 
-    /* ─── Shape drawing ─── */
+    /* ─── Drawing helpers ─── */
     function dotPolyline(x, y, r) {
         const p = [];
         for (let s = 0; s <= 7; s++) {
-            const a = s * 2 * Math.PI / 7;
+            const a = s / 7 * 2 * Math.PI;
             p.push([x + r * Math.cos(a), y + r * Math.sin(a)]);
         }
         return p;
-    }
-
-    /* Returns array of polylines for this shape, or null for types handled separately */
-    function shapeFor(type, cx, cy, s) {
-        switch (type) {
-            case 1: return [ [[cx - s*.50, cy], [cx + s*.50, cy]] ];                    // horiz
-            case 2: return [ [[cx, cy - s*.50], [cx, cy + s*.50]] ];                    // vert
-            case 3: return [ [[cx - s*.50, cy + s*.50], [cx + s*.50, cy - s*.50]] ];    // diag /
-            case 4: {                                                                     // circle
-                const r = s * 0.38, pts = [];
-                for (let i = 0; i <= 36; i++) {
-                    const a = i / 36 * 2 * Math.PI;
-                    pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
-                }
-                return [pts];
-            }
-            default: return null;
-        }
     }
 
     /* ─── App ─── */
@@ -263,23 +247,21 @@
                 { value: '3', label: '3/4' },
                 { value: '4', label: '4/4' },
             ]},
-            { key: 'takte',       label: 'Takte (Muster-Länge)', min: 2, max: 8,  step: 1,    value: 3  },
-            { key: 'rows',        label: 'Zeilen',                min: 4, max: 16, step: 1,    value: 8  },
-            { key: 'shift',       label: 'Versatz / Zeile',       min: 0, max: 8,  step: 1,    value: 0  },
-            { key: 'feed_draw',   label: 'Tempo malen mm/s',      min: 14, max: 80, step: 2,   value: 24 },
-            { key: 'feed_travel', label: 'Tempo Leerfahrt mm/s',  min: 60, max: 200, step: 10, value: 130 },
-            { key: 'grundton',    label: 'Grundton Hz',           min: 80, max: 200, step: 5,  value: 130 },
-            { key: 'tonlage',     label: 'Tonhub',                min: 0.5, max: 4, step: .25, value: 1.5 },
+            { key: 'takte',        label: 'Takte (Muster-Länge)',  min: 2, max: 8, step: 1,   value: 3  },
+            { key: 'hilbert_order',label: 'Hilbert-Ordnung',       min: 2, max: 4, step: 1,   value: 4  },
+            { key: 'feed_draw',    label: 'Tempo malen mm/s',      min: 14, max: 80, step: 2, value: 24 },
+            { key: 'feed_travel',  label: 'Tempo Leerfahrt mm/s',  min: 60, max: 200, step: 10, value: 130 },
+            { key: 'grundton',     label: 'Grundton Hz',           min: 80, max: 200, step: 5, value: 130 },
+            { key: 'tonlage',      label: 'Tonhub',                min: 0.5, max: 4, step: .25, value: 1.5 },
         ],
         onRegen(rnd) {
             for (let i = 0; i < GRID.length; i++) {
                 const r = rnd();
-                if      (r < 0.28) GRID[i] = 0;
-                else if (r < 0.52) GRID[i] = 1;
-                else if (r < 0.67) GRID[i] = 2;
-                else if (r < 0.82) GRID[i] = 3;
-                else if (r < 0.91) GRID[i] = 4;
-                else               GRID[i] = 5;
+                if      (r < 0.25) GRID[i] = 0;
+                else if (r < 0.62) GRID[i] = 1;
+                else if (r < 0.78) GRID[i] = 2;
+                else if (r < 0.89) GRID[i] = 3;
+                else               GRID[i] = 4;
             }
             buildEditor(GRID.length, _takt);
         },
@@ -288,67 +270,91 @@
             const takt  = parseInt(values.takt) || 4;
             const takte = Math.round(values.takte);
             const M     = takt * takte;
-            const rows  = Math.round(values.rows);
-            const shift = Math.round(values.shift);
+            const order = Math.round(values.hilbert_order);
             const fd = values.feed_draw, ft = values.feed_travel;
             _K = values.tonlage; _FB = values.grundton;
 
             ensureGrid(M, takt);
 
-            /* Canvas layout */
-            const X0 = 82, X1 = 918, Y0 = 115, Y1 = 935;
-            const W = X1 - X0, H = Y1 - Y0;
-            const cellW = W / M;
-            const cellH = H / rows;
-            const shapeS = Math.min(cellW, cellH) * 0.78;
-            const dotR   = Math.max(2.5, shapeS * 0.09);
+            /* Hilbert geometry */
+            const N    = 1 << order;
+            const hpts = hilbertPts(order);
+            const totalSegs = N * N - 1;
 
-            /* BPM for straight dash vs circle */
-            const dashMm   = shapeS / 5;                           // shape size in mm
-            const circMm   = 2 * Math.PI * shapeS * 0.38 / 5;    // circle circumference in mm
-            const bpmDash  = Math.round(60 * fd / dashMm);
-            const bpmCirc  = Math.round(60 * fd / circMm);
+            const margin = 115;
+            const sq  = 1000 - 2 * margin;   // 770 px
+            const cs  = sq / (N - 1);         // segment length in canvas px
+            const mapXY = ([gx, gy]) => [margin + gx * cs, margin + gy * cs];
+
+            /* Compact shape size: fits inside cell, leaves breathing room */
+            const shapeS  = cs * 0.60;        // compact shape
+            const dotR    = Math.max(2.5, shapeS * 0.10);
+            const seg_mm  = cs / 5;            // Hilbert segment length in mm
+            const bpm     = Math.round(60 * fd / seg_mm);
+
             document.getElementById('bpm-info').innerHTML =
-                `<b>~${bpmDash} BPM</b> (—/|/╱) · <b>~${bpmCirc} BPM</b> (○) · ` +
-                `${M} Schritte · ${takt}/4-Takt`;
+                `<b>~${bpm} BPM</b> · Ord.${order} · ${totalSegs} Seg. · ` +
+                `Muster: ${M} (${takt}/4 × ${takte})`;
 
             const lines = [], strokes = [];
 
-            /* Faint bar grid lines */
-            for (let r = 0; r <= rows; r++) {
-                const y = Y0 + r * cellH;
-                lines.push({ pts: [[X0, y], [X1, y]], w: 0.09 });
-            }
-            const nbars = Math.ceil(M / takt);
-            for (let b = 0; b <= nbars; b++) {
-                const x = X0 + b * takt * cellW;
-                lines.push({ pts: [[x, Y0], [x, Y1]], w: 0.22 });
-            }
+            /* Start anchor */
+            const p0s = mapXY(hpts[0]);
+            const ds  = dotPolyline(p0s[0], p0s[1], dotR);
+            strokes.push(ds); lines.push({ pts: ds, w: 0.9, closed: true });
 
-            /* Shapes in boustrophedon order */
-            for (let r = 0; r < rows; r++) {
-                const rev = (r % 2 !== 0);
-                for (let ci = 0; ci < M; ci++) {
-                    const col  = rev ? M - 1 - ci : ci;
-                    const type = GRID[(col + r * shift) % M];
-                    const cx   = X0 + (col + 0.5) * cellW;
-                    const cy   = Y0 + (r   + 0.5) * cellH;
+            let run = null;
+            const closeRun = () => {
+                if (run) { strokes.push(run); lines.push({ pts: run, w: 1.3 }); run = null; }
+            };
 
-                    if (type === 5) {                         // klack dot
-                        const d = dotPolyline(cx, cy, dotR);
-                        strokes.push(d);
-                        lines.push({ pts: d, w: 0.9, closed: true });
-                    } else if (type > 0) {                    // draw shape
-                        const segs = shapeFor(type, cx, cy, shapeS);
-                        if (segs) {
-                            for (const seg of segs) {
-                                strokes.push(seg);
-                                lines.push({ pts: seg, w: 1.2, closed: type === 4 });
-                            }
+            for (let i = 0; i < totalSegs; i++) {
+                const p0   = mapXY(hpts[i]);
+                const p1   = mapXY(hpts[i + 1]);
+                const type = GRID[i % M];
+                const cx   = (p0[0] + p1[0]) / 2;
+                const cy   = (p0[1] + p1[1]) / 2;
+
+                /* Anchor dot at pattern-repeat boundary to keep plotter on Hilbert path */
+                if (i > 0 && i % M === 0) {
+                    closeRun();
+                    const d = dotPolyline(p0[0], p0[1], dotR);
+                    strokes.push(d); lines.push({ pts: d, w: 0.9, closed: true });
+                }
+
+                if (type === 1) {
+                    /* Follow Hilbert segment (H or V — single motor) */
+                    if (!run) run = [p0, p1];
+                    else run.push(p1);
+                } else {
+                    closeRun();
+                    if (type === 2) {
+                        /* 45° diagonal (╱) centered on segment midpoint */
+                        const h = shapeS * 0.50;
+                        const seg = [[cx - h, cy + h], [cx + h, cy - h]];
+                        strokes.push(seg); lines.push({ pts: seg, w: 1.2 });
+                    } else if (type === 3) {
+                        /* Small circle centered on segment midpoint */
+                        const r = shapeS * 0.42, pts = [];
+                        for (let j = 0; j <= 36; j++) {
+                            const a = j / 36 * 2 * Math.PI;
+                            pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
                         }
+                        strokes.push(pts); lines.push({ pts: pts, w: 1.2, closed: true });
+                    } else if (type === 4) {
+                        /* Klack dot */
+                        const d = dotPolyline(cx, cy, dotR);
+                        strokes.push(d); lines.push({ pts: d, w: 0.9, closed: true });
                     }
+                    /* type 0: rest — nothing drawn */
                 }
             }
+            closeRun();
+
+            /* End anchor */
+            const pE  = mapXY(hpts[totalSegs]);
+            const dE  = dotPolyline(pE[0], pE[1], dotR);
+            strokes.push(dE); lines.push({ pts: dE, w: 0.9, closed: true });
 
             _tour = PR4Audio.tourFromPolylines(strokes, fd, ft);
 
@@ -357,12 +363,14 @@
                 lines.push({ pts: st, w: 1.0 });
             lines.push({ pts: [[55, 88], [945, 88], [945, 945], [55, 945]], w: 0.6, closed: true });
 
-            const nh = GRID.filter(t => t >= 1 && t <= 4).length;
-            const nk = GRID.filter(t => t === 5).length;
+            const nd = GRID.filter(t => t === 1).length;
+            const nx = GRID.filter(t => t === 2).length;
+            const nc = GRID.filter(t => t === 3).length;
+            const nk = GRID.filter(t => t === 4).length;
             const nr = GRID.filter(t => t === 0).length;
             api.status(
-                `${nh} Töne · ${nk} Klack · ${nr} Pausen · ` +
-                `${rows}×${M} Raster · ${strokes.length} Striche · ~${bpmDash} BPM`
+                `${nd}×▬  ${nx}×╱  ${nc}×○  ${nk}×●  ${nr}×_ · ` +
+                `${M} Muster · ~${bpm} BPM · ${strokes.length} Elemente`
             );
             api.done(lines);
         }
@@ -375,10 +383,10 @@
     function showDot(x, y, pen) {
         if (x == null) { dot.style.display = 'none'; return; }
         const rect = canvas.getBoundingClientRect();
-        const sc = rect.width / 1000;
-        dot.style.display = 'block';
-        dot.style.left = (x * sc) + 'px';
-        dot.style.top  = (y * sc) + 'px';
+        const sc   = rect.width / 1000;
+        dot.style.display    = 'block';
+        dot.style.left       = (x * sc) + 'px';
+        dot.style.top        = (y * sc) + 'px';
         dot.style.background = pen === 'up' ? '#999' : '#cc2200';
     }
 
