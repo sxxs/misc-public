@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>101 · Plotter-Komponist — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+    <style>
+        .composer { display:flex; flex-wrap:wrap; gap:4px; margin:.2rem 0 .6rem; }
+        .cell { width:30px; height:34px; border:1px solid #888; border-radius:5px;
+                font-size:15px; line-height:1; cursor:pointer; padding:0;
+                display:flex; align-items:center; justify-content:center; background:#f4f4f4; }
+        .cell.draw   { background:#16213e; color:#fff; }
+        .cell.dot    { background:#e7d3a1; color:#a23; }
+        .cell.travel { background:#f4f4f4; color:#bbb; }
+        .cell.beat   { box-shadow:0 -3px 0 -1px #c33 inset; }
+        .legend { font-size:.78rem; color:#555; margin:.1rem 0 .5rem; line-height:1.5; }
+        .legend b { color:#16213e; }
+    </style>
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>101 · Plotter-Komponist</h1></header>
+    <main>
+        <section class="paper" style="position:relative">
+            <canvas id="canvas"></canvas>
+            <div id="pen-dot" style="display:none;position:absolute;width:12px;height:12px;
+                border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);
+                box-shadow:0 0 4px rgba(0,0,0,.4)"></div>
+        </section>
+        <section class="panel">
+            <p class="legend">Komponiere eine Tonfolge — Klick schaltet jede Stufe weiter:<br>
+            <b style="background:#16213e;color:#fff;padding:0 4px;border-radius:3px">▬ malen</b>
+            = tiefer Ton (Stift zeichnet, langsam) ·
+            <b style="background:#f4f4f4;padding:0 4px;border-radius:3px;border:1px solid #ccc">leer</b>
+            = hoher Ton (Leerfahrt, schnell) ·
+            <b style="background:#e7d3a1;color:#a23;padding:0 4px;border-radius:3px">● Klack</b>
+            = Stift tippt (Punkt + Klick).</p>
+            <div id="composer" class="composer"></div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="play">▶ Anhören</button>
+                <button id="regen" class="primary">🎲 Neu</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Aus deiner Komposition entsteht ein <b>bildfüllendes Muster</b>:
+            Die Tonfolge wird auf einer Schlangenlinie (oder Spirale) ausgelegt. Punkte am
+            Zeilenanfang/-ende „verankern" den Pfad, damit der Plotter wirklich die
+            komponierte Strecke fährt (sonst nimmt er die Abkürzung) — und so genau deine
+            Musik erzeugt. Der rote Stift fährt beim Anhören live mit.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+
+    /* composition state: 0 = travel (high), 1 = draw (low), 2 = dot (klack) */
+    let GRID = [1,2,0,1, 2,0,1,0, 1,2,0,1, 0,2,1,0];
+    let _tour = [], _K = 2.2, _FB = 130;
+    let _appRef = null, _lastM = -1;
+
+    function styleCell(btn, type, isBeat) {
+        btn.className = 'cell ' + (type === 1 ? 'draw' : type === 2 ? 'dot' : 'travel') + (isBeat ? ' beat' : '');
+        btn.textContent = type === 1 ? '▬' : type === 2 ? '●' : '';
+    }
+
+    function buildEditor(M) {
+        const host = document.getElementById('composer');
+        host.innerHTML = '';
+        for (let i = 0; i < M; i++) {
+            const b = document.createElement('button');
+            styleCell(b, GRID[i], i % 4 === 0);
+            b.addEventListener('click', () => {
+                GRID[i] = (GRID[i] + 1) % 3;
+                styleCell(b, GRID[i], i % 4 === 0);
+                if (_appRef) _appRef.start();
+            });
+            host.appendChild(b);
+        }
+    }
+
+    function ensureGrid(M) {
+        if (GRID.length !== M) {
+            const old = GRID;
+            GRID = new Array(M);
+            for (let i = 0; i < M; i++) GRID[i] = old[i % old.length] != null ? old[i % old.length] : 0;
+        }
+        if (M !== _lastM) { buildEditor(M); _lastM = M; }
+    }
+
+    function dotPolyline(x, y, r) {
+        const p = [];
+        for (let s = 0; s <= 7; s++) { const a = s * 2 * Math.PI / 7; p.push([x + r * Math.cos(a), y + r * Math.sin(a)]); }
+        return p;
+    }
+
+    const app = PR4App({
+        svgName: 'plotter-komponist',
+        params: [
+            { key: 'steps',  label: 'Stufen',  min: 8, max: 32, step: 4, value: 16 },
+            { key: 'rows',   label: 'Zeilen',  min: 3, max: 16, step: 1, value: 6 },
+            { key: 'shift',  label: 'Versatz/Zeile', min: 0, max: 6, step: 1, value: 0 },
+            { key: 'layout', label: 'Auslegung', value: 'serpentine', options: [
+                { value: 'serpentine', label: 'Schlangenlinie' },
+                { value: 'spirale',    label: 'Spirale' },
+            ]},
+            { key: 'feed_draw',   label: 'Tempo malen mm/s',  min: 14, max: 50,  step: 2,  value: 24 },
+            { key: 'feed_travel', label: 'Tempo Leerfahrt mm/s', min: 60, max: 200, step: 10, value: 130 },
+            { key: 'grundton',    label: 'Grundton Hz',       min: 80, max: 200, step: 5,  value: 130 },
+            { key: 'tonlage',     label: 'Tonhub',            min: 1, max: 4,  step: 0.25, value: 2.25 },
+        ],
+        onRegen(rnd) {
+            for (let i = 0; i < GRID.length; i++) {
+                const r = rnd();
+                GRID[i] = r < 0.5 ? 1 : r < 0.78 ? 0 : 2;
+            }
+            buildEditor(GRID.length);
+        },
+        generate(api) {
+            const { values } = api;
+            const M = Math.round(values.steps);
+            ensureGrid(M);
+            const rows = Math.round(values.rows);
+            const shift = Math.round(values.shift);
+            const fd = values.feed_draw, ft = values.feed_travel;
+            _K = values.tonlage; _FB = values.grundton;
+
+            const lines = [];
+            const strokes = [];          // pen-down polylines in plot order
+            const X0 = 85, X1 = 915, Tp = 150, Bp = 915;
+            const W = X1 - X0;
+            const dotR = 3.2;
+
+            function pushDot(x, y) {
+                const d = dotPolyline(x, y, dotR);
+                strokes.push(d);
+                lines.push({ pts: d, w: 0.9, closed: true });
+            }
+
+            if (values.layout === 'serpentine') {
+                const rowH = (Bp - Tp) / rows;
+                const cw = W / M;
+                for (let r = 0; r < rows; r++) {
+                    const y = Tp + (r + 0.5) * rowH;
+                    const dir = r % 2 === 0 ? 1 : -1;
+                    lines.push({ pts: [[X0, y], [X1, y]], w: 0.2 });          // faint staff
+                    const leadX = dir === 1 ? X0 : X1, trailX = dir === 1 ? X1 : X0;
+                    pushDot(leadX, y);                                        // row-start anchor
+                    let runStart = null, runEnd = null;
+                    const closeRun = () => {
+                        if (runStart !== null) {
+                            const seg = [[runStart, y], [runEnd, y]];
+                            strokes.push(seg); lines.push({ pts: seg, w: 1.3 });
+                            runStart = null;
+                        }
+                    };
+                    for (let s = 0; s < M; s++) {
+                        const type = GRID[(s + r * shift) % M];
+                        const lead = dir === 1 ? X0 + s * cw : X1 - s * cw;
+                        const trail = lead + dir * cw;
+                        if (type === 1) { if (runStart === null) runStart = lead; runEnd = trail; }
+                        else { closeRun(); if (type === 2) pushDot(lead + dir * cw / 2, y); }
+                    }
+                    closeRun();
+                    pushDot(trailX, y);                                       // row-end anchor
+                }
+            } else {
+                /* spiral: lay all cells along an Archimedean spiral by equal arc length */
+                const cx = 500, cy = 500, r0 = 70, r1 = 425, turns = Math.max(2, rows);
+                const dense = []; const DS = 3000;
+                for (let i = 0; i <= DS; i++) {
+                    const th = i / DS * turns * 2 * Math.PI;
+                    const rr = r0 + (r1 - r0) * i / DS;
+                    dense.push([cx + rr * Math.cos(th), cy + rr * Math.sin(th)]);
+                }
+                const cum = [0];
+                for (let i = 1; i < dense.length; i++)
+                    cum.push(cum[i - 1] + Math.hypot(dense[i][0] - dense[i-1][0], dense[i][1] - dense[i-1][1]));
+                const total = cum[cum.length - 1];
+                let ptr = 0;
+                const pointAt = (s) => {
+                    while (ptr < cum.length - 2 && cum[ptr + 1] < s) ptr++;
+                    const a = cum[ptr], b = cum[ptr + 1], f = (s - a) / ((b - a) || 1);
+                    return [dense[ptr][0] + (dense[ptr+1][0] - dense[ptr][0]) * f,
+                            dense[ptr][1] + (dense[ptr+1][1] - dense[ptr][1]) * f];
+                };
+                const N = M * rows;
+                let run = null;
+                const closeRun = () => { if (run) { strokes.push(run); lines.push({ pts: run, w: 1.3 }); run = null; } };
+                for (let i = 0; i < N; i++) {
+                    const s0 = total * i / N, s1 = total * (i + 1) / N;
+                    const sub = Math.max(2, Math.ceil((s1 - s0) / 7));
+                    const cpts = [];
+                    for (let k = 0; k <= sub; k++) cpts.push(pointAt(s0 + (s1 - s0) * k / sub));
+                    const mid = cpts[Math.floor(cpts.length / 2)];
+                    const type = GRID[i % M];
+                    if (i % M === 0) { closeRun(); pushDot(cpts[0][0], cpts[0][1]); }   // loop anchor
+                    if (type === 1) {
+                        if (!run) run = cpts.slice();
+                        else for (let k = 1; k < cpts.length; k++) run.push(cpts[k]);
+                    } else { closeRun(); if (type === 2) pushDot(mid[0], mid[1]); }
+                }
+                closeRun();
+            }
+
+            /* honest plotter tour: strokes drawn in order, shortest-path pen-up between */
+            _tour = PR4Audio.tourFromPolylines(strokes, fd, ft);
+
+            /* title + frame */
+            for (const st of PR4Font.textCentered('PLOTTER-KOMPONIST', 500, 60, 20))
+                lines.push({ pts: st, w: 1.0 });
+            lines.push({ pts: [[55, 88], [945, 88], [945, 945], [55, 945]], w: 0.6, closed: true });
+
+            const nd = GRID.filter(t => t === 1).length, nk = GRID.filter(t => t === 2).length;
+            api.status(`${nd}× malen · ${nk}× Klack · ${M} Stufen × ${rows} Zeilen · ${strokes.length} Striche/Punkte`);
+            api.done(lines);
+        }
+    });
+    _appRef = app;
+
+    const dot = document.getElementById('pen-dot');
+    const canvas = document.getElementById('canvas');
+    function showDot(x, y, pen) {
+        if (x == null) { dot.style.display = 'none'; return; }
+        const rect = canvas.getBoundingClientRect();
+        const sc = rect.width / 1000;
+        dot.style.display = 'block';
+        dot.style.left = (x * sc) + 'px';
+        dot.style.top  = (y * sc) + 'px';
+        dot.style.background = pen === 'up' ? '#999' : '#cc2200';
+    }
+
+    const playBtn = document.getElementById('play');
+    let _playing = false;
+    function endPlay() { _playing = false; playBtn.textContent = '▶ Anhören'; dot.style.display = 'none'; }
+    playBtn.addEventListener('click', () => {
+        if (_playing) { PR4Audio.stop(); return; }
+        _playing = true; playBtn.textContent = '■ Stop';
+        PR4Audio.play(_tour, { freqBase: _FB, freqPerMmS: _K, onPos: showDot, onEnd: endPlay });
+    });
+    </script>
+</body>
+</html>
