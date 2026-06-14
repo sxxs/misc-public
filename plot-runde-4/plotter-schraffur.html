@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>101 · Plotter-Komponist — Plot Runde 4</title>
+    <title>103 · Schraffur-Sequencer — Plot Runde 4</title>
     <link rel="stylesheet" href="shared.css">
     <style>
         #seq-wrap { display:flex; flex-wrap:wrap; gap:5px; margin:.15rem 0 .4rem; outline:none; }
@@ -12,15 +12,15 @@
         .bar-cells { display:flex; gap:2px; padding:3px; border:1px solid #ccc;
                      border-radius:4px; background:#f8f8f8; }
         .beat-nums { display:flex; gap:2px; }
-        .beat-num  { width:28px; text-align:center; font-size:.53rem; color:#bbb; }
-        .cell { width:28px; height:30px; border:1px solid #ccc; border-radius:3px;
-                font-size:14px; cursor:pointer; padding:0; display:flex;
+        .beat-num  { width:30px; text-align:center; font-size:.53rem; color:#bbb; }
+        .cell { width:30px; height:30px; border:1px solid #ccc; border-radius:3px;
+                font-size:15px; cursor:pointer; padding:0; display:flex;
                 align-items:center; justify-content:center; background:#f4f4f4;
                 color:#bbb; user-select:none; }
         .cell.active { outline:2px solid #e96000; outline-offset:1px; z-index:1; }
-        .cell.t-draw { background:#16213e; color:#fff; font-size:15px; }
-        .cell.t-diag { background:#1a3d6a; color:#c8daff; font-size:16px; }
-        .cell.t-circ { background:#1a4d2a; color:#a8ffb0; font-size:13px; }
+        .cell.t-line { background:#16213e; color:#fff; }
+        .cell.t-wave { background:#1a3d6a; color:#bfe0ff; }
+        .cell.t-zig  { background:#7a1f5a; color:#ffd0f0; }
         .cell.t-dot  { background:#e7d3a1; color:#a23; }
         .bpm-info  { font-size:.73rem; color:#555; margin:.15rem 0 .3rem; font-variant-numeric:tabular-nums; }
         .bpm-info b { color:#222; }
@@ -32,7 +32,7 @@
     </style>
 </head>
 <body>
-    <header><a class="back" href="./">← Übersicht</a><h1>101 · Plotter-Komponist</h1></header>
+    <header><a class="back" href="./">← Übersicht</a><h1>103 · Schraffur-Sequencer</h1></header>
     <main>
         <section class="paper" style="position:relative">
             <canvas id="canvas"></canvas>
@@ -42,16 +42,16 @@
         </section>
         <section class="panel">
             <p class="legend">
-                <span class="sw" style="background:#16213e;color:#fff">▬</span> Malen (Motor je Achse) ·
-                <span class="sw" style="background:#1a3d6a;color:#c8daff">╱</span> Diagonal (Intervall) ·
-                <span class="sw" style="background:#1a4d2a;color:#a8ffb0">○</span> Kreis (Sweep) ·
+                <span class="sw" style="background:#16213e;color:#fff">▬</span> Gerade (klar) ·
+                <span class="sw" style="background:#1a3d6a;color:#bfe0ff">∿</span> Welle (Vibrato) ·
+                <span class="sw" style="background:#7a1f5a;color:#ffd0f0">⋀</span> Zickzack (Buzz) ·
                 <span class="sw" style="background:#e7d3a1;color:#a23">●</span> Klack ·
                 <span class="sw" style="background:#f4f4f4;color:#aaa;border:1px solid #ccc">_</span> Pause
             </p>
             <div id="bpm-info" class="bpm-info">…</div>
             <div id="seq-wrap" tabindex="0"></div>
             <p class="shortcuts">
-                <kbd>D</kbd> Malen &nbsp; <kbd>X</kbd> Diagonal &nbsp; <kbd>C</kbd> Kreis &nbsp;
+                <kbd>G</kbd> Gerade &nbsp; <kbd>W</kbd> Welle &nbsp; <kbd>Z</kbd> Zickzack &nbsp;
                 <kbd>K</kbd>/<kbd>.</kbd> Klack &nbsp; <kbd>Space</kbd> Pause &nbsp;&nbsp;
                 <kbd>←</kbd><kbd>→</kbd> Cursor &nbsp; <kbd>↑</kbd><kbd>↓</kbd> ±Takt &nbsp; <kbd>⌫</kbd> löschen
             </p>
@@ -62,11 +62,12 @@
                 <button id="download">⬇ SVG</button>
             </div>
             <p id="status" class="status"></p>
-            <p class="hint">Das Muster (Takte × Schläge) läuft über eine wählbare
-            <b>raumfüllende Kurve</b> (Hilbert, Moore, Gosper, Peano). Mit <b>Textur</b>
-            werden Malen-Striche zu Wellen oder Zickzack — dann „brummt" der Quer-Motor
-            mit (unruhiger Klang). Der <b>Tastgrad</b> macht jeden Schlag staccato (mit
-            Klack-Lücke) statt zu einem gehaltenen Ton zu verschmelzen.</p>
+            <p class="hint">Klassische <b>Schraffur füllt das Blatt</b> — aber jeder Strich
+            ist ein Rhythmus aus Textur-Zellen: <b>gerade</b> klingt klar (ein Motor),
+            <b>Welle</b> lässt den Quer-Motor mitschwingen (Vibrato), <b>Zickzack</b>
+            brummt (Buzz). Das Muster wiederholt sich Zeile für Zeile; mit Versatz
+            wandert es diagonal. Richtung waagrecht = X-Ton, senkrecht = Y-Ton, schräg =
+            Intervall.</p>
         </section>
     </main>
     <script src="shared.js"></script>
@@ -75,80 +76,21 @@
     <script>
     "use strict";
 
-    /* Shape types: 0=rest 1=draw 2=diag 3=circle 4=klack */
+    /* Cell types: 0=rest 1=line(straight) 2=wave 3=zigzag 4=klack */
     const NUM_TYPES = 5;
     const CTYPE = [
         { sym:'',  cls:'',       label:'Pause'    },
-        { sym:'▬', cls:'t-draw', label:'Malen'    },
-        { sym:'╱', cls:'t-diag', label:'Diagonal' },
-        { sym:'○', cls:'t-circ', label:'Kreis'    },
+        { sym:'▬', cls:'t-line', label:'Gerade'   },
+        { sym:'∿', cls:'t-wave', label:'Welle'    },
+        { sym:'⋀', cls:'t-zig',  label:'Zickzack' },
         { sym:'●', cls:'t-dot',  label:'Klack'    },
     ];
 
-    let GRID = [1,0,1,4, 1,0,2,1, 1,4,0,1];
+    let GRID = [1,1,2,0, 1,3,1,0, 2,1,3,4];
     let _tour = [], _K = 1.5, _FB = 130;
     let _appRef = null, _lastM = -1, _lastTakt = -1, _cursor = 0, _takt = 4;
 
-    /* ─── L-system space-filling curves ─── */
-    const CURVES = {
-        hilbert: { angle:90, draw:'F', axiom:'A',
-            rules:{ A:'-BF+AFA+FB-', B:'+AF-BFB-FA+' }, iters:o=>o },
-        moore: { angle:90, draw:'F', axiom:'LFL+F+LFL',
-            rules:{ L:'-RF+LFL+FR-', R:'+LF-RFR-FL+' }, iters:o=>o },
-        peano: { angle:90, draw:'F', axiom:'L',
-            rules:{ L:'LFRFL-F-RFLFR+F+LFRFL', R:'RFLFR+F+LFRFL-F-RFLFR' },
-            iters:o=>Math.min(o, 3) },
-        gosper: { angle:60, draw:'AB', axiom:'A',
-            rules:{ A:'A-B--B+A++AA+B-', B:'+A-BB--B-A++A+B' },
-            iters:o=>Math.min(o, 3) },
-    };
-
-    function expandL(def, iters) {
-        let s = def.axiom;
-        for (let k = 0; k < iters; k++) {
-            let out = '';
-            for (const ch of s) out += (def.rules[ch] != null ? def.rules[ch] : ch);
-            s = out;
-        }
-        return s;
-    }
-
-    /* Turn an L-system string into a list of vertices (the curve path). */
-    function turtlePts(def, iters) {
-        const str = expandL(def, iters);
-        const a = def.angle * Math.PI / 180;
-        let x = 0, y = 0, ang = 0;
-        const pts = [[0, 0]];
-        for (const ch of str) {
-            if (def.draw.indexOf(ch) >= 0) {
-                x += Math.cos(ang); y += Math.sin(ang);
-                pts.push([x, y]);
-            } else if (ch === '+') ang += a;
-            else if (ch === '-') ang -= a;
-        }
-        return pts;
-    }
-
-    /* Build a curve normalised into the canvas margin box. */
-    function curvePoints(name, order) {
-        const def = CURVES[name] || CURVES.hilbert;
-        let iters = def.iters(order);
-        let pts = turtlePts(def, iters);
-        /* keep segment count sane */
-        while (pts.length > 2600 && iters > 1) pts = turtlePts(def, --iters);
-        /* normalise to [0,1] preserving aspect, centre in box */
-        let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
-        for (const [px,py] of pts){ if(px<minX)minX=px; if(px>maxX)maxX=px;
-                                    if(py<minY)minY=py; if(py>maxY)maxY=py; }
-        const w = maxX-minX || 1, h = maxY-minY || 1;
-        const margin = 115, box = 1000 - 2*margin;
-        const sc = box / Math.max(w, h);
-        const ox = margin + (box - w*sc)/2, oy = margin + (box - h*sc)/2;
-        const mapped = pts.map(([px,py]) => [ox + (px-minX)*sc, oy + (py-minY)*sc]);
-        return mapped;
-    }
-
-    /* ─── Texture: replace a straight stroke with wave / zigzag ─── */
+    /* texture: perpendicular oscillation along a→b */
     function texturePath(ax, ay, bx, by, mode, amp, waves) {
         if (mode === 'gerade' || amp <= 0) return [[ax,ay],[bx,by]];
         const dx = bx-ax, dy = by-ay, len = Math.hypot(dx,dy);
@@ -161,11 +103,12 @@
             const t = i/steps, ph = t*cyc*2*Math.PI;
             let off;
             if (mode === 'welle') off = Math.sin(ph);
-            else { const fr = (t*cyc) % 1; off = fr<0.5 ? (fr*4-1) : (3-fr*4); } // triangle
+            else { const fr = (t*cyc) % 1; off = fr<0.5 ? (fr*4-1) : (3-fr*4); }
             pts.push([ax+ux*len*t + nx*amp*off, ay+uy*len*t + ny*amp*off]);
         }
         return pts;
     }
+    const TEXMODE = { 1:'gerade', 2:'welle', 3:'zickzack' };
 
     /* ─── Editor ─── */
     function styleCell(btn, i) {
@@ -176,8 +119,7 @@
     }
     function buildEditor(M, takt) {
         _takt = takt;
-        const wrap = document.getElementById('seq-wrap');
-        wrap.innerHTML = '';
+        const wrap = document.getElementById('seq-wrap'); wrap.innerHTML = '';
         const nbars = Math.ceil(M/takt);
         for (let bar=0; bar<nbars; bar++) {
             const block = document.createElement('div'); block.className='bar-block';
@@ -219,11 +161,11 @@
         else if (e.key==='ArrowLeft') { e.preventDefault(); moveCursor(-1); }
         else if (e.key==='ArrowDown') { e.preventDefault(); moveCursor(_takt); }
         else if (e.key==='ArrowUp')   { e.preventDefault(); moveCursor(-_takt); }
-        else if (key==='d'){ e.preventDefault(); setType(1); }
-        else if (key==='x'){ e.preventDefault(); setType(2); }
-        else if (key==='c'){ e.preventDefault(); setType(3); }
+        else if (key==='g'){ e.preventDefault(); setType(1); }
+        else if (key==='w'){ e.preventDefault(); setType(2); }
+        else if (key==='z'){ e.preventDefault(); setType(3); }
         else if (key==='k'||key==='.'){ e.preventDefault(); setType(4); }
-        else if (key===' '||key==='r'||key==='t'){ e.preventDefault(); setType(0); }
+        else if (key===' '||key==='r'){ e.preventDefault(); setType(0); }
         else if (e.key==='Backspace'){ e.preventDefault(); GRID[_cursor]=0;
             moveCursor(_cursor>0?-1:0); if(_appRef)_appRef.start(); }
     });
@@ -233,26 +175,20 @@
 
     /* ─── App ─── */
     const app = PR4App({
-        svgName: 'plotter-komponist',
+        svgName: 'plotter-schraffur',
         params: [
             { key:'takt', label:'Takt', value:'4', options:[{value:'3',label:'3/4'},{value:'4',label:'4/4'}] },
             { key:'takte', label:'Takte (Muster)', min:2, max:8, step:1, value:3 },
-            { key:'curve', label:'Kurve', value:'hilbert', options:[
-                { value:'hilbert', label:'Hilbert' },
-                { value:'moore',   label:'Moore (Schleife)' },
-                { value:'gosper',  label:'Gosper (6-eck)' },
-                { value:'peano',   label:'Peano' },
+            { key:'dir', label:'Richtung', value:'h', options:[
+                { value:'h', label:'Waagrecht (X)' },
+                { value:'v', label:'Senkrecht (Y)' },
+                { value:'d', label:'Diagonal (Intervall)' },
             ]},
-            { key:'order', label:'Kurven-Ordnung', min:2, max:4, step:1, value:4 },
-            { key:'textur', label:'Textur (Malen)', value:'gerade', options:[
-                { value:'gerade',   label:'Gerade ▬' },
-                { value:'welle',    label:'Welle ∿' },
-                { value:'zickzack', label:'Zickzack ⋀⋁' },
-            ]},
-            { key:'tex_amp',   label:'Textur-Tiefe %', min:0, max:45, step:5, value:22 },
-            { key:'tex_freq',  label:'Textur-Wellen',  min:1, max:8, step:1, value:3 },
-            { key:'duty',      label:'Tastgrad (Staccato)', min:0.4, max:1, step:0.05, value:0.8 },
-            { key:'feed_draw', label:'Tempo malen mm/s', min:14, max:80, step:2, value:24 },
+            { key:'rows', label:'Zeilen', min:4, max:24, step:1, value:12 },
+            { key:'shift', label:'Versatz / Zeile', min:0, max:8, step:1, value:1 },
+            { key:'tex_amp',  label:'Textur-Tiefe %', min:5, max:60, step:5, value:30 },
+            { key:'tex_freq', label:'Textur-Wellen',  min:1, max:8, step:1, value:3 },
+            { key:'feed_draw', label:'Tempo malen mm/s', min:14, max:80, step:2, value:26 },
             { key:'feed_travel', label:'Tempo Leerfahrt mm/s', min:60, max:200, step:10, value:130 },
             { key:'grundton', label:'Grundton Hz', min:80, max:200, step:5, value:130 },
             { key:'tonlage',  label:'Tonhub', min:0.5, max:4, step:0.25, value:1.5 },
@@ -260,7 +196,7 @@
         onRegen(rnd) {
             for (let i=0;i<GRID.length;i++){
                 const r=rnd();
-                GRID[i] = r<0.25?0 : r<0.62?1 : r<0.78?2 : r<0.89?3 : 4;
+                GRID[i] = r<0.22?0 : r<0.5?1 : r<0.7?2 : r<0.88?3 : 4;
             }
             buildEditor(GRID.length, _takt);
         },
@@ -269,82 +205,80 @@
             const takt  = parseInt(values.takt)||4;
             const takte = Math.round(values.takte);
             const M     = takt*takte;
-            const order = Math.round(values.order);
+            const rows  = Math.round(values.rows);
+            const shift = Math.round(values.shift);
+            const dir   = values.dir;
             const fd = values.feed_draw, ft = values.feed_travel;
-            const duty = values.duty, texMode = values.textur;
             _K = values.tonlage; _FB = values.grundton;
 
             ensureGrid(M, takt);
 
-            const cp = curvePoints(values.curve, order);
-            const totalSegs = cp.length - 1;
-            const segLenPx = Math.hypot(cp[1][0]-cp[0][0], cp[1][1]-cp[0][1]);
-            const shapeS = segLenPx * 0.60;
-            const dotR   = Math.max(2.4, shapeS*0.10);
-            const texAmp = segLenPx * (values.tex_amp/100);
-            const texFreq = Math.round(values.tex_freq);
-
-            /* BPM: one beat = one segment, drawn for `duty` of its length */
-            const beat_mm = segLenPx/5 * duty;
-            const bpm = Math.round(60 * fd / Math.max(0.5, beat_mm));
-            document.getElementById('bpm-info').innerHTML =
-                `<b>~${bpm} BPM</b> · ${values.curve} Ord.${order} · ${totalSegs} Seg. · ` +
-                `Muster ${M} (${takt}/4×${takte}) · Textur: ${texMode}`;
-
+            const X0 = 90, X1 = 910, Y0 = 150, Y1 = 905;
             const lines = [], strokes = [];
-            function pushDot(x,y){ const d=dotPolyline(x,y,dotR); strokes.push(d);
-                lines.push({pts:d, w:0.9, closed:true}); }
 
-            pushDot(cp[0][0], cp[0][1]);   // start anchor
+            /* geometry per direction: each row is a line of M cells.
+             * `along` advances the cell, `perp` is the texture axis. */
+            const rowH = (Y1 - Y0) / rows;
+            const cellLenH = (X1 - X0) / M;            // horizontal cell width
+            const cellLenV = (Y1 - Y0) / M;            // vertical cell height (for 'v')
+            let cellLen, texAmp, dotR, bpmLen;
 
-            let run = null;
-            const legato = duty >= 0.99 && texMode === 'gerade';
-            const closeRun = ()=>{ if(run){ strokes.push(run); lines.push({pts:run, w:1.3}); run=null; } };
+            if (dir === 'h') { cellLen = cellLenH; }
+            else if (dir === 'v') { cellLen = cellLenV; }
+            else { cellLen = Math.hypot(cellLenH, rowH) * 0.92; }
+            texAmp = cellLen * (values.tex_amp/100);
+            dotR   = Math.max(2.4, cellLen*0.11);
+            const texFreq = Math.round(values.tex_freq);
+            bpmLen = cellLen / 5;                       // mm per cell
+            const bpm = Math.round(60 * fd / Math.max(0.5, bpmLen));
 
-            for (let i=0;i<totalSegs;i++){
-                const p0 = cp[i], p1 = cp[i+1];
-                const type = GRID[i%M];
-                const cx=(p0[0]+p1[0])/2, cy=(p0[1]+p1[1])/2;
+            document.getElementById('bpm-info').innerHTML =
+                `<b>~${bpm} BPM</b> · ${rows} Zeilen × ${M} Zellen · ` +
+                `Richtung ${dir==='h'?'waagrecht':dir==='v'?'senkrecht':'diagonal'} · Versatz ${shift}`;
 
-                if (i>0 && i%M===0){ closeRun(); pushDot(p0[0], p0[1]); }   // pattern anchor
-
-                if (type === 1) {
-                    if (legato) {
-                        if (!run) run=[p0.slice()]; run.push(p1.slice());
-                    } else {
-                        /* staccato dash for `duty` of the segment, textured */
-                        const ex = p0[0]+(p1[0]-p0[0])*duty, ey = p0[1]+(p1[1]-p0[1])*duty;
-                        const seg = texturePath(p0[0],p0[1], ex,ey, texMode, texAmp, texFreq);
-                        strokes.push(seg); lines.push({pts:seg, w:1.2});
-                    }
+            /* For each row, walk M cells (boustrophedon to avoid return travel) */
+            for (let r = 0; r < rows; r++) {
+                const rev = (r % 2 !== 0);
+                /* base point + step vectors */
+                let baseX, baseY, stepX, stepY;
+                if (dir === 'v') {
+                    baseX = X0 + (X1 - X0) * (rows === 1 ? 0.5 : r/(rows-1));
+                    baseY = Y0; stepX = 0; stepY = cellLenV;
+                } else if (dir === 'd') {
+                    baseX = X0; baseY = Y0 + (r + 0.5) * rowH;
+                    const L = cellLen; stepX = L*Math.cos(-0.5); stepY = L*Math.sin(-0.5);
                 } else {
-                    closeRun();
-                    if (type === 2) {
-                        const h = shapeS*0.5;
-                        const seg = [[cx-h,cy+h],[cx+h,cy-h]];
-                        strokes.push(seg); lines.push({pts:seg, w:1.2});
-                    } else if (type === 3) {
-                        const r = shapeS*0.42, pts=[];
-                        for(let j=0;j<=36;j++){ const a=j/36*2*Math.PI;
-                            pts.push([cx+r*Math.cos(a), cy+r*Math.sin(a)]); }
-                        strokes.push(pts); lines.push({pts, w:1.2, closed:true});
-                    } else if (type === 4) {
-                        pushDot(cx, cy);
+                    baseX = X0; baseY = Y0 + (r + 0.5) * rowH; stepX = cellLenH; stepY = 0;
+                }
+
+                for (let ci = 0; ci < M; ci++) {
+                    const cell = rev ? M-1-ci : ci;
+                    const type = GRID[(cell + r*shift) % M];
+                    if (type === 0) continue;
+                    let ax = baseX + stepX*cell, ay = baseY + stepY*cell;
+                    let bx = baseX + stepX*(cell+1), by = baseY + stepY*(cell+1);
+                    if (rev) { const tx=ax,ty=ay; ax=bx; ay=by; bx=tx; by=ty; } // draw in travel dir
+                    const cx = (ax+bx)/2, cy = (ay+by)/2;
+
+                    if (type === 4) {
+                        const d = dotPolyline(cx, cy, dotR);
+                        strokes.push(d); lines.push({ pts:d, w:0.9, closed:true });
+                    } else {
+                        const seg = texturePath(ax,ay, bx,by, TEXMODE[type], texAmp, texFreq);
+                        strokes.push(seg); lines.push({ pts:seg, w:1.2 });
                     }
                 }
             }
-            closeRun();
-            pushDot(cp[totalSegs][0], cp[totalSegs][1]);   // end anchor
 
             _tour = PR4Audio.tourFromPolylines(strokes, fd, ft);
 
-            for (const st of PR4Font.textCentered('PLOTTER-KOMPONIST', 500, 60, 20))
+            for (const st of PR4Font.textCentered('SCHRAFFUR-SEQUENCER', 500, 60, 18))
                 lines.push({ pts:st, w:1.0 });
             lines.push({ pts:[[55,88],[945,88],[945,945],[55,945]], w:0.6, closed:true });
 
             const cnt = t=>GRID.filter(x=>x===t).length;
-            api.status(`${cnt(1)}×▬ ${cnt(2)}×╱ ${cnt(3)}×○ ${cnt(4)}×● ${cnt(0)}×_ · `+
-                `${M} Muster · ~${bpm} BPM · ${strokes.length} Elemente`);
+            api.status(`${cnt(1)}×▬ ${cnt(2)}×∿ ${cnt(3)}×⋀ ${cnt(4)}×● ${cnt(0)}×_ · `+
+                `${rows}×${M} · ~${bpm} BPM · ${strokes.length} Striche`);
             api.done(lines);
         }
     });
