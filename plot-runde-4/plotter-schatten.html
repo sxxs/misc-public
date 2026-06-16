@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>107 · Schatten — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+    <style>
+        .field-wrap { margin:.15rem 0 .35rem; }
+        .field-wrap label { display:block; font-size:.75rem; color:#555; margin-bottom:.25rem; font-weight:600; }
+        .field-wrap input[type=text] { width:100%; box-sizing:border-box; font-family:monospace;
+               font-size:1.1rem; padding:7px 9px; border:1px solid #ccc; border-radius:4px;
+               background:#f8f8f8; letter-spacing:.08em; }
+        .field-wrap input[type=text]:focus { outline:none; border-color:#e96000; background:#fff; }
+        .info { font-size:.73rem; color:#555; margin:.15rem 0 .3rem; font-variant-numeric:tabular-nums; }
+        .info b { color:#222; }
+    </style>
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>107 · Schatten</h1></header>
+    <main>
+        <section class="paper" style="position:relative">
+            <canvas id="canvas"></canvas>
+            <div id="pen-dot" style="display:none;position:absolute;width:12px;height:12px;
+                border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);
+                box-shadow:0 0 4px rgba(0,0,0,.4)"></div>
+        </section>
+        <section class="panel">
+            <div class="field-wrap">
+                <label>Buchstabe / Monogramm (1–3 Zeichen):</label>
+                <input type="text" id="letter" maxlength="3" value="A" spellcheck="false">
+            </div>
+            <div id="info" class="info">…</div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="play">▶ Anhören</button>
+                <button id="regen" class="primary">🎲 Zufalls-Buchstabe</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Ein unsichtbares 3D-Objekt — ein extrudierter Buchstabe — wirft
+            seinen <b>Schatten als Schraffur</b> auf den Boden. Das Objekt selbst
+            existiert nicht. Nur sein Abdruck aus Licht und Schatten. Die Geometrie
+            ist geraytraced: Lichthöhe, Richtung und Extrusions­tiefe bestimmen, wie
+            weit und wohin der Schatten fällt.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+
+    const BLACK = '#16213e';
+
+    const DEMOS = ['A','B','M','S','W','X','Z','R','H','K','T','Y','AB','MK','WS','π','Ω','∞'];
+
+    const PARAMS = [
+        { key:'cap',       label:'Buchstabenhöhe %',     min:15,  max:75,  step:5,   value:48   },
+        { key:'tiefe',     label:'Extrusions­tiefe px',  min:30,  max:500, step:10,  value:200  },
+        { key:'azim',      label:'Schattenrichtung °',   min:0,   max:359, step:5,   value:45   },
+        { key:'elev',      label:'Lichthöhe °',          min:8,   max:72,  step:2,   value:32   },
+        { key:'hatch_sp',  label:'Schraffur-Abstand px', min:3,   max:20,  step:1,   value:6    },
+        { key:'hatch_ang', label:'Schraffur-Winkel °',   min:0,   max:175, step:5,   value:45   },
+        { key:'hatch_w',   label:'Strich-Stärke',        min:0.3, max:2.0, step:0.1, value:0.65 },
+        { key:'sw',        label:'Kontur-Stärke px',     min:8,   max:80,  step:4,   value:28   },
+        { key:'base_x2',   label:'Kreuzschr. unter Obj.',value:'ja',  options:[
+            {value:'ja',label:'Ja'},{value:'nein',label:'Nein'}] },
+        { key:'geist',     label:'Geist-Umriss',          value:'nein', options:[
+            {value:'nein',label:'Nein'},{value:'ja',label:'Ja'}] },
+        { key:'feed_draw', label:'Tempo Strich mm/s',    min:20,  max:80,  step:5,   value:40   },
+        { key:'feed_t',    label:'Tempo Sprung mm/s',    min:60,  max:200, step:10,  value:150  },
+        { key:'grundton',  label:'Grundton Hz',          min:80,  max:200, step:5,   value:130  },
+        { key:'tonlage',   label:'Tonhub',               min:0.5, max:6,   step:.25, value:2.0  },
+    ];
+
+    let _tour = [], _appRef = null;
+
+    /* ── Canvas-boundary intersection (parametric slab method) ──
+       Returns [tMin, tMax] for segment of line (px,py)+t*(dx,dy) inside [0,W]×[0,H],
+       or null if the line doesn't cross the canvas at all. */
+    function lineCanvasIntersect(px, py, dx, dy, W, H) {
+        let tMin = -1e9, tMax = 1e9;
+        if (Math.abs(dx) > 1e-9) {
+            const t0 = -px / dx, t1 = (W - px) / dx;
+            tMin = Math.max(tMin, Math.min(t0, t1));
+            tMax = Math.min(tMax, Math.max(t0, t1));
+        } else if (px < 0 || px > W) return null;
+        if (Math.abs(dy) > 1e-9) {
+            const t0 = -py / dy, t1 = (H - py) / dy;
+            tMin = Math.max(tMin, Math.min(t0, t1));
+            tMax = Math.min(tMax, Math.max(t0, t1));
+        } else if (py < 0 || py > H) return null;
+        return tMin <= tMax ? [tMin, tMax] : null;
+    }
+
+    /* ── Hatch-line scanner ──
+       Walks parallel lines at `angleRad`, spaced `spacing` px apart,
+       and clips them to wherever `maskFn(x,y)` returns true.
+       Emits line segments into `out` array. */
+    function scanLines(maskFn, angleRad, spacing, lineW, color, W, H, out) {
+        const hd  = [Math.cos(angleRad),  Math.sin(angleRad)];   // hatch direction
+        const nd  = [-Math.sin(angleRad), Math.cos(angleRad)];   // normal direction
+        const STEP = 1.4;   // sample step along each hatch line (px)
+        const diagonal = Math.sqrt(W * W + H * H);
+
+        for (let k = -diagonal; k <= diagonal; k += spacing) {
+            const px = W / 2 + k * nd[0];
+            const py = H / 2 + k * nd[1];
+            const rng = lineCanvasIntersect(px, py, hd[0], hd[1], W, H);
+            if (!rng) continue;
+            const [t0, t1] = rng;
+
+            let inSeg = false, segStart = null;
+            for (let t = t0; t <= t1 + STEP; t += STEP) {
+                const tc = Math.min(t, t1);
+                const x  = px + tc * hd[0];
+                const y  = py + tc * hd[1];
+                const ins = maskFn(x, y);
+                if (ins && !inSeg) {
+                    inSeg = true;
+                    segStart = [x, y];
+                } else if (!ins && inSeg) {
+                    inSeg = false;
+                    out.push({ pts: [segStart, [x, y]], w: lineW, color });
+                }
+            }
+            if (inSeg && segStart) {
+                out.push({ pts: [segStart, [px + t1 * hd[0], py + t1 * hd[1]]], w: lineW, color });
+            }
+        }
+    }
+
+    const app = PR4App({
+        svgName: 'schatten',
+        params: PARAMS,
+        onRegen(rnd) {
+            const demo = DEMOS[Math.floor(rnd() * DEMOS.length)];
+            document.getElementById('letter').value = demo;
+        },
+        generate(api) {
+            const v = api.values;
+            const W = 1000, H = 1000;
+
+            /* ── Letter text ── */
+            const rawText    = (document.getElementById('letter').value || 'A').toUpperCase();
+            const letterText = rawText.slice(0, 3);
+
+            /* ── Geometry: letter height & stroke thickness ── */
+            const MAX_TW  = 680;
+            let   capH    = W * ((v.cap || 48) / 100);
+            let   tw      = PR4Font.textWidth(letterText, capH);
+            if (tw > MAX_TW) { capH *= MAX_TW / tw; tw = MAX_TW; }
+            const halfTw  = tw / 2;
+            const halfTh  = capH / 2;
+            const strokePx = Math.max(8, Math.round(v.sw || 28));
+
+            /* ── Light geometry ──
+               azim=45° → shadow falls toward lower-right (light from upper-left).
+               Convention: azim measured clockwise from "shadow goes right" (+x axis).
+               elev = altitude angle of sun above horizon. */
+            const elRad     = Math.max(0.14, (v.elev || 32)) * Math.PI / 180;
+            const azRad     = (v.azim || 45) * Math.PI / 180;
+            const tiefe     = v.tiefe || 200;
+            const shadowLen = tiefe / Math.tan(elRad);   // horizontal shadow reach
+            const sdx       = shadowLen * Math.cos(azRad);
+            const sdy       = shadowLen * Math.sin(azRad);
+
+            /* ── Letter center: offset so total visual extent is centered on canvas ──
+               The shadow of the top face is at (lcx+sdx, lcy+sdy), so center the
+               bounding box of [letter footprint] union [top-face projection]. */
+            const lcx = Math.max(halfTw + 10,
+                        Math.min(W - halfTw - 10,
+                            W / 2 - sdx / 2));
+            const lcy = Math.max(halfTh + 10,
+                        Math.min(H - halfTh - 10,
+                            H / 2 - sdy / 2));
+
+            if (api.cancelled()) return;
+            api.status('Erzeuge Buchstaben-Maske…');
+
+            /* ── Rasterise letter to boolean mask (returns fn(x,y)->bool) ── */
+            const lMask = PR4Font.makeTextMask(letterText, lcx, lcy, capH, strokePx);
+
+            if (api.cancelled()) return;
+            api.status('Berechne Schattengeometrie…');
+
+            /* ── Shadow mask ──
+               For a solid extruded prism, the shadow is the union of:
+                 • base footprint (z=0)  — always at (x, y)
+                 • top-face projection   — the letter shifted by (sdx, sdy)
+               The lateral faces fill in the gap between them for most letterforms. */
+            const inShadow = (x, y) => lMask(x, y) || lMask(x - sdx, y - sdy);
+            const inBase   = (x, y) => lMask(x, y);
+
+            const hAngle  = (v.hatch_ang || 45) * Math.PI / 180;
+            const spacing = Math.max(1, v.hatch_sp || 6);
+            const hw      = v.hatch_w  || 0.65;
+
+            if (api.cancelled()) return;
+            api.status('Schraffur scannen…');
+
+            const lines = [];
+
+            /* ── Primary shadow hatch ── */
+            scanLines(inShadow, hAngle, spacing, hw, BLACK, W, H, lines);
+
+            if (api.cancelled()) return;
+
+            /* ── Cross-hatch under the letter itself (contact shadow — denser) ── */
+            if (v.base_x2 === 'ja') {
+                scanLines(inBase, hAngle + Math.PI / 2, spacing, hw * 0.9, BLACK, W, H, lines);
+            }
+
+            /* ── Ghost outline: faint letter strokes to show the invisible object ── */
+            if (v.geist === 'ja') {
+                for (const s of PR4Font.textCentered(letterText, lcx, lcy, capH))
+                    lines.push({ pts: s, w: 0.5, color: '#b8b8c0' });
+            }
+
+            /* ── Audio tour: walk the hatch segments in order ── */
+            const fd = v.feed_draw || 40;
+            const ft = v.feed_t    || 150;
+            const tour = []; let cur = null;
+            const step = Math.max(1, Math.ceil(lines.length / 600));
+            for (let i = 0; i < lines.length; i += step) {
+                const seg = lines[i];
+                if (!seg || !seg.pts || seg.pts.length < 2) continue;
+                const p0 = seg.pts[0], p1 = seg.pts[seg.pts.length - 1];
+                if (cur) tour.push({ pts: [cur, p0], pen: 'up',   feed: ft });
+                tour.push(         { pts: [p0,  p1], pen: 'down', feed: fd });
+                cur = p1;
+            }
+            _tour = tour;
+            _tour._FB = v.grundton || 130;
+            _tour._K  = v.tonlage  || 2.0;
+
+            /* ── Status ── */
+            const shadowSegs = lines.filter(l => l.color === BLACK && l.w === hw).length;
+            const baseSegs   = lines.length - shadowSegs;
+            document.getElementById('info').innerHTML =
+                `Buchstabe <b>${letterText}</b> · ` +
+                `Extrusion <b>${Math.round(tiefe)}px</b> · ` +
+                `Licht <b>${Math.round(v.elev||32)}°</b> Höhe, ` +
+                `<b>${Math.round(v.azim||45)}°</b> Richtung · ` +
+                `<b>${lines.length}</b> Schraffur­segmente`;
+            api.status(
+                `"${letterText}" · ${lines.length} Segmente · ` +
+                `Schatten ${Math.round(shadowLen)}px`
+            );
+            api.done(lines);
+        }
+    });
+    _appRef = app;
+
+    const _deb = PR4.debounce(() => _appRef.start(), 280);
+    document.getElementById('letter').addEventListener('input', _deb);
+
+    /* ─── Playback ─── */
+    const dot    = document.getElementById('pen-dot');
+    const canvas = document.getElementById('canvas');
+    function showDot(x, y, pen) {
+        if (x == null) { dot.style.display = 'none'; return; }
+        const rc = canvas.getBoundingClientRect(), sc = rc.width / 1000;
+        dot.style.display = 'block';
+        dot.style.left = (x * sc) + 'px';
+        dot.style.top  = (y * sc) + 'px';
+        dot.style.background = pen === 'up' ? '#aaa' : BLACK;
+    }
+    const playBtn = document.getElementById('play');
+    let _playing = false;
+    function endPlay() { _playing = false; playBtn.textContent = '▶ Anhören'; dot.style.display = 'none'; }
+    playBtn.addEventListener('click', () => {
+        if (_playing) { PR4Audio.stop(); return; }
+        _playing = true;
+        playBtn.textContent = '■ Stop';
+        PR4Audio.play(_tour, {
+            freqBase: _tour._FB || 130,
+            freqPerMmS: _tour._K || 2.0,
+            onPos: showDot,
+            onEnd: endPlay
+        });
+    });
+    </script>
+</body>
+</html>
