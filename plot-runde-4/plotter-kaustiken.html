@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>108 · Kaustiken — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+    <style>
+        .info { font-size:.73rem; color:#555; margin:.15rem 0 .3rem; font-variant-numeric:tabular-nums; }
+        .info b { color:#222; }
+    </style>
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>108 · Kaustiken</h1></header>
+    <main>
+        <section class="paper" style="position:relative">
+            <canvas id="canvas"></canvas>
+            <div id="pen-dot" style="display:none;position:absolute;width:12px;height:12px;
+                border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);
+                box-shadow:0 0 4px rgba(0,0,0,.4)"></div>
+        </section>
+        <section class="panel">
+            <div id="info" class="info">…</div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="play">▶ Anhören</button>
+                <button id="regen" class="primary">🎲 Zufalls-Material</button>
+                <button id="download">⬇ SVG (2 Stifte)</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Parallelstrahlen fallen auf eine transparente Kugel (Glas,
+            Wasser, Diamant). An beiden Oberflächen bricht das Licht (Snell'sches Gesetz).
+            Die gebündelten Strahlen bilden auf dem Boden einen <b>Kaustik-Brennstreifen</b>
+            — das Objekt selbst ist nur als Lichtmuster sichtbar. Bei hohem Brechungsindex
+            tritt Totalreflexion an den Rändern auf — diese Strahlen verschwinden spurlos
+            und hinterlassen einen dunklen Rand im Kaustik-Bild.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+
+    const BLACK = '#16213e';
+    const GRAY  = '#8888aa';
+
+    const DEMOS = [
+        { n: 1.33, name: 'Wasser',       a:  0 },
+        { n: 1.50, name: 'Kronglas',     a:  0 },
+        { n: 1.46, name: 'Quartz',       a: -12 },
+        { n: 1.62, name: 'Flintglas',    a:  8 },
+        { n: 1.70, name: 'Schwerglas',   a: -6 },
+        { n: 1.90, name: 'Rubin',        a: 15 },
+        { n: 2.00, name: 'Zirkonia',     a:  0 },
+        { n: 2.42, name: 'Diamant',      a:  5 },
+    ];
+
+    const PARAMS = [
+        { key:'n_glass',    label:'Brechungsindex n',    min:1.05, max:2.5,  step:0.05, value:1.5  },
+        { key:'lens_r',     label:'Linsenradius %',      min:8,    max:40,   step:1,    value:18   },
+        { key:'lens_y',     label:'Linse Höhe %',        min:12,   max:60,   step:1,    value:28   },
+        { key:'light_a',    label:'Lichtwinkel °',       min:-50,  max:50,   step:2,    value:0    },
+        { key:'n_rays',     label:'Strahlenanzahl',      min:20,   max:500,  step:10,   value:180  },
+        { key:'floor_y',    label:'Boden-Höhe %',        min:55,   max:95,   step:1,    value:85   },
+        { key:'ray_w',      label:'Strahlstärke',        min:0.15, max:1.5,  step:0.05, value:0.4  },
+        { key:'show_lens',  label:'Linse anzeigen',      value:'ja',   options:[
+            {value:'ja',label:'Ja'},{value:'nein',label:'Nein'}] },
+        { key:'show_in',    label:'Einfallstrahlen',     value:'nein', options:[
+            {value:'nein',label:'Nein'},{value:'ja',label:'Ja'}] },
+        { key:'show_floor', label:'Bodenlinie',          value:'ja',   options:[
+            {value:'ja',label:'Ja'},{value:'nein',label:'Nein'}] },
+        { key:'show_label', label:'n-Beschriftung',      value:'ja',   options:[
+            {value:'ja',label:'Ja'},{value:'nein',label:'Nein'}] },
+        { key:'feed_draw',  label:'Tempo Strich mm/s',   min:20, max:80,  step:5,   value:40  },
+        { key:'feed_t',     label:'Tempo Sprung mm/s',   min:60, max:200, step:10,  value:150 },
+        { key:'grundton',   label:'Grundton Hz',         min:80, max:200, step:5,   value:110 },
+        { key:'tonlage',    label:'Tonhub',              min:0.5, max:6,  step:.25, value:1.5 },
+    ];
+
+    let _tour = [], _appRef = null;
+
+    /* ── Snell's law refraction ──
+       d: unit incident direction
+       n_src: unit normal pointing TOWARD the source medium (medium 1)
+       n1, n2: refractive indices
+       Returns refracted unit direction, or null for total internal reflection */
+    function snellRefract(d, n_src, n1, n2) {
+        const ratio = n1 / n2;
+        const cosI = -(d[0]*n_src[0] + d[1]*n_src[1]);
+        if (cosI < -1e-6) return null;
+        const sinT2 = ratio * ratio * (1 - cosI * cosI);
+        if (sinT2 > 1) return null;   // TIR
+        const cosT = Math.sqrt(1 - sinT2);
+        const rx = ratio * d[0] + (ratio * cosI - cosT) * n_src[0];
+        const ry = ratio * d[1] + (ratio * cosI - cosT) * n_src[1];
+        const len = Math.sqrt(rx*rx + ry*ry);
+        return [rx/len, ry/len];
+    }
+
+    /* ── Ray–circle intersection ──
+       Returns [t_near, t_far] or null (t in units of ray-direction length) */
+    function rayCircle(ox, oy, dx, dy, cx, cy, R) {
+        const fx = ox - cx, fy = oy - cy;
+        const a  = dx*dx + dy*dy;
+        const b  = 2*(fx*dx + fy*dy);
+        const c  = fx*fx + fy*fy - R*R;
+        const disc = b*b - 4*a*c;
+        if (disc < 0) return null;
+        const sq = Math.sqrt(disc);
+        return [(-b - sq)/(2*a), (-b + sq)/(2*a)];
+    }
+
+    /* ── Clip a point to canvas boundary along direction d ──
+       Returns t such that (ox + t*dx, oy + t*dy) is on the canvas edge,
+       or null if unreachable in positive direction. */
+    function clipToCanvas(ox, oy, dx, dy, W, H) {
+        let tMax = Infinity;
+        if (Math.abs(dx) > 1e-9) {
+            if (dx > 0) tMax = Math.min(tMax, (W - ox) / dx);
+            else        tMax = Math.min(tMax, -ox / dx);
+        }
+        if (Math.abs(dy) > 1e-9) {
+            if (dy > 0) tMax = Math.min(tMax, (H - oy) / dy);
+            else        tMax = Math.min(tMax, -oy / dy);
+        }
+        return tMax < 0 || tMax === Infinity ? null : tMax;
+    }
+
+    const app = PR4App({
+        svgName: 'kaustiken',
+        params: PARAMS,
+        onRegen(rnd) {
+            const demo = DEMOS[Math.floor(rnd() * DEMOS.length)];
+            PARAMS.forEach(p => {
+                if (p.key === 'n_glass' && p._set) p._set(demo.n);
+                if (p.key === 'light_a' && p._set) p._set(demo.a);
+            });
+        },
+        generate(api) {
+            const v = api.values;
+            const W = 1000, H = 1000;
+
+            const n_glass = Math.max(1.01, v.n_glass || 1.5);
+            const R       = W * Math.max(5, v.lens_r || 18) / 100;
+            const cy      = H * Math.max(10, v.lens_y || 28) / 100;
+            const cx      = W / 2;
+            const floorY  = H * Math.max(cy/H + 0.1, (v.floor_y || 85)) / 100;
+            const n_rays  = Math.round(Math.max(2, v.n_rays || 180));
+            const lightA  = (v.light_a || 0) * Math.PI / 180;
+            const rw      = v.ray_w || 0.4;
+
+            /* Light direction (downward, angled) and perpendicular */
+            const ldx = Math.sin(lightA);
+            const ldy = Math.cos(lightA);   // > 0 always (downward component)
+            const pdx = -ldy;               // perpendicular to light
+            const pdy =  ldx;
+
+            const lines = [];
+
+            /* ── Floor line ── */
+            if (v.show_floor === 'ja')
+                lines.push({ pts: [[15, floorY], [W-15, floorY]], w: 0.6, color: BLACK });
+
+            /* ── Lens outline ── */
+            if (v.show_lens === 'ja') {
+                const pts = [];
+                for (let i = 0; i <= 80; i++) {
+                    const a = i / 80 * Math.PI * 2;
+                    pts.push([cx + R * Math.cos(a), cy + R * Math.sin(a)]);
+                }
+                lines.push({ pts, w: 0.5, color: GRAY, closed: true });
+            }
+
+            if (api.cancelled()) return;
+            api.status('Strahlen berechnen…');
+
+            /* ── Incoming rays (background grid, optional) ── */
+            if (v.show_in === 'ja') {
+                const inStep = Math.max(8, Math.round(W / 60));
+                for (let xi = 0; xi <= W; xi += inStep) {
+                    /* Find where this vertical column ray enters canvas */
+                    const t0 = -cy * 1.5 / ldy;
+                    const ro_x = xi - ldx * cy * 1.5;
+                    const ro_y = -cy * 0.5;
+                    /* Start at y=0 */
+                    const t_top = (0 - ro_y) / ldy;
+                    const x_top = ro_x + ldx * t_top;
+                    if (x_top < -10 || x_top > W+10) continue;
+
+                    const ts = rayCircle(ro_x, ro_y, ldx, ldy, cx, cy, R);
+                    let x_end, y_end;
+                    if (ts && ts[0] > 0) {
+                        const te = ts[0];
+                        x_end = ro_x + ldx * te;
+                        y_end = ro_y + ldy * te;
+                        if (y_end < 0 || y_end > H) { x_end = x_top; y_end = 0; }
+                    } else {
+                        const tf = (floorY - ro_y) / ldy;
+                        x_end = ro_x + ldx * tf;
+                        y_end = floorY;
+                    }
+                    lines.push({ pts: [[x_top, 0], [x_end, y_end]], w: 0.2, color: GRAY });
+                }
+            }
+
+            if (api.cancelled()) return;
+
+            /* ── Traced rays through sphere ── */
+            let tirCount = 0, missCount = 0, hitCount = 0;
+            const refracted = [];  // collect for floor density
+
+            for (let i = 0; i < n_rays; i++) {
+                /* Spread rays evenly across lens diameter, + tiny border */
+                const offset = (i / (n_rays - 1) - 0.5) * 2 * R;
+
+                /* Ray origin: far "above" (upstream of light direction) */
+                const ro_x = cx + offset * pdx - ldx * 2000;
+                const ro_y = cy + offset * pdy - ldy * 2000;
+
+                /* Intersect with sphere */
+                const ts = rayCircle(ro_x, ro_y, ldx, ldy, cx, cy, R);
+
+                if (!ts || ts[0] < 0.5) {
+                    missCount++;
+                    if (v.show_in === 'nein') continue;
+                    /* Already drawn in the incoming grid above */
+                    continue;
+                }
+
+                /* ── Entry ── */
+                const t_ent = ts[0];
+                const ex = ro_x + ldx * t_ent;
+                const ey = ro_y + ldy * t_ent;
+
+                /* Outward normal at entry (points away from sphere toward air) */
+                const ne_x = (ex - cx) / R;
+                const ne_y = (ey - cy) / R;
+
+                /* Refract: air → glass. n_src points toward air = outward normal. */
+                const d1 = snellRefract([ldx, ldy], [ne_x, ne_y], 1.0, n_glass);
+                if (!d1) { missCount++; continue; }
+
+                /* ── Exit ── */
+                const ts2 = rayCircle(ex, ey, d1[0], d1[1], cx, cy, R);
+                if (!ts2 || ts2[1] < 0.5) { missCount++; continue; }
+
+                const t_ex = ts2[1];
+                const xx = ex + d1[0] * t_ex;
+                const xy = ey + d1[1] * t_ex;
+
+                /* Outward normal at exit */
+                const nx_x = (xx - cx) / R;
+                const nx_y = (xy - cy) / R;
+
+                /* Refract: glass → air.
+                   n_src at exit points toward glass = inward normal = -outward. */
+                const d2 = snellRefract(d1, [-nx_x, -nx_y], n_glass, 1.0);
+                if (!d2) { tirCount++; continue; }  // TIR — ray stays inside
+
+                /* Trace from exit to floor (or canvas edge if going upward/sideways) */
+                if (d2[1] < 1e-6 && floorY > xy) { missCount++; continue; }
+
+                let xEnd, yEnd;
+                if (d2[1] > 1e-6) {
+                    const t_fl = (floorY - xy) / d2[1];
+                    xEnd = xx + d2[0] * t_fl;
+                    yEnd = floorY;
+                } else {
+                    /* Ray going sideways or slightly up — clip to canvas boundary */
+                    const tc = clipToCanvas(xx, xy, d2[0], d2[1], W, H);
+                    if (!tc) { missCount++; continue; }
+                    xEnd = xx + d2[0] * tc;
+                    yEnd = xy + d2[1] * tc;
+                }
+
+                hitCount++;
+                refracted.push(xEnd);
+
+                /* Draw incoming segment (from above to sphere entry) */
+                if (v.show_in === 'ja') {
+                    const t_above = (0 - ro_y) / ldy;
+                    const x_above = ro_x + ldx * t_above;
+                    if (x_above >= -10 && x_above <= W+10)
+                        lines.push({ pts: [[x_above, 0], [ex, ey]], w: rw * 0.45, color: GRAY });
+                }
+
+                /* Draw refracted segment (main visual) */
+                lines.push({ pts: [[xx, xy], [xEnd, yEnd]], w: rw, color: BLACK });
+
+                if (api.cancelled()) return;
+            }
+
+            /* ── n-label ── */
+            if (v.show_label === 'ja') {
+                const labelY = H * 0.94;
+                const nStr = 'n = ' + n_glass.toFixed(2);
+                for (const s of PR4Font.textCentered(nStr, W/2, labelY, 22))
+                    lines.push({ pts: s, w: 0.7, color: BLACK });
+            }
+
+            /* ── Audio tour ── */
+            const fd = v.feed_draw || 40;
+            const ft = v.feed_t    || 150;
+            const tour = []; let cur = null;
+            for (const seg of lines) {
+                if (!seg.pts || seg.pts.length < 2) continue;
+                const p0 = seg.pts[0], p1 = seg.pts[seg.pts.length - 1];
+                if (cur) tour.push({ pts: [cur, p0], pen: 'up',   feed: ft });
+                tour.push(         { pts: [p0,  p1], pen: 'down', feed: fd });
+                cur = p1;
+            }
+            _tour = tour;
+            _tour._FB = v.grundton || 110;
+            _tour._K  = v.tonlage  || 1.5;
+
+            /* ── Focal length estimate (thin lens) ── */
+            const f_approx = R / (2 * (n_glass - 1));
+            const focalY   = cy + R + f_approx;
+            const focusStr = focalY < floorY
+                ? `Fokus bei y≈${Math.round(focalY)}px`
+                : 'Fokus unterhalb Boden';
+
+            document.getElementById('info').innerHTML =
+                `n = <b>${n_glass.toFixed(2)}</b> · ` +
+                `R = <b>${Math.round(R)}px</b> · ` +
+                `<b>${hitCount}</b> Strahlen · ` +
+                `<b>${tirCount}</b> TIR · ${focusStr}`;
+            api.status(`${hitCount} Strahlen · ${tirCount} TIR · n=${n_glass.toFixed(2)}`);
+            api.done(lines);
+        }
+    });
+    _appRef = app;
+
+    /* ─── Playback ─── */
+    const dot    = document.getElementById('pen-dot');
+    const canvas = document.getElementById('canvas');
+    function showDot(x, y, pen) {
+        if (x == null) { dot.style.display = 'none'; return; }
+        const rc = canvas.getBoundingClientRect(), sc = rc.width / 1000;
+        dot.style.display = 'block';
+        dot.style.left = (x * sc) + 'px';
+        dot.style.top  = (y * sc) + 'px';
+        dot.style.background = pen === 'up' ? '#aaa' : BLACK;
+    }
+    const playBtn = document.getElementById('play');
+    let _playing = false;
+    function endPlay() { _playing = false; playBtn.textContent = '▶ Anhören'; dot.style.display = 'none'; }
+    playBtn.addEventListener('click', () => {
+        if (_playing) { PR4Audio.stop(); return; }
+        _playing = true;
+        playBtn.textContent = '■ Stop';
+        PR4Audio.play(_tour, {
+            freqBase: _tour._FB || 110,
+            freqPerMmS: _tour._K || 1.5,
+            onPos: showDot,
+            onEnd: endPlay
+        });
+    });
+    </script>
+</body>
+</html>
