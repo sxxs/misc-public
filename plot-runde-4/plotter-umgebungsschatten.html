@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>110 · Umgebungsschatten — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+    <style>
+        .field-wrap { margin:.15rem 0 .35rem; }
+        .field-wrap label { display:block; font-size:.75rem; color:#555; margin-bottom:.25rem; font-weight:600; }
+        .field-wrap input[type=text] { width:100%; box-sizing:border-box; font-family:monospace;
+               font-size:1.1rem; padding:7px 9px; border:1px solid #ccc; border-radius:4px;
+               background:#f8f8f8; letter-spacing:.08em; }
+        .field-wrap input[type=text]:focus { outline:none; border-color:#e96000; background:#fff; }
+        .info { font-size:.73rem; color:#555; margin:.15rem 0 .3rem; font-variant-numeric:tabular-nums; }
+        .info b { color:#222; }
+    </style>
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>110 · Umgebungsschatten</h1></header>
+    <main>
+        <section class="paper" style="position:relative">
+            <canvas id="canvas"></canvas>
+            <div id="pen-dot" style="display:none;position:absolute;width:12px;height:12px;
+                border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);
+                box-shadow:0 0 4px rgba(0,0,0,.4)"></div>
+        </section>
+        <section class="panel">
+            <div class="field-wrap">
+                <label>Buchstabe / Monogramm (1–3 Zeichen):</label>
+                <input type="text" id="letter" maxlength="3" value="R" spellcheck="false">
+            </div>
+            <div id="info" class="info">…</div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="play">▶ Anhören</button>
+                <button id="regen" class="primary">🎲 Zufalls-Buchstabe</button>
+                <button id="download">⬇ SVG</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Jeder Bodenpunkt „sieht" einen Teil des Himmels. Je näher
+            am unsichtbaren extrudierten Objekt, desto mehr Himmel ist versperrt —
+            desto dichter der Schatten. Kein Richtungslicht, kein Fluchtpunkt:
+            der <b>weiche Schattenkranz</b> breitet sich gleichmäßig in alle Richtungen
+            aus. Buchstaben mit Löchern (O, B, R, P …) zeigen einen dunklen Kern im
+            Innenraum — die Wände schirmen dort fast den gesamten Himmel ab.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+
+    const BLACK = '#16213e';
+
+    const DEMOS = ['A','B','C','D','G','O','P','R','S','Q','HB','AB','OP','DR'];
+
+    const PARAMS = [
+        { key:'cap',      label:'Buchstabenhöhe %',       min:12, max:65,  step:5,   value:40   },
+        { key:'sw',       label:'Kontur-Stärke px',       min:8,  max:80,  step:4,   value:28   },
+        { key:'tiefe',    label:'Extrusions-Höhe px',     min:30, max:600, step:10,  value:260  },
+        { key:'hatch_sp', label:'Schraffur-Abstand px',   min:3,  max:20,  step:1,   value:6    },
+        { key:'hatch_ang',label:'Schraffur-Winkel °',     min:0,  max:175, step:5,   value:30   },
+        { key:'hatch_w',  label:'Strich-Stärke',          min:0.3, max:2.0, step:0.1, value:0.6 },
+        { key:'ao_hi',    label:'Kernschwelle (dicht)',   min:0.25, max:0.95, step:0.05, value:0.65 },
+        { key:'ao_lo',    label:'Verblassungsgrenze',     min:0.03, max:0.50, step:0.02, value:0.18 },
+        { key:'geist',    label:'Geist-Umriss',            value:'nein', options:[
+            {value:'nein',label:'Nein'},{value:'ja',label:'Ja'}] },
+        { key:'feed_draw',label:'Tempo Strich mm/s',      min:20, max:80,  step:5,   value:40   },
+        { key:'feed_t',   label:'Tempo Sprung mm/s',      min:60, max:200, step:10,  value:150  },
+        { key:'grundton', label:'Grundton Hz',            min:80, max:200, step:5,   value:130  },
+        { key:'tonlage',  label:'Tonhub',                 min:0.5, max:6,  step:.25, value:1.8  },
+    ];
+
+    let _tour = [], _appRef = null;
+
+    function lineCanvasIntersect(px, py, dx, dy, W, H) {
+        let tMin = -1e9, tMax = 1e9;
+        if (Math.abs(dx) > 1e-9) {
+            const t0 = -px/dx, t1 = (W-px)/dx;
+            tMin = Math.max(tMin, Math.min(t0, t1));
+            tMax = Math.min(tMax, Math.max(t0, t1));
+        } else if (px < 0 || px > W) return null;
+        if (Math.abs(dy) > 1e-9) {
+            const t0 = -py/dy, t1 = (H-py)/dy;
+            tMin = Math.max(tMin, Math.min(t0, t1));
+            tMax = Math.min(tMax, Math.max(t0, t1));
+        } else if (py < 0 || py > H) return null;
+        return tMin <= tMax ? [tMin, tMax] : null;
+    }
+
+    function scanLines(aoFn, aoMin, aoMax, angleRad, spacing, lineW, W, H, out) {
+        const hd  = [Math.cos(angleRad),  Math.sin(angleRad)];
+        const nd  = [-Math.sin(angleRad), Math.cos(angleRad)];
+        const STEP = 1.6;
+        const diag = Math.sqrt(W*W + H*H);
+        for (let k = -diag; k <= diag; k += spacing) {
+            const px = W/2 + k*nd[0], py = H/2 + k*nd[1];
+            const rng = lineCanvasIntersect(px, py, hd[0], hd[1], W, H);
+            if (!rng) continue;
+            const [t0, t1] = rng;
+            let inSeg = false, segStart = null;
+            for (let t = t0; t <= t1 + STEP; t += STEP) {
+                const tc = Math.min(t, t1);
+                const x = px + tc*hd[0], y = py + tc*hd[1];
+                const ao = aoFn(x, y);
+                const ins = ao > aoMin && ao <= aoMax;
+                if (ins && !inSeg)       { inSeg = true;  segStart = [x, y]; }
+                else if (!ins && inSeg)  { inSeg = false; out.push({ pts: [segStart, [x, y]], w: lineW, color: BLACK }); }
+            }
+            if (inSeg && segStart)
+                out.push({ pts: [segStart, [px+t1*hd[0], py+t1*hd[1]]], w: lineW, color: BLACK });
+        }
+    }
+
+    const app = PR4App({
+        svgName: 'umgebungsschatten',
+        params: PARAMS,
+        onRegen(rnd) {
+            document.getElementById('letter').value = DEMOS[Math.floor(rnd() * DEMOS.length)];
+        },
+        generate(api) {
+            const v = api.values;
+            const W = 1000, H = 1000;
+
+            const rawText    = (document.getElementById('letter').value || 'R').toUpperCase();
+            const letterText = rawText.slice(0, 3);
+
+            /* ── Letter geometry ── */
+            const MAX_TW  = 680;
+            let   capH    = W * ((v.cap || 40) / 100);
+            let   tw      = PR4Font.textWidth(letterText, capH);
+            if (tw > MAX_TW) { capH *= MAX_TW / tw; tw = MAX_TW; }
+            const strokePx = Math.max(8, Math.round(v.sw || 28));
+            const tiefe    = v.tiefe || 260;
+
+            /* ── Letter mask (centered on canvas) ── */
+            const lcx = W / 2;
+            const lcy = H / 2;
+
+            if (api.cancelled()) return;
+            api.status('Buchstaben-Maske…');
+
+            const lMask = PR4Font.makeTextMask(letterText, lcx, lcy, capH, strokePx);
+
+            if (api.cancelled()) return;
+            api.status('Distanzfeld berechnen…');
+
+            /* ── Distance transform via BFS ──
+               Computes for every grid cell the grid-distance to the nearest
+               boundary (inside↔outside transition). Grid-distance × SCALE = px. */
+            const RES   = 200;
+            const SCALE = 1000 / RES;  // 5 px per grid cell
+
+            const gridMask = new Uint8Array(RES * RES);
+            for (let gy = 0; gy < RES; gy++)
+                for (let gx = 0; gx < RES; gx++)
+                    gridMask[gy*RES + gx] = lMask(gx*SCALE + SCALE/2, gy*SCALE + SCALE/2) ? 1 : 0;
+
+            const dist = new Float32Array(RES * RES).fill(RES * 3);
+            const bfsQ = [];
+            let   qi   = 0;
+
+            for (let gy = 0; gy < RES; gy++) {
+                for (let gx = 0; gx < RES; gx++) {
+                    const inside = gridMask[gy*RES + gx];
+                    let boundary = false;
+                    if (gx === 0 || gx === RES-1 || gy === 0 || gy === RES-1) {
+                        boundary = true;
+                    } else {
+                        for (const [dx, dy] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+                            if (gridMask[(gy+dy)*RES + (gx+dx)] !== inside) { boundary = true; break; }
+                        }
+                    }
+                    if (boundary) { dist[gy*RES + gx] = 0; bfsQ.push(gy*RES + gx); }
+                }
+            }
+
+            while (qi < bfsQ.length) {
+                const idx = bfsQ[qi++];
+                const gx  = idx % RES, gy = (idx / RES) | 0;
+                const d   = dist[idx];
+                for (const [dx, dy] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+                    const nx = gx+dx, ny = gy+dy;
+                    if (nx < 0 || nx >= RES || ny < 0 || ny >= RES) continue;
+                    const ni = ny*RES + nx;
+                    if (dist[ni] > d+1) { dist[ni] = d+1; bfsQ.push(ni); }
+                }
+            }
+
+            /* AO at canvas point (x, y):
+               -1  → inside letter stroke (no hatch)
+               0–1 → ambient occlusion, 1 = maximally occluded (right at boundary) */
+            function getAO(x, y) {
+                const gx = Math.max(0, Math.min(RES-1, (x / SCALE) | 0));
+                const gy = Math.max(0, Math.min(RES-1, (y / SCALE) | 0));
+                if (gridMask[gy*RES + gx]) return -1;
+                const d_px = dist[gy*RES + gx] * SCALE;
+                /* AO = atan(H / d) / (π/2): fraction of sky hemisphere blocked
+                   by a vertical wall of height H at distance d. */
+                return Math.atan(tiefe / Math.max(0.5, d_px)) / (Math.PI / 2);
+            }
+
+            if (api.cancelled()) return;
+            api.status('Schraffur scannen…');
+
+            const hAngle  = (v.hatch_ang || 30) * Math.PI / 180;
+            const sp      = Math.max(1, v.hatch_sp || 6);
+            const hw      = v.hatch_w || 0.6;
+            const ao_hi   = v.ao_hi || 0.65;
+            const ao_lo   = v.ao_lo || 0.18;
+
+            const lines = [];
+
+            /* Dense core: ao_hi < ao ≤ 1 (right against letter, full occlusion) */
+            scanLines(getAO, ao_hi,  1.1, hAngle, sp, hw,       W, H, lines);
+
+            if (api.cancelled()) return;
+
+            /* Soft penumbra: ao_lo < ao ≤ ao_hi (fading outward, half density) */
+            scanLines(getAO, ao_lo, ao_hi, hAngle, sp * 2.2, hw * 0.75, W, H, lines);
+
+            /* Ghost outline */
+            if (v.geist === 'ja') {
+                for (const s of PR4Font.textCentered(letterText, lcx, lcy, capH))
+                    lines.push({ pts: s, w: 0.5, color: '#b8b8c0' });
+            }
+
+            /* ── Audio tour ── */
+            const fd = v.feed_draw || 40;
+            const ft = v.feed_t    || 150;
+            const tour = []; let cur = null;
+            const step = Math.max(1, Math.ceil(lines.length / 700));
+            for (let i = 0; i < lines.length; i += step) {
+                const seg = lines[i];
+                if (!seg?.pts || seg.pts.length < 2) continue;
+                const p0 = seg.pts[0], p1 = seg.pts[seg.pts.length-1];
+                if (cur) tour.push({ pts: [cur, p0], pen: 'up',   feed: ft });
+                tour.push(         { pts: [p0,  p1], pen: 'down', feed: fd });
+                cur = p1;
+            }
+            _tour = tour;
+            _tour._FB = v.grundton || 130;
+            _tour._K  = v.tonlage  || 1.8;
+
+            /* ── Info ── */
+            /* Estimate shadow radius: d where AO = ao_lo */
+            const shadowR = Math.round(tiefe / Math.tan(ao_lo * Math.PI / 2));
+            const coreR   = Math.round(tiefe / Math.tan(ao_hi * Math.PI / 2));
+            const denseSegs  = lines.filter(l => l.color === BLACK && l.w === hw).length;
+            const penumSegs  = lines.filter(l => l.color === BLACK && l.w !== hw).length;
+            document.getElementById('info').innerHTML =
+                `„<b>${letterText}</b>" · H = <b>${Math.round(tiefe)}px</b> · ` +
+                `Kern ≤ <b>${coreR}px</b>, Penumbra bis <b>${shadowR}px</b> · ` +
+                `<b>${denseSegs}</b> + <b>${penumSegs}</b> Segmente`;
+            api.status(`„${letterText}" · ${lines.length} Segmente · Schattenradius ~${shadowR}px`);
+            api.done(lines);
+        }
+    });
+    _appRef = app;
+
+    const _deb = PR4.debounce(() => _appRef.start(), 280);
+    document.getElementById('letter').addEventListener('input', _deb);
+
+    /* ─── Playback ─── */
+    const dot    = document.getElementById('pen-dot');
+    const canvas = document.getElementById('canvas');
+    function showDot(x, y, pen) {
+        if (x == null) { dot.style.display = 'none'; return; }
+        const rc = canvas.getBoundingClientRect(), sc = rc.width / 1000;
+        dot.style.display = 'block';
+        dot.style.left = (x * sc) + 'px';
+        dot.style.top  = (y * sc) + 'px';
+        dot.style.background = pen === 'up' ? '#aaa' : BLACK;
+    }
+    const playBtn = document.getElementById('play');
+    let _playing = false;
+    function endPlay() { _playing = false; playBtn.textContent = '▶ Anhören'; dot.style.display = 'none'; }
+    playBtn.addEventListener('click', () => {
+        if (_playing) { PR4Audio.stop(); return; }
+        _playing = true;
+        playBtn.textContent = '■ Stop';
+        PR4Audio.play(_tour, {
+            freqBase: _tour._FB || 130,
+            freqPerMmS: _tour._K || 1.8,
+            onPos: showDot,
+            onEnd: endPlay
+        });
+    });
+    </script>
+</body>
+</html>

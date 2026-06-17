@@ -736,8 +736,9 @@
     Texturen — gerade, Welle, Zickzack — verändern den Klang: ein Zickzack lässt den
     Quer-Motor mitbrummen. Kein Rückweg, keine Leerstrecken — jede Bewegung klingt.
     Außerdem: ein unsichtbares 3D-Objekt wirft seinen <b>Schatten</b> als Schraffur,
-    und Licht gebrochen durch eine transparente Kugel zeichnet <b>Kaustiken</b>
-    auf den Boden — Physik als Zeichner.</p>
+    Licht gebrochen durch eine transparente Kugel zeichnet <b>Kaustiken</b>,
+    zwei Lichter erzeugen einen <b>Doppelschatten</b> in zwei Farben —
+    und der <b>Umgebungsschatten</b> misst die Himmelsverdeckung ohne Richtungslicht.</p>
     <div class="grid">
         <a href="plotter-komponist.html">
             <div class="num">VARIANTE 101</div>
@@ -816,6 +817,15 @@
             Schatten in einer anderen Farbe. Wo die Schatten sich überschneiden,
             kreuzen sich beide Schraffuren — das Kreuzschraffur-Raster
             zeigt den gemeinsamen Kern.</div>
+        </a>
+        <a href="plotter-umgebungsschatten.html">
+            <div class="num">VARIANTE 110</div>
+            <div class="name">Umgebungsschatten — weicher Schattenkranz ohne Richtungslicht</div>
+            <div class="desc">Jeder Bodenpunkt berechnet, wie viel Himmel das
+            unsichtbare extrudierte Objekt verdeckt. Das Ergebnis: ein weicher,
+            allseitiger Schattenkranz — dicht am Buchstaben, in einer Penumbra
+            verblassend. Buchstaben mit Löchern (O, B, R …) erhalten einen
+            dunklen Kern im Innenraum. Keine Richtung, nur Verdeckung.</div>
         </a>
         <a href="motoren-duett.html">
             <div class="num">VARIANTE 100</div>
