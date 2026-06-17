@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>111 · Tiergesicht — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+    <style>
+        .info { font-size:.73rem; color:#555; margin:.15rem 0 .3rem; }
+        .info b { color:#222; }
+    </style>
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>111 · Tiergesicht</h1></header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="info" class="info">…</div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="play">▶ Anhören</button>
+                <button id="regen" class="primary">🎲 Neues Muster</button>
+                <button id="download">⬇ SVG (2 Stifte)</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Ein Tiergesicht als <b>Pop-Art-Schraffur</b>: fette schwarze
+            Kontur, farbige Schraffur-Zonen im Stil amerikanischer Comics. Jeder Klick auf
+            „Neues Muster" würfelt neue Schraffurrichtungen pro Zone — gleiche Form,
+            andere Textur.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+
+    const BLACK  = '#16213e';
+    const ACCENTS = { schwarz:'#16213e', rot:'#cc2200', blau:'#1b5fbf',
+                      gruen:'#1e8a4c', magenta:'#c01b8a', orange:'#e07000' };
+
+    /* ── Canvas coord helpers (face centered at cx,cy, scale S) ── */
+    const S = 255, CX = 500, CY = 492;
+    const F = (ux, uy) => [CX + ux*S, CY + uy*S];
+
+    function ell(ucx, ucy, urx, ury, n=44, rot=0) {
+        const ex=CX+ucx*S, ey=CY+ucy*S, rx=urx*S, ry=ury*S;
+        return Array.from({length:n+1}, (_,i) => {
+            const a = i/n * Math.PI * 2;
+            const px=rx*Math.cos(a), py=ry*Math.sin(a);
+            return [ex + px*Math.cos(rot) - py*Math.sin(rot),
+                    ey + px*Math.sin(rot) + py*Math.cos(rot)];
+        });
+    }
+
+    /* ── Point in polygon (ray casting) ── */
+    function pip(x, y, poly) {
+        let inside = false;
+        for (let i=0, j=poly.length-1; i<poly.length; j=i++) {
+            const xi=poly[i][0],yi=poly[i][1],xj=poly[j][0],yj=poly[j][1];
+            if ((yi>y)!==(yj>y) && x<(xj-xi)*(y-yi)/(yj-yi)+xi) inside=!inside;
+        }
+        return inside;
+    }
+
+    /* ── Hatch scanner ── */
+    function lcIntersect(px,py,dx,dy,W,H) {
+        let lo=-1e9,hi=1e9;
+        if (Math.abs(dx)>1e-9){const a=-px/dx,b=(W-px)/dx;lo=Math.max(lo,Math.min(a,b));hi=Math.min(hi,Math.max(a,b));}
+        else if(px<0||px>W) return null;
+        if (Math.abs(dy)>1e-9){const a=-py/dy,b=(H-py)/dy;lo=Math.max(lo,Math.min(a,b));hi=Math.min(hi,Math.max(a,b));}
+        else if(py<0||py>H) return null;
+        return lo<=hi ? [lo,hi] : null;
+    }
+
+    function hatchZone(poly, angle, sp, lw, color, out) {
+        const W=1000,H=1000;
+        const hd=[Math.cos(angle),Math.sin(angle)], nd=[-Math.sin(angle),Math.cos(angle)];
+        const ST=1.5, diag=Math.sqrt(W*W+H*H);
+        for (let k=-diag; k<=diag; k+=sp) {
+            const px=500+k*nd[0], py=500+k*nd[1];
+            const rng=lcIntersect(px,py,hd[0],hd[1],W,H);
+            if (!rng) continue;
+            const [t0,t1]=rng;
+            let on=false, s0=null;
+            for (let t=t0; t<=t1+ST; t+=ST) {
+                const tc=Math.min(t,t1), x=px+tc*hd[0], y=py+tc*hd[1];
+                const ins=pip(x,y,poly);
+                if (ins&&!on)  { on=true;  s0=[x,y]; }
+                else if(!ins&&on) { on=false; out.push({pts:[s0,[x,y]],w:lw,color}); }
+            }
+            if (on&&s0) out.push({pts:[s0,[px+t1*hd[0],py+t1*hd[1]]],w:lw,color});
+        }
+    }
+
+    /* ══════════════════════════════════════════════
+       FACE DEFINITIONS
+       Each returns { label, strokes[], zones[] }
+       strokes: {pts, w}  — always drawn in BLACK
+       zones:   {pts, name} — filled with pattern
+    ══════════════════════════════════════════════ */
+
+    function buildKatze() {
+        const strokes = [], zones = [];
+
+        /* Head circle */
+        strokes.push({ pts: ell(0,0, 0.82,0.80), w:2.4 });
+
+        /* Ears: two lines each (V-shape, base hidden in head) */
+        strokes.push({ pts:[F(-0.57,-0.52), F(-0.44,-1.09), F(-0.09,-0.63)], w:2.4 });
+        strokes.push({ pts:[F( 0.09,-0.63), F( 0.44,-1.09), F( 0.57,-0.52)], w:2.4 });
+        /* Inner ear lines */
+        strokes.push({ pts:[F(-0.50,-0.57), F(-0.43,-0.97), F(-0.16,-0.67)], w:1.2 });
+        strokes.push({ pts:[F( 0.16,-0.67), F( 0.43,-0.97), F( 0.50,-0.57)], w:1.2 });
+
+        /* Eyes (almond, slightly rotated) */
+        strokes.push({ pts: ell(-0.31,-0.10, 0.16,0.095, 28, -0.22), w:1.8 });
+        strokes.push({ pts: ell( 0.31,-0.10, 0.16,0.095, 28,  0.22), w:1.8 });
+        /* Pupils (vertical slits) */
+        strokes.push({ pts: ell(-0.31,-0.10, 0.055,0.092, 20), w:1.5 });
+        strokes.push({ pts: ell( 0.31,-0.10, 0.055,0.092, 20), w:1.5 });
+
+        /* Nose */
+        strokes.push({ pts:[F(-0.062,0.245), F(0.062,0.245), F(0,0.305), F(-0.062,0.245)], w:1.8 });
+        /* Mouth */
+        strokes.push({ pts:[F(-0.062,0.308), F(-0.14,0.368), F(-0.22,0.40)], w:1.4 });
+        strokes.push({ pts:[F( 0.062,0.308), F( 0.14,0.368), F( 0.22,0.40)], w:1.4 });
+
+        /* Whiskers — 3 per side */
+        [[-0.07,0.06],[0,0],[ 0.07,-0.05]].forEach(([dy,_],i) => {
+            const wy = 0.22 + i*0.07;
+            strokes.push({ pts:[F(-0.19,wy), F(-0.90, wy+dy)], w:0.9 });
+            strokes.push({ pts:[F( 0.19,wy), F( 0.90, wy+dy)], w:0.9 });
+        });
+
+        /* ── Fill zones ── */
+        zones.push({ pts:[F(-0.50,-0.58),F(-0.42,-0.96),F(-0.16,-0.67)],  name:'ohr_li' });
+        zones.push({ pts:[F( 0.16,-0.67),F( 0.42,-0.96),F( 0.50,-0.58)],  name:'ohr_re' });
+        zones.push({ pts:[
+            F(-0.63,-0.18),F(-0.50,-0.57),F(-0.13,-0.60),
+            F(0,-0.67),F(0.13,-0.60),F(0.50,-0.57),F(0.63,-0.18),
+            F(0.30,-0.17),F(0,-0.13),F(-0.30,-0.17)
+        ], name:'stirn' });
+        zones.push({ pts:[
+            F(-0.28,0.22),F(0.28,0.22),F(0.36,0.49),
+            F(0.26,0.67),F(0,0.74),F(-0.26,0.67),F(-0.36,0.49)
+        ], name:'kinn' });
+        zones.push({ pts:[
+            F(-0.80,-0.12),F(-0.63,-0.18),F(-0.55,0.10),
+            F(-0.62,0.38),F(-0.78,0.28)
+        ], name:'wange_li' });
+        zones.push({ pts:[
+            F(0.63,-0.18),F(0.80,-0.12),F(0.78,0.28),
+            F(0.62,0.38),F(0.55,0.10)
+        ], name:'wange_re' });
+
+        return { label:'Katze', strokes, zones };
+    }
+
+    function buildBaer() {
+        const strokes = [], zones = [];
+
+        /* Head */
+        strokes.push({ pts: ell(0,0.02, 0.86,0.84), w:2.4 });
+        /* Round ears */
+        strokes.push({ pts: ell(-0.56,-0.74, 0.22,0.22), w:2.2 });
+        strokes.push({ pts: ell( 0.56,-0.74, 0.22,0.22), w:2.2 });
+        /* Inner ear circles */
+        strokes.push({ pts: ell(-0.56,-0.74, 0.13,0.13), w:1.2 });
+        strokes.push({ pts: ell( 0.56,-0.74, 0.13,0.13), w:1.2 });
+
+        /* Muzzle oval */
+        strokes.push({ pts: ell(0,0.30, 0.48,0.32), w:2.0 });
+
+        /* Eyes — round, friendly */
+        strokes.push({ pts: ell(-0.30,-0.14, 0.10,0.10), w:1.8 });
+        strokes.push({ pts: ell( 0.30,-0.14, 0.10,0.10), w:1.8 });
+        /* Highlights in eyes (small inner circle) */
+        strokes.push({ pts: ell(-0.30,-0.14, 0.04,0.04), w:1.2 });
+        strokes.push({ pts: ell( 0.30,-0.14, 0.04,0.04), w:1.2 });
+
+        /* Nose */
+        strokes.push({ pts: ell(0,0.15, 0.14,0.09), w:1.8 });
+
+        /* Mouth — simple smile */
+        strokes.push({ pts:[F(-0.12,0.28),F(-0.06,0.34),F(0,0.36),F(0.06,0.34),F(0.12,0.28)], w:1.4 });
+
+        /* ── Fill zones ── */
+        zones.push({ pts: ell(-0.56,-0.74, 0.20,0.20, 28), name:'ohr_li' });
+        zones.push({ pts: ell( 0.56,-0.74, 0.20,0.20, 28), name:'ohr_re' });
+        zones.push({ pts:[
+            F(-0.82,-0.22),F(-0.66,-0.60),F(-0.40,-0.80),
+            F(0,-0.84),F(0.40,-0.80),F(0.66,-0.60),F(0.82,-0.22),
+            F(0.58,-0.18),F(0,-0.10),F(-0.58,-0.18)
+        ], name:'oberes_gesicht' });
+        zones.push({ pts: ell(0,0.30, 0.46,0.30, 32), name:'maulpartie' });
+        zones.push({ pts:[
+            F(-0.82,0.10),F(-0.62,-0.18),F(-0.48,0.06),
+            F(-0.46,0.26),F(-0.60,0.50),F(-0.78,0.42)
+        ], name:'wange_li' });
+        zones.push({ pts:[
+            F(0.62,-0.18),F(0.82,0.10),F(0.78,0.42),
+            F(0.60,0.50),F(0.46,0.26),F(0.48,0.06)
+        ], name:'wange_re' });
+
+        return { label:'Bär', strokes, zones };
+    }
+
+    function buildFuchs() {
+        const strokes = [], zones = [];
+
+        /* Head silhouette — elongated, slightly tapered at chin */
+        strokes.push({ pts:[
+            F(0,-0.82),F(0.28,-0.66),F(0.52,-0.72),
+            F(0.70,-0.40),F(0.80,0.04),F(0.72,0.46),
+            F(0.54,0.70),F(0.30,0.86),F(0,0.92),
+            F(-0.30,0.86),F(-0.54,0.70),F(-0.72,0.46),
+            F(-0.80,0.04),F(-0.70,-0.40),F(-0.52,-0.72),
+            F(-0.28,-0.66),F(0,-0.82)
+        ], w:2.4 });
+
+        /* Large triangular ears */
+        strokes.push({ pts:[F(-0.28,-0.66),F(-0.62,-1.12),F(-0.52,-0.72)], w:2.4 });
+        strokes.push({ pts:[F( 0.52,-0.72),F( 0.62,-1.12),F( 0.28,-0.66)], w:2.4 });
+        /* Inner ear */
+        strokes.push({ pts:[F(-0.34,-0.72),F(-0.58,-1.05),F(-0.46,-0.73)], w:1.2 });
+        strokes.push({ pts:[F( 0.46,-0.73),F( 0.58,-1.05),F( 0.34,-0.72)], w:1.2 });
+
+        /* Eyes — slightly angular/cunning */
+        strokes.push({ pts: ell(-0.28,-0.06, 0.155,0.094, 28, -0.30), w:1.8 });
+        strokes.push({ pts: ell( 0.28,-0.06, 0.155,0.094, 28,  0.30), w:1.8 });
+        strokes.push({ pts: ell(-0.28,-0.06, 0.062,0.090, 20, -0.15), w:1.4 });
+        strokes.push({ pts: ell( 0.28,-0.06, 0.062,0.090, 20,  0.15), w:1.4 });
+
+        /* Snout / muzzle (fox has pointed, slightly angular) */
+        strokes.push({ pts: ell(0,0.52, 0.26,0.16, 32), w:1.8 });
+
+        /* Nose — small, at tip of snout */
+        strokes.push({ pts:[F(-0.05,0.44),F(0.05,0.44),F(0,0.50),F(-0.05,0.44)], w:1.8 });
+
+        /* Mouth */
+        strokes.push({ pts:[F(-0.05,0.50),F(-0.10,0.56),F(-0.16,0.60)], w:1.3 });
+        strokes.push({ pts:[F( 0.05,0.50),F( 0.10,0.56),F( 0.16,0.60)], w:1.3 });
+
+        /* ── Fill zones ── */
+        zones.push({ pts:[F(-0.33,-0.72),F(-0.57,-1.04),F(-0.46,-0.73)], name:'ohr_li' });
+        zones.push({ pts:[F( 0.46,-0.73),F( 0.57,-1.04),F( 0.33,-0.72)], name:'ohr_re' });
+        /* Forehead between ears */
+        zones.push({ pts:[
+            F(-0.28,-0.66),F(-0.14,-0.68),F(0,-0.74),
+            F(0.14,-0.68),F(0.28,-0.66),F(0.24,-0.50),
+            F(0,-0.44),F(-0.24,-0.50)
+        ], name:'stirn' });
+        /* Dark "mask" — area above/around eyes */
+        zones.push({ pts:[
+            F(-0.68,-0.40),F(-0.50,-0.44),F(-0.26,-0.32),
+            F(-0.14,-0.28),F(0,-0.26),F(0.14,-0.28),
+            F(0.26,-0.32),F(0.50,-0.44),F(0.68,-0.40),
+            F(0.70,0.04),F(0.58,0.14),
+            F(0.38,0.18),F(0.26,0.30),F(0,0.34),F(-0.26,0.30),
+            F(-0.38,0.18),F(-0.58,0.14),F(-0.70,0.04)
+        ], name:'dunkelmaske' });
+        /* Light "face-mask" — around snout/cheeks (lighter, fox's cream area) */
+        zones.push({ pts:[
+            F(-0.38,0.18),F(0.38,0.18),F(0.28,0.50),
+            F(0.14,0.68),F(0,0.74),F(-0.14,0.68),F(-0.28,0.50)
+        ], name:'hellmaske' });
+
+        return { label:'Fuchs', strokes, zones };
+    }
+
+    const FACES = { katze: buildKatze, baer: buildBaer, fuchs: buildFuchs };
+
+    /* ── Hatch patterns ── */
+    const HATCH_PATTERNS = [
+        { angle: 0,                sp_mult: 1.0 },   // horizontal
+        { angle: Math.PI/4,        sp_mult: 1.0 },   // 45°
+        { angle: Math.PI/2,        sp_mult: 1.0 },   // vertical
+        { angle: -Math.PI/4,       sp_mult: 1.0 },   // -45°
+        { angle: Math.PI/6,        sp_mult: 1.3 },   // 30°, slightly sparse
+        { angle: Math.PI/3,        sp_mult: 1.3 },   // 60°
+        { angle: Math.PI/8,        sp_mult: 0.8 },   // shallow, dense
+        { angle: 3*Math.PI/8,      sp_mult: 0.8 },   // steep, dense
+        null,                                          // empty zone
+    ];
+
+    const PARAMS = [
+        { key:'tier',      label:'Tiergesicht', value:'katze', options:[
+            {value:'katze',label:'Katze'},
+            {value:'baer', label:'Bär'},
+            {value:'fuchs',label:'Fuchs'}] },
+        { key:'farbe',     label:'Schraffur-Farbe', value:'rot', options:[
+            {value:'schwarz',label:'Schwarz'},
+            {value:'rot',    label:'Rot'},
+            {value:'blau',   label:'Blau'},
+            {value:'gruen',  label:'Grün'},
+            {value:'magenta',label:'Magenta'},
+            {value:'orange', label:'Orange'}] },
+        { key:'hatch_sp',  label:'Schraffur-Abstand px', min:4, max:18, step:1,   value:7    },
+        { key:'hatch_w',   label:'Schraffur-Stärke',     min:0.3, max:1.2, step:0.05, value:0.55 },
+        { key:'outline_w', label:'Kontur-Stärke ×',      min:0.5, max:2.0, step:0.1,  value:1.0  },
+        { key:'feed_draw', label:'Tempo Strich mm/s',    min:20, max:80,  step:5,  value:40 },
+        { key:'feed_t',    label:'Tempo Sprung mm/s',    min:60, max:200, step:10, value:150 },
+        { key:'grundton',  label:'Grundton Hz',          min:80, max:200, step:5,  value:120 },
+        { key:'tonlage',   label:'Tonhub',               min:0.5, max:6,  step:.25,value:1.5 },
+    ];
+
+    let _tour = [];
+
+    const app = PR4App({
+        svgName: 'tiergesicht',
+        params: PARAMS,
+        generate(api) {
+            const v = api.values;
+            const W = 1000, H = 1000;
+            const COLOR = ACCENTS[v.farbe] || ACCENTS.rot;
+            const sp    = Math.max(2, v.hatch_sp || 7);
+            const hw    = v.hatch_w   || 0.55;
+            const ow    = v.outline_w || 1.0;
+            const rnd   = api.rnd;
+
+            /* Build face */
+            const faceKey = v.tier || 'katze';
+            const face = FACES[faceKey]();
+
+            if (api.cancelled()) return;
+            api.status('Muster zuweisen…');
+
+            /* Shuffle pattern list using seeded PRNG */
+            const pats = [...HATCH_PATTERNS];
+            for (let i=pats.length-1; i>0; i--) {
+                const j = Math.floor(rnd() * (i+1));
+                [pats[i], pats[j]] = [pats[j], pats[i]];
+            }
+
+            const lines = [];
+
+            /* Fill zones */
+            face.zones.forEach((zone, i) => {
+                const pat = pats[i % pats.length];
+                if (!pat) return;
+                const zsp = sp * pat.sp_mult;
+                hatchZone(zone.pts, pat.angle, zsp, hw, COLOR, lines);
+            });
+
+            if (api.cancelled()) return;
+            api.status('Konturen zeichnen…');
+
+            /* Outline strokes (drawn on top of fills) */
+            for (const s of face.strokes)
+                lines.push({ pts: s.pts, w: s.w * ow, color: BLACK, closed: s.closed });
+
+            /* Audio tour */
+            const fd = v.feed_draw || 40, ft = v.feed_t || 150;
+            const tour = []; let cur = null;
+            const step = Math.max(1, Math.ceil(lines.length / 600));
+            for (let i=0; i<lines.length; i+=step) {
+                const seg = lines[i];
+                if (!seg?.pts || seg.pts.length<2) continue;
+                const p0=seg.pts[0], p1=seg.pts[seg.pts.length-1];
+                if (cur) tour.push({ pts:[cur,p0], pen:'up',   feed:ft });
+                tour.push(         { pts:[p0, p1], pen:'down', feed:fd });
+                cur=p1;
+            }
+            _tour=tour; _tour._FB=v.grundton||120; _tour._K=v.tonlage||1.5;
+
+            /* Info */
+            const zoneNames = face.zones.map((z,i)=>{
+                const p=pats[i%pats.length];
+                return p ? z.name : `${z.name}(leer)`;
+            }).join(' · ');
+            document.getElementById('info').innerHTML =
+                `<b>${face.label}</b> · ${face.zones.length} Zonen · ${lines.length} Linien<br>
+                 <span style="font-size:.68rem;color:#888">${zoneNames}</span>`;
+            api.status(`${face.label} · ${lines.length} Segmente · Seed ${api.seed}`);
+            api.done(lines);
+        }
+    });
+
+    /* Playback */
+    const dot=document.getElementById('pen-dot')||document.createElement('div');
+    const canvas=document.getElementById('canvas');
+    function showDot(x,y,pen) {
+        if (!dot.parentNode) return;
+        if (x==null){dot.style.display='none';return;}
+        const rc=canvas.getBoundingClientRect(),sc=rc.width/1000;
+        dot.style.cssText=`display:block;position:absolute;width:12px;height:12px;
+            border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);
+            left:${x*sc}px;top:${y*sc}px;
+            background:${pen==='up'?'#aaa':BLACK};box-shadow:0 0 4px rgba(0,0,0,.4)`;
+    }
+    const playBtn=document.getElementById('play'); let _playing=false;
+    function endPlay(){_playing=false;playBtn.textContent='▶ Anhören';dot.style.display='none';}
+    playBtn.addEventListener('click',()=>{
+        if(_playing){PR4Audio.stop();return;}
+        _playing=true; playBtn.textContent='■ Stop';
+        PR4Audio.play(_tour,{freqBase:_tour._FB||120,freqPerMmS:_tour._K||1.5,onPos:showDot,onEnd:endPlay});
+    });
+    </script>
+</body>
+</html>
