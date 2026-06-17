@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>109 · Doppelschatten — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+    <style>
+        .field-wrap { margin:.15rem 0 .35rem; }
+        .field-wrap label { display:block; font-size:.75rem; color:#555; margin-bottom:.25rem; font-weight:600; }
+        .field-wrap input[type=text] { width:100%; box-sizing:border-box; font-family:monospace;
+               font-size:1.1rem; padding:7px 9px; border:1px solid #ccc; border-radius:4px;
+               background:#f8f8f8; letter-spacing:.08em; }
+        .field-wrap input[type=text]:focus { outline:none; border-color:#e96000; background:#fff; }
+        .info { font-size:.73rem; color:#555; margin:.15rem 0 .3rem; font-variant-numeric:tabular-nums; }
+        .info b { color:#222; }
+        .legend { font-size:.76rem; color:#555; margin:.1rem 0 .25rem; line-height:1.7; }
+        .sw { display:inline-block; width:11px; height:11px; border-radius:50%;
+              vertical-align:-1px; margin-right:1px; }
+    </style>
+</head>
+<body>
+    <header><a class="back" href="./">← Übersicht</a><h1>109 · Doppelschatten</h1></header>
+    <main>
+        <section class="paper" style="position:relative">
+            <canvas id="canvas"></canvas>
+            <div id="pen-dot" style="display:none;position:absolute;width:12px;height:12px;
+                border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);
+                box-shadow:0 0 4px rgba(0,0,0,.4)"></div>
+        </section>
+        <section class="panel">
+            <div class="field-wrap">
+                <label>Buchstabe / Monogramm (1–3 Zeichen):</label>
+                <input type="text" id="letter" maxlength="3" value="M" spellcheck="false">
+            </div>
+            <p class="legend">
+                <span class="sw" id="lg0" style="background:#cc2200"></span> Stift 1 (Schatten A) ·
+                <span class="sw" style="background:#16213e"></span> Stift 2 (Schatten B) ·
+                <span class="sw" id="lg2" style="background:#7a1100"></span> Überschneidung (beide)</p>
+            <div id="info" class="info">…</div>
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="play">▶ Anhören</button>
+                <button id="regen" class="primary">🎲 Zufalls-Komposition</button>
+                <button id="download">⬇ SVG (2 Stifte)</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Zwei unsichtbare Lichtquellen beleuchten denselben extrudierten
+            Buchstaben. Jede wirft ihren Schatten in <b>anderer Farbe</b> und unter
+            anderem Winkel. Das Objekt selbst bleibt leer. Wo sich die Schatten überschneiden,
+            zeichnen <b>beide Stifte</b> — das Kreuzschraffur-Raster zeigt den
+            gemeinsamen Kern.</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="font.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+
+    const BLACK  = '#16213e';
+    const ACCENTS = {
+        rot:     '#cc2200',
+        blau:    '#1b5fbf',
+        gruen:   '#1e8a4c',
+        magenta: '#c01b8a',
+        orange:  '#e07000',
+    };
+
+    const DEMOS = [
+        { a1: 45,  e1: 32, t1: 200, a2: 135, e2: 32, t2: 200, cap: 46, note: 'Symmetrisch'   },
+        { a1: 225, e1: 35, t1: 200, a2:  45, e2: 35, t2: 200, cap: 46, note: 'Gegenüber'      },
+        { a1:  0,  e1: 20, t1: 340, a2:  90, e2: 20, t2: 340, cap: 44, note: 'Kreuz'          },
+        { a1: 30,  e1: 25, t1: 280, a2: 150, e2: 45, t2: 160, cap: 48, note: 'Asymmetrisch'   },
+        { a1: 45,  e1: 58, t1: 120, a2:  45, e2: 14, t2: 420, cap: 42, note: 'Nah / Fern'     },
+        { a1: 20,  e1: 30, t1: 250, a2:  30, e2: 38, t2: 210, cap: 50, note: 'Fast gleich'    },
+        { a1: 315, e1: 40, t1: 180, a2: 135, e2: 40, t2: 180, cap: 46, note: 'Diagonal X'     },
+        { a1:  0,  e1: 45, t1: 200, a2: 180, e2: 20, t2: 300, cap: 44, note: 'Oben / Unten'   },
+    ];
+
+    const PARAMS = [
+        { key:'cap',       label:'Buchstabenhöhe %',     min:15, max:65,  step:5,   value:46   },
+        { key:'sw',        label:'Kontur-Stärke px',     min:8,  max:80,  step:4,   value:28   },
+        { key:'farbe1',    label:'Farbe Stift 1',        value:'rot', options:[
+            {value:'rot',label:'Rot'},{value:'blau',label:'Blau'},{value:'gruen',label:'Grün'},
+            {value:'magenta',label:'Magenta'},{value:'orange',label:'Orange'}] },
+        { key:'azim1',     label:'Licht A: Richtung °',  min:0,  max:359, step:5,   value:45   },
+        { key:'elev1',     label:'Licht A: Höhe °',      min:8,  max:72,  step:2,   value:32   },
+        { key:'tiefe1',    label:'Licht A: Tiefe px',    min:30, max:500, step:10,  value:200  },
+        { key:'azim2',     label:'Licht B: Richtung °',  min:0,  max:359, step:5,   value:135  },
+        { key:'elev2',     label:'Licht B: Höhe °',      min:8,  max:72,  step:2,   value:32   },
+        { key:'tiefe2',    label:'Licht B: Tiefe px',    min:30, max:500, step:10,  value:200  },
+        { key:'hatch_sp',  label:'Schraffur-Abstand px', min:3,  max:20,  step:1,   value:6    },
+        { key:'hatch_ang', label:'Schraffur-Winkel A °', min:0,  max:175, step:5,   value:45   },
+        { key:'hatch_w',   label:'Strich-Stärke',        min:0.3, max:2.0, step:0.1, value:0.6 },
+        { key:'geist',     label:'Geist-Umriss',          value:'nein', options:[
+            {value:'nein',label:'Nein'},{value:'ja',label:'Ja'}] },
+        { key:'feed_draw', label:'Tempo Strich mm/s',    min:20, max:80,  step:5,   value:40   },
+        { key:'feed_t',    label:'Tempo Sprung mm/s',    min:60, max:200, step:10,  value:150  },
+        { key:'grundton',  label:'Grundton Hz',          min:80, max:200, step:5,   value:130  },
+        { key:'tonlage',   label:'Tonhub',               min:0.5, max:6,  step:.25, value:2.0  },
+    ];
+
+    let _tour = [], _appRef = null;
+
+    function lineCanvasIntersect(px, py, dx, dy, W, H) {
+        let tMin = -1e9, tMax = 1e9;
+        if (Math.abs(dx) > 1e-9) {
+            const t0 = -px / dx, t1 = (W - px) / dx;
+            tMin = Math.max(tMin, Math.min(t0, t1));
+            tMax = Math.min(tMax, Math.max(t0, t1));
+        } else if (px < 0 || px > W) return null;
+        if (Math.abs(dy) > 1e-9) {
+            const t0 = -py / dy, t1 = (H - py) / dy;
+            tMin = Math.max(tMin, Math.min(t0, t1));
+            tMax = Math.min(tMax, Math.max(t0, t1));
+        } else if (py < 0 || py > H) return null;
+        return tMin <= tMax ? [tMin, tMax] : null;
+    }
+
+    function scanLines(maskFn, angleRad, spacing, lineW, color, W, H, out) {
+        const hd = [Math.cos(angleRad),  Math.sin(angleRad)];
+        const nd = [-Math.sin(angleRad), Math.cos(angleRad)];
+        const STEP = 1.4;
+        const diagonal = Math.sqrt(W * W + H * H);
+        for (let k = -diagonal; k <= diagonal; k += spacing) {
+            const px = W / 2 + k * nd[0], py = H / 2 + k * nd[1];
+            const rng = lineCanvasIntersect(px, py, hd[0], hd[1], W, H);
+            if (!rng) continue;
+            const [t0, t1] = rng;
+            let inSeg = false, segStart = null;
+            for (let t = t0; t <= t1 + STEP; t += STEP) {
+                const tc = Math.min(t, t1);
+                const x = px + tc * hd[0], y = py + tc * hd[1];
+                const ins = maskFn(x, y);
+                if (ins && !inSeg)         { inSeg = true;  segStart = [x, y]; }
+                else if (!ins && inSeg)    { inSeg = false; out.push({ pts: [segStart, [x, y]], w: lineW, color }); }
+            }
+            if (inSeg && segStart)
+                out.push({ pts: [segStart, [px + t1*hd[0], py + t1*hd[1]]], w: lineW, color });
+        }
+    }
+
+    const app = PR4App({
+        svgName: 'doppelschatten',
+        params: PARAMS,
+        onRegen(rnd) {
+            const demo = DEMOS[Math.floor(rnd() * DEMOS.length)];
+            document.getElementById('letter').value =
+                ['A','B','M','S','W','H','K','R','X','Z','DH','MK','AB'][Math.floor(rnd() * 13)];
+            PARAMS.forEach(p => {
+                if (p.key === 'azim1'  && p._set) p._set(demo.a1);
+                if (p.key === 'elev1'  && p._set) p._set(demo.e1);
+                if (p.key === 'tiefe1' && p._set) p._set(demo.t1);
+                if (p.key === 'azim2'  && p._set) p._set(demo.a2);
+                if (p.key === 'elev2'  && p._set) p._set(demo.e2);
+                if (p.key === 'tiefe2' && p._set) p._set(demo.t2);
+                if (p.key === 'cap'    && p._set) p._set(demo.cap);
+            });
+        },
+        generate(api) {
+            const v = api.values;
+            const W = 1000, H = 1000;
+
+            const COLOR1  = ACCENTS[v.farbe1] || ACCENTS.rot;
+            document.getElementById('lg0').style.background = COLOR1;
+            /* Overlap legend: mix of color1 + black (approximate visual mix) */
+            document.getElementById('lg2').style.background = COLOR1 + '99';
+
+            const rawText    = (document.getElementById('letter').value || 'M').toUpperCase();
+            const letterText = rawText.slice(0, 3);
+
+            /* ── Letter geometry ── */
+            const MAX_TW  = 680;
+            let   capH    = W * ((v.cap || 46) / 100);
+            let   tw      = PR4Font.textWidth(letterText, capH);
+            if (tw > MAX_TW) { capH *= MAX_TW / tw; tw = MAX_TW; }
+            const halfTw  = tw / 2;
+            const halfTh  = capH / 2;
+            const strokePx = Math.max(8, Math.round(v.sw || 28));
+
+            /* ── Shadow geometry: light A ── */
+            const elRad1    = Math.max(0.14, (v.elev1 || 32)) * Math.PI / 180;
+            const azRad1    = (v.azim1 || 45)  * Math.PI / 180;
+            const sdLen1    = (v.tiefe1 || 200) / Math.tan(elRad1);
+            const sdx1      = sdLen1 * Math.cos(azRad1);
+            const sdy1      = sdLen1 * Math.sin(azRad1);
+
+            /* ── Shadow geometry: light B ── */
+            const elRad2    = Math.max(0.14, (v.elev2 || 32)) * Math.PI / 180;
+            const azRad2    = (v.azim2 || 135) * Math.PI / 180;
+            const sdLen2    = (v.tiefe2 || 200) / Math.tan(elRad2);
+            const sdx2      = sdLen2 * Math.cos(azRad2);
+            const sdy2      = sdLen2 * Math.sin(azRad2);
+
+            /* ── Letter center: balance both shadow extents on canvas ── */
+            const xCtr = (Math.min(0, sdx1, sdx2) + Math.max(0, sdx1, sdx2)) / 2;
+            const yCtr = (Math.min(0, sdy1, sdy2) + Math.max(0, sdy1, sdy2)) / 2;
+            const lcx  = Math.max(halfTw + 15, Math.min(W - halfTw - 15, W / 2 - xCtr));
+            const lcy  = Math.max(halfTh + 15, Math.min(H - halfTh - 15, H / 2 - yCtr));
+
+            if (api.cancelled()) return;
+            api.status('Buchstaben-Maske…');
+
+            const lMask = PR4Font.makeTextMask(letterText, lcx, lcy, capH, strokePx);
+
+            if (api.cancelled()) return;
+            api.status('Doppelschatten berechnen…');
+
+            /* Shadow A: letter footprint union top-face projection via light A */
+            const inShadowA = (x, y) => lMask(x, y) || lMask(x - sdx1, y - sdy1);
+            /* Shadow B: same via light B */
+            const inShadowB = (x, y) => lMask(x, y) || lMask(x - sdx2, y - sdy2);
+
+            const hAngle  = (v.hatch_ang || 45) * Math.PI / 180;
+            const spacing = Math.max(1, v.hatch_sp || 6);
+            const hw      = v.hatch_w || 0.6;
+
+            const lines = [];
+
+            /* Pen 1 (COLOR1): hatch shadow A at angle θ — spans shadow-only AND overlap */
+            scanLines(inShadowA, hAngle, spacing, hw, COLOR1, W, H, lines);
+
+            if (api.cancelled()) return;
+
+            /* Pen 2 (BLACK): hatch shadow B at angle θ+90° — spans shadow-only AND overlap */
+            scanLines(inShadowB, hAngle + Math.PI / 2, spacing, hw, BLACK, W, H, lines);
+
+            /* Ghost outline of the invisible letter */
+            if (v.geist === 'ja') {
+                for (const s of PR4Font.textCentered(letterText, lcx, lcy, capH))
+                    lines.push({ pts: s, w: 0.5, color: '#b8b8c0' });
+            }
+
+            /* ── Audio tour ── */
+            const fd = v.feed_draw || 40;
+            const ft = v.feed_t    || 150;
+            const tour = []; let cur = null;
+            const step = Math.max(1, Math.ceil(lines.length / 700));
+            for (let i = 0; i < lines.length; i += step) {
+                const seg = lines[i];
+                if (!seg?.pts || seg.pts.length < 2) continue;
+                const p0 = seg.pts[0], p1 = seg.pts[seg.pts.length - 1];
+                if (cur) tour.push({ pts: [cur, p0], pen: 'up',   feed: ft });
+                tour.push(         { pts: [p0,  p1], pen: 'down', feed: fd });
+                cur = p1;
+            }
+            _tour = tour;
+            _tour._FB = v.grundton || 130;
+            _tour._K  = v.tonlage  || 2.0;
+
+            /* ── Info ── */
+            const c1segs = lines.filter(l => l.color === COLOR1).length;
+            const c2segs = lines.filter(l => l.color === BLACK).length;
+            document.getElementById('info').innerHTML =
+                `„<b>${letterText}</b>" · ` +
+                `A: ${Math.round(v.elev1||32)}°↑ ${Math.round(v.azim1||45)}°→ ${Math.round(sdLen1)}px · ` +
+                `B: ${Math.round(v.elev2||32)}°↑ ${Math.round(v.azim2||135)}°→ ${Math.round(sdLen2)}px · ` +
+                `<b>${c1segs}</b> / <b>${c2segs}</b> Seg.`;
+            api.status(`„${letterText}" · ${lines.length} Segmente · 2 Stifte`);
+            api.done(lines);
+        }
+    });
+    _appRef = app;
+
+    const _deb = PR4.debounce(() => _appRef.start(), 280);
+    document.getElementById('letter').addEventListener('input', _deb);
+
+    /* ─── Playback ─── */
+    const dot    = document.getElementById('pen-dot');
+    const canvas = document.getElementById('canvas');
+    function showDot(x, y, pen) {
+        if (x == null) { dot.style.display = 'none'; return; }
+        const rc = canvas.getBoundingClientRect(), sc = rc.width / 1000;
+        dot.style.display = 'block';
+        dot.style.left = (x * sc) + 'px';
+        dot.style.top  = (y * sc) + 'px';
+        dot.style.background = pen === 'up' ? '#aaa' : BLACK;
+    }
+    const playBtn = document.getElementById('play');
+    let _playing = false;
+    function endPlay() { _playing = false; playBtn.textContent = '▶ Anhören'; dot.style.display = 'none'; }
+    playBtn.addEventListener('click', () => {
+        if (_playing) { PR4Audio.stop(); return; }
+        _playing = true;
+        playBtn.textContent = '■ Stop';
+        PR4Audio.play(_tour, {
+            freqBase: _tour._FB || 130,
+            freqPerMmS: _tour._K || 2.0,
+            onPos: showDot,
+            onEnd: endPlay
+        });
+    });
+    </script>
+</body>
+</html>
