@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>119 · Züchter — Plot Runde 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,400,0,0&display=swap" rel="stylesheet">
+<style>
+    :root{--bg:#f4f1ea;--panel:#fffdf8;--ink:#1d1b17;--dim:#7c7668;--line:#e2dccd;--accent:#b1482b;--sel:#1e7a52}
+    *{box-sizing:border-box}html,body{margin:0;height:100%}
+    body{background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,sans-serif;
+        display:flex;flex-direction:column;min-height:100%}
+    .top{display:flex;gap:1.2rem;align-items:baseline;padding:1rem 1.5rem;border-bottom:1px solid var(--line)}
+    .top a{color:var(--dim);text-decoration:none;font-size:.82rem}.top a:hover{color:var(--ink)}
+    .top h1{margin:0;font-size:1.1rem;font-weight:700}.top h1 .no{color:var(--accent);font-weight:800}
+    .top .tag{margin-left:auto;font-size:.78rem;color:var(--dim)}
+    .stage{flex:1;display:flex;gap:1.4rem;padding:1.4rem 1.5rem;min-height:0;flex-wrap:wrap}
+    .gridwrap{flex:1 1 540px;min-width:320px;display:flex;align-items:center;justify-content:center}
+    #grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:min(82vh,820px);aspect-ratio:1/1}
+    .cell{position:relative;background:var(--panel);border:2px solid var(--line);border-radius:8px;
+        overflow:hidden;cursor:pointer;transition:.1s}
+    .cell:hover{border-color:var(--dim)}
+    .cell.sel{border-color:var(--sel);box-shadow:0 0 0 2px var(--sel) inset}
+    .cell .pick{position:absolute;top:6px;right:8px;font-size:.78rem;color:var(--sel);opacity:0;font-weight:700}
+    .cell.sel .pick{opacity:1}
+    .cell canvas{width:100%;height:100%;display:block}
+    .cell .cap{position:absolute;bottom:0;left:0;right:0;font-size:.62rem;color:var(--dim);
+        background:linear-gradient(transparent,rgba(255,253,248,.92) 40%);padding:.5rem .4rem .25rem;
+        pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
+    .cell .cap .g{font-family:"Material Symbols Outlined";font-variation-settings:'FILL' 0;color:var(--ink)}
+    .panel{flex:0 0 252px;display:flex;flex-direction:column;gap:1rem}
+    .lead{font-size:.86rem;line-height:1.5;color:var(--dim);margin:0}.lead b{color:var(--ink);font-weight:600}
+    .roll{border:1px solid var(--ink);background:var(--ink);color:var(--bg);font-weight:700;padding:.78rem;border-radius:8px;
+        font:inherit;font-size:.96rem;cursor:pointer}.roll:hover{background:#000}
+    .roll.alt{background:transparent;color:var(--ink)}.roll.alt:hover{background:#0000000d}
+    .roll:disabled{opacity:.4;cursor:not-allowed}
+    .row{display:flex;gap:.5rem}.row button{flex:1;border:1px solid var(--line);background:var(--panel);
+        color:var(--ink);padding:.55rem;border-radius:6px;font:inherit;font-size:.8rem;cursor:pointer}
+    .row button:hover{border-color:var(--accent);color:var(--accent)}
+    .field{display:flex;flex-direction:column;gap:.3rem}
+    .field>span{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim)}
+    .hero{border:1px solid var(--line);background:#fff;border-radius:6px;padding:.5rem .6rem;font:inherit;
+        font-size:.95rem;text-align:center;letter-spacing:.1em;color:var(--ink);outline:none}
+    .hero:focus{border-color:var(--accent)}
+    .hint{font-size:.72rem;color:var(--dim);line-height:1.45}.gen{font-size:.72rem;color:var(--dim)}
+</style>
+</head>
+<body>
+    <div class="top">
+        <a href="./">← Übersicht</a><h1><span class="no">119</span> Züchter</h1>
+        <span class="tag">② Mikro × Makro — du züchtest durch Auswählen</span>
+    </div>
+    <div class="stage">
+        <div class="gridwrap"><div id="grid"></div></div>
+        <div class="panel">
+            <p class="lead">Eine <b>Makro-Struktur</b> (Verlauf, Schachbrett, Wolke, Herz,
+            Hilbert, Strömung…) gezeichnet mit einem <b>Mikro</b> — als <b>Stempel</b>
+            (Punkt, Schraffur, Glyph) oder als durchgehende <b>Linie</b> (glatt, Welle,
+            Zickzack, Ornament). Tippe die schönen an.</p>
+            <button class="roll" id="breedBig">🧬 Kreuzen &amp; mutieren</button>
+            <button class="roll alt" id="breedSmall">🔬 Nur verfeinern</button>
+            <div class="row"><button id="rand">🎲 Alles neu würfeln</button></div>
+            <div class="field"><span>Hero-Glyph / Wort (optional)</span>
+                <input class="hero" id="hero" maxlength="6" placeholder="z. B. A oder WIAI"></div>
+            <p class="hint"><b>🎲 Würfeln</b>: 9 ganz neue Zufallsmuster — vergisst deine Auswahl.<br>
+            <b>🧬 Kreuzen</b>: aus deinen Gewählten — Kreuzungen (A×B), Abkömmlinge & Selbst-Mix,
+            + 2 Frische. Große Sprünge.<br>
+            <b>🔬 Verfeinern</b>: sanfte Varianten der Gewählten, gleiche Bauart.<br>
+            Monogramm bleibt unabhängig · Doppelklick = SVG.</p>
+            <p class="gen" id="gen">Generation 1</p>
+        </div>
+    </div>
+<script src="shared.js"></script>
+<script>
+"use strict";
+const FONT='"Material Symbols Outlined"', HEROCOL="#b1482b";
+const GENES=16, R=440;
+const PALS=[["#1d1b17","#b1482b"],["#143b46","#c43b5a"],["#21403a","#bd7d1c"],
+    ["#2d2733","#7a5cc0"],["#1d1b17","#1d1b17"],["#402038","#1e7a52"],["#14303a","#b1482b"]];
+const NOISE=PR4.makeNoise2D(PR4.mulberry32(98765));
+const NMACRO=19, NMICRO=9;
+const MACRO_NAMES=["Verlauf","Streifen","Schachbrett","Radial","Wolke","Wellen","Ringe","Diagonale","Karo","Spirale",
+    "Kreis","Herz","Stern","Quadrat","Raute","Perspektive","Truchet","Hilbert","Strömung"];
+const MICRO_NAMES=["Stipple","Schraffur","Kreuz","Kästchen","Glyphen","Linie","Welle","Zickzack","Ornament"];
+const ORN_NAMES=["Glyph","Kreis","Quadrat","Zacke"];
+const GLYPHSETS=[[0xe15b,0xe5d3,0xe3ea,0xe3a5,0xe061,0xe3fa,0xef4a],[0xe145,0xe86b,0xead5,0xeb39,0xf09a,0xeb36],
+    [0xe798,0xea35,0xe87e,0xe91d,0xef55,0xea0b],[0xe5cd,0xe145,0xf09a,0xe87e,0xeb39,0xef4a,0xeb36]];
+let GLYPHRAMPS=GLYPHSETS.map(s=>s.map(cp=>({ch:String.fromCodePoint(cp),cov:0.5})));
+
+const grid=document.getElementById("grid"), heroEl=document.getElementById("hero");
+let pop=[], selected=[], generation=1, cells=[], HERO=null;
+function randGenome(){return Array.from({length:GENES},()=>Math.random());}
+
+/* ── helpers ── */
+const cs=t=>t<-.5?0:t>.5?1:t+.5;
+function flowAngle(x,y){return NOISE.fbm(x*0.0016+5.2,y*0.0016+9.1,3)*Math.PI*4;}
+function hilbertCurve(order){const n=1<<order,pts=[];
+    for(let d=0;d<n*n;d++){let t=d,x=0,y=0;
+        for(let s=1;s<n;s*=2){const rx=1&(t>>1),ry=1&(t^rx);
+            if(ry===0){if(rx===1){x=s-1-x;y=s-1-y;}const tmp=x;x=y;y=tmp;}
+            x+=s*rx;y+=s*ry;t>>=2;}
+        pts.push([x,y]);}
+    return{pts,n};}
+function resampleN(poly,ds){const pts=[];if(poly.length<2)return pts;
+    let acc=0,prev=poly[0];const ps=[poly[0]];
+    for(let i=1;i<poly.length;i++){let cur=poly[i],seg=Math.hypot(cur[0]-prev[0],cur[1]-prev[1]);
+        while(acc+seg>=ds){const t=(ds-acc)/seg,np=[prev[0]+(cur[0]-prev[0])*t,prev[1]+(cur[1]-prev[1])*t];
+            ps.push(np);prev=np;seg=Math.hypot(cur[0]-prev[0],cur[1]-prev[1]);acc=0;}acc+=seg;prev=cur;}
+    for(let i=0;i<ps.length;i++){const a=ps[Math.max(0,i-1)],b=ps[Math.min(ps.length-1,i+1)];
+        let tx=b[0]-a[0],ty=b[1]-a[1],l=Math.hypot(tx,ty)||1;pts.push({p:ps[i],n:[-ty/l,tx/l]});}
+    return pts;}
+
+/* ── stamp micros (per grid cell, modulated by field f) ── */
+function stampMark(L,micro,x,y,s,f,ang,col,ramp){
+    const r=s*0.46;
+    if(micro===0){const rad=r*(0.22+0.78*f),c=[];for(let t=0;t<=12;t++){const a=t/12*Math.PI*2;c.push([x+Math.cos(a)*rad,y+Math.sin(a)*rad]);}L.push({pts:c,color:col,w:1.1,closed:true});}
+    else if(micro===1){const len=r*(0.35+1.5*f),dx=Math.cos(ang)*len,dy=Math.sin(ang)*len;L.push({pts:[[x-dx,y-dy],[x+dx,y+dy]],color:col,w:1.2});}
+    else if(micro===2){const len=r*(0.3+0.85*f);L.push({pts:[[x-len,y],[x+len,y]],color:col,w:1.1});L.push({pts:[[x,y-len],[x,y+len]],color:col,w:1.1});
+        if(f>0.6){const d=len*0.7;L.push({pts:[[x-d,y-d],[x+d,y+d]],color:col,w:1});L.push({pts:[[x-d,y+d],[x+d,y-d]],color:col,w:1});}}
+    else if(micro===3){const a=r*(0.3+0.7*f);L.push({pts:[[x-a,y-a],[x+a,y-a],[x+a,y+a],[x-a,y+a],[x-a,y-a]],color:col,w:1.1});}
+    else{const gi=Math.min(ramp.length-1,Math.floor(f*ramp.length));L.push({glyph:ramp[gi].ch,gx:x,gy:y,gsize:s*(0.8+0.5*f),color:col});}
+}
+/* ── line micros (style a continuous polyline) ── */
+function placeOrn(L,p,n,t,orn,size,col,gch){
+    if(orn===0){L.push({glyph:gch,gx:p[0],gy:p[1],gsize:size*1.7,color:col});}
+    else if(orn===1){const c=[];for(let i=0;i<=12;i++){const a=i/12*Math.PI*2;c.push([p[0]+Math.cos(a)*size,p[1]+Math.sin(a)*size]);}L.push({pts:c,color:col,w:1.3,closed:true});}
+    else if(orn===2){const a=size;L.push({pts:[[p[0]-a,p[1]-a],[p[0]+a,p[1]-a],[p[0]+a,p[1]+a],[p[0]-a,p[1]+a],[p[0]-a,p[1]-a]],color:col,w:1.3});}
+    else{const pp=[];for(let i=0;i<=5;i++){const tt=(i-2.5)/2.5;pp.push([p[0]+t[0]*tt*size*1.6+n[0]*(i%2?size:-size),p[1]+t[1]*tt*size*1.6+n[1]*(i%2?size:-size)]);}L.push({pts:pp,color:col,w:1.3});}
+}
+function styleLine(L,poly,micro,col,lw,amp,fr,orn,ramp,rnd){
+    if(micro===5){L.push({pts:poly,color:col,w:lw});return;}
+    const rs=resampleN(poly,7); if(rs.length<3)return;
+    if(micro===6){const o=rs.map((q,i)=>[q.p[0]+q.n[0]*Math.sin(i*fr)*amp,q.p[1]+q.n[1]*Math.sin(i*fr)*amp]);L.push({pts:o,color:col,w:lw});}
+    else if(micro===7){const o=rs.map((q,i)=>{const tri=(i%2?1:-1);return [q.p[0]+q.n[0]*amp*tri,q.p[1]+q.n[1]*amp*tri];});L.push({pts:o,color:col,w:lw});}
+    else{ // ornament: mostly line, occasionally replaced by an object
+        let seg=[],next=3+Math.floor(rnd()*5);
+        for(let i=0;i<rs.length;i++){seg.push(rs[i].p);
+            if(i>=next&&i<rs.length-2){if(seg.length>=2)L.push({pts:seg,color:col,w:lw});
+                const tang=[rs[Math.min(i+1,rs.length-1)].p[0]-rs[i].p[0],rs[Math.min(i+1,rs.length-1)].p[1]-rs[i].p[1]];
+                const tl=Math.hypot(tang[0],tang[1])||1;
+                placeOrn(L,rs[i].p,rs[i].n,[tang[0]/tl,tang[1]/tl],orn,amp*0.9+4,col,ramp[Math.floor(rnd()*ramp.length)].ch);
+                seg=[rs[i].p];next=i+4+Math.floor(rnd()*7);}}
+        if(seg.length>=2)L.push({pts:seg,color:col,w:lw});}
+}
+
+/* ── macro → continuous polylines (contours / paths) ── */
+function fieldContours(field){
+    const N=82,step=2*R/(N-1),mp=i=>-R+i*step,vals=new Float32Array(N*N);
+    for(let j=0;j<N;j++)for(let i=0;i<N;i++)vals[j*N+i]=field(mp(i),mp(j));
+    const sample=(i,j)=>vals[j*N+i];let out=[];
+    const K=14;                                       // many levels → space-filling
+    for(let li=1;li<=K;li++)out=out.concat(PR4.contourLines(sample,N,N,li/(K+1),mp,mp));
+    return out;
+}
+function flowLines(){const out=[],STEP=13;
+    for(let sy=-R+24;sy<R;sy+=44)for(let sx=-R+24;sx<R;sx+=44){const pts=[];let x=sx,y=sy;
+        for(let k=0;k<44;k++){pts.push([x,y]);const a=flowAngle(x,y);x+=Math.cos(a)*STEP;y+=Math.sin(a)*STEP;if(x<-R||x>R||y<-R||y>R)break;}
+        if(pts.length>3)out.push(pts);}return out;}
+function truchetLines(g){const cells=2+Math.floor(g[4]*3),s=2*R/cells,rad=s/2,out=[];
+    const arc=(ax,ay,a0)=>{const p=[];for(let i=0;i<=12;i++){const a=a0+i/12*Math.PI/2;p.push([ax+Math.cos(a)*rad,ay+Math.sin(a)*rad]);}return p;};
+    for(let yi=0;yi<cells;yi++)for(let xi=0;xi<cells;xi++){const x0=-R+xi*s,y0=-R+yi*s;
+        const bit=(Math.sin((xi*7.1+yi*13.3+g[9]*61)*1.3)*0.5+0.5)>0.5;
+        if(bit){out.push(arc(x0,y0,0));out.push(arc(x0+s,y0+s,Math.PI));}else{out.push(arc(x0+s,y0,Math.PI/2));out.push(arc(x0,y0+s,-Math.PI/2));}}
+    return out;}
+function perspLines(freq){const out=[],rows=9;
+    for(let r=0;r<=rows;r++){const t=r/rows,y=R-t*(R*1.55),hw=R*(0.22+0.78*(1-t));out.push([[-hw,y],[hw,y]]);}
+    const cols=4+freq*2;for(let c=0;c<=cols;c++){const u=c/cols*2-1;out.push([[u*R,R],[u*R*0.22,R-R*1.55]]);}return out;}
+function hilbertLine(order){const H=hilbertCurve(order),n=H.n;return [H.pts.map(p=>[-R+(p[0]+0.5)/n*2*R,-R+(p[1]+0.5)/n*2*R])];}
+function macroLines(macro,g,field,freq){
+    if(macro===15)return perspLines(freq);
+    if(macro===16)return truchetLines(g);
+    if(macro===17)return hilbertLine(4+Math.floor(g[4]*2));
+    if(macro===18)return flowLines();
+    return fieldContours(field);
+}
+function clipHero(poly){if(!HERO)return [poly];const out=[];let seg=[];
+    for(const p of poly){if(!HERO.inside(p[0],p[1]))seg.push(p);else{if(seg.length>=2)out.push(seg);seg=[];}}
+    if(seg.length>=2)out.push(seg);return out;}
+
+/* ── phenotype: macro A carries, macro B warps it (domain warping) → hybrids ── */
+function pheno(g){
+    const macroA=Math.min(NMACRO-1,Math.floor(g[0]*NMACRO));
+    const macroB=Math.min(NMACRO-1,Math.floor(g[14]*NMACRO));
+    const beta=g[15];
+    const micro=Math.min(NMICRO-1,Math.floor(g[1]*NMICRO));
+    const pal=PALS[Math.floor(g[2]*PALS.length)%PALS.length];
+    const cell=24+g[3]*30, freq=1+Math.floor(g[4]*5);
+    const ang=g[5]*Math.PI, mang=g[6]*Math.PI, contrast=0.7+g[7]*3.2, inv=g[8]>0.5;
+    const ox=g[9]*30, oy=g[10]*30, ramp=GLYPHRAMPS[Math.floor(g[11]*GLYPHRAMPS.length)%GLYPHRAMPS.length];
+    const orn=Math.floor(g[12]*4)%4, rnd=PR4.mulberry32(((g[0]*1e6)^(g[5]*1e6))|0);
+    const lines=[];
+    function fieldOf(m,x,y){
+        const u=(x+R)/(2*R),v=(y+R)/(2*R),cx=u-0.5,cy=v-0.5,ca=Math.cos(ang),sa=Math.sin(ang);
+        const ru=cx*ca-cy*sa+0.5, rv=cx*sa+cy*ca+0.5, rad=Math.hypot(cx,cy); let f;
+        switch(m){
+            case 0: f=ru;break;
+            case 1: f=0.5+0.5*Math.sin(rv*freq*Math.PI*2);break;
+            case 2: f=((Math.floor(ru*freq*2)+Math.floor(rv*freq*2))%2+2)%2;break;
+            case 3: f=1-Math.min(1,rad*2.1);break;
+            case 4: f=NOISE.fbm(u*(1.4+freq*0.7)+ox,v*(1.4+freq*0.7)+oy,4);break;
+            case 5: f=0.5+0.5*Math.sin((ru+0.25*Math.sin(rv*Math.PI*3))*freq*Math.PI*2);break;
+            case 6: f=0.5+0.5*Math.sin(rad*freq*Math.PI*5);break;
+            case 7: f=(ru+rv)*0.5;break;
+            case 8: f=0.5+0.25*Math.sin(ru*freq*Math.PI*2)+0.25*Math.sin(rv*freq*Math.PI*2);break;
+            case 9: f=0.5+0.5*Math.sin(rad*freq*8+Math.atan2(cy,cx)*freq);break;
+            case 10: f=cs((0.45-rad)*16);break;
+            case 11:{const X=cx*2.3,Y=-cy*2.3+0.32,val=Math.pow(X*X+Y*Y-1,3)-X*X*Y*Y*Y;f=cs(-val*2.4);break;}
+            case 12:{const a2=Math.atan2(cy,cx),sr=0.2+0.26*(0.5+0.5*Math.cos(5*a2));f=cs((sr-rad)*20);break;}
+            case 13: f=cs((0.42-Math.max(Math.abs(cx),Math.abs(cy)))*22);break;
+            default: f=cs((0.46-(Math.abs(cx)+Math.abs(cy)))*22);break;       // 14 + path macros fall here
+        }
+        if(m>=10&&m<=14)f*=(0.5+0.7*NOISE.fbm(u*5+ox,v*5+oy,3));
+        f=(f-0.5)*contrast+0.5;f=f<0?0:f>1?1:f;return inv?1-f:f;
+    }
+    const fieldA=(x,y)=>fieldOf(macroA,x,y);
+    // warp field: B displaces A. path macros warp like a flow; field macros warp along their gradient.
+    const AMP=130;
+    function warp(x,y){
+        if(beta<0.02)return [x,y];
+        let wx,wy;
+        if(macroB===18){const a=flowAngle(x,y);wx=Math.cos(a);wy=Math.sin(a);}
+        else if(macroB>=15&&macroB<=17){const a=flowAngle(x*1.4+11,y*1.4+4);wx=Math.cos(a);wy=Math.sin(a);}
+        else{const e=5,gx=fieldOf(macroB,x+e,y)-fieldOf(macroB,x-e,y),gy=fieldOf(macroB,x,y+e)-fieldOf(macroB,x,y-e);
+            const gl=Math.hypot(gx,gy);if(gl<1e-4){wx=0;wy=0;}else{const m=Math.min(1,gl*12);wx=gx/gl*m;wy=gy/gl*m;}}
+        return [x+wx*beta*AMP, y+wy*beta*AMP];
+    }
+
+    if(micro>=5){                                    // ── LINE family ──
+        const lw=1.2+g[3]*0.9, amp=4+g[6]*11, fr=0.35+g[4]*0.5;
+        for(const poly of macroLines(macroA,g,fieldA,freq)){
+            const wp=poly.map(p=>warp(p[0],p[1]));
+            for(const sub of clipHero(wp)) styleLine(lines,sub,micro,pal[0],lw,amp,fr,orn,ramp,rnd);}
+    } else {                                         // ── STAMP family ──
+        const stampW=(x,y,s,f,a,col)=>{if(f<0.06)return;const w=warp(x,y);if(HERO&&HERO.inside(w[0],w[1]))return;stampMark(lines,micro,w[0],w[1],s,f,a,col,ramp);};
+        if(macroA===15){const rows=12+Math.floor(g[4]*12);
+            for(let r=0;r<rows;r++){const t=r/rows,depth=1-t,y=R-t*(R*1.55),cols=4+freq*2,hw=R*(0.22+0.78*depth);
+                for(let c=0;c<=cols;c++){const x=-hw+c/cols*2*hw;stampW(x,y,cell*(0.25+depth),0.35+0.55*depth,mang,((r+c)%2)?pal[1]:pal[0]);}}
+        }else if(macroA===16){for(const ar of truchetLines(g))for(const p of ar)stampW(p[0],p[1],cell*0.85,0.72,mang,pal[0]);
+        }else if(macroA===17){const ord=4+Math.floor(g[4]*2),ln=hilbertLine(ord)[0];for(const p of ln)stampW(p[0],p[1],2*R/(1<<ord)*0.95,0.72,mang,pal[0]);
+        }else{let row=0;for(let y=-R+cell*0.5;y<R;y+=cell*0.866,row++){const xo=row%2?cell/2:0;
+            for(let x=-R+cell*0.5+xo;x<R;x+=cell){
+                let f,a=mang;if(macroA===18){a=flowAngle(x,y);f=0.62;}else f=fieldA(x,y);
+                stampW(x,y,cell,f,a,f>0.62?pal[1]:pal[0]);}}}
+    }
+    if(HERO&&HERO.outline)for(const o of HERO.outline)lines.push({pts:o,color:HEROCOL,w:4.5});
+    return lines;
+}
+function recipe(g){
+    const macroA=Math.min(NMACRO-1,Math.floor(g[0]*NMACRO)),macroB=Math.min(NMACRO-1,Math.floor(g[14]*NMACRO));
+    const micro=Math.min(NMICRO-1,Math.floor(g[1]*NMICRO));
+    const ml=MACRO_NAMES[macroA]+(g[15]>0.18&&macroB!==macroA?"×"+MACRO_NAMES[macroB]:"");
+    let s=ml+" · "+MICRO_NAMES[micro];
+    if(micro===8)s+=" ("+ORN_NAMES[Math.floor(g[12]*4)%4]+")";
+    const showG=micro===4||(micro===8&&Math.floor(g[12]*4)%4===0);
+    if(showG){const ramp=GLYPHRAMPS[Math.floor(g[11]*GLYPHRAMPS.length)%GLYPHRAMPS.length];return {txt:s+"  ",glyphs:ramp.map(r=>r.ch).join("")};}
+    return {txt:s,glyphs:""};
+}
+
+function drawTo(ctx,W,lines){
+    ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,W);ctx.fillStyle="#fffdf8";ctx.fillRect(0,0,W,W);
+    const sc=W/(2*R*1.05);ctx.setTransform(sc,0,0,sc,W/2,W/2);
+    ctx.lineJoin="round";ctx.lineCap="round";ctx.textAlign="center";ctx.textBaseline="middle";
+    for(const l of lines){
+        if(l.glyph){ctx.fillStyle=l.color;ctx.font='600 '+l.gsize+'px '+FONT;
+            if("fontVariationSettings" in ctx)ctx.fontVariationSettings="'FILL' 0";ctx.fillText(l.glyph,l.gx,l.gy);continue;}
+        if(l.pts.length<2)continue;ctx.strokeStyle=l.color;ctx.lineWidth=l.w/sc;
+        ctx.beginPath();ctx.moveTo(l.pts[0][0],l.pts[0][1]);
+        for(let i=1;i<l.pts.length;i++)ctx.lineTo(l.pts[i][0],l.pts[i][1]);if(l.closed)ctx.closePath();ctx.stroke();}
+}
+function tileSvg(marks){const map=p=>[p[0]/(R*1.05)*500+500,p[1]/(R*1.05)*500+500];
+    const esc=s=>s.replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));let body="";
+    for(const l of marks){if(l.glyph){const c=map([l.gx,l.gy]),sz=l.gsize/(R*1.05)*500;
+        body+=`<text x="${c[0].toFixed(1)}" y="${(c[1]+sz*0.34).toFixed(1)}" font-size="${sz.toFixed(1)}" fill="${l.color}">${esc(l.glyph)}</text>`;}
+        else{const q=l.pts.map(map);let d="M"+q[0][0].toFixed(1)+" "+q[0][1].toFixed(1);
+            for(let i=1;i<q.length;i++)d+="L"+q[i][0].toFixed(1)+" "+q[i][1].toFixed(1);if(l.closed)d+="Z";
+            body+=`<path d="${d}" fill="none" stroke="${l.color}" stroke-width="${l.w}"/>`;}}
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="200mm" height="200mm" viewBox="0 0 1000 1000">\n<style>@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0');text{font-family:'Material Symbols Outlined';text-anchor:middle}</style>\n<rect width="1000" height="1000" fill="#fff"/>\n${body}\n</svg>`;}
+function buildGrid(){grid.innerHTML="";cells=[];
+    for(let i=0;i<9;i++){const cell=document.createElement("div");cell.className="cell";
+        const cv=document.createElement("canvas"),pick=document.createElement("div"),cap=document.createElement("div");
+        pick.className="pick";pick.textContent="✓ Eltern";cap.className="cap";cell.append(cv,pick,cap);grid.appendChild(cell);
+        cell.addEventListener("click",()=>{selected[i]=!selected[i];cell.classList.toggle("sel",selected[i]);updateBreedBtn();});
+        cell.addEventListener("dblclick",()=>PR4.downloadSvg("zuechter-g"+generation+"-"+(i+1)+".svg",tileSvg(pheno(pop[i]))));
+        cells.push({cell,cv,cap});}}
+function renderGrid(){for(let i=0;i<9;i++){const {cv,cap}=cells[i],dpr=devicePixelRatio||1,W=cv.clientWidth||260,px=Math.round(W*dpr);
+        if(cv.width!==px){cv.width=px;cv.height=px;}drawTo(cv.getContext("2d"),px,pheno(pop[i]));
+        const rc=recipe(pop[i]);cap.innerHTML=rc.txt+(rc.glyphs?' <span class="g">'+rc.glyphs+'</span>':'');}
+    document.getElementById("gen").textContent="Generation "+generation;}
+function updateBreedBtn(){const on=selected.some(Boolean);document.getElementById("breedBig").disabled=!on;document.getElementById("breedSmall").disabled=!on;}
+function randomize(){pop=Array.from({length:9},randGenome);selected=Array(9).fill(false);cells.forEach(c=>c.cell.classList.remove("sel"));updateBreedBtn();renderGrid();}
+const clamp01=v=>v<0?0:v>1?1:v, ri=n=>Math.floor(Math.random()*n);
+function breed(mode){const idx=[];for(let i=0;i<9;i++)if(selected[i])idx.push(i);if(!idx.length)return;
+    const parents=idx.map(i=>pop[i]),next=parents.map(p=>p.slice());
+    if(mode==="klein"){while(next.length<9){const p=parents[ri(parents.length)].slice();
+        for(let i=2;i<GENES;i++)if(Math.random()<0.6)p[i]=clamp01(p[i]+(Math.random()*2-1)*0.16);next.push(p);}
+    }else{const IMM=2;                                   // mix of cross / descendant / self-cross + fresh blood
+        while(next.length<9-IMM){const a=parents[ri(parents.length)],r=Math.random();let c;
+            if(r<0.42){                                  // CROSS two parents → A from one, B from the other (blend)
+                const b=parents[ri(parents.length)];
+                c=a.map((g,i)=>{let v=Math.random()<0.5?g:b[i];if(Math.random()<0.55)v+=(Math.random()*2-1)*0.3;return clamp01(v);});
+                c[0]=a[0];c[14]=b[14];if(c[15]<0.3)c[15]=0.4+Math.random()*0.45;
+            }else if(r<0.74){                            // DESCENDANT of one parent (no crossover, occasional drift)
+                c=a.map((g,i)=>{let v=g;if((i===1||i===11||i===12)&&Math.random()<0.3)v=Math.random();else if(Math.random()<0.6)v+=(Math.random()*2-1)*0.3;return clamp01(v);});
+                if(Math.random()<0.22)c[0]=Math.random();
+            }else{                                       // SELF-CROSS: a pattern warps itself (A×A)
+                c=a.map(g=>{let v=g;if(Math.random()<0.6)v+=(Math.random()*2-1)*0.3;return clamp01(v);});
+                c[14]=c[0];if(c[15]<0.3)c[15]=0.4+Math.random()*0.45;}
+            next.push(c);}
+        while(next.length<9)next.push(randGenome());}
+    pop=next.slice(0,9);generation++;selected=Array(9).fill(false);cells.forEach(c=>c.cell.classList.remove("sel"));updateBreedBtn();renderGrid();}
+/* hero: a mask + an independent outline (negative-space monogram) */
+function buildHero(text){text=(text||"").trim();if(!text){HERO=null;return;}
+    const S=300,off=document.createElement("canvas");off.width=off.height=S;
+    const o=off.getContext("2d",{willReadFrequently:true});
+    o.fillStyle="#fff";o.fillRect(0,0,S,S);o.fillStyle="#000";o.textAlign="center";o.textBaseline="middle";
+    o.font="900 100px Arial, sans-serif";const w=o.measureText(text).width||1,fs=Math.min(100*(S*0.84/w),S*0.6);
+    o.font="900 "+fs+"px Arial, sans-serif";o.fillText(text,S/2,S/2+fs*0.04);
+    const d=o.getImageData(0,0,S,S).data;
+    const inside=(x,y)=>{const ix=(x+R)/(2*R)*S|0,iy=(y+R)/(2*R)*S|0;if(ix<0||iy<0||ix>=S||iy>=S)return false;return d[(iy*S+ix)*4]<128;};
+    const N=140,mp=i=>-R+i*(2*R/(N-1)),sample=(i,j)=>inside(mp(i),mp(j))?1:0;
+    const outline=PR4.contourLines(sample,N,N,0.5,mp,mp);
+    HERO={inside,outline};}
+document.getElementById("breedBig").addEventListener("click",()=>breed("gross"));
+document.getElementById("breedSmall").addEventListener("click",()=>breed("klein"));
+document.getElementById("rand").addEventListener("click",()=>{generation=1;randomize();});
+heroEl.addEventListener("input",()=>{buildHero(heroEl.value);renderGrid();});
+window.addEventListener("resize",PR4.debounce(renderGrid,150));
+window.__sel=(i)=>{selected[i]=true;cells[i].cell.classList.add("sel");updateBreedBtn();};
+window.__breed=(m)=>{breed(m||"gross");return generation;};
+window.__force=(arr)=>{arr.forEach((a,i)=>pop[i]=a);renderGrid();};
+function measureRamps(){const S=48,off=document.createElement("canvas");off.width=off.height=S;
+    const o=off.getContext("2d",{willReadFrequently:true});o.textAlign="center";o.textBaseline="middle";o.font='600 '+Math.round(S*0.8)+'px '+FONT;
+    if("fontVariationSettings" in o)o.fontVariationSettings="'FILL' 0";
+    GLYPHRAMPS=GLYPHSETS.map(set=>set.map(cp=>{o.clearRect(0,0,S,S);o.fillStyle="#000";o.fillText(String.fromCodePoint(cp),S/2,S/2+1);
+        const d=o.getImageData(0,0,S,S).data;let ink=0;for(let i=3;i<d.length;i+=4)if(d[i]>40)ink++;return{ch:String.fromCodePoint(cp),cov:ink/(S*S)};}).sort((a,b)=>a.cov-b.cov));}
+buildGrid();randomize();
+(async()=>{try{await document.fonts.load('600 40px '+FONT,"★❤◆");await document.fonts.ready;measureRamps();renderGrid();}catch(_){}})();
+</script>
+</body>
+</html>
