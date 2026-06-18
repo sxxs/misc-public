@@ -15,22 +15,31 @@
     .top .tag{margin-left:auto;font-size:.78rem;color:var(--dim)}
     .stage{flex:1;display:flex;gap:1.4rem;padding:1.4rem 1.5rem;min-height:0;flex-wrap:wrap}
     .sheet-wrap{flex:1 1 460px;min-width:300px;display:flex;align-items:center;justify-content:center}
-    .sheet{position:relative;aspect-ratio:1/1;width:100%;max-height:80vh;background:var(--panel);
+    .sheet{position:relative;aspect-ratio:1/1;width:100%;max-height:82vh;background:var(--panel);
         border:1px solid var(--line);box-shadow:0 18px 44px -28px rgba(40,30,15,.55);overflow:hidden}
     canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
     .prompt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;
         pointer-events:none;color:var(--dim);font-style:italic;font-size:1.1rem;transition:opacity .4s;padding:2rem}
-    .panel{flex:0 0 250px;display:flex;flex-direction:column;gap:1.1rem}
-    .lead{font-size:.88rem;line-height:1.5;color:var(--dim);margin:0}.lead b{color:var(--ink);font-weight:600}
-    .field{display:flex;flex-direction:column;gap:.35rem}
-    .field>span{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);
-        display:flex;justify-content:space-between}.field b{color:var(--ink)}
+    .panel{flex:0 0 268px;display:flex;flex-direction:column;gap:1rem;max-height:82vh;overflow-y:auto}
+    .lead{font-size:.86rem;line-height:1.5;color:var(--dim);margin:0}.lead b{color:var(--ink);font-weight:600}
+    .grp{display:flex;flex-direction:column;gap:.45rem}
+    .grp>.h{font-size:.7rem;text-transform:uppercase;letter-spacing:.09em;color:var(--dim);font-weight:600}
+    .pills{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.35rem}
+    .pill{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:.42rem .2rem;
+        border-radius:6px;font:inherit;font-size:.74rem;cursor:pointer;text-align:center;white-space:nowrap;
+        overflow:hidden;text-overflow:ellipsis}
+    .pill:hover{border-color:var(--accent);color:var(--accent)}
+    .pill.on{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+    .pill.dice.on{background:var(--accent);border-color:var(--accent)}
+    .field{display:flex;flex-direction:column;gap:.3rem}
+    .field>span{font-size:.72rem;color:var(--dim);display:flex;justify-content:space-between}.field b{color:var(--ink)}
+    .field.off{display:none}
     input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:var(--line)}
     input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--accent);cursor:pointer}
+    .tip{font-size:.74rem;color:var(--accent);min-height:1.1em;font-style:italic}
     .row{display:flex;gap:.5rem}.row button{flex:1;border:1px solid var(--line);background:var(--panel);
-        color:var(--ink);padding:.6rem;border-radius:6px;font:inherit;font-size:.82rem;cursor:pointer}
+        color:var(--ink);padding:.55rem;border-radius:6px;font:inherit;font-size:.8rem;cursor:pointer}
     .row button:hover{border-color:var(--accent);color:var(--accent)}
-    .actions{margin-top:auto;display:flex;flex-direction:column;gap:.5rem}
     .status{font-size:.74rem;color:var(--dim);min-height:1em}
     .legend{font-size:.74rem;color:var(--dim);line-height:1.5}
     .legend .u{color:var(--ink);font-weight:600}.legend .m{color:var(--accent);font-weight:600}
@@ -44,86 +53,365 @@
     <div class="stage">
         <div class="sheet-wrap"><div class="sheet">
             <canvas id="c"></canvas>
-            <div class="prompt" id="prompt">Zieh einen Strich.<br>Die Maschine antwortet.</div>
+            <div class="prompt" id="prompt">Wähl ein Werkzeug, mach eine Geste.<br>Die Maschine antwortet.</div>
         </div></div>
         <div class="panel">
-            <p class="lead">Jeder deiner Striche wird sofort zum <b>Mandala</b> gespiegelt —
-            und die Maschine legt eine <b>Antwort</b> dazu. Du reagierst auf ihre Antwort.
-            So wächst das Muster aus dem Hin und Her.</p>
+            <p class="lead">Du machst eine <b>Geste</b> — die Maschine vervielfältigt sie nach einer
+            <b>Regel</b> und legt eine <b>Antwort</b> dazu. Wechsle Werkzeug und Regel,
+            oder lass <b>🎲</b> die Maschine pro Zug selbst entscheiden.</p>
             <p class="legend"><span class="u">■ du</span> &nbsp; <span class="m">■ die Maschine</span></p>
-            <div class="field"><span>Symmetrie <b id="vN">6</b></span>
-                <input type="range" id="n" min="2" max="14" step="1" value="6"></div>
+
+            <div class="grp"><div class="h">Werkzeug — was du zeichnest</div>
+                <div class="pills" id="tools"></div></div>
+
+            <div class="grp"><div class="h">Regel — wie die Maschine spiegelt</div>
+                <div class="pills" id="rules"></div>
+                <div class="pills" style="grid-template-columns:1fr"><button class="pill dice" id="dice">🎲 Maschine wählt pro Zug</button></div>
+                <div class="tip" id="tip"></div></div>
+
+            <div class="field" id="fA"><span><b id="lA">Arme</b> <b id="vA">6</b></span>
+                <input type="range" id="a" min="2" max="16" step="1" value="6"></div>
+            <div class="field off" id="fB"><span><b id="lB">Ringe</b> <b id="vB">5</b></span>
+                <input type="range" id="b" min="2" max="12" step="1" value="5"></div>
+            <div class="field off" id="fC"><span>Ecken / Zacken <b id="vC">5</b></span>
+                <input type="range" id="co" min="3" max="12" step="1" value="5"></div>
+            <div class="field off" id="fD"><span>Faktor — ↓ kleiner · ↑ größer <b id="vD">×2.00</b></span>
+                <input type="range" id="fd" min="0.4" max="2.5" step="0.05" value="2"></div>
+
             <div class="row"><button id="undo">↶ zurück</button><button id="clear">leeren</button></div>
-            <div class="actions"><div class="row"><button id="dl">⬇ SVG</button></div>
-            <p class="status" id="status">…</p></div>
+            <div class="row"><button id="dl">⬇ SVG</button></div>
+            <p class="status" id="status">…</p>
         </div>
     </div>
 <script src="shared.js"></script>
 <script>
 "use strict";
-const SIZE=1000,CX=500,CY=500,INK="#1d1b17",ACC="#b1482b";
+/* ── Dialog as pattern generator ────────────────────────────────────────────
+ * Two independent axes turn one gesture into a whole composition:
+ *   TOOL   — what your pen makes (freehand, line, circle, rect, polygon, star)
+ *   RULE   — how the machine multiplies that gesture (a symmetry / projection)
+ * Every rule also has the machine add a contrasting "answer" in accent colour,
+ * so it always reads as call-and-response. Geometry lives in a 1000×1000 space
+ * and exports as plotter-ready SVG (ink + accent become separate pen groups). */
+const SIZE=1000,CX=500,CY=500,TAU=Math.PI*2,INK="#1d1b17",ACC="#b1482b";
 const canvas=document.getElementById("c"),ctx=canvas.getContext("2d");
-const promptEl=document.getElementById("prompt"),statusEl=document.getElementById("status");
-const nEl=document.getElementById("n");
-const state={turns:[],raw:[],drawing:false,turnNo:0};
+const promptEl=document.getElementById("prompt"),statusEl=document.getElementById("status"),tipEl=document.getElementById("tip");
+const aEl=document.getElementById("a"),bEl=document.getElementById("b"),coEl=document.getElementById("co"),fdEl=document.getElementById("fd");
 
+const TOOLS=[["frei","✎ frei"],["gerade","╱ Gerade"],["kreis","◯ Kreis"],
+             ["rechteck","▭ Rechteck"],["polygon","⬠ Vieleck"],["stern","✶ Stern"]];
+/* a = primary density (relabelled per rule); b = secondary (only some rules);
+ * tip = one-line description of what the machine will do. */
+const RULES={
+    mandala:  {name:"Mandala",      a:"Arme",      tip:"Drehung um die Mitte"},
+    kaleido:  {name:"Kaleidoskop",  a:"Achsen",    tip:"Drehung + Spiegelung — Diedergruppe"},
+    kreuz:    {name:"Spiegelkreuz", a:null,        tip:"Vier Achsen — quadratisch, nicht rund"},
+    fries:    {name:"Fries",        a:"Takte",     tip:"Wiederholung + Translation (Bandornament)"},
+    echo:     {name:"Echo",         a:"Schichten", tip:"Wiederholung mit Skalierung — an Ort und Stelle"},
+    gitter:   {name:"Gitter",       a:"Felder",    tip:"Kachelung in die Fläche (Tapete)"},
+    flucht:   {name:"Fluchtpunkt",  a:"Tiefe",     tip:"Perspektivische Staffelung zur Mitte (Tunnel)"},
+    drechseln:{name:"Drechseln",    a:"Meridiane", b:"Ringe", tip:"Profil um die Achse rotiert (Rotationskörper)"},
+    kreisspiegel:{name:"Kreisspiegel",a:"Radius",   tip:"Spiegelung am Kreis — Geraden werden Bögen"},
+    parallelen:{name:"Parallelen",  a:"Linien",    b:"Abstand", tip:"Konturlinien entlang deiner Geste (Offset)"},
+    schraffur:{name:"Schraffur",    a:"Dichte",    tip:"Füllt die Form mit form-folgenden Konturlinien"},
+    baum:     {name:"Baum",         a:"Tiefe",     b:"Streuung",tip:"Selbstähnlich — wächst als Baum aus sich selbst"},
+};
+const RULE_KEYS=Object.keys(RULES);
+/* order the surprise-mode cycles through — deliberately alternating round/flat */
+const CYCLE=["mandala","kreuz","fries","flucht","kaleido","parallelen","gitter","kreisspiegel","drechseln","echo","schraffur","baum"];
+
+const state={turns:[],raw:[],start:null,cur:null,drawing:false,turnNo:0,tool:"frei",rule:"mandala",auto:false};
+
+/* ── geometry helpers ─────────────────────────────────────────────────────── */
+const sub=(a,b)=>[a[0]-b[0],a[1]-b[1]],hyp=a=>Math.hypot(a[0],a[1]);
+const rot=(p,ang)=>{const dx=p[0]-CX,dy=p[1]-CY,c=Math.cos(ang),s=Math.sin(ang);return [CX+dx*c-dy*s,CY+dx*s+dy*c];};
+const reflV=p=>[2*CX-p[0],p[1]];                                  // mirror across vertical centre axis
+const reflH=p=>[p[0],2*CY-p[1]];                                  // mirror across horizontal centre axis
+const r180=p=>[2*CX-p[0],2*CY-p[1]];                             // point reflection through centre
+const tdiag=p=>[CX+(p[1]-CY),CY+(p[0]-CX)];                       // reflect across main diagonal
+const tanti=p=>[CX-(p[1]-CY),CY-(p[0]-CX)];                       // reflect across anti-diagonal
+const scaleC=(p,s)=>[CX+(p[0]-CX)*s,CY+(p[1]-CY)*s];             // scale about centre
+const trans=(p,dx,dy)=>[p[0]+dx,p[1]+dy];
+const mp=(pts,f)=>pts.map(f);
+const L=(pts,color,w)=>({pts,color,w});
+/* pick up to n vertices spread evenly along a stroke (for rails / depth edges) */
+function sample(pts,n){if(pts.length<=n)return pts.slice();const o=[],st=(pts.length-1)/(n-1);
+    for(let i=0;i<n;i++)o.push(pts[Math.round(i*st)]);return o;}
+/* densify a polyline so curved transforms (inversion) stay smooth */
+function densify(pts,step){if(pts.length<2)return pts.slice();const o=[pts[0]];
+    for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],d=hyp(sub(b,a)),n=Math.max(1,Math.ceil(d/step));
+        for(let k=1;k<=n;k++)o.push([a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n]);}return o;}
+/* circle inversion about the centre, radius R: p → C + R²·(p−C)/|p−C|².
+ * densifies first; breaks the polyline near the centre where it shoots to ∞. */
+function invertStroke(stroke,R){const dense=densify(stroke,8),lines=[];let cur=[];
+    for(const p of dense){const dx=p[0]-CX,dy=p[1]-CY,d2=dx*dx+dy*dy;
+        if(d2<(R*0.05)**2){if(cur.length>1)lines.push(cur);cur=[];continue;}
+        const f=R*R/d2;cur.push([CX+dx*f,CY+dy*f]);}
+    if(cur.length>1)lines.push(cur);return lines;}
+/* N parallel offset copies along the local normal, on one side (±1) */
+function offsetLines(stroke,N,spacing,side){const M=stroke.length,norm=[];
+    for(let i=0;i<M;i++){const a=stroke[Math.max(0,i-1)],b=stroke[Math.min(M-1,i+1)];
+        const tx=b[0]-a[0],ty=b[1]-a[1],len=Math.hypot(tx,ty)||1;norm.push([-ty/len,tx/len]);}
+    const out=[];for(let k=1;k<=N;k++){const off=side*k*spacing;
+        out.push(stroke.map((p,i)=>[p[0]+norm[i][0]*off,p[1]+norm[i][1]*off]));}return out;}
+/* form-following fill: iso-contours of the shape's signed distance field, so the
+ * lines hug the silhouette (concentric rings inset by spacing, 2·spacing, …). */
+function hatchFill(poly,spacing){
+    let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+    for(const p of poly){if(p[0]<x0)x0=p[0];if(p[0]>x1)x1=p[0];if(p[1]<y0)y0=p[1];if(p[1]>y1)y1=p[1];}
+    const pad=spacing*1.5;x0-=pad;y0-=pad;x1+=pad;y1+=pad;
+    const w=x1-x0,h=y1-y0;if(w<2||h<2)return [];
+    const cell=Math.max(spacing*0.5,Math.max(w,h)/200);
+    const nx=Math.max(4,Math.ceil(w/cell)+1),ny=Math.max(4,Math.ceil(h/cell)+1);
+    const E=[];for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length];
+        if(a[0]!==b[0]||a[1]!==b[1])E.push([a,b]);}
+    if(!E.length)return [];
+    const inside=(px,py)=>{let c=false;for(const[a,b]of E){const yi=a[1],yj=b[1];
+        if((yi>py)!==(yj>py)&&px<(b[0]-a[0])*(py-yi)/(yj-yi)+a[0])c=!c;}return c;};
+    const distSeg=(px,py,a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],l2=dx*dx+dy*dy||1;
+        let t=((px-a[0])*dx+(py-a[1])*dy)/l2;t=t<0?0:t>1?1:t;
+        return Math.hypot(px-(a[0]+t*dx),py-(a[1]+t*dy));};
+    const field=new Float32Array(nx*ny);let maxD=0;
+    for(let iy=0;iy<ny;iy++)for(let ix=0;ix<nx;ix++){const px=x0+ix*cell,py=y0+iy*cell;
+        let dmin=Infinity;for(const[a,b]of E){const d=distSeg(px,py,a,b);if(d<dmin)dmin=d;}
+        const v=inside(px,py)?dmin:-dmin;field[iy*nx+ix]=v;if(v>maxD)maxD=v;}
+    const sample=(ix,iy)=>field[iy*nx+ix],mapX=gx=>x0+gx*cell,mapY=gy=>y0+gy*cell;
+    const lines=[];
+    for(let t=spacing;t<maxD;t+=spacing)
+        for(const ln of PR4.contourLines(sample,nx,ny,t,mapX,mapY))lines.push(ln);
+    return lines;}
+/* self-similar tree: place scaled+rotated copies of the motif at each tip, recursively.
+ * works best with an open gesture (Freihand/Gerade) — base=first point, tip=last point. */
+function buildTree(stroke,depth,spread,S){const out=[],base=stroke[0];
+    const place=(B,sc,r)=>{const c=Math.cos(r),s=Math.sin(r);
+        return stroke.map(p=>{const dx=p[0]-base[0],dy=p[1]-base[1];
+            return [B[0]+(dx*c-dy*s)*sc,B[1]+(dx*s+dy*c)*sc];});};
+    (function grow(B,sc,r,d){const pts=place(B,sc,r);out.push({pts,d});
+        if(d>=depth||sc<0.05)return;const t=pts[pts.length-1];
+        grow(t,sc*S,r-spread,d+1);grow(t,sc*S,r+spread,d+1);})(base,1,0,0);
+    return out;}
+
+/* build the raw stroke from a press-drag gesture, per tool.
+ * frei/gerade are endpoint based; kreis/polygon/stern grow from the centre;
+ * rechteck spans a box. a=down point, b=current point. */
+function shapeFrom(tool,a,b,corners){
+    if(tool==="frei")    return state.raw.slice();
+    if(tool==="gerade")  return [a.slice(),b.slice()];
+    const dx=b[0]-a[0],dy=b[1]-a[1],R=Math.hypot(dx,dy),ang=Math.atan2(dy,dx);
+    if(tool==="rechteck")return [a.slice(),[b[0],a[1]],b.slice(),[a[0],b[1]],a.slice()];
+    if(tool==="kreis"){const seg=Math.max(28,Math.round(R/5)),o=[];
+        for(let i=0;i<=seg;i++){const t=i/seg*TAU;o.push([a[0]+R*Math.cos(t),a[1]+R*Math.sin(t)]);}return o;}
+    if(tool==="polygon"){const K=corners,o=[];
+        for(let i=0;i<=K;i++){const t=ang+i/K*TAU;o.push([a[0]+R*Math.cos(t),a[1]+R*Math.sin(t)]);}return o;}
+    if(tool==="stern"){const K=corners,o=[];
+        for(let i=0;i<=2*K;i++){const rr=(i%2)?R*0.44:R,t=ang+i/(2*K)*TAU;o.push([a[0]+rr*Math.cos(t),a[1]+rr*Math.sin(t)]);}return o;}
+    return [a.slice(),b.slice()];
+}
+
+/* ── the rules: stroke → your copies (ink) + the machine's answer (accent) ──
+ * Each returns {ink:[lines], acc:[lines]}. Lines are {pts,color,w}. */
+function apply(stroke,rule,P){
+    const ink=[],acc=[];
+    if(rule==="mandala"){
+        const N=P.a;
+        for(let k=0;k<N;k++){const ang=k*TAU/N;ink.push(L(mp(stroke,p=>rot(p,ang)),INK,1.7));}
+        // machine: a nested ring, half-step rotated and pulled inward
+        for(let k=0;k<N;k++){const ang=(k+0.5)*TAU/N;acc.push(L(mp(stroke,p=>rot(scaleC(p,0.7),ang)),ACC,1.2));}
+    }
+    else if(rule==="kaleido"){
+        const N=P.a,mir=mp(stroke,reflV);
+        for(let k=0;k<N;k++){const ang=k*TAU/N;
+            ink.push(L(mp(stroke,p=>rot(p,ang)),INK,1.6));   // your half of each wedge
+            acc.push(L(mp(mir,p=>rot(p,ang)),ACC,1.4));}      // its reflection — the fold
+    }
+    else if(rule==="kreuz"){
+        // full square symmetry (D4) split by colour → stays square, never round
+        [p=>p,reflV,reflH,r180].forEach(f=>ink.push(L(mp(stroke,f),INK,1.7)));
+        [tdiag,tanti,p=>rot(p,Math.PI/2),p=>rot(p,-Math.PI/2)].forEach(f=>acc.push(L(mp(stroke,f),ACC,1.3)));
+    }
+    else if(rule==="fries"){
+        const R=P.a,period=SIZE/R,n=Math.ceil(R)+1;
+        for(let i=-n;i<=n;i++)ink.push(L(mp(stroke,p=>trans(p,i*period,0)),INK,1.6));
+        // machine: a glide-reflected row, offset half a period
+        for(let i=-n;i<=n;i++)acc.push(L(mp(stroke,p=>trans(reflH(p),(i+0.5)*period,0)),ACC,1.3));
+    }
+    else if(rule==="gitter"){
+        const R=Math.min(P.a,8),period=SIZE/R,n=Math.ceil(R)+1;
+        for(let ix=-n;ix<=n;ix++)for(let iy=-n;iy<=n;iy++)
+            ink.push(L(mp(stroke,p=>trans(p,ix*period,iy*period)),INK,1.5));
+        for(let ix=-n;ix<=n;ix++)for(let iy=-n;iy<=n;iy++)
+            acc.push(L(mp(stroke,p=>trans(p,(ix+0.5)*period,(iy+0.5)*period)),ACC,1.1));
+    }
+    else if(rule==="flucht"){
+        const K=P.a,sh=0.74;
+        for(let i=0;i<=K;i++)ink.push(L(mp(stroke,p=>scaleC(p,Math.pow(sh,i))),INK,1.5));
+        // machine: the rails — connect each vertex across the receding copies
+        for(const v of sample(stroke,12)){const rail=[];
+            for(let i=0;i<=K;i++)rail.push(scaleC(v,Math.pow(sh,i)));acc.push(L(rail,ACC,0.9));}
+    }
+    else if(rule==="drechseln"){
+        // lathe: treat the stroke as a profile beside the vertical centre axis.
+        // radius r=(x-CX), height=y; sweep around the axis, project with a slight
+        // vertical foreshorten (FS) so latitude rings read as ellipses.
+        const M=P.a,RINGS=P.b,FS=0.32;
+        const project=(p,th)=>{const r=p[0]-CX,y=p[1];return [CX+r*Math.cos(th),y-r*Math.sin(th)*FS];};
+        for(let k=0;k<M;k++){const th=k*TAU/M;ink.push(L(mp(stroke,p=>project(p,th)),INK,1.4));} // meridians
+        const prof=sample(stroke,RINGS+2);
+        for(const p of prof){const r=p[0]-CX,y=p[1],seg=36,ring=[];if(Math.abs(r)<6)continue;
+            for(let t=0;t<=seg;t++){const th=t/seg*TAU;ring.push([CX+r*Math.cos(th),y-r*Math.sin(th)*FS]);}
+            acc.push(L(ring,ACC,1.0));}                                                          // latitude rings
+    }
+    else if(rule==="echo"){
+        // repeat the gesture scaled about its OWN centroid — nested in place.
+        // F = size of the outermost copy (F<1 shrinks inward, F>1 grows outward);
+        // copies are spaced geometrically between 1× and F× so it never explodes.
+        const K=P.a,F=P.factor;
+        let cx=0,cy=0;for(const p of stroke){cx+=p[0];cy+=p[1];}cx/=stroke.length;cy/=stroke.length;
+        const sc=(p,s)=>[cx+(p[0]-cx)*s,cy+(p[1]-cy)*s];
+        for(let i=0;i<=K;i++){const s=Math.pow(F,i/K);ink.push(L(mp(stroke,p=>sc(p,s)),INK,1.6));}
+        // machine: the in-between layers, interleaved at half steps
+        for(let i=0;i<K;i++){const s=Math.pow(F,(i+0.5)/K);acc.push(L(mp(stroke,p=>sc(p,s)),ACC,1.2));}
+    }
+    else if(rule==="kreisspiegel"){
+        const R=P.a*30;ink.push(L(stroke.slice(),INK,1.7));            // your gesture
+        for(const ln of invertStroke(stroke,R))acc.push(L(ln,ACC,1.2)); // its reflection through the circle
+    }
+    else if(rule==="parallelen"){
+        const N=P.a,sp=P.b*4;ink.push(L(stroke.slice(),INK,1.7));
+        for(const ln of offsetLines(stroke,N,sp, 1))ink.push(L(ln,INK,1.1)); // your side
+        for(const ln of offsetLines(stroke,N,sp,-1))acc.push(L(ln,ACC,1.1)); // the machine's side
+    }
+    else if(rule==="schraffur"){
+        ink.push(L(stroke.slice(),INK,1.7));                            // the outline stays yours
+        const sp=Math.max(4,60/P.a);                                    // ring spacing px (denser at higher Dichte)
+        for(const ln of hatchFill(stroke,sp))acc.push(L(ln,ACC,1.0));   // machine fills it, following the shape
+    }
+    else if(rule==="baum"){
+        const depth=Math.min(P.a,7),spread=P.b*9*Math.PI/180,S=0.68;
+        for(const node of buildTree(stroke,depth,spread,S)){
+            const w=Math.max(0.7,1.7-node.d*0.18);                      // twigs taper thinner
+            (node.d%2?acc:ink).push(L(node.pts,node.d%2?ACC:INK,w));}   // alternate pens by depth
+    }
+    return {ink,acc};
+}
+
+/* ── canvas plumbing ──────────────────────────────────────────────────────── */
 function fit(){const dpr=devicePixelRatio||1,r=canvas.getBoundingClientRect();
     const px=Math.max(1,Math.round(r.width*dpr));if(canvas.width!==px){canvas.width=px;canvas.height=px;}render();}
 function toPage(e){const r=canvas.getBoundingClientRect();return [(e.clientX-r.left)/r.width*SIZE,(e.clientY-r.top)/r.height*SIZE];}
-const sub=(a,b)=>[a[0]-b[0],a[1]-b[1]],hyp=a=>Math.hypot(a[0],a[1]);
-function rotAbout(p,a){const dx=p[0]-CX,dy=p[1]-CY,c=Math.cos(a),s=Math.sin(a);return [CX+dx*c-dy*s,CY+dx*s+dy*c];}
+function nextRule(){return state.auto?CYCLE[state.turnNo%CYCLE.length]:state.rule;}
+function poly(pts,close){if(pts.length<2)return;ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);
+    for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i][0],pts[i][1]);if(close)ctx.closePath();ctx.stroke();}
 
-/* the machine's reply transform — cycles each turn so it feels like a partner with moods */
-function reply(pts,mode){
-    if(mode===0) return pts.map(p=>[2*CX-p[0],p[1]]);                 // mirror across vertical
-    if(mode===1) return pts.map(p=>[2*CX-p[0],2*CY-p[1]]);           // point reflection
-    if(mode===2) return pts.map(p=>{const q=rotAbout(p,Math.PI/(+nEl.value));return [CX+(q[0]-CX)*0.78,CY+(q[1]-CY)*0.78];}); // offset + shrink
-    return pts.map(p=>{const q=rotAbout(p,-Math.PI/(+nEl.value));return [CX+(q[0]-CX)*1.12,CY+(q[1]-CY)*1.12];}); // offset + grow
-}
-function symmetrize(pts,color,w){
-    const N=+nEl.value,out=[];
-    for(let k=0;k<N;k++){const a=k*2*Math.PI/N;out.push({pts:pts.map(p=>rotAbout(p,a)),color,w});}
-    return out;
-}
-function commit(){
-    state.drawing=false;
-    if(state.raw.length<3){state.raw=[];render();return;}
-    const stroke=PR4.mulberry32?state.raw.slice():state.raw.slice();
-    const userLines=symmetrize(stroke,INK,1.7);
-    const mode=state.turnNo%4;
-    const machineLines=symmetrize(reply(stroke,mode),ACC,1.3);
-    state.turns.push({user:userLines,machine:machineLines});
-    state.turnNo++;state.raw=[];
-    render();
-    statusEl.textContent="Zug "+state.turnNo+" · die Maschine antwortete ("+["Spiegel","Punktspiegel","Drehung −","Drehung +"][mode]+")";
-}
-function allLines(){const o=[];for(const t of state.turns){o.push(...t.user,...t.machine);}return o;}
+/* faint guide showing what the active rule will do — like seeing the next piece.
+ * a persistent alignment grid is always drawn first; both are screen-only and
+ * never enter allLines(), so they never appear in the exported SVG. */
+function guide(rule){ctx.save();ctx.lineWidth=1;ctx.setLineDash([]);
+    // always-on alignment grid (50px = 10mm) + centre cross
+    ctx.strokeStyle="rgba(0,0,0,.035)";
+    for(let i=50;i<SIZE;i+=50){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,SIZE);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(SIZE,i);ctx.stroke();}
+    ctx.strokeStyle="rgba(0,0,0,.09)";
+    ctx.beginPath();ctx.moveTo(CX,0);ctx.lineTo(CX,SIZE);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,CY);ctx.lineTo(SIZE,CY);ctx.stroke();
+    // rule-specific guide on top
+    ctx.strokeStyle="rgba(0,0,0,.06)";
+    if(rule==="mandala"||rule==="kaleido"){
+        for(const rr of[120,250,380,470]){ctx.beginPath();ctx.arc(CX,CY,rr,0,TAU);ctx.stroke();}
+        const N=+aEl.value;for(let k=0;k<N;k++){const a=k*TAU/N;
+            ctx.beginPath();ctx.moveTo(CX,CY);ctx.lineTo(CX+480*Math.cos(a),CY+480*Math.sin(a));ctx.stroke();}}
+    else if(rule==="kreuz"){[reflV,reflH,tdiag,tanti].forEach(()=>{});
+        for(const f of[[0,CY,SIZE,CY],[CX,0,CX,SIZE],[0,0,SIZE,SIZE],[SIZE,0,0,SIZE]]){
+            ctx.beginPath();ctx.moveTo(f[0],f[1]);ctx.lineTo(f[2],f[3]);ctx.stroke();}}
+    else if(rule==="fries"){const period=SIZE/(+aEl.value);
+        for(let x=0;x<=SIZE;x+=period){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,SIZE);ctx.stroke();}
+        ctx.strokeStyle="rgba(0,0,0,.1)";ctx.beginPath();ctx.moveTo(0,CY);ctx.lineTo(SIZE,CY);ctx.stroke();}
+    else if(rule==="gitter"){const period=SIZE/Math.min(+aEl.value,8);
+        for(let x=0;x<=SIZE;x+=period){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,SIZE);ctx.stroke();}
+        for(let y=0;y<=SIZE;y+=period){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(SIZE,y);ctx.stroke();}}
+    else if(rule==="flucht"){ctx.beginPath();ctx.arc(CX,CY,4,0,TAU);ctx.stroke();
+        for(let k=0;k<8;k++){const a=k*TAU/8;ctx.beginPath();ctx.moveTo(CX,CY);
+            ctx.lineTo(CX+500*Math.cos(a),CY+500*Math.sin(a));ctx.stroke();}}
+    else if(rule==="drechseln"){ctx.setLineDash([6,6]);ctx.strokeStyle="rgba(0,0,0,.12)";
+        ctx.beginPath();ctx.moveTo(CX,40);ctx.lineTo(CX,SIZE-40);ctx.stroke();ctx.setLineDash([]);}
+    else if(rule==="kreisspiegel"){const R=(+aEl.value)*30;ctx.setLineDash([6,6]);
+        ctx.beginPath();ctx.arc(CX,CY,R,0,TAU);ctx.stroke();ctx.setLineDash([]);}
+    ctx.restore();}
+
+function allLines(){const o=[];for(const t of state.turns){o.push(...t.ink,...t.acc);}return o;}
 function render(){
     const px=canvas.width;ctx.setTransform(px/SIZE,0,0,px/SIZE,0,0);
     ctx.fillStyle="#fffdf8";ctx.fillRect(0,0,SIZE,SIZE);ctx.lineJoin="round";ctx.lineCap="round";
-    // faint guide rings
-    ctx.strokeStyle="rgba(0,0,0,.05)";ctx.lineWidth=1;
-    for(const rr of [120,250,380,470]){ctx.beginPath();ctx.arc(CX,CY,rr,0,7);ctx.stroke();}
-    for(const l of allLines()){if(l.pts.length<2)continue;ctx.strokeStyle=l.color;ctx.lineWidth=l.w;
-        ctx.beginPath();ctx.moveTo(l.pts[0][0],l.pts[0][1]);
-        for(let i=1;i<l.pts.length;i++)ctx.lineTo(l.pts[i][0],l.pts[i][1]);ctx.stroke();}
-    if(state.drawing&&state.raw.length>1){ctx.strokeStyle="rgba(29,27,23,.5)";ctx.lineWidth=2;
-        ctx.beginPath();ctx.moveTo(state.raw[0][0],state.raw[0][1]);
-        for(let i=1;i<state.raw.length;i++)ctx.lineTo(state.raw[i][0],state.raw[i][1]);ctx.stroke();}
+    guide(nextRule());
+    for(const l of allLines()){if(l.pts.length<2)continue;ctx.strokeStyle=l.color;ctx.lineWidth=l.w;poly(l.pts);}
+    // live preview of the gesture in progress
+    if(state.drawing){ctx.strokeStyle="rgba(29,27,23,.5)";ctx.lineWidth=2;
+        const prev=state.tool==="frei"?state.raw:(state.start&&state.cur?shapeFrom(state.tool,state.start,state.cur,+coEl.value):null);
+        if(prev&&prev.length>1)poly(prev);}
 }
+
+function paramsNow(){return {a:+aEl.value,b:+bEl.value,corners:+coEl.value,factor:+fdEl.value};}
+function commit(){
+    state.drawing=false;
+    let stroke;
+    if(state.tool==="frei"){if(state.raw.length<3){state.raw=[];render();return;}stroke=state.raw.slice();}
+    else{if(!state.start||!state.cur){state.raw=[];render();return;}
+        const R=hyp(sub(state.cur,state.start));if(R<8){state.raw=[];render();return;}
+        stroke=shapeFrom(state.tool,state.start,state.cur,+coEl.value);}
+    const rule=nextRule();
+    const {ink,acc}=apply(stroke,rule,paramsNow());
+    state.turns.push({ink,acc});state.turnNo++;state.raw=[];state.start=state.cur=null;
+    promptEl.style.opacity=0;render();refreshUI();   // refresh so 🎲 "next rule" preview stays current
+    statusEl.textContent="Zug "+state.turnNo+" · "+RULES[rule].name+" — "+RULES[rule].tip;
+}
+
 canvas.addEventListener("pointerdown",e=>{try{canvas.setPointerCapture(e.pointerId);}catch(_){}
-    promptEl.style.opacity=0;state.drawing=true;state.raw=[toPage(e)];render();});
-canvas.addEventListener("pointermove",e=>{if(!state.drawing)return;const p=toPage(e),l=state.raw[state.raw.length-1];
-    if(hyp(sub(p,l))>4){state.raw.push(p);render();}});
+    promptEl.style.opacity=0;state.drawing=true;const p=toPage(e);state.start=p;state.cur=p;state.raw=[p];render();});
+canvas.addEventListener("pointermove",e=>{if(!state.drawing)return;const p=toPage(e);state.cur=p;
+    if(state.tool==="frei"){const l=state.raw[state.raw.length-1];if(hyp(sub(p,l))>4)state.raw.push(p);}render();});
 canvas.addEventListener("pointerup",commit);
 canvas.addEventListener("pointercancel",commit);
-document.getElementById("n").addEventListener("input",()=>{document.getElementById("vN").textContent=nEl.value;render();});
-document.getElementById("undo").addEventListener("click",()=>{state.turns.pop();if(state.turnNo>0)state.turnNo--;render();});
-document.getElementById("clear").addEventListener("click",()=>{state.turns=[];state.turnNo=0;promptEl.style.opacity=1;render();statusEl.textContent="";});
-document.getElementById("dl").addEventListener("click",()=>{const L=allLines();if(L.length)PR4.downloadSvg("dialog.svg",PR4.linesToSvg(L,{width:1,mm:200}));});
+
+/* ── UI wiring ────────────────────────────────────────────────────────────── */
+function refreshUI(){
+    document.querySelectorAll("#tools .pill").forEach(b=>b.classList.toggle("on",b.dataset.k===state.tool));
+    document.querySelectorAll("#rules .pill").forEach(b=>b.classList.toggle("on",!state.auto&&b.dataset.k===state.rule));
+    document.getElementById("dice").classList.toggle("on",state.auto);
+    const r=RULES[nextRule()];
+    tipEl.textContent=(state.auto?"🎲 nächster Zug: "+r.name+" — ":"")+r.tip;
+    // primary slider relabels per rule; hidden when the rule ignores it
+    document.getElementById("fA").classList.toggle("off",!r.a);
+    if(r.a)document.getElementById("lA").textContent=r.a;
+    document.getElementById("fB").classList.toggle("off",!r.b);
+    if(r.b)document.getElementById("lB").textContent=r.b;
+    // corner count only matters for polygon / star tools
+    document.getElementById("fC").classList.toggle("off",!(state.tool==="polygon"||state.tool==="stern"));
+    // scale factor only matters for the Echo rule
+    document.getElementById("fD").classList.toggle("off",nextRule()!=="echo");
+}
+(function buildPills(){
+    const tw=document.getElementById("tools");
+    for(const[k,label]of TOOLS){const b=document.createElement("button");b.className="pill";b.dataset.k=k;
+        b.textContent=label;b.onclick=()=>{state.tool=k;refreshUI();render();};tw.appendChild(b);}
+    const rw=document.getElementById("rules");
+    for(const k of RULE_KEYS){const b=document.createElement("button");b.className="pill";b.dataset.k=k;
+        b.textContent=RULES[k].name;b.onclick=()=>{state.rule=k;state.auto=false;refreshUI();render();};rw.appendChild(b);}
+})();
+document.getElementById("dice").onclick=()=>{state.auto=!state.auto;refreshUI();render();};
+aEl.addEventListener("input",()=>{document.getElementById("vA").textContent=aEl.value;render();});
+bEl.addEventListener("input",()=>{document.getElementById("vB").textContent=bEl.value;render();});
+coEl.addEventListener("input",()=>{document.getElementById("vC").textContent=coEl.value;render();});
+fdEl.addEventListener("input",()=>{document.getElementById("vD").textContent="×"+(+fdEl.value).toFixed(2);render();});
+document.getElementById("undo").onclick=()=>{state.turns.pop();if(state.turnNo>0)state.turnNo--;render();refreshUI();};
+document.getElementById("clear").onclick=()=>{state.turns=[];state.turnNo=0;promptEl.style.opacity=1;render();refreshUI();statusEl.textContent="";};
+document.getElementById("dl").onclick=()=>{const A=allLines();if(A.length)PR4.downloadSvg("dialog.svg",PR4.linesToSvg(A,{width:1,mm:200}));};
 window.addEventListener("resize",PR4.debounce(fit,150));
-window.__stroke=(pts)=>{state.raw=pts.slice();commit();return state.turnNo;};
-fit();
+
+/* test hooks: drive a gesture without a real pointer */
+window.__set=(tool,rule,auto)=>{if(tool)state.tool=tool;if(rule){state.rule=rule;state.auto=false;}if(auto!=null)state.auto=auto;refreshUI();render();};
+window.__stroke=(pts)=>{state.tool="frei";state.raw=pts.slice();state.start=pts[0];state.cur=pts[pts.length-1];commit();return state.turnNo;};
+window.__shape=(tool,a,b)=>{state.tool=tool;state.start=a;state.cur=b;state.raw=[a];commit();return state.turnNo;};
+refreshUI();fit();
 </script>
 </body>
 </html>
