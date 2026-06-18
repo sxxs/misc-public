@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>113 · Dein Fehler wird schön — Plot Runde 4</title>
+<style>
+    :root{
+        --paper:#f3ede1; --paper2:#ece4d4; --ink:#23201c; --ink-soft:#6f6657;
+        --accent:#b1442b; --line:#d8cdb8; --gold:#9c7a3c;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%}
+    body{
+        background:var(--paper);
+        color:var(--ink);
+        font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+        -webkit-font-smoothing:antialiased;
+        display:flex;flex-direction:column;min-height:100%;
+    }
+    a{color:inherit}
+    .topbar{
+        display:flex;align-items:baseline;gap:1.2rem;
+        padding:1.1rem 1.6rem .8rem;border-bottom:1px solid var(--line);
+    }
+    .topbar .back{font-size:.8rem;letter-spacing:.04em;text-decoration:none;
+        color:var(--ink-soft);border-bottom:1px solid transparent;padding-bottom:1px}
+    .topbar .back:hover{border-color:var(--ink-soft)}
+    .topbar h1{font-size:1.45rem;font-weight:600;margin:0;letter-spacing:.01em}
+    .topbar h1 .no{color:var(--gold);font-variant-numeric:tabular-nums;margin-right:.5rem}
+    .topbar .tag{font-size:.78rem;color:var(--ink-soft);font-style:italic;margin-left:auto}
+
+    .stage{flex:1;display:flex;gap:1.4rem;padding:1.4rem 1.6rem;align-items:stretch;
+        min-height:0;flex-wrap:wrap}
+    .sheet-wrap{flex:1 1 520px;min-width:300px;display:flex;flex-direction:column}
+    .sheet{
+        position:relative;flex:1;aspect-ratio:1/1;max-height:78vh;
+        background:
+            linear-gradient(var(--paper2),var(--paper2)) padding-box,
+            var(--paper);
+        border:1px solid var(--line);
+        border-radius:3px;
+        box-shadow:0 1px 0 #fff inset, 0 18px 40px -28px rgba(40,30,15,.5);
+        overflow:hidden;
+    }
+    /* faint notebook margin + baseline ruling */
+    .sheet::before{content:"";position:absolute;inset:0;pointer-events:none;
+        background:
+            linear-gradient(90deg,transparent 46px,rgba(177,68,43,.16) 46px,rgba(177,68,43,.16) 47px,transparent 47px),
+            repeating-linear-gradient(0deg,transparent 0,transparent 39px,rgba(120,100,70,.07) 39px,rgba(120,100,70,.07) 40px);
+    }
+    canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair;display:block}
+    .prompt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+        text-align:center;pointer-events:none;color:var(--ink-soft);
+        transition:opacity .4s;padding:2rem}
+    .prompt span{font-style:italic;font-size:1.15rem;line-height:1.5;max-width:24ch}
+    .prompt small{display:block;margin-top:.6rem;font-size:.82rem;opacity:.7;font-style:normal}
+
+    .panel{flex:0 0 280px;display:flex;flex-direction:column;gap:1.15rem;padding-top:.2rem}
+    .lead{font-size:.92rem;line-height:1.55;color:var(--ink-soft);margin:0}
+    .lead b{color:var(--ink);font-weight:600}
+
+    .seg{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:#fff8}
+    .seg button{flex:1;border:0;background:transparent;padding:.5rem .2rem;font:inherit;
+        font-size:.86rem;color:var(--ink-soft);cursor:pointer;transition:.15s}
+    .seg button.on{background:var(--ink);color:var(--paper)}
+    .seg button:not(.on):hover{background:#0001}
+
+    .field{display:flex;flex-direction:column;gap:.3rem}
+    .field label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--ink-soft);
+        letter-spacing:.02em}
+    .field label b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+    input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:var(--line);outline:0}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;
+        background:var(--accent);cursor:pointer;border:2px solid var(--paper);box-shadow:0 0 0 1px var(--accent)}
+    input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--accent);
+        cursor:pointer;border:2px solid var(--paper)}
+
+    .toggle{display:flex;align-items:center;gap:.55rem;font-size:.86rem;color:var(--ink-soft);cursor:pointer;user-select:none}
+    .toggle input{display:none}
+    .toggle .box{width:34px;height:19px;border-radius:999px;background:var(--line);position:relative;transition:.18s;flex:0 0 auto}
+    .toggle .box::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;
+        background:#fff;transition:.18s;box-shadow:0 1px 2px #0003}
+    .toggle input:checked + .box{background:var(--accent)}
+    .toggle input:checked + .box::after{transform:translateX(15px)}
+
+    .actions{display:flex;gap:.6rem;margin-top:auto;flex-wrap:wrap}
+    .actions button{flex:1;min-width:96px;border:1px solid var(--ink);background:var(--ink);color:var(--paper);
+        padding:.62rem .5rem;border-radius:3px;font:inherit;font-size:.86rem;cursor:pointer;transition:.15s}
+    .actions button.ghost{background:transparent;color:var(--ink)}
+    .actions button:hover{transform:translateY(-1px)}
+    .actions button:disabled{opacity:.35;cursor:not-allowed;transform:none}
+    .status{font-size:.78rem;color:var(--ink-soft);font-style:italic;min-height:1.1em}
+</style>
+</head>
+<body>
+    <div class="topbar">
+        <a class="back" href="./">← Übersicht</a>
+        <h1><span class="no">113</span>Dein Fehler wird schön</h1>
+        <span class="tag">je wackliger, desto schöner</span>
+    </div>
+
+    <div class="stage">
+        <div class="sheet-wrap">
+            <div class="sheet">
+                <canvas id="c"></canvas>
+                <div class="prompt" id="prompt">
+                    <span>Zieh eine krumme Linie.<small>Mit Maus oder Finger — eine zittrige Initiale, ein schiefes Herz, irgendein Gekrakel.</small></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <p class="lead">Deine Linie wird zur <b>Mittelachse</b>. Sie wird nicht
+            geglättet — der Fehler bleibt und wird zum Charakter. Links und rechts
+            <b>wächst</b> etwas daran.</p>
+
+            <div class="seg" id="modes">
+                <button data-mode="farn" class="on">Farn</button>
+                <button data-mode="relief">Relief</button>
+                <button data-mode="ranke">Ranke</button>
+            </div>
+
+            <div class="field">
+                <label>Dichte <b id="vDichte">—</b></label>
+                <input type="range" id="dichte" min="0" max="1" step="0.01" value="0.55">
+            </div>
+            <div class="field">
+                <label>Wuchslänge <b id="vLaenge">—</b></label>
+                <input type="range" id="laenge" min="0" max="1" step="0.01" value="0.5">
+            </div>
+            <div class="field">
+                <label>Asymmetrie <b id="vAsym">—</b></label>
+                <input type="range" id="asym" min="0" max="1" step="0.01" value="0.4">
+            </div>
+            <div class="field">
+                <label>Feld (füllt das Blatt) <b id="vFeld">—</b></label>
+                <input type="range" id="feld" min="0" max="1" step="0.01" value="0.4">
+            </div>
+
+            <label class="toggle"><input type="checkbox" id="zwei">
+                <span class="box"></span> Zweifarbig (2 Stifte)</label>
+
+            <div class="actions">
+                <button class="ghost" id="clear">Neu zeichnen</button>
+                <button class="ghost" id="regen">🎲 Variieren</button>
+                <button id="dl">⬇ SVG</button>
+            </div>
+            <p class="status" id="status">Beispiel — zeichne selbst, um es zu ersetzen.</p>
+        </div>
+    </div>
+
+<script src="shared.js"></script>
+<script>
+"use strict";
+const SIZE = 1000;
+const INK = "#23201c", ACCENT = "#b1442b";
+
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+const promptEl = document.getElementById("prompt");
+const statusEl = document.getElementById("status");
+
+const ui = {
+    dichte: document.getElementById("dichte"),
+    laenge: document.getElementById("laenge"),
+    asym:   document.getElementById("asym"),
+    feld:   document.getElementById("feld"),
+    zwei:   document.getElementById("zwei"),
+};
+const state = {
+    raw: [], spine: [], lines: [],
+    mode: "farn", seed: PR4.randomSeed(),
+    drawing: false, anim: 0, rafId: 0,
+    df: null, dfN: 0, dfSpine: null,
+};
+
+/* ── canvas sizing (author in 1000×1000) ── */
+function fit(){
+    const dpr = window.devicePixelRatio || 1;
+    const r = canvas.getBoundingClientRect();
+    const px = Math.max(1, Math.round(r.width * dpr));
+    if (canvas.width !== px){ canvas.width = px; canvas.height = px; }
+    render();
+}
+function toPage(ev){
+    const r = canvas.getBoundingClientRect();
+    return [ (ev.clientX - r.left)/r.width*SIZE, (ev.clientY - r.top)/r.height*SIZE ];
+}
+
+/* ── small vector helpers ── */
+const sub=(a,b)=>[a[0]-b[0],a[1]-b[1]];
+const add=(a,b)=>[a[0]+b[0],a[1]+b[1]];
+const mul=(a,k)=>[a[0]*k,a[1]*k];
+const len=(a)=>Math.hypot(a[0],a[1]);
+const norm=(a)=>{const l=len(a)||1;return [a[0]/l,a[1]/l];};
+
+/* resample a polyline to even arc-length spacing */
+function resample(pts, ds){
+    if (pts.length < 2) return pts.slice();
+    const out=[pts[0]]; let prev=pts[0], acc=0;
+    for (let i=1;i<pts.length;i++){
+        let cur=pts[i], seg=len(sub(cur,prev));
+        while (acc+seg >= ds){
+            const t=(ds-acc)/seg;
+            const np=[prev[0]+(cur[0]-prev[0])*t, prev[1]+(cur[1]-prev[1])*t];
+            out.push(np); prev=np; seg=len(sub(cur,prev)); acc=0;
+        }
+        acc+=seg; prev=cur;
+    }
+    return out;
+}
+/* gentle single-pass smoothing — keeps the wobble, kills only pointer jitter */
+function smooth(pts){
+    if (pts.length<3) return pts.slice();
+    const o=[pts[0]];
+    for (let i=1;i<pts.length-1;i++)
+        o.push([ (pts[i-1][0]+2*pts[i][0]+pts[i+1][0])/4,
+                 (pts[i-1][1]+2*pts[i][1]+pts[i+1][1])/4 ]);
+    o.push(pts[pts.length-1]); return o;
+}
+function normalAt(s,i){
+    const a=s[Math.max(0,i-1)], b=s[Math.min(s.length-1,i+1)];
+    const t=norm(sub(b,a));
+    return { t, n:[-t[1],t[0]] };          // n = left normal
+}
+
+/* distance from point to segment ab */
+function ptSeg(px,py,a,b){
+    const vx=b[0]-a[0],vy=b[1]-a[1], wx=px-a[0],wy=py-a[1];
+    const c1=vx*wx+vy*wy; if(c1<=0)return Math.hypot(wx,wy);
+    const c2=vx*vx+vy*vy; if(c2<=c1)return Math.hypot(px-b[0],py-b[1]);
+    const t=c1/c2; return Math.hypot(px-(a[0]+vx*t),py-(a[1]+vy*t));
+}
+/* unsigned distance field of the spine over a GN×GN grid (cached per spine) */
+function ensureDF(){
+    if(state.dfSpine===state.spine && state.df) return;
+    const GN=120, cell=SIZE/(GN-1), df=new Float32Array(GN*GN), S=state.spine;
+    for(let gy=0;gy<GN;gy++)for(let gx=0;gx<GN;gx++){
+        const px=gx*cell, py=gy*cell; let best=1e9;
+        for(let i=0;i<S.length-1;i++){const d=ptSeg(px,py,S[i],S[i+1]); if(d<best)best=d;}
+        df[gy*GN+gx]=best;
+    }
+    state.df=df; state.dfN=GN; state.dfSpine=state.spine;
+}
+/* concentric iso-distance rings that radiate across the whole sheet, fading out */
+function fieldRings(lines, feld){
+    ensureDF();
+    const GN=state.dfN, cell=SIZE/(GN-1), DF=state.df;
+    const sample=(ix,iy)=>DF[iy*GN+ix], mc=i=>i*cell;
+    const spacing=18, K=Math.round(feld*34), reach=spacing*K||1;
+    for(let k=1;k<=K;k++){
+        const lvl=k*spacing, f=lvl/reach;
+        const rings=PR4.contourLines(sample,GN,GN,lvl,mc,mc);
+        const a=Math.max(0.10, 1-f*0.82);
+        const w=Math.max(0.3, 1.4*(1-f)*(1-f)+0.3);
+        const col=`rgba(35,32,28,${a.toFixed(2)})`;
+        for(const r of rings) lines.push({pts:r, color:col, w, t:-2+f});
+    }
+}
+
+/* ── growth generators: each returns [{pts,color,w,t}] in 1000-space ── */
+function gen(){
+    if (state.spine.length < 2){ state.lines=[]; return; }
+    const rnd = PR4.mulberry32(state.seed);
+    const { noise } = PR4.makeNoise2D(rnd);
+    const d = +ui.dichte.value, L = +ui.laenge.value, asym = +ui.asym.value;
+    const feld = +ui.feld.value;
+    const two = ui.zwei.checked;
+    const colL = INK, colR = two ? ACCENT : INK;
+    const S = state.spine, n = S.length;
+    const lines = [];
+    const prof = (t)=>Math.pow(Math.sin(Math.PI*t), 0.65);
+    if (feld>0.005) fieldRings(lines, feld);
+
+    if (state.mode === "farn"){
+        const step = Math.max(2, Math.round(12 - d*9));         // 3..12
+        const base = 26 + L*120;
+        for (let i=2;i<n-2;i+=step){
+            const t=i/(n-1), pr=prof(t); if (pr<0.04) continue;
+            const {t:tan,n:nl}=normalAt(S,i), P=S[i];
+            for (const side of [1,-1]){
+                const isL = side>0;
+                const rake = (0.55 + (isL?asym:-asym)*0.5);     // lean toward tip
+                const lenK = isL ? 1 : (1 - asym*0.55);
+                const dir = norm([ nl[0]*side*Math.cos(rake)+tan[0]*Math.sin(rake),
+                                   nl[1]*side*Math.cos(rake)+tan[1]*Math.sin(rake) ]);
+                const perp = [-dir[1],dir[0]];
+                const wob = 0.7 + 0.6*noise(i*0.13, side*3.1);
+                const Llen = base*pr*lenK*wob;
+                const bend = (isL? 0.22 : -0.16) * (1 - asym*0.3);
+                const barb=[]; const SUB=10;
+                for (let k=0;k<=SUB;k++){
+                    const f=k/SUB;
+                    const along=mul(dir, Llen*f);
+                    const curve=mul(perp, Math.sin(Math.PI*f)*Llen*bend);
+                    barb.push(add(add(P,along),curve));
+                }
+                lines.push({pts:barb, color:isL?colL:colR, w:1.1, t});
+                /* barblets — turn each barb into a little frond */
+                if (Llen>42){
+                    const NB=Math.round(2+pr*3);
+                    for (let b=1;b<=NB;b++){
+                        const f=b/(NB+1), bp=barb[Math.round(f*SUB)];
+                        const bl=Llen*0.20*(1-f*0.7);
+                        const bdir = norm([dir[0]*Math.cos(0.7)+perp[0]*Math.sin(0.7),
+                                           dir[1]*Math.cos(0.7)+perp[1]*Math.sin(0.7)]);
+                        lines.push({pts:[bp, add(bp,mul(bdir,bl)), add(bp,mul(dir,bl*0.3))],
+                                    color:isL?colL:colR, w:0.8, t});
+                    }
+                }
+            }
+        }
+        lines.push({pts:S, color:INK, w:1.9, t:0});            // the stem (your line)
+    }
+
+    else if (state.mode === "ranke"){
+        const step=Math.max(3, Math.round(16-d*11));
+        const leaf=(P,dir,r)=>{ const pp=[-dir[1],dir[0]],o=[];
+            // lens: width 0 at base & tip, max in the middle (w = sin)
+            for(let k=0;k<=14;k++){const f=k/14,w=Math.sin(f*Math.PI)*0.42;
+                o.push(add(add(P,mul(dir,f*r)),mul(pp, w*r)));}
+            for(let k=14;k>=0;k--){const f=k/14,w=Math.sin(f*Math.PI)*0.42;
+                o.push(add(add(P,mul(dir,f*r)),mul(pp,-w*r)));}
+            return o; };
+        let flip=1, cnt=0;
+        for (let i=2;i<n-2;i+=step){
+            const t=i/(n-1),pr=prof(t); if(pr<0.05)continue;
+            const {t:tan,n:nl}=normalAt(S,i),P=S[i];
+            const side=flip; flip*=-1; cnt++;
+            const isL=side>0;
+            const dir=norm([nl[0]*side*0.8+tan[0]*0.6, nl[1]*side*0.8+tan[1]*0.6]);
+            const r=(28+L*90)*pr*(0.8+0.4*noise(i*0.2,side));
+            lines.push({pts:leaf(P,dir,r), color:isL?colL:colR, w:1.0, t});
+            if (cnt%3===0){                                    // a spiral tendril
+                const sp=[]; const dir2=norm([nl[0]*-side,nl[1]*-side]);
+                let ang=Math.atan2(dir2[1],dir2[0]);
+                for(let k=0;k<=26;k++){const f=k/26,rr=(6+f*r*0.7);
+                    ang+=0.45; sp.push(add(P,[Math.cos(ang)*rr,Math.sin(ang)*rr]));}
+                lines.push({pts:sp, color:isL?colR:colL, w:0.9, t});
+            }
+        }
+        lines.push({pts:S, color:INK, w:1.7, t:0});
+    }
+
+    else { /* relief — your line as a topographic ridge / coastline */
+        const N=Math.round(4+d*7);
+        const spacing=7+L*16;
+        lines.push({pts:S, color:INK, w:2.6, t:0});
+        for (const side of [1,-1]){
+            for (let k=1;k<=N;k++){
+                const thr=k/(N+1.4);
+                // contiguous central run where the contour exists (outer = shorter)
+                let i0=-1,i1=-1;
+                for (let i=0;i<n;i++){ if(prof(i/(n-1))>=thr){ if(i0<0)i0=i; i1=i; } }
+                if (i0<0 || i1-i0<2) continue;
+                const path=[];
+                for (let i=i0;i<=i1;i++){
+                    const {n:nl}=normalAt(S,i);
+                    const wob=1+0.10*noise(i*0.08, k*1.7+side);
+                    const dist=side*k*spacing*wob;
+                    path.push(add(S[i], mul(nl,dist)));
+                }
+                const col = side>0 ? colL : colR;
+                lines.push({pts:path, color:col, w:1.0, t:0.5});
+            }
+        }
+    }
+
+    // order by position along the line so the animation "grows" outward
+    lines.sort((a,b)=>a.t-b.t);
+    state.lines = lines;
+}
+
+/* ── rendering ── */
+function drawPath(pts,col,w){
+    if(pts.length<2)return;
+    ctx.strokeStyle=col; ctx.lineWidth=w;
+    ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]);
+    for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i][0],pts[i][1]);
+    ctx.stroke();
+}
+function render(){
+    const px=canvas.width; ctx.setTransform(px/SIZE,0,0,px/SIZE,0,0);
+    ctx.clearRect(0,0,SIZE,SIZE);
+    ctx.lineJoin="round"; ctx.lineCap="round";
+    const reveal = state.anim>=1 ? state.lines.length : Math.floor(state.anim*state.lines.length);
+    for (let i=0;i<reveal;i++){ const l=state.lines[i]; drawPath(l.pts,l.color,l.w); }
+    // live spine while drawing
+    if (state.drawing && state.raw.length>1) drawPath(state.raw, "rgba(35,32,28,.5)", 2.2);
+}
+function animateIn(){
+    cancelAnimationFrame(state.rafId);
+    state.anim=0; const dur=650, t0=performance.now();
+    const tick=(now)=>{ state.anim=Math.min(1,(now-t0)/dur); render();
+        if(state.anim<1) state.rafId=requestAnimationFrame(tick); };
+    state.rafId=requestAnimationFrame(tick);
+}
+function rebuild(animate){
+    gen();
+    if(animate) animateIn(); else { state.anim=1; render(); }
+    const labels={farn:"Farnwedel",ranke:"Ranke",relief:"Relief"};
+    statusEl.textContent = state.spine.length<2 ? "Zeichne eine Linie."
+        : state.lines.length + " Pfade · " + (state.mode==="relief"?"Höhenlinien":"beidseitiger Wuchs")
+          + (ui.zwei.checked?" · 2 Stifte":"");
+}
+
+/* ── interaction ── */
+function finishStroke(){
+    state.drawing=false;
+    if (state.raw.length<2){ render(); return; }
+    const rs=resample(state.raw, 5);
+    state.spine=smooth(rs);
+    state.seed=PR4.randomSeed();
+    rebuild(true);
+}
+canvas.addEventListener("pointerdown",(e)=>{
+    try{ canvas.setPointerCapture(e.pointerId); }catch(_){}
+    promptEl.style.opacity=0;
+    state.drawing=true; state.raw=[toPage(e)]; state.lines=[]; render();
+});
+canvas.addEventListener("pointermove",(e)=>{
+    if(!state.drawing)return;
+    const p=toPage(e), last=state.raw[state.raw.length-1];
+    if(len(sub(p,last))>3){ state.raw.push(p); render(); }
+});
+canvas.addEventListener("pointerup",finishStroke);
+canvas.addEventListener("pointercancel",finishStroke);
+
+/* ── controls ── */
+function syncLabels(){
+    document.getElementById("vDichte").textContent=Math.round(ui.dichte.value*100)+"%";
+    document.getElementById("vLaenge").textContent=Math.round(ui.laenge.value*100)+"%";
+    document.getElementById("vAsym").textContent=Math.round(ui.asym.value*100)+"%";
+    document.getElementById("vFeld").textContent=Math.round(ui.feld.value*100)+"%";
+}
+["dichte","laenge","asym","feld"].forEach(k=>ui[k].addEventListener("input",()=>{
+    syncLabels(); if(state.spine.length>1) rebuild(false);
+}));
+ui.zwei.addEventListener("change",()=>{ if(state.spine.length>1) rebuild(false); });
+document.querySelectorAll("#modes button").forEach(b=>b.addEventListener("click",()=>{
+    document.querySelectorAll("#modes button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); state.mode=b.dataset.mode;
+    if(state.spine.length>1) rebuild(true);
+}));
+document.getElementById("clear").addEventListener("click",()=>{
+    state.raw=[]; state.spine=[]; state.lines=[]; state.anim=1; render();
+    promptEl.style.opacity=1; statusEl.textContent="Zeichne eine Linie.";
+});
+document.getElementById("regen").addEventListener("click",()=>{
+    if(state.spine.length<2)return; state.seed=PR4.randomSeed(); rebuild(true);
+});
+document.getElementById("dl").addEventListener("click",()=>{
+    if(state.lines.length<1)return;
+    const svg=PR4.linesToSvg(state.lines,{width:1,stroke:INK,mm:200});
+    PR4.downloadSvg("fehler-wird-schoen-"+state.seed+".svg",svg);
+});
+
+/* ── built-in demo so the page is alive on load ── */
+function demoSpine(){
+    const pts=[];
+    for(let i=0;i<=60;i++){
+        const f=i/60;
+        const x=130+f*740;
+        const y=560 + Math.sin(f*Math.PI*1.6)*150 - f*140
+                 + Math.sin(f*38)*7;            // a little human tremor
+        pts.push([x,y]);
+    }
+    return smooth(resample(pts,5));
+}
+window.addEventListener("resize", ()=>{ fit(); });
+syncLabels();
+state.spine=demoSpine();
+fit();
+rebuild(true);
+promptEl.style.opacity=0;                 // demo is alive on load; prompt returns on "Neu zeichnen"
+statusEl.textContent="Beispiel — zeichne selbst, um es zu ersetzen.";
+</script>
+</body>
+</html>

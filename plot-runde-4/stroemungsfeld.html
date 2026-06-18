@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>116 · Strömungsfeld — Plot Runde 4</title>
+<style>
+    :root{ --bg:#f5f2ea; --panel:#fffdf8; --ink:#1c1a17; --dim:#7a7468; --line:#e1daccc; --accent:#b14a2b; }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%}
+    body{background:var(--bg);color:var(--ink);
+        font-family:"Inter",-apple-system,"Segoe UI",system-ui,sans-serif;
+        display:flex;flex-direction:column;min-height:100%}
+    .topbar{display:flex;align-items:baseline;gap:1.2rem;padding:1rem 1.5rem;border-bottom:1px solid var(--line)}
+    .topbar a{color:var(--dim);text-decoration:none;font-size:.82rem}
+    .topbar a:hover{color:var(--ink)}
+    .topbar h1{margin:0;font-size:1.1rem;font-weight:700;letter-spacing:-.01em}
+    .topbar h1 .no{color:var(--accent);font-weight:800}
+    .topbar .tag{margin-left:auto;font-size:.78rem;color:var(--dim)}
+    .stage{flex:1;display:flex;gap:1.4rem;padding:1.4rem 1.5rem;min-height:0;flex-wrap:wrap}
+    .sheet-wrap{flex:1 1 480px;min-width:300px;display:flex;align-items:center;justify-content:center}
+    .sheet{position:relative;aspect-ratio:1/1;width:100%;max-height:80vh;background:var(--panel);
+        border:1px solid var(--line);box-shadow:0 20px 50px -30px rgba(40,30,15,.6);overflow:hidden}
+    canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+    .panel{flex:0 0 270px;display:flex;flex-direction:column;gap:1.2rem}
+    .lead{font-size:.9rem;line-height:1.5;color:var(--dim);margin:0}
+    .lead b{color:var(--ink);font-weight:600}
+    .roll{border:0;background:var(--ink);color:var(--bg);font:inherit;font-weight:700;font-size:1.05rem;
+        padding:1rem;border-radius:8px;cursor:pointer;letter-spacing:.01em;transition:.12s;
+        display:flex;align-items:center;justify-content:center;gap:.5rem}
+    .roll:hover{transform:translateY(-1px);background:#000}
+    .roll:active{transform:translateY(0)}
+    .field{display:flex;flex-direction:column;gap:.4rem}
+    .field > span{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:var(--dim)}
+    .txt{border:1px solid var(--line);background:#fff;border-radius:6px;padding:.6rem .7rem;font:inherit;
+        font-size:1rem;color:var(--ink);outline:none;text-align:center;letter-spacing:.1em}
+    .txt:focus{border-color:var(--accent)}
+    .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff}
+    .seg button{flex:1;border:0;background:transparent;color:var(--dim);padding:.5rem .2rem;font:inherit;
+        font-size:.82rem;cursor:pointer;transition:.12s}
+    .seg button.on{background:var(--ink);color:var(--bg);font-weight:600}
+    .actions{margin-top:auto;display:flex;gap:.6rem}
+    .actions button{flex:1;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+        padding:.6rem;border-radius:6px;font:inherit;font-size:.84rem;cursor:pointer}
+    .actions button:hover{border-color:var(--accent);color:var(--accent)}
+    .status{font-size:.74rem;color:var(--dim);min-height:1em}
+</style>
+</head>
+<body>
+    <div class="topbar">
+        <a href="./">← Übersicht</a>
+        <h1><span class="no">116</span> Strömungsfeld</h1>
+        <span class="tag">füllt das Blatt · würfeln macht Spaß</span>
+    </div>
+    <div class="stage">
+        <div class="sheet-wrap"><div class="sheet"><canvas id="c"></canvas></div></div>
+        <div class="panel">
+            <p class="lead">Tausende Linien folgen einem unsichtbaren Strömungsfeld und
+            füllen das ganze Blatt. Jeder Wurf ist anders — und <b>fast jeder sieht gut aus</b>,
+            weil die Schönheit aus Dichte und Fluss kommt, nicht aus Reglern.</p>
+
+            <button class="roll" id="roll">🎲 Würfeln</button>
+
+            <div class="field">
+                <span>Dein Buchstabe (optional)</span>
+                <input class="txt" id="text" maxlength="8" placeholder="z. B. WIAI" value="">
+            </div>
+            <div class="field">
+                <span>Dichte</span>
+                <div class="seg" id="dense">
+                    <button data-d="0">locker</button>
+                    <button data-d="1" class="on">mittel</button>
+                    <button data-d="2">dicht</button>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="dl">⬇ SVG</button>
+            </div>
+            <p class="status" id="status">…</p>
+        </div>
+    </div>
+
+<script src="shared.js"></script>
+<script>
+"use strict";
+const SIZE=1000;
+const canvas=document.getElementById("c"), ctx=canvas.getContext("2d");
+const statusEl=document.getElementById("status"), textEl=document.getElementById("text");
+
+/* curated plotter palettes — every roll picks one, so colour is never off */
+const PALETTES=[
+    ["#1b2a4a","#b1442b"], ["#21403a","#bd7d1c"], ["#2d2733","#7a5cc0"],
+    ["#143b46","#c43b5a"], ["#3a2c1e","#2f7d6b"], ["#1c1a17","#1c1a17"],
+    ["#402038","#c98a1a"], ["#0f3322","#a8432a"],
+];
+const state={ seed:PR4.randomSeed(), density:1, lines:[], pal:PALETTES[0] };
+
+function fit(){const dpr=window.devicePixelRatio||1,r=canvas.getBoundingClientRect();
+    const px=Math.max(1,Math.round(r.width*dpr));
+    if(canvas.width!==px){canvas.width=px;canvas.height=px;} render();}
+
+/* optional monogram → coarse mask the flow lines are coloured by */
+function buildMask(text){
+    if(!text) return null;
+    const S=300, off=document.createElement("canvas"); off.width=off.height=S;
+    const o=off.getContext("2d",{willReadFrequently:true});
+    o.fillStyle="#fff"; o.fillRect(0,0,S,S);
+    o.fillStyle="#000"; o.textAlign="center"; o.textBaseline="middle";
+    o.font="900 100px Arial, sans-serif";
+    const w=o.measureText(text).width||1;
+    const fs=Math.min(230, 100*(S*0.86/w));
+    o.font="900 "+fs+"px Arial, sans-serif";
+    o.fillText(text, S/2, S/2+fs*0.04);
+    const d=o.getImageData(0,0,S,S).data;
+    return { S, inside:(x,y)=>{
+        const ix=Math.floor(x/SIZE*S), iy=Math.floor(y/SIZE*S);
+        if(ix<0||iy<0||ix>=S||iy>=S) return false;
+        return d[(iy*S+ix)*4]<128;
+    }};
+}
+
+/* ── the generator: evenly-spaced streamlines through a noise flow field ── */
+function generate(){
+    const rnd=PR4.mulberry32(state.seed);
+    const noise=PR4.makeNoise2D(rnd);
+    const text=(textEl.value||"").trim().toUpperCase();
+    const mask=buildMask(text);
+    // bounded-good parameters — the dice only ever lands in the nice zone.
+    // With a monogram: smoother flow + no vortex so the letters stay legible.
+    const scale=0.0016+rnd()*0.0020;
+    const turns=mask ? (0.9+rnd()*0.6) : (1.1+rnd()*1.5);
+    const warp=(!mask && rnd()<0.4)? (0.6+rnd()*0.8) : 0;   // occasional swirl
+    const cx=300+rnd()*400, cy=300+rnd()*400;
+    const SEP=[20,14.5,10.5][state.density];
+    const STEP=SEP*0.55, MAXLEN=520, MINLEN=Math.round(SEP*1.4);
+    // a monogram needs two contrasting inks; the mono-black palette is excluded then
+    const choices = mask ? PALETTES.filter(p=>p[0]!==p[1]) : PALETTES;
+    state.pal = choices[Math.floor(rnd()*choices.length)];
+    const pal=state.pal;
+    const colorMode = mask ? "mask" : (rnd()<0.5 ? "band" : "mono");
+
+    function field(x,y){
+        let a=noise.fbm(x*scale,y*scale,4)*turns*Math.PI*2;
+        if(warp){ a += warp*Math.atan2(y-cy,x-cx); }     // gentle vortex
+        return a;
+    }
+    const gridN=Math.ceil(SIZE/SEP)+1;
+    const occ=new Int32Array(gridN*gridN).fill(-1);
+    const cellOf=(x,y)=>(Math.floor(x/SEP))+(Math.floor(y/SEP))*gridN;
+
+    function walk(seed,id,dir){
+        const pts=[]; let px=seed[0],py=seed[1];
+        for(let s=0;s<MAXLEN;s++){
+            const a=field(px,py);
+            px+=Math.cos(a)*STEP*dir; py+=Math.sin(a)*STEP*dir;
+            if(px<0||px>SIZE||py<0||py>SIZE) break;
+            const c=cellOf(px,py);
+            if(occ[c]!==-1 && occ[c]!==id) break;
+            pts.push([px,py]); occ[c]=id;
+        }
+        return pts;
+    }
+    const lines=[];
+    const ss=SEP*1.7;
+    for(let gy=ss; gy<SIZE; gy+=ss){
+        for(let gx=ss; gx<SIZE; gx+=ss){
+            const sx=gx+(rnd()-0.5)*ss*0.8, sy=gy+(rnd()-0.5)*ss*0.8;
+            if(sx<0||sx>SIZE||sy<0||sy>SIZE) continue;
+            const c=cellOf(sx,sy); if(occ[c]!==-1) continue;
+            const id=lines.length; occ[c]=id;
+            const bwd=walk([sx,sy],id,-1).reverse(), fwd=walk([sx,sy],id,1);
+            const pts=bwd.concat([[sx,sy]],fwd);
+            if(pts.length<MINLEN) continue;
+            if(colorMode==="mask"){
+                // split the streamline at letter boundaries → crisp monogram
+                let run=[pts[0]], cur=mask.inside(pts[0][0],pts[0][1]);
+                for(let i=1;i<pts.length;i++){
+                    const inN=mask.inside(pts[i][0],pts[i][1]);
+                    if(inN!==cur){
+                        run.push(pts[i]);
+                        if(run.length>=2) lines.push({pts:run,color:cur?pal[1]:pal[0],w:cur?2.1:0.8});
+                        run=[pts[i]]; cur=inN;
+                    } else run.push(pts[i]);
+                }
+                if(run.length>=2) lines.push({pts:run,color:cur?pal[1]:pal[0],w:cur?2.1:0.8});
+            } else {
+                const mid=pts[Math.floor(pts.length/2)];
+                const col = colorMode==="band"
+                    ? pal[(Math.floor(field(mid[0],mid[1])/Math.PI))%2===0?0:1] : pal[0];
+                lines.push({pts,color:col,w:1.2});
+            }
+        }
+    }
+    state.lines=lines;
+    statusEl.textContent=lines.length+" Linien · Seed "+state.seed+(text?(" · »"+text+"«"):"");
+}
+
+function render(){
+    const px=canvas.width; ctx.setTransform(px/SIZE,0,0,px/SIZE,0,0);
+    ctx.fillStyle="#fffdf8"; ctx.fillRect(0,0,SIZE,SIZE);
+    ctx.lineJoin="round"; ctx.lineCap="round";
+    for(const l of state.lines){ if(l.pts.length<2)continue;
+        ctx.strokeStyle=l.color; ctx.lineWidth=l.w;
+        ctx.beginPath(); ctx.moveTo(l.pts[0][0],l.pts[0][1]);
+        for(let i=1;i<l.pts.length;i++)ctx.lineTo(l.pts[i][0],l.pts[i][1]);
+        ctx.stroke();
+    }
+}
+function roll(){ state.seed=PR4.randomSeed(); generate(); render(); }
+
+document.getElementById("roll").addEventListener("click",roll);
+textEl.addEventListener("input",()=>{ generate(); render(); });
+document.querySelectorAll("#dense button").forEach(b=>b.addEventListener("click",()=>{
+    document.querySelectorAll("#dense button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); state.density=+b.dataset.d; generate(); render();
+}));
+document.getElementById("dl").addEventListener("click",()=>{
+    if(!state.lines.length)return;
+    PR4.downloadSvg("stroemungsfeld-"+state.seed+".svg",
+        PR4.linesToSvg(state.lines,{width:1,mm:200}));
+});
+window.addEventListener("resize",PR4.debounce(fit,150));
+
+/* test hook */
+window.__roll=()=>{roll();return state.lines.length;};
+generate(); fit();
+</script>
+</body>
+</html>

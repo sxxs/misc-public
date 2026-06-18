@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>117 · Höhenzug — Plot Runde 4</title>
+<style>
+    :root{ --bg:#101014; --panel:#17171d; --ink:#ece9e2; --dim:#8a8678; --line:#2a2a33; --accent:#e8654a; }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%}
+    body{background:var(--bg);color:var(--ink);
+        font-family:"Inter",-apple-system,"Segoe UI",system-ui,sans-serif;
+        display:flex;flex-direction:column;min-height:100%}
+    .topbar{display:flex;align-items:baseline;gap:1.2rem;padding:1rem 1.5rem;border-bottom:1px solid var(--line)}
+    .topbar a{color:var(--dim);text-decoration:none;font-size:.82rem}
+    .topbar a:hover{color:var(--ink)}
+    .topbar h1{margin:0;font-size:1.1rem;font-weight:700;letter-spacing:-.01em}
+    .topbar h1 .no{color:var(--accent);font-weight:800}
+    .topbar .tag{margin-left:auto;font-size:.78rem;color:var(--dim)}
+    .stage{flex:1;display:flex;gap:1.4rem;padding:1.4rem 1.5rem;min-height:0;flex-wrap:wrap}
+    .sheet-wrap{flex:1 1 480px;min-width:300px;display:flex;align-items:center;justify-content:center}
+    .sheet{position:relative;aspect-ratio:1/1;width:100%;max-height:80vh;background:#16161b;
+        border:1px solid var(--line);box-shadow:0 20px 50px -30px #000;overflow:hidden}
+    canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+    .panel{flex:0 0 270px;display:flex;flex-direction:column;gap:1.2rem}
+    .lead{font-size:.9rem;line-height:1.5;color:var(--dim);margin:0}
+    .lead b{color:var(--ink);font-weight:600}
+    .roll{border:0;background:var(--accent);color:#16161b;font:inherit;font-weight:700;font-size:1.05rem;
+        padding:1rem;border-radius:8px;cursor:pointer;transition:.12s;display:flex;align-items:center;
+        justify-content:center;gap:.5rem}
+    .roll:hover{transform:translateY(-1px);filter:brightness(1.08)}
+    .roll:active{transform:translateY(0)}
+    .field{display:flex;flex-direction:column;gap:.4rem}
+    .field > span{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:var(--dim)}
+    .txt{border:1px solid var(--line);background:#0d0d11;border-radius:6px;padding:.6rem .7rem;font:inherit;
+        font-size:1rem;color:var(--ink);outline:none;text-align:center;letter-spacing:.12em}
+    .txt:focus{border-color:var(--accent)}
+    .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#0d0d11}
+    .seg button{flex:1;border:0;background:transparent;color:var(--dim);padding:.5rem .2rem;font:inherit;
+        font-size:.82rem;cursor:pointer;transition:.12s}
+    .seg button.on{background:var(--ink);color:#16161b;font-weight:600}
+    .actions{margin-top:auto;display:flex;gap:.6rem}
+    .actions button{flex:1;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+        padding:.6rem;border-radius:6px;font:inherit;font-size:.84rem;cursor:pointer}
+    .actions button:hover{border-color:var(--accent);color:var(--accent)}
+    .status{font-size:.74rem;color:var(--dim);min-height:1em}
+</style>
+</head>
+<body>
+    <div class="topbar">
+        <a href="./">← Übersicht</a>
+        <h1><span class="no">117</span> Höhenzug</h1>
+        <span class="tag">die Berge schreiben deinen Namen</span>
+    </div>
+    <div class="stage">
+        <div class="sheet-wrap"><div class="sheet"><canvas id="c"></canvas></div></div>
+        <div class="panel">
+            <p class="lead">Gestapelte Linien steigen zu einem Gebirge auf — vordere Kämme
+            verdecken die hinteren (3D). Dein Wort ist als <b>Relief</b> eingeprägt: dort,
+            wo die Buchstaben liegen, <b>heben sich die Berge</b>. Jeder Wurf: ein neues Land.</p>
+
+            <button class="roll" id="roll">🎲 Würfeln</button>
+
+            <div class="field">
+                <span>Dein Wort (optional)</span>
+                <input class="txt" id="text" maxlength="7" placeholder="z. B. WIAI" value="WIAI">
+            </div>
+            <div class="field">
+                <span>Kämme</span>
+                <div class="seg" id="dense">
+                    <button data-d="0">weit</button>
+                    <button data-d="1" class="on">mittel</button>
+                    <button data-d="2">eng</button>
+                </div>
+            </div>
+            <div class="actions"><button id="dl">⬇ SVG</button></div>
+            <p class="status" id="status">…</p>
+        </div>
+    </div>
+
+<script src="shared.js"></script>
+<script>
+"use strict";
+const SIZE=1000;
+const canvas=document.getElementById("c"), ctx=canvas.getContext("2d");
+const statusEl=document.getElementById("status"), textEl=document.getElementById("text");
+
+const PALETTES=[ // [ink, peak-accent] — peaks above a height threshold pick the accent
+    ["#ece9e2","#e8654a"], ["#ece9e2","#ece9e2"], ["#dfe6ee","#5aa9d8"],
+    ["#e7e2d2","#d9a441"], ["#e4e7e2","#7ad0a0"], ["#ece9e2","#ce5c8a"],
+];
+const state={ seed:PR4.randomSeed(), density:1, lines:[], bg:"#16161b" };
+
+function fit(){const dpr=window.devicePixelRatio||1,r=canvas.getBoundingClientRect();
+    const px=Math.max(1,Math.round(r.width*dpr));
+    if(canvas.width!==px){canvas.width=px;canvas.height=px;} render();}
+
+/* monogram → relief mask, scaled tall so several ridges form the letters */
+function buildMask(text){
+    if(!text) return null;
+    const S=320, off=document.createElement("canvas"); off.width=off.height=S;
+    const o=off.getContext("2d",{willReadFrequently:true});
+    o.fillStyle="#fff"; o.fillRect(0,0,S,S);
+    o.fillStyle="#000"; o.textAlign="center"; o.textBaseline="middle";
+    o.font="900 100px Arial, sans-serif";
+    const w=o.measureText(text).width||1;
+    const fs=Math.min(100*(S*0.88/w), S*0.52);
+    o.font="900 "+fs+"px Arial, sans-serif";
+    o.fillText(text,S/2,S/2+fs*0.02);
+    const d=o.getImageData(0,0,S,S).data;
+    // soft height: fraction of dark pixels in a small neighbourhood (anti-aliased relief)
+    return (x,y)=>{
+        const ix=x/SIZE*S, iy=y/SIZE*S; let hit=0,tot=0;
+        for(let a=-2;a<=2;a+=2)for(let b=-2;b<=2;b+=2){
+            const px=(ix+a)|0, py=(iy+b)|0; if(px<0||py<0||px>=S||py>=S)continue;
+            tot++; if(d[(py*S+px)*4]<128)hit++;
+        }
+        return tot?hit/tot:0;
+    };
+}
+
+/* ── ridgeline heightfield with hidden-line removal ── */
+function generate(){
+    const rnd=PR4.mulberry32(state.seed);
+    const noise=PR4.makeNoise2D(rnd);
+    const text=(textEl.value||"").trim().toUpperCase();
+    const mask=buildMask(text);
+    state.pal=PALETTES[Math.floor(rnd()*PALETTES.length)];
+    const pal=state.pal, duo=pal[0]!==pal[1] && rnd()<0.7;
+
+    const R=[26,42,64][state.density];
+    const topY=120, botY=905, rowH=(botY-topY)/(R-1);
+    const sx=0.0016+rnd()*0.0026;           // terrain horizontal frequency
+    const sy=0.09+rnd()*0.16;               // how fast terrain changes row-to-row
+    const oct=3+Math.floor(rnd()*2);
+    const amp=rowH*(3.2+rnd()*3.8);         // terrain amplitude (ridge overlap)
+    const ampM=rowH*(4.5+rnd()*2.5);        // monogram lift
+    const jag=rnd()<0.45;                   // sometimes sharper peaks
+    const STEPX=4, NX=Math.floor(SIZE/STEPX);
+    const peakThr=topY+ (botY-topY)*0.0;    // (unused base) — accent decided per-point height
+
+    const horizon=new Float32Array(NX+1).fill(1e9);
+    const lines=[];
+
+    // front (j=R-1, lowest) → back (j=0): a ridge is visible only where it rises
+    // above everything in front of it.
+    for(let j=R-1;j>=0;j--){
+        const baseY=topY+j*rowH;
+        let run=null, runAccent=false;
+        for(let xi=0;xi<=NX;xi++){
+            const x=xi*STEPX;
+            let h=noise.fbm(x*sx, j*sy, oct);     // 0..1
+            if(jag) h=Math.pow(h,1.6);
+            let y=baseY - h*amp;
+            if(mask){ y -= mask(x, baseY)*ampM; }
+            const visible = y < horizon[xi]-0.01;
+            if(visible){
+                const acc = duo && (h*amp + (mask?mask(x,baseY)*ampM:0)) > rowH*4.2;
+                if(!run){ run=[[x,y]]; runAccent=acc; }
+                else if(acc!==runAccent){            // colour break → split run
+                    lines.push({pts:run, color:runAccent?pal[1]:pal[0], w:1.25});
+                    run=[[x,y]]; runAccent=acc;
+                } else run.push([x,y]);
+                if(y<horizon[xi]) horizon[xi]=y;
+            } else {
+                if(run){ if(run.length>=2)lines.push({pts:run,color:runAccent?pal[1]:pal[0],w:1.25}); run=null; }
+            }
+        }
+        if(run&&run.length>=2)lines.push({pts:run,color:runAccent?pal[1]:pal[0],w:1.25});
+    }
+    state.lines=lines;
+    statusEl.textContent=R+" Kämme · "+lines.length+" Segmente · Seed "+state.seed+(text?(" · »"+text+"«"):"");
+}
+
+function render(){
+    const px=canvas.width; ctx.setTransform(px/SIZE,0,0,px/SIZE,0,0);
+    ctx.fillStyle=state.bg; ctx.fillRect(0,0,SIZE,SIZE);
+    ctx.lineJoin="round"; ctx.lineCap="round";
+    for(const l of state.lines){ if(l.pts.length<2)continue;
+        ctx.strokeStyle=l.color; ctx.lineWidth=l.w;
+        ctx.beginPath(); ctx.moveTo(l.pts[0][0],l.pts[0][1]);
+        for(let i=1;i<l.pts.length;i++)ctx.lineTo(l.pts[i][0],l.pts[i][1]);
+        ctx.stroke();
+    }
+}
+function roll(){ state.seed=PR4.randomSeed(); generate(); render(); }
+
+document.getElementById("roll").addEventListener("click",roll);
+textEl.addEventListener("input",()=>{generate();render();});
+document.querySelectorAll("#dense button").forEach(b=>b.addEventListener("click",()=>{
+    document.querySelectorAll("#dense button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); state.density=+b.dataset.d; generate(); render();}));
+document.getElementById("dl").addEventListener("click",()=>{
+    if(!state.lines.length)return;
+    // export on a light ground for plotting (dark ink on paper)
+    PR4.downloadSvg("hoehenzug-"+state.seed+".svg", PR4.linesToSvg(state.lines,{width:1,mm:200}));});
+window.addEventListener("resize",PR4.debounce(fit,150));
+window.__roll=()=>{roll();return state.lines.length;};
+generate(); fit();
+</script>
+</body>
+</html>

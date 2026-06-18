@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>112 · Ikon-Halbton — Plot Runde 4</title>
+    <link rel="stylesheet" href="shared.css">
+    <!-- Material Symbols (filled instance pinned) — same font as wiai25.de/dein-muster -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,700,1,0" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <a class="back" href="./">← Übersicht</a>
+        <h1>112 · Ikon-Halbton</h1>
+    </header>
+    <main>
+        <section class="paper"><canvas id="canvas"></canvas></section>
+        <section class="panel">
+            <div id="controls"></div>
+            <div class="buttons">
+                <button id="regen" class="primary">🎲 Neue Textur</button>
+                <button id="download">⬇ SVG (2 Stifte)</button>
+            </div>
+            <p id="status" class="status"></p>
+            <p class="hint">Eine große Form aus dem Symbol-Font — Herz, Pfote, Blitz,
+            Berge — wird mit hunderten <b>winzigen Symbolen</b> gefüllt: Ben-Day-Halbton
+            wie im Comic. Die Stempel werden zum Licht hin kleiner, vom Licht weg größer,
+            so bekommt die flache Silhouette <b>Volumen</b>. Wähle Makro-Form + Füll-Symbol —
+            „eine Pfote aus lauter Pfoten". Fette Kontur und Füllung exportieren als
+            <b>2-Stift-SVG</b> (zwei Farb-Layer).</p>
+        </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+    <script>
+    "use strict";
+
+    const BLACK = "#16213e";
+    const ACCENTS = {
+        rot: "#cc2200", blau: "#1b5fbf", gruen: "#1e8a4c",
+        magenta: "#c01b8a", orange: "#e07000", schwarz: "#16213e"
+    };
+
+    /* Macro silhouettes: name → Material-Symbols codepoint (filled glyphs).
+     * The glyph is only used as a REGION (rasterised to a mask), never plotted
+     * directly — exactly the pattern the production engine uses. */
+    const MACROS = {
+        herz:   0xe87e, // favorite
+        pfote:  0xe91d, // pets
+        stern:  0xf09a, // star
+        blitz:  0xea0b, // bolt
+        flamme: 0xef55, // local_fire_department
+        berge:  0xe564, // landscape
+        hase:   0xe799, // cruelty_free
+        tropfen:0xe798, // water_drop
+        blatt:  0xea35, // eco
+        smiley: 0xea22, // mood
+        rakete: 0xeba5, // rocket
+        kopf:   0xea4a  // psychology
+    };
+
+    /* ── Mask: rasterise a glyph, then flood-fill from the border so enclosed
+     * holes count as "inside" (robust even if the fill axis is ignored). ── */
+    const MW = 360;                          // mask resolution
+    const P2M = MW / 1000;                   // page (1000) → mask px
+    const maskCache = new Map();
+
+    function buildMask(cp) {
+        if (maskCache.has(cp)) return maskCache.get(cp);
+        const off = document.createElement("canvas");
+        off.width = off.height = MW;
+        const o = off.getContext("2d");
+        o.fillStyle = "#fff"; o.fillRect(0, 0, MW, MW);
+        o.fillStyle = "#000";
+        o.textAlign = "center"; o.textBaseline = "middle";
+        o.font = '700 ' + Math.round(MW * 0.74) + 'px "Material Symbols Outlined"';
+        if ("fontVariationSettings" in o) o.fontVariationSettings = "'FILL' 1, 'wght' 700";
+        o.fillText(String.fromCodePoint(cp), MW / 2, MW * 0.53);
+
+        const img = o.getImageData(0, 0, MW, MW).data;
+        const N = MW * MW;
+        const dark = new Float32Array(N);    // anti-aliased darkness 0..1 (smooth contour)
+        const opaque = new Uint8Array(N);    // hard threshold for flood fill
+        for (let i = 0; i < N; i++) {
+            const d = 1 - img[i * 4] / 255;
+            dark[i] = d;
+            opaque[i] = d > 0.5 ? 1 : 0;
+        }
+        // flood fill background (non-opaque) from all border pixels
+        const bg = new Uint8Array(N);
+        const stack = [];
+        for (let x = 0; x < MW; x++) { stack.push(x, x + (MW - 1) * MW); }
+        for (let y = 0; y < MW; y++) { stack.push(y * MW, MW - 1 + y * MW); }
+        while (stack.length) {
+            const i = stack.pop();
+            if (bg[i] || opaque[i]) continue;
+            bg[i] = 1;
+            const x = i % MW, y = (i / MW) | 0;
+            if (x > 0) stack.push(i - 1);
+            if (x < MW - 1) stack.push(i + 1);
+            if (y > 0) stack.push(i - MW);
+            if (y < MW - 1) stack.push(i + MW);
+        }
+        const solid = new Uint8Array(N);     // 1 = inside silhouette (holes filled)
+        for (let i = 0; i < N; i++) solid[i] = bg[i] ? 0 : 1;
+
+        const mask = { dark, solid };
+        maskCache.set(cp, mask);
+        return mask;
+    }
+
+    function mIndex(x, y) {
+        let mx = Math.round(x * P2M), my = Math.round(y * P2M);
+        if (mx < 0) mx = 0; else if (mx >= MW) mx = MW - 1;
+        if (my < 0) my = 0; else if (my >= MW) my = MW - 1;
+        return my * MW + mx;
+    }
+
+    /* ── Micro motifs: each returns an array of polylines (page coords).
+     * Pure vectors → single-stroke, plotter-clean. ── */
+    function poly(cx, cy, r, rot, verts) {
+        const c = Math.cos(rot), s = Math.sin(rot), out = [];
+        for (const [ux, uy] of verts) {
+            const px = ux * r, py = uy * r;
+            out.push([cx + px * c - py * s, cy + px * s + py * c]);
+        }
+        return out;
+    }
+    function ngon(n, start) {
+        const v = [];
+        for (let i = 0; i <= n; i++) {
+            const a = start + i / n * Math.PI * 2;
+            v.push([Math.cos(a), Math.sin(a)]);
+        }
+        return v;
+    }
+    function starVerts(points, inner) {
+        const v = [];
+        for (let i = 0; i <= points * 2; i++) {
+            const a = -Math.PI / 2 + i / (points * 2) * Math.PI * 2;
+            const rr = i % 2 ? inner : 1;
+            v.push([Math.cos(a) * rr, Math.sin(a) * rr]);
+        }
+        return v;
+    }
+    const HEART = (() => {
+        const v = [];
+        for (let i = 0; i <= 40; i++) {
+            const t = i / 40 * Math.PI * 2;
+            const x = 16 * Math.pow(Math.sin(t), 3);
+            const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+            v.push([x / 17, y / 17]);
+        }
+        return v;
+    })();
+
+    const MOTIFS = {
+        punkt: (cx, cy, r, rot) => {                 // spiral dot — reads as a filled point
+            const pts = [], turns = 3.2, steps = 46;
+            for (let i = 0; i <= steps; i++) {
+                const f = i / steps, a = f * turns * Math.PI * 2 + rot, rr = f * r;
+                pts.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]);
+            }
+            return [pts];
+        },
+        ring:   (cx, cy, r, rot) => [poly(cx, cy, r, rot, ngon(22, 0))],
+        herz:   (cx, cy, r, rot) => [poly(cx, cy, r, rot, HEART)],
+        stern:  (cx, cy, r, rot) => [poly(cx, cy, r, rot, starVerts(5, 0.42))],
+        kreuz:  (cx, cy, r, rot) => [
+            poly(cx, cy, r, rot, [[-1, 0], [1, 0]]),
+            poly(cx, cy, r, rot, [[0, -1], [0, 1]])
+        ],
+        raute:  (cx, cy, r, rot) => [poly(cx, cy, r, rot, ngon(4, 0))],
+        dreieck:(cx, cy, r, rot) => [poly(cx, cy, r, rot - Math.PI / 2, ngon(3, 0))],
+        pfote:  (cx, cy, r, rot) => {                // pad + four toes
+            const out = [poly(cx, cy + r * 0.25, r * 0.6, rot, ngon(18, 0))];
+            const toes = [[-0.55, -0.55], [-0.2, -0.85], [0.2, -0.85], [0.55, -0.55]];
+            for (const [ux, uy] of toes) {
+                const c = Math.cos(rot), s = Math.sin(rot);
+                const tx = cx + (ux * r) * c - (uy * r) * s;
+                const ty = cy + (ux * r) * s + (uy * r) * c;
+                out.push(poly(tx, ty, r * 0.26, rot, ngon(14, 0)));
+            }
+            return out;
+        },
+        blatt:  (cx, cy, r, rot) => {                // pointed leaf + midrib
+            const a = [], b = [];
+            for (let i = 0; i <= 16; i++) {
+                const f = i / 16, x = (f - 0.5) * 2, w = Math.cos(f * Math.PI) * 0.55;
+                a.push([x, -Math.abs(w)]); b.push([x, Math.abs(w)]);
+            }
+            const lens = a.concat(b.reverse());
+            return [poly(cx, cy, r, rot, lens), poly(cx, cy, r, rot, [[-1, 0], [1, 0]])];
+        },
+        spirale:(cx, cy, r, rot) => {
+            const pts = [], turns = 2.4, steps = 40;
+            for (let i = 0; i <= steps; i++) {
+                const f = i / steps, ang = f * turns * Math.PI * 2 + rot, rr = (0.15 + 0.85 * f) * r;
+                pts.push([cx + Math.cos(ang) * rr, cy + Math.sin(ang) * rr]);
+            }
+            return [pts];
+        }
+    };
+
+    /* ── Pop-art background: speed-lines, Ben-Day dots, explosion burst.
+     * Everything is CLIPPED to outside the silhouette so the icon stays clean
+     * and gets dramatically framed. ── */
+    function clipOutside(x, y, mask){ return !mask.solid[mIndex(x, y)]; }
+    function rayToBox(fx, fy, dx, dy){
+        let best = 1e9;
+        if (dx > 1e-6) best = Math.min(best, (1000 - fx) / dx);
+        if (dx < -1e-6) best = Math.min(best, (0 - fx) / dx);
+        if (dy > 1e-6) best = Math.min(best, (1000 - fy) / dy);
+        if (dy < -1e-6) best = Math.min(best, (0 - fy) / dy);
+        return [fx + dx * best, fy + dy * best];
+    }
+    function circlePts(cx, cy, r, n){
+        const o = [];
+        for (let i = 0; i <= n; i++){ const a = i / n * Math.PI * 2; o.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); }
+        return o;
+    }
+    function buildBackground(lines, mask, focus, accent, style, wild, rnd){
+        if (style === "aus") return;
+        const [fx, fy] = focus;
+
+        // ── speed-lines: rays from the focus, only the part outside the icon ──
+        if (style === "strahlen" || style === "knall"){
+            const N = Math.round(46 + wild * 150);
+            for (let i = 0; i < N; i++){
+                const a = (i / N) * Math.PI * 2 + (rnd() - 0.5) * 0.04;
+                const dx = Math.cos(a), dy = Math.sin(a);
+                // find where the ray leaves the silhouette
+                let r = 4, hit = null;
+                const [ex, ey] = rayToBox(fx, fy, dx, dy);
+                const maxR = Math.hypot(ex - fx, ey - fy);
+                for (; r < maxR; r += 6){ if (clipOutside(fx + dx * r, fy + dy * r, mask)){ hit = r; break; } }
+                if (hit === null) continue;
+                const start = hit + 6 + rnd() * 18;
+                // ragged: some lines stop short of the edge
+                const end = maxR * (0.55 + rnd() * 0.45);
+                if (end <= start) continue;
+                const w = rnd() < 0.5 ? 1.0 : (rnd() < 0.6 ? 2.2 : 4.0);   // mixed weights
+                lines.push({ pts: [[fx + dx * start, fy + dy * start], [fx + dx * end, fy + dy * end]],
+                             color: BLACK, w });
+            }
+        }
+
+        // ── Ben-Day dots in the gaps outside the icon ──
+        if (style === "punkte" || style === "knall"){
+            const gap = 46 - wild * 22;                 // denser when wilder
+            let row = 0;
+            for (let y = gap; y < 1000; y += gap * 0.9, row++){
+                const xo = row % 2 ? gap / 2 : 0;
+                for (let x = gap + xo; x < 1000; x += gap){
+                    if (!clipOutside(x, y, mask)) continue;
+                    // keep a little breathing room around the silhouette edge
+                    if (mask.solid[mIndex(x + gap*0.45, y)] || mask.solid[mIndex(x - gap*0.45, y)] ||
+                        mask.solid[mIndex(x, y + gap*0.45)] || mask.solid[mIndex(x, y - gap*0.45)]) continue;
+                    const dn = Math.min(1, Math.hypot(x - 500, y - 500) / 640);
+                    const r = gap * (0.10 + 0.30 * dn);   // grow toward the edges
+                    lines.push({ pts: circlePts(x, y, r, 14), color: accent, w: 1.0, closed: true });
+                }
+            }
+        }
+
+        // ── explosion: jagged burst ring(s) framing the page ──
+        if (style === "explosion" || style === "knall"){
+            const spikes = Math.round(18 + wild * 28);
+            const rings = style === "explosion" ? [[478, 415, 3.4], [392, 345, 1.6]] : [[482, 420, 3.0]];
+            for (const [R0, R1, ww] of rings){
+                const pts = [];
+                for (let i = 0; i <= spikes * 2; i++){
+                    const a = i / (spikes * 2) * Math.PI * 2;
+                    const rr = (i % 2 ? R1 : R0) + (rnd() - 0.5) * 24;
+                    pts.push([500 + Math.cos(a) * rr, 500 + Math.sin(a) * rr]);
+                }
+                lines.push({ pts, color: BLACK, w: ww, closed: true });
+            }
+        }
+    }
+
+    /* centroid of the silhouette (focus point for the burst) */
+    function maskFocus(mask){
+        let sx = 0, sy = 0, n = 0;
+        for (let my = 0; my < MW; my += 2) for (let mx = 0; mx < MW; mx += 2){
+            if (mask.solid[my * MW + mx]){ sx += mx; sy += my; n++; }
+        }
+        if (!n) return [500, 500];
+        return [sx / n / P2M, sy / n / P2M];
+    }
+
+    PR4App({
+        svgName: "ikon-halbton",
+        svgOpts: { width: 1.1 },
+        drawOpts: { width: 1.5, bg: "#fff" },
+        params: [
+            { key: "form", label: "Form (Makro)", value: "pfote", options: [
+                { value: "herz", label: "♥ Herz" }, { value: "pfote", label: "🐾 Pfote" },
+                { value: "stern", label: "★ Stern" }, { value: "blitz", label: "⚡ Blitz" },
+                { value: "flamme", label: "🔥 Flamme" }, { value: "berge", label: "⛰ Berge" },
+                { value: "hase", label: "🐰 Hase" }, { value: "tropfen", label: "💧 Tropfen" },
+                { value: "blatt", label: "🍃 Blatt" }, { value: "smiley", label: "🙂 Smiley" },
+                { value: "rakete", label: "🚀 Rakete" }, { value: "kopf", label: "🧠 Kopf" }
+            ] },
+            { key: "fuell", label: "Füllung (Mikro)", value: "herz", options: [
+                { value: "punkt", label: "Punkt" }, { value: "ring", label: "Ring" },
+                { value: "herz", label: "Herz" }, { value: "stern", label: "Stern" },
+                { value: "kreuz", label: "Kreuz" }, { value: "raute", label: "Raute" },
+                { value: "dreieck", label: "Dreieck" }, { value: "pfote", label: "Pfote" },
+                { value: "blatt", label: "Blatt" }, { value: "spirale", label: "Spirale" }
+            ] },
+            { key: "farbe", label: "Farbe (Füllung)", value: "rot", options: [
+                { value: "rot", label: "Rot" }, { value: "blau", label: "Blau" },
+                { value: "gruen", label: "Grün" }, { value: "magenta", label: "Magenta" },
+                { value: "orange", label: "Orange" }, { value: "schwarz", label: "Schwarz" }
+            ] },
+            { key: "bg", label: "Hintergrund", value: "knall", options: [
+                { value: "knall", label: "💥 Knall (Strahlen+Punkte)" },
+                { value: "strahlen", label: "Speedlines" },
+                { value: "punkte", label: "Ben-Day-Punkte" },
+                { value: "explosion", label: "Explosion" },
+                { value: "aus", label: "— aus —" }
+            ] },
+            { key: "wild", label: "Wildheit", min: 0, max: 1, step: 0.05, value: 0.6 },
+            { key: "gap", label: "Abstand", min: 16, max: 50, step: 2, value: 28 },
+            { key: "size", label: "Größe", min: 0.4, max: 1.3, step: 0.05, value: 0.92 },
+            { key: "shade", label: "Schattierung", min: 0, max: 1, step: 0.05, value: 0.7 },
+            { key: "unruhe", label: "Unruhe", min: 0, max: 1, step: 0.05, value: 0.3 }
+        ],
+        onRegen(rnd, params, values) {
+            // keep the chosen form & fill (same shape, new texture); reshuffle light
+            // direction by nudging the seed — handled via api.rnd in generate.
+        },
+        async generate(api) {
+            const { rnd, values } = api;
+            api.status("Lade Symbol-Font…");
+            try {
+                await document.fonts.load('700 64px "Material Symbols Outlined"',
+                    String.fromCodePoint(MACROS[values.form]));
+                await document.fonts.ready;
+            } catch (_) {}
+            if (api.cancelled()) return;
+
+            const mask = buildMask(MACROS[values.form]);
+            const accent = ACCENTS[values.farbe] || ACCENTS.rot;
+            const lines = [];
+
+            /* ── 0. Pop-art background (behind everything), clipped outside icon ── */
+            buildBackground(lines, mask, maskFocus(mask), accent, values.bg, values.wild, rnd);
+
+            /* ── 1. Bold contour: marching squares over the smooth darkness field ── */
+            const NX = 200;
+            const map = (i) => i / (NX - 1) * 1000;
+            const sample = (ix, iy) => mask.dark[mIndex(map(ix), map(iy))];
+            const contour = PR4.contourLines(sample, NX, NX, 0.5, map, map);
+            for (const c of contour) lines.push({ pts: c, color: BLACK, w: 3.2, closed: false });
+
+            /* ── 2. Halftone fill: hex grid of micro-motifs, sized by a light field ── */
+            const motif = MOTIFS[values.fuell];
+            const gap = values.gap;
+            const rowH = gap * 0.866;
+            // light from upper-left → smaller stamps toward light, bigger away (volume)
+            const lx = -0.72, ly = -0.69, shade = values.shade, jit = values.unruhe;
+            let row = 0, count = 0;
+            for (let y = gap; y < 1000 - gap * 0.5; y += rowH, row++) {
+                const xoff = row % 2 ? gap / 2 : 0;
+                for (let x = gap + xoff; x < 1000 - gap * 0.5; x += gap) {
+                    if (!mask.solid[mIndex(x, y)]) continue;
+                    // darkness field d∈[0,1]: bright toward light (small), dark away (big)
+                    const nx = (x - 500) / 500, ny = (y - 500) / 500;
+                    const bright = nx * lx + ny * ly;
+                    let d = 0.5 - shade * bright * 0.65;
+                    d += (rnd() - 0.5) * 0.18 * jit;
+                    d = d < 0.05 ? 0.05 : d > 1 ? 1 : d;
+                    // shrink stamps that straddle the edge so the fill stays tidy
+                    let edge = 0;
+                    for (let k = 0; k < 4; k++) {
+                        const a = k / 4 * Math.PI * 2;
+                        if (mask.solid[mIndex(x + Math.cos(a) * gap * 0.5, y + Math.sin(a) * gap * 0.5)]) edge++;
+                    }
+                    const r0 = gap * 0.5 * values.size * (0.42 + 0.58 * d) * (0.55 + 0.45 * edge / 4);
+                    const jx = (rnd() - 0.5) * gap * 0.28 * jit;
+                    const jy = (rnd() - 0.5) * gap * 0.28 * jit;
+                    const rot = rnd() * Math.PI * 2 * (0.15 + 0.85 * jit);
+                    for (const pl of motif(x + jx, y + jy, r0, rot)) {
+                        lines.push({ pts: pl, color: accent, w: 1.1, closed: false });
+                    }
+                    count++;
+                }
+            }
+
+            api.status(count + " Symbole · " + contour.length + " Kontur-Pfade · 2 Stifte");
+            api.done(lines);
+        }
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>118 · Spiegel-Architekt — Plot Runde 4</title>
+<style>
+    :root{--bg:#f4f1ea;--panel:#fffdf8;--ink:#1d1b17;--dim:#7c7668;--line:#e2dccd;--accent:#b1482b}
+    *{box-sizing:border-box}html,body{margin:0;height:100%}
+    body{background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,sans-serif;
+        display:flex;flex-direction:column;min-height:100%}
+    .top{display:flex;gap:1.2rem;align-items:baseline;padding:1rem 1.5rem;border-bottom:1px solid var(--line)}
+    .top a{color:var(--dim);text-decoration:none;font-size:.82rem}.top a:hover{color:var(--ink)}
+    .top h1{margin:0;font-size:1.1rem;font-weight:700}.top h1 .no{color:var(--accent);font-weight:800}
+    .top .tag{margin-left:auto;font-size:.78rem;color:var(--dim)}
+    .stage{flex:1;display:flex;gap:1.4rem;padding:1.4rem 1.5rem;min-height:0;flex-wrap:wrap}
+    .sheet-wrap{flex:1 1 460px;min-width:300px;display:flex;align-items:center;justify-content:center}
+    .sheet{position:relative;aspect-ratio:1/1;width:100%;max-height:80vh;background:var(--panel);
+        border:1px solid var(--line);box-shadow:0 18px 44px -28px rgba(40,30,15,.55);overflow:hidden}
+    canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab}canvas:active{cursor:grabbing}
+    .panel{flex:0 0 250px;display:flex;flex-direction:column;gap:1.1rem}
+    .lead{font-size:.88rem;line-height:1.5;color:var(--dim);margin:0}.lead b{color:var(--ink);font-weight:600}
+    .seg{display:grid;grid-template-columns:1fr 1fr;gap:.4rem}
+    .seg button{border:1px solid var(--line);background:var(--panel);color:var(--dim);padding:.5rem;
+        border-radius:6px;font:inherit;font-size:.82rem;cursor:pointer}
+    .seg button.on{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600}
+    .field{display:flex;flex-direction:column;gap:.35rem}
+    .field>span{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);
+        display:flex;justify-content:space-between}.field b{color:var(--ink)}
+    input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:var(--line)}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--accent);cursor:pointer}
+    .roll{border:0;background:var(--ink);color:var(--bg);font-weight:600;padding:.7rem;border-radius:7px;
+        font:inherit;font-size:.9rem;cursor:pointer}.roll:hover{background:#000}
+    .row{display:flex;gap:.5rem}.row button{flex:1;border:1px solid var(--line);background:var(--panel);
+        color:var(--ink);padding:.55rem;border-radius:6px;font:inherit;font-size:.82rem;cursor:pointer}
+    .row button:hover{border-color:var(--accent);color:var(--accent)}
+    .actions{margin-top:auto;display:flex;flex-direction:column;gap:.5rem}
+    .status{font-size:.74rem;color:var(--dim);min-height:1em}
+</style>
+</head>
+<body>
+    <div class="top">
+        <a href="./">← Übersicht</a><h1><span class="no">118</span> Spiegel-Architekt</h1>
+        <span class="tag">① du setzt die Spiegelachsen — der Raum kachelt sich</span>
+    </div>
+    <div class="stage">
+        <div class="sheet-wrap"><div class="sheet"><canvas id="c"></canvas></div></div>
+        <div class="panel">
+            <p class="lead">Der Inhalt ist <b>Zufall</b>. Du wählst, <b>wie die Spiegel stehen</b> —
+            und der Inhalt wird über jede Achse gespiegelt, die Spiegelbilder wieder gespiegelt,
+            bis die Fläche <b>parkettiert</b> ist. Ziehen = drehen.</p>
+            <div class="field"><span>Spiegel-Anordnung</span>
+                <div class="seg" id="preset">
+                    <button data-p="rosette" class="on">Rosette</button>
+                    <button data-p="streifen">Streifen</button>
+                    <button data-p="gitter">Gitter</button>
+                    <button data-p="dreieck">Dreieck</button>
+                </div>
+            </div>
+            <div class="field"><span id="pLabel">Zähligkeit <b id="pVal">6</b></span>
+                <input type="range" id="param" min="0" max="1" step="0.01" value="0.4"></div>
+            <button class="roll" id="content">🎲 neuer Inhalt</button>
+            <div class="actions"><div class="row"><button id="dl">⬇ SVG</button></div>
+            <p class="status" id="status">…</p></div>
+        </div>
+    </div>
+<script src="shared.js"></script>
+<script>
+"use strict";
+const SIZE=1000,CX=500,CY=500,R=460,INK="#1d1b17",ACC="#b1482b";
+const canvas=document.getElementById("c"),ctx=canvas.getContext("2d");
+const presetEl=document.getElementById("preset"),paramEl=document.getElementById("param");
+const state={seed:PR4.randomSeed(),preset:"rosette",rot:0,marks:[],lines:[]};
+
+function fit(){const dpr=devicePixelRatio||1,r=canvas.getBoundingClientRect();
+    const px=Math.max(1,Math.round(r.width*dpr));if(canvas.width!==px){canvas.width=px;canvas.height=px;}render();}
+
+/* ── affine 2×3 + reflection group machinery ── */
+const ID={a:1,b:0,c:0,d:0,e:0,f:1};
+function reflectM(px,py,nx,ny){const a=1-2*nx*nx,b=-2*nx*ny,e=1-2*ny*ny,dot=2*(px*nx+py*ny);
+    return {a,b,c:dot*nx,d:b,e,f:dot*ny};}
+function mul(A,B){return{a:A.a*B.a+A.b*B.d,b:A.a*B.b+A.b*B.e,c:A.a*B.c+A.b*B.f+A.c,
+    d:A.d*B.a+A.e*B.d,e:A.d*B.b+A.e*B.e,f:A.d*B.c+A.e*B.f+A.f};}
+function ap(M,p){return [M.a*p[0]+M.b*p[1]+M.c, M.d*p[0]+M.e*p[1]+M.f];}
+function sig(M){const r3=v=>Math.round(v*1000)/1000,r2=v=>Math.round(v*2)/2;
+    return r3(M.a)+","+r3(M.b)+","+r2(M.c)+","+r3(M.d)+","+r3(M.e)+","+r2(M.f);}
+function orbit(mirrors,centroid){
+    const seen=new Set([sig(ID)]),out=[],q=[ID],CAP=460,MAR=130;
+    while(q.length&&out.length<CAP){const M=q.shift();out.push(M);
+        for(const L of mirrors){const M2=mul(reflectM(L.px,L.py,L.nx,L.ny),M),s=sig(M2);
+            if(seen.has(s))continue;seen.add(s);
+            const cc=ap(M2,centroid);
+            if(cc[0]<-MAR||cc[0]>SIZE+MAR||cc[1]<-MAR||cc[1]>SIZE+MAR)continue;
+            q.push(M2);}}
+    return out;
+}
+
+/* ── random content in the unit square [0,1]² ── */
+function genMarks(){
+    const rnd=PR4.mulberry32(state.seed),m=[];
+    const k=6+Math.floor(rnd()*5);                          // 6..10 curvy strokes
+    for(let i=0;i<k;i++){let x=0.1+rnd()*0.8,y=0.1+rnd()*0.8;const pts=[[x,y]];
+        let dir=rnd()*Math.PI*2, sp=0.035+rnd()*0.05, curl=(rnd()*2-1)*0.55;
+        const steps=12+Math.floor(rnd()*16);
+        for(let s=0;s<steps;s++){dir+=curl+(rnd()*2-1)*0.28;x+=Math.cos(dir)*sp;y+=Math.sin(dir)*sp;
+            x=x<0.04?0.04:x>0.96?0.96:x;y=y<0.04?0.04:y>0.96?0.96:y;pts.push([x,y]);}
+        m.push({pts,accent:rnd()<0.4});}
+    const dots=3+Math.floor(rnd()*4);
+    for(let i=0;i<dots;i++){const cx=0.15+rnd()*0.7,cy=0.15+rnd()*0.7,rr=0.025+rnd()*0.065,c=[];
+        for(let a=0;a<=14;a++){const t=a/14*Math.PI*2;c.push([cx+Math.cos(t)*rr,cy+Math.sin(t)*rr]);}
+        m.push({pts:c,accent:rnd()<0.5,closed:true});}
+    state.marks=m;
+}
+
+/* ── each preset: a place-map (unit square → fundamental domain) + its mirrors ── */
+function config(){
+    const t=+paramEl.value, P=state.preset;
+    if(P==="rosette"){
+        const n=3+Math.round(t*9), w=Math.PI/n;
+        return {place:(u,v)=>{const th=u*w,r=55+v*(R-55);return [CX+Math.cos(th)*r,CY+Math.sin(th)*r];},
+            mirrors:[{px:CX,py:CY,nx:0,ny:1},{px:CX,py:CY,nx:-Math.sin(w),ny:Math.cos(w)}], info:n+"-zählig"};
+    }
+    if(P==="streifen"){
+        const bw=120+t*360;
+        return {place:(u,v)=>[CX-bw/2+u*bw, 70+v*(SIZE-140)],
+            mirrors:[{px:CX-bw/2,py:CY,nx:1,ny:0},{px:CX+bw/2,py:CY,nx:1,ny:0}], info:"Streifen"};
+    }
+    if(P==="gitter"){
+        const w=150+t*340;
+        return {place:(u,v)=>[CX-w/2+u*w, CY-w/2+v*w],
+            mirrors:[{px:CX-w/2,py:CY,nx:1,ny:0},{px:CX+w/2,py:CY,nx:1,ny:0},
+                     {px:CX,py:CY-w/2,nx:0,ny:1},{px:CX,py:CY+w/2,nx:0,ny:1}], info:"Gitter (pmm)"};
+    }
+    // dreieck — equilateral kaleidoscope triangle (tiles as *333)
+    const Rt=130+t*180;
+    const V=[0,1,2].map(k=>{const a=-Math.PI/2+k*2*Math.PI/3;return [CX+Math.cos(a)*Rt,CY+Math.sin(a)*Rt];});
+    const edge=(A,B)=>{const dx=B[0]-A[0],dy=B[1]-A[1],L=Math.hypot(dx,dy);return {px:A[0],py:A[1],nx:-dy/L,ny:dx/L};};
+    return {place:(u,v)=>{let a=u,b=v;if(a+b>1){a=1-a;b=1-b;}const w0=1-a-b;
+            return [w0*V[0][0]+a*V[1][0]+b*V[2][0], w0*V[0][1]+a*V[1][1]+b*V[2][1]];},
+        mirrors:[edge(V[0],V[1]),edge(V[1],V[2]),edge(V[2],V[0])], info:"Dreieck (Kaleidoskop)"};
+}
+
+function build(){
+    const cfg=config();
+    const placed=state.marks.map(m=>({pts:m.pts.map(p=>cfg.place(p[0],p[1])),accent:m.accent,closed:m.closed}));
+    let sx=0,sy=0,n=0;for(const m of placed)for(const p of m.pts){sx+=p[0];sy+=p[1];n++;}
+    const centroid=n?[sx/n,sy/n]:[CX,CY];
+    const copies=orbit(cfg.mirrors,centroid);
+    const lines=[];
+    for(const M of copies){const refl=(M.a*M.e-M.b*M.d)<0;
+        for(const m of placed){lines.push({pts:m.pts.map(p=>ap(M,p)),
+            color:m.accent?ACC:INK, w:m.accent?1.1:1.3, closed:m.closed});}}
+    state.lines=lines;
+    document.getElementById("status").textContent=cfg.info+" · "+copies.length+" Spiegelungen · "+lines.length+" Pfade";
+}
+function view(p){const c=Math.cos(state.rot),s=Math.sin(state.rot),dx=p[0]-CX,dy=p[1]-CY;
+    return [CX+dx*c-dy*s,CY+dx*s+dy*c];}
+function render(){
+    const px=canvas.width;ctx.setTransform(px/SIZE,0,0,px/SIZE,0,0);
+    ctx.fillStyle="#fffdf8";ctx.fillRect(0,0,SIZE,SIZE);ctx.lineJoin="round";ctx.lineCap="round";
+    for(const l of state.lines){if(l.pts.length<2)continue;ctx.strokeStyle=l.color;ctx.lineWidth=l.w;
+        const q=l.pts.map(view);ctx.beginPath();ctx.moveTo(q[0][0],q[0][1]);
+        for(let i=1;i<q.length;i++)ctx.lineTo(q[i][0],q[i][1]);if(l.closed)ctx.closePath();ctx.stroke();}
+}
+function regen(){genMarks();build();render();}
+
+const LABELS={rosette:"Zähligkeit",streifen:"Streifen-Breite",gitter:"Zellgröße",dreieck:"Dreieck-Größe"};
+function syncLabel(){const cfg=config();document.getElementById("pLabel").firstChild.textContent=LABELS[state.preset]+" ";
+    document.getElementById("pVal").textContent=cfg.info.split(" ")[0];}
+presetEl.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+    [...presetEl.children].forEach(x=>x.classList.remove("on"));b.classList.add("on");
+    state.preset=b.dataset.p;syncLabel();build();render();});
+paramEl.addEventListener("input",()=>{syncLabel();build();render();});
+document.getElementById("content").addEventListener("click",()=>{state.seed=PR4.randomSeed();regen();});
+document.getElementById("dl").addEventListener("click",()=>{if(!state.lines.length)return;
+    const baked=state.lines.map(l=>({pts:l.pts.map(view),color:l.color,w:l.w,closed:l.closed}));
+    PR4.downloadSvg("spiegel-"+state.preset+"-"+state.seed+".svg",PR4.linesToSvg(baked,{width:1,mm:200}));});
+let drag=false,lastA=0;
+function ang(e){const r=canvas.getBoundingClientRect();return Math.atan2((e.clientY-r.top)/r.height*SIZE-CY,(e.clientX-r.left)/r.width*SIZE-CX);}
+canvas.addEventListener("pointerdown",e=>{drag=true;lastA=ang(e);try{canvas.setPointerCapture(e.pointerId);}catch(_){}});
+canvas.addEventListener("pointermove",e=>{if(!drag)return;const a=ang(e);state.rot+=a-lastA;lastA=a;render();});
+canvas.addEventListener("pointerup",()=>drag=false);
+window.addEventListener("resize",PR4.debounce(fit,150));
+window.__set=(p,t)=>{state.preset=p;paramEl.value=t;[...presetEl.children].forEach(x=>x.classList.toggle("on",x.dataset.p===p));syncLabel();build();render();};
+syncLabel();regen();fit();
+</script>
+</body>
+</html>

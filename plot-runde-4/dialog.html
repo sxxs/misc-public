@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>120 · Dialog — Plot Runde 4</title>
+<style>
+    :root{--bg:#f4f1ea;--panel:#fffdf8;--ink:#1d1b17;--dim:#7c7668;--line:#e2dccd;--accent:#b1482b}
+    *{box-sizing:border-box}html,body{margin:0;height:100%}
+    body{background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,sans-serif;
+        display:flex;flex-direction:column;min-height:100%}
+    .top{display:flex;gap:1.2rem;align-items:baseline;padding:1rem 1.5rem;border-bottom:1px solid var(--line)}
+    .top a{color:var(--dim);text-decoration:none;font-size:.82rem}.top a:hover{color:var(--ink)}
+    .top h1{margin:0;font-size:1.1rem;font-weight:700}.top h1 .no{color:var(--accent);font-weight:800}
+    .top .tag{margin-left:auto;font-size:.78rem;color:var(--dim)}
+    .stage{flex:1;display:flex;gap:1.4rem;padding:1.4rem 1.5rem;min-height:0;flex-wrap:wrap}
+    .sheet-wrap{flex:1 1 460px;min-width:300px;display:flex;align-items:center;justify-content:center}
+    .sheet{position:relative;aspect-ratio:1/1;width:100%;max-height:80vh;background:var(--panel);
+        border:1px solid var(--line);box-shadow:0 18px 44px -28px rgba(40,30,15,.55);overflow:hidden}
+    canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+    .prompt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;
+        pointer-events:none;color:var(--dim);font-style:italic;font-size:1.1rem;transition:opacity .4s;padding:2rem}
+    .panel{flex:0 0 250px;display:flex;flex-direction:column;gap:1.1rem}
+    .lead{font-size:.88rem;line-height:1.5;color:var(--dim);margin:0}.lead b{color:var(--ink);font-weight:600}
+    .field{display:flex;flex-direction:column;gap:.35rem}
+    .field>span{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);
+        display:flex;justify-content:space-between}.field b{color:var(--ink)}
+    input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:var(--line)}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--accent);cursor:pointer}
+    .row{display:flex;gap:.5rem}.row button{flex:1;border:1px solid var(--line);background:var(--panel);
+        color:var(--ink);padding:.6rem;border-radius:6px;font:inherit;font-size:.82rem;cursor:pointer}
+    .row button:hover{border-color:var(--accent);color:var(--accent)}
+    .actions{margin-top:auto;display:flex;flex-direction:column;gap:.5rem}
+    .status{font-size:.74rem;color:var(--dim);min-height:1em}
+    .legend{font-size:.74rem;color:var(--dim);line-height:1.5}
+    .legend .u{color:var(--ink);font-weight:600}.legend .m{color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+    <div class="top">
+        <a href="./">← Übersicht</a><h1><span class="no">120</span> Dialog</h1>
+        <span class="tag">⑤ du machst eine Geste, die Maschine antwortet</span>
+    </div>
+    <div class="stage">
+        <div class="sheet-wrap"><div class="sheet">
+            <canvas id="c"></canvas>
+            <div class="prompt" id="prompt">Zieh einen Strich.<br>Die Maschine antwortet.</div>
+        </div></div>
+        <div class="panel">
+            <p class="lead">Jeder deiner Striche wird sofort zum <b>Mandala</b> gespiegelt —
+            und die Maschine legt eine <b>Antwort</b> dazu. Du reagierst auf ihre Antwort.
+            So wächst das Muster aus dem Hin und Her.</p>
+            <p class="legend"><span class="u">■ du</span> &nbsp; <span class="m">■ die Maschine</span></p>
+            <div class="field"><span>Symmetrie <b id="vN">6</b></span>
+                <input type="range" id="n" min="2" max="14" step="1" value="6"></div>
+            <div class="row"><button id="undo">↶ zurück</button><button id="clear">leeren</button></div>
+            <div class="actions"><div class="row"><button id="dl">⬇ SVG</button></div>
+            <p class="status" id="status">…</p></div>
+        </div>
+    </div>
+<script src="shared.js"></script>
+<script>
+"use strict";
+const SIZE=1000,CX=500,CY=500,INK="#1d1b17",ACC="#b1482b";
+const canvas=document.getElementById("c"),ctx=canvas.getContext("2d");
+const promptEl=document.getElementById("prompt"),statusEl=document.getElementById("status");
+const nEl=document.getElementById("n");
+const state={turns:[],raw:[],drawing:false,turnNo:0};
+
+function fit(){const dpr=devicePixelRatio||1,r=canvas.getBoundingClientRect();
+    const px=Math.max(1,Math.round(r.width*dpr));if(canvas.width!==px){canvas.width=px;canvas.height=px;}render();}
+function toPage(e){const r=canvas.getBoundingClientRect();return [(e.clientX-r.left)/r.width*SIZE,(e.clientY-r.top)/r.height*SIZE];}
+const sub=(a,b)=>[a[0]-b[0],a[1]-b[1]],hyp=a=>Math.hypot(a[0],a[1]);
+function rotAbout(p,a){const dx=p[0]-CX,dy=p[1]-CY,c=Math.cos(a),s=Math.sin(a);return [CX+dx*c-dy*s,CY+dx*s+dy*c];}
+
+/* the machine's reply transform — cycles each turn so it feels like a partner with moods */
+function reply(pts,mode){
+    if(mode===0) return pts.map(p=>[2*CX-p[0],p[1]]);                 // mirror across vertical
+    if(mode===1) return pts.map(p=>[2*CX-p[0],2*CY-p[1]]);           // point reflection
+    if(mode===2) return pts.map(p=>{const q=rotAbout(p,Math.PI/(+nEl.value));return [CX+(q[0]-CX)*0.78,CY+(q[1]-CY)*0.78];}); // offset + shrink
+    return pts.map(p=>{const q=rotAbout(p,-Math.PI/(+nEl.value));return [CX+(q[0]-CX)*1.12,CY+(q[1]-CY)*1.12];}); // offset + grow
+}
+function symmetrize(pts,color,w){
+    const N=+nEl.value,out=[];
+    for(let k=0;k<N;k++){const a=k*2*Math.PI/N;out.push({pts:pts.map(p=>rotAbout(p,a)),color,w});}
+    return out;
+}
+function commit(){
+    state.drawing=false;
+    if(state.raw.length<3){state.raw=[];render();return;}
+    const stroke=PR4.mulberry32?state.raw.slice():state.raw.slice();
+    const userLines=symmetrize(stroke,INK,1.7);
+    const mode=state.turnNo%4;
+    const machineLines=symmetrize(reply(stroke,mode),ACC,1.3);
+    state.turns.push({user:userLines,machine:machineLines});
+    state.turnNo++;state.raw=[];
+    render();
+    statusEl.textContent="Zug "+state.turnNo+" · die Maschine antwortete ("+["Spiegel","Punktspiegel","Drehung −","Drehung +"][mode]+")";
+}
+function allLines(){const o=[];for(const t of state.turns){o.push(...t.user,...t.machine);}return o;}
+function render(){
+    const px=canvas.width;ctx.setTransform(px/SIZE,0,0,px/SIZE,0,0);
+    ctx.fillStyle="#fffdf8";ctx.fillRect(0,0,SIZE,SIZE);ctx.lineJoin="round";ctx.lineCap="round";
+    // faint guide rings
+    ctx.strokeStyle="rgba(0,0,0,.05)";ctx.lineWidth=1;
+    for(const rr of [120,250,380,470]){ctx.beginPath();ctx.arc(CX,CY,rr,0,7);ctx.stroke();}
+    for(const l of allLines()){if(l.pts.length<2)continue;ctx.strokeStyle=l.color;ctx.lineWidth=l.w;
+        ctx.beginPath();ctx.moveTo(l.pts[0][0],l.pts[0][1]);
+        for(let i=1;i<l.pts.length;i++)ctx.lineTo(l.pts[i][0],l.pts[i][1]);ctx.stroke();}
+    if(state.drawing&&state.raw.length>1){ctx.strokeStyle="rgba(29,27,23,.5)";ctx.lineWidth=2;
+        ctx.beginPath();ctx.moveTo(state.raw[0][0],state.raw[0][1]);
+        for(let i=1;i<state.raw.length;i++)ctx.lineTo(state.raw[i][0],state.raw[i][1]);ctx.stroke();}
+}
+canvas.addEventListener("pointerdown",e=>{try{canvas.setPointerCapture(e.pointerId);}catch(_){}
+    promptEl.style.opacity=0;state.drawing=true;state.raw=[toPage(e)];render();});
+canvas.addEventListener("pointermove",e=>{if(!state.drawing)return;const p=toPage(e),l=state.raw[state.raw.length-1];
+    if(hyp(sub(p,l))>4){state.raw.push(p);render();}});
+canvas.addEventListener("pointerup",commit);
+canvas.addEventListener("pointercancel",commit);
+document.getElementById("n").addEventListener("input",()=>{document.getElementById("vN").textContent=nEl.value;render();});
+document.getElementById("undo").addEventListener("click",()=>{state.turns.pop();if(state.turnNo>0)state.turnNo--;render();});
+document.getElementById("clear").addEventListener("click",()=>{state.turns=[];state.turnNo=0;promptEl.style.opacity=1;render();statusEl.textContent="";});
+document.getElementById("dl").addEventListener("click",()=>{const L=allLines();if(L.length)PR4.downloadSvg("dialog.svg",PR4.linesToSvg(L,{width:1,mm:200}));});
+window.addEventListener("resize",PR4.debounce(fit,150));
+window.__stroke=(pts)=>{state.raw=pts.slice();commit();return state.turnNo;};
+fit();
+</script>
+</body>
+</html>
