@@ -45,11 +45,21 @@
         font-size:.95rem;text-align:center;letter-spacing:.1em;color:var(--ink);outline:none}
     .hero:focus{border-color:var(--accent)}
     .hint{font-size:.72rem;color:var(--dim);line-height:1.45}.gen{font-size:.72rem;color:var(--dim)}
+    .catOverlay{position:fixed;inset:0;background:var(--bg);overflow:auto;padding:1.2rem 1.6rem;z-index:50;display:none}
+    .catBar{position:sticky;top:0;display:flex;align-items:center;gap:1rem;background:var(--bg);padding:.4rem 0 .8rem;z-index:2}
+    .catBar h2{margin:0;font-size:1.1rem;font-weight:700}
+    .catClose{margin-left:auto;border:1px solid var(--ink);background:var(--ink);color:var(--bg);padding:.5rem .9rem;border-radius:6px;cursor:pointer;font:inherit;font-weight:600}
+    .catOverlay h3{font-size:.95rem;margin:1.1rem 0 .55rem;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+    .catGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:11px}
+    .catTile{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;flex-direction:column}
+    .catTile canvas{width:100%;display:block;aspect-ratio:1/1}
+    .catLbl{font-size:.72rem;color:var(--ink);text-align:center;padding:.35rem .2rem;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
     <div class="top">
         <a href="./">← Übersicht</a><h1><span class="no">119</span> Züchter</h1>
+        <a href="?katalog" style="font-size:.82rem;color:var(--accent);text-decoration:none;font-weight:600">📋 Katalog</a>
         <span class="tag">② Mikro × Makro — du züchtest durch Auswählen</span>
     </div>
     <div class="stage">
@@ -61,7 +71,7 @@
             Zickzack, Ornament). Tippe die schönen an.</p>
             <button class="roll" id="breedBig">🧬 Kreuzen &amp; mutieren</button>
             <button class="roll alt" id="breedSmall">🔬 Nur verfeinern</button>
-            <div class="row"><button id="rand">🎲 Alles neu würfeln</button></div>
+            <div class="row"><button id="rand">🎲 Alles neu würfeln</button><button id="catBtn">📋 Katalog</button></div>
             <div class="field"><span>Hero-Glyph / Wort (optional)</span>
                 <input class="hero" id="hero" maxlength="6" placeholder="z. B. A oder WIAI"></div>
             <p class="hint"><b>🎲 Würfeln</b>: 9 ganz neue Zufallsmuster — vergisst deine Auswahl.<br>
@@ -116,7 +126,7 @@ function randGenome(){return Array.from({length:GENES},()=>Math.random());}
 
 /* ── helpers ── */
 const cs=t=>t<-.5?0:t>.5?1:t+.5;
-function flowAngle(x,y){return NOISE.fbm(x*0.0016+5.2,y*0.0016+9.1,3)*Math.PI*4;}
+function flowAngle(x,y){return NOISE.fbm(x*0.0011+5.2,y*0.0011+9.1,3)*Math.PI*2.2;} // calmer flow (was *4 → too wild)
 function hilbertCurve(order){const n=1<<order,pts=[];
     for(let d=0;d<n*n;d++){let t=d,x=0,y=0;
         for(let s=1;s<n;s*=2){const rx=1&(t>>1),ry=1&(t^rx);
@@ -222,17 +232,20 @@ function lsysCurve(macro,g){const d=LSYS[macro];let s=d.ax,it=d.base+Math.floor(
     return [pts.map(p=>[(p[0]-mx)*sc,(p[1]-my)*sc])];}
 function circlePack(g,freq){const cols=3+freq,s=2*R/cols,out=[];
     for(let yi=0;yi<cols;yi++)for(let xi=0;xi<cols;xi++){const cx=-R+(xi+0.5)*s,cy=-R+(yi+0.5)*s;
-        const r=s*0.5*(0.32+0.62*NOISE.fbm((xi+0.5)*0.8+g[9]*5,(yi+0.5)*0.8+g[10]*5,3)),c=[];
-        for(let k=0;k<=26;k++){const a=k/26*Math.PI*2;c.push([cx+Math.cos(a)*r,cy+Math.sin(a)*r]);}out.push(c);}
+        const nz=NOISE.fbm((xi+0.5)*0.9+g[9]*5,(yi+0.5)*0.9+g[10]*5,3);
+        const r=s*0.5*Math.min(0.98,0.08+1.7*nz*nz),c=[];                       // much wider size variance (tiny ↔ big)
+        if(r<3)continue;for(let k=0;k<=26;k++){const a=k/26*Math.PI*2;c.push([cx+Math.cos(a)*r,cy+Math.sin(a)*r]);}out.push(c);}
     return out;}
-function stringArt(g,freq){const N=12+freq*6,out=[];
-    for(let i=0;i<=N;i++){const t=i/N;
-        out.push([[-R+t*2*R,-R],[R,-R+t*2*R]]);out.push([[R-t*2*R,R],[-R,R-t*2*R]]);}
+function stringArt(g,freq){const N=12+freq*5,out=[];
+    const env=(ax,ay,bx,by,cx,cy)=>{for(let i=0;i<=N;i++){const t=i/N;                 // each corner: envelope between its two edges → fills the centre
+        out.push([[ax+(bx-ax)*t,ay+(by-ay)*t],[ax+(cx-ax)*(1-t),ay+(cy-ay)*(1-t)]]);}};
+    env(-R,-R, R,-R, -R,R); env(R,-R, -R,-R, R,R); env(R,R, R,-R, -R,R); env(-R,R, R,R, -R,-R);
     return out;}
 const fit=(pts)=>{let a=1e9,b=1e9,c=-1e9,d=-1e9;for(const p of pts){if(p[0]<a)a=p[0];if(p[0]>c)c=p[0];if(p[1]<b)b=p[1];if(p[1]>d)d=p[1];}
     const w=c-a||1,h=d-b||1,s=2*R*0.92/Math.max(w,h),mx=(a+c)/2,my=(b+d)/2;return pts.map(p=>[(p[0]-mx)*s,(p[1]-my)*s]);};
-function phylloLine(g){const N=180+Math.floor(g[4]*420),ga=Math.PI*(3-Math.sqrt(5)),c=R/Math.sqrt(N)*1.6,pts=[];
-    for(let i=0;i<N;i++){const a=i*ga,r=c*Math.sqrt(i);pts.push([Math.cos(a)*r,Math.sin(a)*r]);}return [pts];} // index-order = spiral line; stamp = sunflower dots
+function phylloLine(g){const N=110+Math.floor(g[4]*240),ga=Math.PI*(3-Math.sqrt(5)),c=R/Math.sqrt(N)*1.7,out=[];
+    for(let i=0;i<N;i++){const a=i*ga,r=c*Math.sqrt(i),x=Math.cos(a)*r,y=Math.sin(a)*r,d=c*0.4;     // each seed = a short radial dash → clean sunflower, not a tangled line
+        out.push([[x-Math.cos(a)*d,y-Math.sin(a)*d],[x+Math.cos(a)*d,y+Math.sin(a)*d]]);}return out;}
 function harmoLine(g){const f1=1+Math.floor(g[4]*4),f2=1+Math.floor(g[5]*4),p1=g[6]*6.28,p2=g[7]*6.28,d=0.0015+g[8]*0.004,pts=[];
     for(let t=0;t<220;t+=0.06){const e=Math.exp(-d*t*30);const x=Math.sin(f1*t+p1)*e+Math.sin((f1+0.008)*t)*e*0.6,y=Math.sin(f2*t+p2)*e+Math.sin((f2+0.008)*t+1)*e*0.6;pts.push([x,y]);}return [fit(pts)];}
 function roseLine(g){const k=2+Math.floor(g[4]*6),maurer=g[5]>0.45,step=maurer?(11+Math.floor(g[6]*60)):0.5,pts=[];
@@ -274,13 +287,14 @@ function pheno(g){
     const beta=g[15];
     const micro=Math.min(NMICRO-1,Math.floor(g[1]*NMICRO));
     const pal=PALS[Math.floor(g[2]*PALS.length)%PALS.length];
-    const cell=24+g[3]*30, freq=1+Math.floor(g[4]*5);
+    const cell=22+g[3]*36, freq=1+Math.floor(g[4]*5), zoom=0.62+g[3]*1.05; // g3 = Grobheit/Zoom (vollflächig)
     const ang=g[5]*Math.PI, mang=g[6]*Math.PI, contrast=0.7+g[7]*3.2, inv=g[8]>0.5;
     const ox=g[9]*30, oy=g[10]*30, ramp=GLYPHRAMPS[Math.floor(g[11]*GLYPHRAMPS.length)%GLYPHRAMPS.length];
     const orn=Math.floor(g[12]*4)%4, rnd=PR4.mulberry32(((g[0]*1e6)^(g[5]*1e6))|0);
     const lines=[];
     function fieldOf(m,x,y){
-        const u=(x+R)/(2*R),v=(y+R)/(2*R),cx=u-0.5,cy=v-0.5,ca=Math.cos(ang),sa=Math.sin(ang);
+        let u=(x+R)/(2*R),v=(y+R)/(2*R);u=0.5+(u-0.5)/zoom;v=0.5+(v-0.5)/zoom; // zoom>1 → größere Features (vollflächiger)
+        const cx=u-0.5,cy=v-0.5,ca=Math.cos(ang),sa=Math.sin(ang);
         const ru=cx*ca-cy*sa+0.5, rv=cx*sa+cy*ca+0.5, rad=Math.hypot(cx,cy); let f;
         switch(m){
             case 0: f=ru;break;
@@ -288,7 +302,7 @@ function pheno(g){
             case 2: f=((Math.floor(ru*freq*2)+Math.floor(rv*freq*2))%2+2)%2;break;
             case 3: f=1-Math.min(1,rad*2.1);break;
             case 4: f=NOISE.fbm(u*(1.4+freq*0.7)+ox,v*(1.4+freq*0.7)+oy,4);break;
-            case 5: f=0.5+0.5*Math.sin((ru+0.25*Math.sin(rv*Math.PI*3))*freq*Math.PI*2);break;
+            case 5: f=0.5+0.5*Math.sin((ru+0.12*Math.sin(rv*Math.PI*2.4))*freq*Math.PI*2);break; // Wellen (gentler amplitude)
             case 6: f=0.5+0.5*Math.sin(rad*freq*Math.PI*5);break;
             case 7: f=(ru+rv)*0.5;break;
             case 8: f=0.5+0.25*Math.sin(ru*freq*Math.PI*2)+0.25*Math.sin(rv*freq*Math.PI*2);break;
@@ -335,16 +349,19 @@ function pheno(g){
     }
 
     if(micro>=5){                                    // ── LINE family ──
-        const lw=1.2+g[3]*0.9, amp=4+g[6]*11, fr=0.35+g[4]*0.5;
+        const lw=1.05, amp=4+g[6]*9, fr=0.35+g[4]*0.5;   // ONE thin pen width — no fake thickness via parallel paths
+        const pz=isPathA?Math.max(0.85,Math.min(1.55,zoom)):1; // zoom curves/paths to fill the frame
         let budget=9000;                             // point budget → keeps it plottable (no dense overlap)
-        outer:for(const poly of macroLines(macroA,g,fieldA,freq)){
+        outer:for(const poly0 of macroLines(macroA,g,fieldA,freq)){
+            const poly=pz!==1?poly0.map(p=>[p[0]*pz,p[1]*pz]):poly0;
             const wp=poly.map(p=>warp(p[0],p[1]));
             for(const sub of clipHero(wp)){ styleLine(lines,sub,micro,pal[0],lw,amp,fr,orn,ramp,rnd); budget-=sub.length; if(budget<0)break outer; }}
     } else {                                         // ── STAMP family ──
         const stampW=(x,y,s,f,a,col)=>{if(f<0.06)return;const w=warp(x,y);if(HERO&&HERO.inside(w[0],w[1]))return;stampMark(lines,micro,w[0],w[1],s,f,a,col,ramp);};
         if(PATHM.has(macroA)&&macroA!==18){          // line/path macro → stud micro marks along it
+            const pz=Math.max(0.85,Math.min(1.55,zoom));
             for(const poly of macroLines(macroA,g,fieldA,freq)){const st=Math.max(1,Math.floor(poly.length/500));
-                for(let i=0;i<poly.length;i+=st)stampW(poly[i][0],poly[i][1],cell*0.8,0.7,mang,pal[0]);}
+                for(let i=0;i<poly.length;i+=st)stampW(poly[i][0]*pz,poly[i][1]*pz,cell*0.8,0.7,mang,pal[0]);}
         }else{let row=0;for(let y=-R+cell*0.5;y<R;y+=cell*0.866,row++){const xo=row%2?cell/2:0;
             for(let x=-R+cell*0.5+xo;x<R;x+=cell){
                 let f,a=mang;if(macroA===18){a=flowAngle(x,y);f=0.62;}else f=fieldA(x,y);
@@ -455,8 +472,36 @@ function measureRamps(){const S=48,off=document.createElement("canvas");off.widt
         let outline=scored.filter(s=>s.cov<=0.28);
         if(outline.length<2)outline=scored.slice(0,2);
         return outline;});}
+/* ── catalogue: render every macro and every micro in isolation, for overview ── */
+function catGenome(macro,micro){const g=new Array(GENES).fill(0.5);
+    g[0]=(macro+0.5)/NMACRO;g[14]=g[0];g[15]=0;          // no blend → pure macro
+    g[1]=(micro+0.5)/NMICRO;g[2]=0;g[7]=0.5;g[8]=0;g[9]=0.3;g[10]=0.6;g[11]=0.3;g[12]=0.2;g[13]=0.5;return g;}
+function openCatalog(){
+    let ov=document.getElementById("catOverlay");
+    if(!ov){ov=document.createElement("div");ov.id="catOverlay";ov.className="catOverlay";
+        const bar=document.createElement("div");bar.className="catBar";
+        const h=document.createElement("h2");h.textContent="Katalog — alle Bausteine isoliert";
+        const cl=document.createElement("button");cl.className="catClose";cl.textContent="✕ schließen";cl.onclick=()=>ov.style.display="none";
+        bar.append(h,cl);
+        const h1=document.createElement("h3");h1.textContent="Makros (40) — jeweils mit Mikro „Linie“";
+        const g1=document.createElement("div");g1.className="catGrid";
+        const h2=document.createElement("h3");h2.textContent="Mikros (12) — jeweils mit Makro „Wellen“";
+        const g2=document.createElement("div");g2.className="catGrid";
+        ov.append(bar,h1,g1,h2,g2);document.body.appendChild(ov);
+        const tile=(grid,gen,label)=>{const w=document.createElement("div");w.className="catTile";
+            const cv=document.createElement("canvas");cv.width=cv.height=320;
+            const lb=document.createElement("div");lb.className="catLbl";lb.textContent=label;
+            w.append(cv,lb);grid.appendChild(w);
+            try{drawTo(cv.getContext("2d"),320,pheno(gen));}catch(e){lb.textContent=label+" ⚠";}};
+        for(let m=0;m<NMACRO;m++)tile(g1,catGenome(m,5),m+" "+MACRO_NAMES[m]);   // micro 5 = Linie
+        for(let mi=0;mi<NMICRO;mi++)tile(g2,catGenome(5,mi),mi+" "+MICRO_NAMES[mi]); // macro 5 = Wellen
+    }
+    ov.style.display="block";ov.scrollTop=0;
+}
+document.getElementById("catBtn").addEventListener("click",openCatalog);
 buildGrid();randomize();
-(async()=>{try{await document.fonts.load('600 40px '+FONT,"★❤◆");await document.fonts.ready;measureRamps();renderGrid();}catch(_){}})();
+(async()=>{try{await document.fonts.load('600 40px '+FONT,"★❤◆");await document.fonts.ready;measureRamps();renderGrid();}catch(_){}
+    if(/katalog/i.test(location.search)||location.hash.toLowerCase()==="#katalog")openCatalog();})();
 </script>
 </body>
 </html>
