@@ -75,18 +75,39 @@
 <script src="shared.js"></script>
 <script>
 "use strict";
+/* ════════════════════════════════════════════════════════════════════════════
+ * ZÜCHTER — Mikro × Makro interactive-evolution breeder.
+ * Integration in dein-muster: siehe zuechter-INTEGRATION.md (Kern = pheno(genome)).
+ *
+ * Abschnitte in dieser Datei:
+ *   §A Konstanten        PALS, NMACRO/NMICRO, MACRO/MICRO_NAMES, PATHM, GLYPHSETS
+ *   §B Mark-Helfer       cs, flowAngle, hilbertCurve, resampleN
+ *   §C Mikro-Renderer    stampMark (Stempel) · placeOrn/styleLine (Linien-Stile)
+ *   §D Makro-Generatoren fieldContours, *Lines (perspLines/tunnelLines/…), L-System,
+ *                        circlePack, stringArt, phyllo/harmo/rose/torus/delaunay, macroLines
+ *   §E pheno(g)          DER KERN: Feld-Blend vs. subtiles Warp, Stempel-/Linien-Zweig, Hero
+ *   §F Ausgabe           drawTo (Canvas) · tileSvg (Plot-SVG)
+ *   §G UI/Zucht          buildGrid/renderGrid/breed/buildHero/measureRamps  (Prototyp-UI)
+ * Koordinaten: zentriert, [-R,R]², R=440.  Genom: 16 Floats [0,1] (Gen-Tabelle in der .md).
+ * ════════════════════════════════════════════════════════════════════════════ */
 const FONT='"Material Symbols Outlined"', HEROCOL="#b1482b";
 const GENES=16, R=440;
 const PALS=[["#1d1b17","#b1482b"],["#143b46","#c43b5a"],["#21403a","#bd7d1c"],
     ["#2d2733","#7a5cc0"],["#1d1b17","#1d1b17"],["#402038","#1e7a52"],["#14303a","#b1482b"]];
 const NOISE=PR4.makeNoise2D(PR4.mulberry32(98765));
-const NMACRO=19, NMICRO=9;
+const NMACRO=40, NMICRO=12;
 const MACRO_NAMES=["Verlauf","Streifen","Schachbrett","Radial","Wolke","Wellen","Ringe","Diagonale","Karo","Spirale",
-    "Kreis","Herz","Stern","Quadrat","Raute","Perspektive","Truchet","Hilbert","Strömung"];
-const MICRO_NAMES=["Stipple","Schraffur","Kreuz","Kästchen","Glyphen","Linie","Welle","Zickzack","Ornament"];
+    "Kreis","Herz","Stern","Quadrat","Raute","Perspektive","Truchet","Hilbert","Strömung",
+    "Ziegel","Moiré","Plasma","Strahlen","Marmor",
+    "Peano","Gosper","Sierpinski","Drache","Moore","Kreispackung","Linienschar","Moiré-Ringe","Sinus",
+    "Chladni","Phyllotaxis","Harmonograph","Rose","Torusknoten","Delaunay","Tunnel"];
+const PATHM=new Set([15,16,17,18,24,25,26,27,28,29,30,34,35,36,37,38,39]); // lines/paths (Chladni 33 is a scalar field)
+const MICRO_NAMES=["Stipple","Schraffur","Kreuz","Kästchen","Glyphen","Linie","Welle","Zickzack","Ornament","Doppel","Strich","Leiter"];
 const ORN_NAMES=["Glyph","Kreis","Quadrat","Zacke"];
-const GLYPHSETS=[[0xe15b,0xe5d3,0xe3ea,0xe3a5,0xe061,0xe3fa,0xef4a],[0xe145,0xe86b,0xead5,0xeb39,0xf09a,0xeb36],
-    [0xe798,0xea35,0xe87e,0xe91d,0xef55,0xea0b],[0xe5cd,0xe145,0xf09a,0xe87e,0xeb39,0xef4a,0xeb36]];
+/* only outline-friendly glyphs (FILL=0); solid icons like paw/lens/disc are excluded
+ * here AND filtered by coverage at load — a pen plotter can only stroke outlines */
+const GLYPHSETS=[[0xe15b,0xe5d3,0xe3ea,0xe3a5,0xef4a,0xeb36],[0xe145,0xe86b,0xead5,0xeb39,0xf09a,0xeb36],
+    [0xe798,0xea35,0xe87e,0xef55,0xea0b,0xe86b],[0xe5cd,0xe145,0xf09a,0xe87e,0xeb39,0xef4a,0xeb36]];
 let GLYPHRAMPS=GLYPHSETS.map(s=>s.map(cp=>({ch:String.fromCodePoint(cp),cov:0.5})));
 
 const grid=document.getElementById("grid"), heroEl=document.getElementById("hero");
@@ -134,7 +155,16 @@ function styleLine(L,poly,micro,col,lw,amp,fr,orn,ramp,rnd){
     const rs=resampleN(poly,7); if(rs.length<3)return;
     if(micro===6){const o=rs.map((q,i)=>[q.p[0]+q.n[0]*Math.sin(i*fr)*amp,q.p[1]+q.n[1]*Math.sin(i*fr)*amp]);L.push({pts:o,color:col,w:lw});}
     else if(micro===7){const o=rs.map((q,i)=>{const tri=(i%2?1:-1);return [q.p[0]+q.n[0]*amp*tri,q.p[1]+q.n[1]*amp*tri];});L.push({pts:o,color:col,w:lw});}
-    else{ // ornament: mostly line, occasionally replaced by an object
+    else if(micro===9){const d=amp*0.45;                                  // Doppellinie (railroad)
+        L.push({pts:rs.map(q=>[q.p[0]+q.n[0]*d,q.p[1]+q.n[1]*d]),color:col,w:lw});
+        L.push({pts:rs.map(q=>[q.p[0]-q.n[0]*d,q.p[1]-q.n[1]*d]),color:col,w:lw});}
+    else if(micro===10){let seg=[],on=true,cnt=0,dash=2+Math.floor(amp*0.35);  // Strichelung
+        for(let i=0;i<rs.length;i++){if(on)seg.push(rs[i].p);cnt++;
+            if(cnt>=dash){if(on&&seg.length>=2)L.push({pts:seg,color:col,w:lw});seg=[rs[i].p];on=!on;cnt=0;}}
+        if(on&&seg.length>=2)L.push({pts:seg,color:col,w:lw});}
+    else if(micro===11){L.push({pts:rs.map(q=>q.p),color:col,w:lw});         // Leiter (ties)
+        for(let i=0;i<rs.length;i+=2){const q=rs[i];L.push({pts:[[q.p[0]-q.n[0]*amp,q.p[1]-q.n[1]*amp],[q.p[0]+q.n[0]*amp,q.p[1]+q.n[1]*amp]],color:col,w:lw*0.8});}}
+    else{ // ornament (8): mostly line, occasionally replaced by an object
         let seg=[],next=3+Math.floor(rnd()*5);
         for(let i=0;i<rs.length;i++){seg.push(rs[i].p);
             if(i>=next&&i<rs.length-2){if(seg.length>=2)L.push({pts:seg,color:col,w:lw});
@@ -150,7 +180,7 @@ function fieldContours(field){
     const N=82,step=2*R/(N-1),mp=i=>-R+i*step,vals=new Float32Array(N*N);
     for(let j=0;j<N;j++)for(let i=0;i<N;i++)vals[j*N+i]=field(mp(i),mp(j));
     const sample=(i,j)=>vals[j*N+i];let out=[];
-    const K=14;                                       // many levels → space-filling
+    const K=9;                                        // odd → a level lands on 0.5 (e.g. Chladni nodes); plottable density
     for(let li=1;li<=K;li++)out=out.concat(PR4.contourLines(sample,N,N,li/(K+1),mp,mp));
     return out;
 }
@@ -164,16 +194,74 @@ function truchetLines(g){const cells=2+Math.floor(g[4]*3),s=2*R/cells,rad=s/2,ou
         const bit=(Math.sin((xi*7.1+yi*13.3+g[9]*61)*1.3)*0.5+0.5)>0.5;
         if(bit){out.push(arc(x0,y0,0));out.push(arc(x0+s,y0+s,Math.PI));}else{out.push(arc(x0+s,y0,Math.PI/2));out.push(arc(x0,y0+s,-Math.PI/2));}}
     return out;}
-function perspLines(freq){const out=[],rows=9;
-    for(let r=0;r<=rows;r++){const t=r/rows,y=R-t*(R*1.55),hw=R*(0.22+0.78*(1-t));out.push([[-hw,y],[hw,y]]);}
-    const cols=4+freq*2;for(let c=0;c<=cols;c++){const u=c/cols*2-1;out.push([[u*R,R],[u*R*0.22,R-R*1.55]]);}return out;}
+function perspLines(freq){const out=[],horizon=-R*0.82,rows=10+Math.floor(freq*1.8),cols=8+freq*3;
+    for(let r=0;r<=rows;r++){const t=r/rows,y=R-t*(R-horizon);out.push([[-R,y],[R,y]]);}        // depth lines: full width, bottom→horizon (fills the plane)
+    for(let c=0;c<=cols;c++){const x=-R+c/cols*2*R;out.push([[x,R],[0,horizon]]);}                // orthogonals converge to a vanishing point on the horizon
+    return out;}
+function tunnelLines(g){const out=[],vx=(g[5]-0.5)*R*0.6,vy=(g[6]-0.5)*R*0.6,near=R*0.97,N=14+Math.floor(g[4]*16),tw=g[7]*Math.PI*2.6;
+    const ring=(t)=>{const s=1-t*0.97,cx=vx*t,cy=vy*t,h=near*s,a=t*tw,co=Math.cos(a),si=Math.sin(a);
+        return [[-h,-h],[h,-h],[h,h],[-h,h]].map(p=>[cx+p[0]*co-p[1]*si, cy+p[0]*si+p[1]*co]);};
+    for(let i=0;i<=N;i++){const c=ring(i/N);out.push([c[0],c[1],c[2],c[3],c[0]]);}                  // nested (twisting) rectangles toward the vanishing point
+    for(let k=0;k<4;k++){const rail=[];for(let i=0;i<=N;i++)rail.push(ring(i/N)[k]);out.push(rail);} // 4 corner rails → straight tunnel, or spirals when twisted
+    return out;}
 function hilbertLine(order){const H=hilbertCurve(order),n=H.n;return [H.pts.map(p=>[-R+(p[0]+0.5)/n*2*R,-R+(p[1]+0.5)/n*2*R])];}
+/* L-system space-filling / fractal curves — each ONE continuous polyline */
+const LSYS={
+    24:{ax:"X",ru:{X:"XFYFX+F+YFXFY-F-XFYFX",Y:"YFXFY-F-XFYFX+F+YFXFY"},an:90,draw:"F",base:2,it:1}, // Peano
+    25:{ax:"A",ru:{A:"A-B--B+A++AA+B-",B:"+A-BB--B-A++A+B"},an:60,draw:"AB",base:3,it:1},               // Gosper
+    26:{ax:"A",ru:{A:"B-A-B",B:"A+B+A"},an:60,draw:"AB",base:6,it:1},                                   // Sierpinski
+    27:{ax:"FX",ru:{X:"X+YF+",Y:"-FX-Y"},an:90,draw:"F",base:9,it:3},                                   // Drache
+    28:{ax:"LFL+F+LFL",ru:{L:"-RF+LFL+FR-",R:"+LF-RFR-FL+"},an:90,draw:"F",base:4,it:1}                  // Moore
+};
+function lsysCurve(macro,g){const d=LSYS[macro];let s=d.ax,it=d.base+Math.floor(g[4]*d.it);
+    for(let i=0;i<it;i++){let n="";for(const c of s)n+=(d.ru[c]!==undefined?d.ru[c]:c);s=n;}
+    const A=d.an*Math.PI/180;let x=0,y=0,a=0;const pts=[[0,0]];
+    for(const c of s){if(d.draw.indexOf(c)>=0){x+=Math.cos(a);y+=Math.sin(a);pts.push([x,y]);}else if(c==="+")a+=A;else if(c==="-")a-=A;}
+    let mnx=1e9,mny=1e9,mxx=-1e9,mxy=-1e9;for(const p of pts){if(p[0]<mnx)mnx=p[0];if(p[0]>mxx)mxx=p[0];if(p[1]<mny)mny=p[1];if(p[1]>mxy)mxy=p[1];}
+    const w=mxx-mnx||1,h=mxy-mny||1,sc=2*R*0.92/Math.max(w,h),mx=(mnx+mxx)/2,my=(mny+mxy)/2;
+    return [pts.map(p=>[(p[0]-mx)*sc,(p[1]-my)*sc])];}
+function circlePack(g,freq){const cols=3+freq,s=2*R/cols,out=[];
+    for(let yi=0;yi<cols;yi++)for(let xi=0;xi<cols;xi++){const cx=-R+(xi+0.5)*s,cy=-R+(yi+0.5)*s;
+        const r=s*0.5*(0.32+0.62*NOISE.fbm((xi+0.5)*0.8+g[9]*5,(yi+0.5)*0.8+g[10]*5,3)),c=[];
+        for(let k=0;k<=26;k++){const a=k/26*Math.PI*2;c.push([cx+Math.cos(a)*r,cy+Math.sin(a)*r]);}out.push(c);}
+    return out;}
+function stringArt(g,freq){const N=12+freq*6,out=[];
+    for(let i=0;i<=N;i++){const t=i/N;
+        out.push([[-R+t*2*R,-R],[R,-R+t*2*R]]);out.push([[R-t*2*R,R],[-R,R-t*2*R]]);}
+    return out;}
+const fit=(pts)=>{let a=1e9,b=1e9,c=-1e9,d=-1e9;for(const p of pts){if(p[0]<a)a=p[0];if(p[0]>c)c=p[0];if(p[1]<b)b=p[1];if(p[1]>d)d=p[1];}
+    const w=c-a||1,h=d-b||1,s=2*R*0.92/Math.max(w,h),mx=(a+c)/2,my=(b+d)/2;return pts.map(p=>[(p[0]-mx)*s,(p[1]-my)*s]);};
+function phylloLine(g){const N=180+Math.floor(g[4]*420),ga=Math.PI*(3-Math.sqrt(5)),c=R/Math.sqrt(N)*1.6,pts=[];
+    for(let i=0;i<N;i++){const a=i*ga,r=c*Math.sqrt(i);pts.push([Math.cos(a)*r,Math.sin(a)*r]);}return [pts];} // index-order = spiral line; stamp = sunflower dots
+function harmoLine(g){const f1=1+Math.floor(g[4]*4),f2=1+Math.floor(g[5]*4),p1=g[6]*6.28,p2=g[7]*6.28,d=0.0015+g[8]*0.004,pts=[];
+    for(let t=0;t<220;t+=0.06){const e=Math.exp(-d*t*30);const x=Math.sin(f1*t+p1)*e+Math.sin((f1+0.008)*t)*e*0.6,y=Math.sin(f2*t+p2)*e+Math.sin((f2+0.008)*t+1)*e*0.6;pts.push([x,y]);}return [fit(pts)];}
+function roseLine(g){const k=2+Math.floor(g[4]*6),maurer=g[5]>0.45,step=maurer?(11+Math.floor(g[6]*60)):0.5,pts=[];
+    for(let i=0;i<=720;i++){const th=i*step*Math.PI/180,r=Math.cos(k*th);pts.push([Math.cos(th)*r,Math.sin(th)*r]);}return [fit(pts)];}
+function torusLine(g){const p=2+Math.floor(g[4]*4),q=1+Math.floor(g[5]*4),pts=[];
+    for(let t=0;t<=Math.PI*2+0.02;t+=0.008){const rr=2+Math.cos(q*t);pts.push([Math.cos(p*t)*rr,Math.sin(p*t)*rr]);}return [fit(pts)];}
+function delaunayMesh(g){const rnd=PR4.mulberry32(((g[4]*1e6)^(g[9]*1e6))|0),N=16+Math.floor(g[5]*44),P=[];
+    for(let i=0;i<N;i++)P.push([(rnd()*2-1)*R*0.9,(rnd()*2-1)*R*0.9]);
+    const tris=PR4.delaunay(P),out=[],seen=new Set();
+    for(const t of tris)for(const[a,b]of[[t[0],t[1]],[t[1],t[2]],[t[2],t[0]]]){const k=Math.min(a,b)+"_"+Math.max(a,b);if(seen.has(k))continue;seen.add(k);out.push([P[a],P[b]]);}
+    return out;}
+function macroLines2(macro,g,freq){
+    if(macro===34)return phylloLine(g);
+    if(macro===35)return harmoLine(g);
+    if(macro===36)return roseLine(g);
+    if(macro===37)return torusLine(g);
+    if(macro===38)return delaunayMesh(g);
+    return null;}
 function macroLines(macro,g,field,freq){
     if(macro===15)return perspLines(freq);
     if(macro===16)return truchetLines(g);
     if(macro===17)return hilbertLine(4+Math.floor(g[4]*2));
     if(macro===18)return flowLines();
-    return fieldContours(field);
+    if(macro>=24&&macro<=28)return lsysCurve(macro,g);
+    if(macro===29)return circlePack(g,freq);
+    if(macro===30)return stringArt(g,freq);
+    if(macro>=34&&macro<=38)return macroLines2(macro,g,freq);
+    if(macro===39)return tunnelLines(g);
+    return fieldContours(field);                          // 31 Moiré-Ringe, 32 Sinus, 33 Chladni are scalar fields
 }
 function clipHero(poly){if(!HERO)return [poly];const out=[];let seg=[];
     for(const p of poly){if(!HERO.inside(p[0],p[1]))seg.push(p);else{if(seg.length>=2)out.push(seg);seg=[];}}
@@ -209,36 +297,54 @@ function pheno(g){
             case 11:{const X=cx*2.3,Y=-cy*2.3+0.32,val=Math.pow(X*X+Y*Y-1,3)-X*X*Y*Y*Y;f=cs(-val*2.4);break;}
             case 12:{const a2=Math.atan2(cy,cx),sr=0.2+0.26*(0.5+0.5*Math.cos(5*a2));f=cs((sr-rad)*20);break;}
             case 13: f=cs((0.42-Math.max(Math.abs(cx),Math.abs(cy)))*22);break;
-            default: f=cs((0.46-(Math.abs(cx)+Math.abs(cy)))*22);break;       // 14 + path macros fall here
+            case 19:{const bw=freq*2,ry=Math.floor(v*bw),of=ry%2?0.5:0,fx=Math.abs((((u*bw+of)%1)+1)%1-0.5),fy=Math.abs((((v*bw)%1)+1)%1-0.5);f=1-Math.min(fx,fy)*2;break;} // Ziegel
+            case 20: f=0.5+0.25*Math.sin(ru*freq*Math.PI*2)+0.25*Math.sin((ru*0.95+rv*0.31)*freq*1.15*Math.PI*2);break; // Moiré
+            case 21: f=0.5+0.166*(Math.sin(ru*freq*6)+Math.sin(rv*freq*5)+Math.sin((ru+rv)*freq*4));break; // Plasma
+            case 22: f=0.5+0.5*Math.sin(Math.atan2(cy,cx)*Math.max(2,freq*2));break; // Strahlen
+            case 23: f=0.5+0.5*Math.sin((ru+NOISE.fbm(u*3+ox,v*3+oy,4)*1.3)*Math.min(3,freq)*Math.PI*2);break; // Marmor (tamed)
+            case 31:{const d1=Math.hypot(cx-0.13,cy),d2=Math.hypot(cx+0.13,cy);f=0.5+0.25*Math.sin(d1*Math.min(3,freq)*16)+0.25*Math.sin(d2*Math.min(3,freq)*16);break;} // Moiré-Ringe
+            case 32: f=0.5+0.5*Math.sin(rv*Math.min(3,freq)*Math.PI*4+0.6*Math.sin(ru*Math.PI*2));break; // Sinus
+            case 33:{const n=1+Math.floor((g[4]*0.999)*4),mq=n+1+Math.floor((g[5]*0.999)*3); // Chladni nodal field (m≠n)
+                f=0.5+0.45*(Math.cos(n*Math.PI*u)*Math.cos(mq*Math.PI*v)-Math.cos(mq*Math.PI*u)*Math.cos(n*Math.PI*v));break;}
+            default: f=cs((0.46-(Math.abs(cx)+Math.abs(cy)))*22);break;       // 14 raute + fallback
         }
-        if(m>=10&&m<=14)f*=(0.5+0.7*NOISE.fbm(u*5+ox,v*5+oy,3));
+        if(m>=10&&m<=14)f*=(0.62+0.45*NOISE.fbm(u*5+ox,v*5+oy,3));
         f=(f-0.5)*contrast+0.5;f=f<0?0:f>1?1:f;return inv?1-f:f;
     }
-    const fieldA=(x,y)=>fieldOf(macroA,x,y);
-    // warp field: B displaces A. path macros warp like a flow; field macros warp along their gradient.
-    const AMP=130;
+    const isPathA=PATHM.has(macroA), isPathB=PATHM.has(macroB);
+    // CLEAN combination: two scalar fields blend algebraically (no geometry distortion → tidy).
+    const doBlend=!isPathA && !isPathB && macroA!==macroB && beta>0.05;
+    const bmode=Math.floor((g[13]*0.999)*3);
+    const fieldA=doBlend
+        ? (x,y)=>{const fa=fieldOf(macroA,x,y),fb=fieldOf(macroB,x,y);let f;
+            if(bmode===0)f=fa*(1-beta)+fb*beta;                         // morph
+            else if(bmode===1)f=0.5+2*(fa-0.5)*(fb-0.5)*(0.5+beta);     // interference (moiré-like)
+            else f=fa*(1-beta)+Math.max(fa,fb)*beta;                    // union
+            return f<0?0:f>1?1:f;}
+        : (x,y)=>fieldOf(macroA,x,y);
+    // WARP: only a SUBTLE geometric nudge, and only when a path/curve is involved (fields use blend instead).
+    const AMP=24, wbeta=Math.min(beta,0.5);
     function warp(x,y){
-        if(beta<0.02)return [x,y];
+        if(beta<0.02||doBlend)return [x,y];
         let wx,wy;
         if(macroB===18){const a=flowAngle(x,y);wx=Math.cos(a);wy=Math.sin(a);}
-        else if(macroB>=15&&macroB<=17){const a=flowAngle(x*1.4+11,y*1.4+4);wx=Math.cos(a);wy=Math.sin(a);}
+        else if(isPathB){const a=flowAngle(x*1.4+11,y*1.4+4);wx=Math.cos(a);wy=Math.sin(a);}
         else{const e=5,gx=fieldOf(macroB,x+e,y)-fieldOf(macroB,x-e,y),gy=fieldOf(macroB,x,y+e)-fieldOf(macroB,x,y-e);
             const gl=Math.hypot(gx,gy);if(gl<1e-4){wx=0;wy=0;}else{const m=Math.min(1,gl*12);wx=gx/gl*m;wy=gy/gl*m;}}
-        return [x+wx*beta*AMP, y+wy*beta*AMP];
+        return [x+wx*wbeta*AMP, y+wy*wbeta*AMP];
     }
 
     if(micro>=5){                                    // ── LINE family ──
         const lw=1.2+g[3]*0.9, amp=4+g[6]*11, fr=0.35+g[4]*0.5;
-        for(const poly of macroLines(macroA,g,fieldA,freq)){
+        let budget=9000;                             // point budget → keeps it plottable (no dense overlap)
+        outer:for(const poly of macroLines(macroA,g,fieldA,freq)){
             const wp=poly.map(p=>warp(p[0],p[1]));
-            for(const sub of clipHero(wp)) styleLine(lines,sub,micro,pal[0],lw,amp,fr,orn,ramp,rnd);}
+            for(const sub of clipHero(wp)){ styleLine(lines,sub,micro,pal[0],lw,amp,fr,orn,ramp,rnd); budget-=sub.length; if(budget<0)break outer; }}
     } else {                                         // ── STAMP family ──
         const stampW=(x,y,s,f,a,col)=>{if(f<0.06)return;const w=warp(x,y);if(HERO&&HERO.inside(w[0],w[1]))return;stampMark(lines,micro,w[0],w[1],s,f,a,col,ramp);};
-        if(macroA===15){const rows=12+Math.floor(g[4]*12);
-            for(let r=0;r<rows;r++){const t=r/rows,depth=1-t,y=R-t*(R*1.55),cols=4+freq*2,hw=R*(0.22+0.78*depth);
-                for(let c=0;c<=cols;c++){const x=-hw+c/cols*2*hw;stampW(x,y,cell*(0.25+depth),0.35+0.55*depth,mang,((r+c)%2)?pal[1]:pal[0]);}}
-        }else if(macroA===16){for(const ar of truchetLines(g))for(const p of ar)stampW(p[0],p[1],cell*0.85,0.72,mang,pal[0]);
-        }else if(macroA===17){const ord=4+Math.floor(g[4]*2),ln=hilbertLine(ord)[0];for(const p of ln)stampW(p[0],p[1],2*R/(1<<ord)*0.95,0.72,mang,pal[0]);
+        if(PATHM.has(macroA)&&macroA!==18){          // line/path macro → stud micro marks along it
+            for(const poly of macroLines(macroA,g,fieldA,freq)){const st=Math.max(1,Math.floor(poly.length/500));
+                for(let i=0;i<poly.length;i+=st)stampW(poly[i][0],poly[i][1],cell*0.8,0.7,mang,pal[0]);}
         }else{let row=0;for(let y=-R+cell*0.5;y<R;y+=cell*0.866,row++){const xo=row%2?cell/2:0;
             for(let x=-R+cell*0.5+xo;x<R;x+=cell){
                 let f,a=mang;if(macroA===18){a=flowAngle(x,y);f=0.62;}else f=fieldA(x,y);
@@ -292,23 +398,32 @@ function updateBreedBtn(){const on=selected.some(Boolean);document.getElementByI
 function randomize(){pop=Array.from({length:9},randGenome);selected=Array(9).fill(false);cells.forEach(c=>c.cell.classList.remove("sel"));updateBreedBtn();renderGrid();}
 const clamp01=v=>v<0?0:v>1?1:v, ri=n=>Math.floor(Math.random()*n);
 function breed(mode){const idx=[];for(let i=0;i<9;i++)if(selected[i])idx.push(i);if(!idx.length)return;
-    const parents=idx.map(i=>pop[i]),next=parents.map(p=>p.slice());
+    const parents=idx.map(i=>pop[i]),eliteN=parents.length,next=parents.map(p=>p.slice());
     if(mode==="klein"){while(next.length<9){const p=parents[ri(parents.length)].slice();
-        for(let i=2;i<GENES;i++)if(Math.random()<0.6)p[i]=clamp01(p[i]+(Math.random()*2-1)*0.16);next.push(p);}
-    }else{const IMM=2;                                   // mix of cross / descendant / self-cross + fresh blood
+        // refine: bigger nudges on the look-defining genes → variants differ visibly
+        for(let i=2;i<GENES;i++)if(Math.random()<0.7)p[i]=clamp01(p[i]+(Math.random()*2-1)*0.24);
+        if(Math.random()<0.5)p[15]=clamp01(p[15]+(Math.random()*2-1)*0.3);   // vary the blend amount
+        next.push(p);}
+    }else{const IMM=3;                                   // mostly clean tiles, gentle hybrids
         while(next.length<9-IMM){const a=parents[ri(parents.length)],r=Math.random();let c;
-            if(r<0.42){                                  // CROSS two parents → A from one, B from the other (blend)
-                const b=parents[ri(parents.length)];
+            if(r<0.30){const b=parents[ri(parents.length)];                  // CROSS two parents → gentle A×B blend
                 c=a.map((g,i)=>{let v=Math.random()<0.5?g:b[i];if(Math.random()<0.55)v+=(Math.random()*2-1)*0.3;return clamp01(v);});
-                c[0]=a[0];c[14]=b[14];if(c[15]<0.3)c[15]=0.4+Math.random()*0.45;
-            }else if(r<0.74){                            // DESCENDANT of one parent (no crossover, occasional drift)
-                c=a.map((g,i)=>{let v=g;if((i===1||i===11||i===12)&&Math.random()<0.3)v=Math.random();else if(Math.random()<0.6)v+=(Math.random()*2-1)*0.3;return clamp01(v);});
-                if(Math.random()<0.22)c[0]=Math.random();
-            }else{                                       // SELF-CROSS: a pattern warps itself (A×A)
+                c[0]=a[0];c[14]=b[14];if(c[15]<0.3)c[15]=0.3+Math.random()*0.4;       // visible blend (clean) / capped warp
+            }else if(r<0.78){                            // DESCENDANT of one parent — clean, keeps its look
+                c=a.map((g,i)=>{let v=g;if((i===1||i===11||i===12)&&Math.random()<0.32)v=Math.random();else if(Math.random()<0.6)v+=(Math.random()*2-1)*0.3;return clamp01(v);});
+                if(Math.random()<0.35)c[0]=Math.random();if(Math.random()<0.2)c[14]=Math.random();
+                if(Math.random()<0.7)c[15]=clamp01(c[15]*0.3);               // mostly little/no warp → tidy
+            }else{                                       // SELF-CROSS: gentle self-distortion
                 c=a.map(g=>{let v=g;if(Math.random()<0.6)v+=(Math.random()*2-1)*0.3;return clamp01(v);});
-                c[14]=c[0];if(c[15]<0.3)c[15]=0.4+Math.random()*0.45;}
+                c[14]=c[0];if(c[15]<0.18)c[15]=0.08+Math.random()*0.16;}
             next.push(c);}
-        while(next.length<9)next.push(randGenome());}
+        while(next.length<9)next.push(randGenome());
+        // diversity cap: no single macro fills more than 3 tiles → every generation stays varied
+        const cnt={};for(let i=0;i<eliteN;i++){const m=Math.floor(next[i][0]*NMACRO);cnt[m]=(cnt[m]||0)+1;}
+        for(let i=eliteN;i<9;i++){let m=Math.floor(next[i][0]*NMACRO),t=0;
+            while((cnt[m]||0)>=3&&t<16){next[i][0]=Math.random();m=Math.floor(next[i][0]*NMACRO);t++;}
+            cnt[m]=(cnt[m]||0)+1;}
+    }
     pop=next.slice(0,9);generation++;selected=Array(9).fill(false);cells.forEach(c=>c.cell.classList.remove("sel"));updateBreedBtn();renderGrid();}
 /* hero: a mask + an independent outline (negative-space monogram) */
 function buildHero(text){text=(text||"").trim();if(!text){HERO=null;return;}
@@ -333,8 +448,13 @@ window.__force=(arr)=>{arr.forEach((a,i)=>pop[i]=a);renderGrid();};
 function measureRamps(){const S=48,off=document.createElement("canvas");off.width=off.height=S;
     const o=off.getContext("2d",{willReadFrequently:true});o.textAlign="center";o.textBaseline="middle";o.font='600 '+Math.round(S*0.8)+'px '+FONT;
     if("fontVariationSettings" in o)o.fontVariationSettings="'FILL' 0";
-    GLYPHRAMPS=GLYPHSETS.map(set=>set.map(cp=>{o.clearRect(0,0,S,S);o.fillStyle="#000";o.fillText(String.fromCodePoint(cp),S/2,S/2+1);
-        const d=o.getImageData(0,0,S,S).data;let ink=0;for(let i=3;i<d.length;i+=4)if(d[i]>40)ink++;return{ch:String.fromCodePoint(cp),cov:ink/(S*S)};}).sort((a,b)=>a.cov-b.cov));}
+    GLYPHRAMPS=GLYPHSETS.map(set=>{
+        const scored=set.map(cp=>{o.clearRect(0,0,S,S);o.fillStyle="#000";o.fillText(String.fromCodePoint(cp),S/2,S/2+1);
+            const d=o.getImageData(0,0,S,S).data;let ink=0;for(let i=3;i<d.length;i+=4)if(d[i]>40)ink++;return{ch:String.fromCodePoint(cp),cov:ink/(S*S)};}).sort((a,b)=>a.cov-b.cov);
+        // drop solid/filled glyphs (high coverage) — a pen plotter can only stroke outlines
+        let outline=scored.filter(s=>s.cov<=0.28);
+        if(outline.length<2)outline=scored.slice(0,2);
+        return outline;});}
 buildGrid();randomize();
 (async()=>{try{await document.fonts.load('600 40px '+FONT,"★❤◆");await document.fonts.ready;measureRamps();renderGrid();}catch(_){}})();
 </script>
