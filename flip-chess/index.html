@@ -68,8 +68,9 @@
   .sq.sel{box-shadow:inset 0 0 0 4px var(--sel);}
   .sq.check{box-shadow:inset 0 0 0 5px var(--check);}
   .piece{position:relative;z-index:2;pointer-events:none;}
-  .piece.w{color:#fbf6ea;text-shadow:0 1px 1px #000,0 0 2px #000,1px 0 0 #3a3a3a,-1px 0 0 #3a3a3a,0 -1px 0 #3a3a3a;}
-  .piece.b{color:#201a1a;text-shadow:0 1px 1px rgba(255,255,255,.5),0 0 1px #000;}
+  /* solid glyphs for both colours; distinguished by a crisp fill + contrasting stroke */
+  .piece.w{color:#ffffff;-webkit-text-stroke:1.6px #222;text-shadow:0 1px 2px rgba(0,0,0,.45);}
+  .piece.b{color:#161616;-webkit-text-stroke:1.6px #000;text-shadow:0 1px 2px rgba(255,255,255,.25);}
   /* move indicators */
   .dot{position:absolute;width:30%;height:30%;border-radius:50%;background:var(--moveDot);z-index:1;pointer-events:none;}
   .ring{position:absolute;inset:8%;border-radius:50%;border:5px solid var(--capRing);z-index:1;pointer-events:none;}
