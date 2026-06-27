@@ -221,12 +221,13 @@
  Piece = {c:'w'|'b', t:'p'|'n'|'b'|'r'|'q'|'k', moved:bool}
 */
 const N=8;
-// Flip-Felder: vier versetzte Felder b6, c4, f5, g3 (row,col). Bewusst so platziert, dass
-// keine zwei benachbart sind und keine zwei auf gleicher Reihe/Linie/Diagonale liegen –
-// so kann weder der König von Feld zu Feld wandern noch ein Läufer/Turm zwischen zwei
-// Flip-Feldern pendeln. 180°-symmetrisch: b6<->g3, c4<->f5.
-// b6=(2,1) c4=(4,2) f5=(3,5) g3=(5,6)
-const FLIP=new Set(['2,1','4,2','3,5','5,6']);
+// Flip-Felder: vier versetzte Felder a5, d6, e3, h4 (row,col). So platziert, dass zwischen
+// je zwei Flip-Feldern KEIN einzelner Zug irgendeiner Figur möglich ist: verschiedene Reihe,
+// Linie und Diagonale (Turm/Läufer/Dame), keine Springerdistanz (Springer) und nicht
+// benachbart (König). Damit kann keine Figur zwischen zwei Flip-Feldern pendeln.
+// 180°-symmetrisch: d6<->e3, a5<->h4.
+// a5=(3,0) d6=(2,3) e3=(5,4) h4=(4,7)
+const FLIP=new Set(['3,0','2,3','5,4','4,7']);
 const isFlip=(r,c)=>FLIP.has(r+','+c);
 
 // Pieces are drawn as inline SVG (see the #pc-* symbols in the markup) instead of font
