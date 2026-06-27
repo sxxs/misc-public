@@ -167,7 +167,12 @@ const N=8;
 const FLIP=new Set(['4,3','4,4','3,3','3,4']);
 const isFlip=(r,c)=>FLIP.has(r+','+c);
 
-const GLY={k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'};
+// Solid chess glyphs (U+265A–265F) + U+FE0E variation selector. The selector forces
+// TEXT presentation: without it iOS renders some of these (notably the pawn) as a colored
+// emoji that ignores CSS color, making "white" pieces appear black. With it, every piece is
+// a monochrome shape filled by the CSS color/stroke below.
+const VS='\uFE0E';
+const GLY={k:'♚'+VS,q:'♛'+VS,r:'♜'+VS,b:'♝'+VS,n:'♞'+VS,p:'♟'+VS};
 
 // turn = Farbe am Zug. bottomColor = Farbe, die der untere Spieler (Spieler 1) gerade kontrolliert.
 // Das Brett rotiert NUR, wenn bottomColor schwarz ist (also nach einem Flip) – die Spieler
