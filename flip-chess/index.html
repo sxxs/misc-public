@@ -13,7 +13,7 @@
   :root{
     --light:#e9d8b8; --dark:#9b6b43; --flip:#7b3fb8; --flip2:#b066e6;
     --sel:#f6d860; --moveDot:rgba(40,40,40,.45); --capRing:rgba(200,40,40,.7);
-    --check:#e63946; --last:rgba(246,216,96,.45);
+    --check:#e63946; --last:rgba(245,205,70,.95);
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   html,body{height:100%;}
@@ -64,7 +64,7 @@
      radial-gradient(circle at 50% 50%, var(--flip2) 0%, var(--flip) 60%, #5a2a8a 100%);}
   .sq.flip::after{content:"⟲";position:absolute;font-size:.5em;color:rgba(255,255,255,.30);
      top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;font-weight:700;}
-  .sq.last{box-shadow:inset 0 0 0 100px var(--last);}
+  .sq.last{box-shadow:inset 0 0 0 4px var(--last);}
   .sq.sel{box-shadow:inset 0 0 0 4px var(--sel);}
   .sq.check{box-shadow:inset 0 0 0 5px var(--check);}
   /* Pieces are inline SVG, filled via currentColor with a dilated outline filter for
@@ -372,8 +372,13 @@ function applyMove(b,m,promoType){
   }
 }
 
-// all legal moves for `color`. A move onto a flip field is always legal (it flips control);
-// other moves must not leave own king in check.
+// all legal moves for `color`.
+//  - normal move: must not leave own king in check (standard chess).
+//  - flip move (lands on a flip field): control swaps, so the SAME colour moves again next.
+//    It may leave own king in check (that passes the check to the other player), BUT it must
+//    NOT put the OPPONENT's king in check: after the flip it would be this colour's move again
+//    and the opponent's king could simply be captured, which breaks the game. Such a flip is
+//    therefore illegal.
 function legalMoves(b,color,ep){
   const out=[];
   for(let r=0;r<N;r++)for(let c=0;c<N;c++){
@@ -381,9 +386,12 @@ function legalMoves(b,color,ep){
     if(!p||p.c!==color)continue;
     for(const m of pseudoFor(b,r,c,ep)){
       m.flip=isFlip(m.tr,m.tc);
-      if(m.flip){ out.push(m); continue; }      // flip move: always legal
       const nb=cloneBoard(b); applyMove(nb,m,'q');
-      if(!inCheck(nb,color)) out.push(m);
+      if(m.flip){
+        if(!inCheck(nb,opp(color))) out.push(m);   // flip ok unless it checks the opponent's king
+      } else {
+        if(!inCheck(nb,color)) out.push(m);         // normal move ok unless it self-checks
+      }
     }
   }
   return out;
