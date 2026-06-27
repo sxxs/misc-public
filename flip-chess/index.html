@@ -67,10 +67,13 @@
   .sq.last{box-shadow:inset 0 0 0 100px var(--last);}
   .sq.sel{box-shadow:inset 0 0 0 4px var(--sel);}
   .sq.check{box-shadow:inset 0 0 0 5px var(--check);}
-  .piece{position:relative;z-index:2;pointer-events:none;}
-  /* solid glyphs for both colours; distinguished by a crisp fill + contrasting stroke */
-  .piece.w{color:#ffffff;-webkit-text-stroke:1.6px #222;text-shadow:0 1px 2px rgba(0,0,0,.45);}
-  .piece.b{color:#161616;-webkit-text-stroke:1.6px #000;text-shadow:0 1px 2px rgba(255,255,255,.25);}
+  /* Pieces are inline SVG, filled via currentColor with a dilated outline filter for
+     contrast. No font glyphs -> identical on every browser (iOS drew chess Unicode as
+     colour emoji that ignored CSS, so "white" pieces came out black). */
+  .piece{position:relative;z-index:2;width:86%;height:86%;pointer-events:none;fill:currentColor;}
+  .piece.w{color:#f6f3ec;--eye:#1b1b1b;filter:url(#ol-dark) drop-shadow(0 1px 1px rgba(0,0,0,.4));}
+  .piece.b{color:#1b1b1b;--eye:#efe9dc;filter:url(#ol-light) drop-shadow(0 1px 1px rgba(0,0,0,.45));}
+  .promoRow .piece{width:100%;height:100%;}
   /* move indicators */
   .dot{position:absolute;width:30%;height:30%;border-radius:50%;background:var(--moveDot);z-index:1;pointer-events:none;}
   .ring{position:absolute;inset:8%;border-radius:50%;border:5px solid var(--capRing);z-index:1;pointer-events:none;}
@@ -104,6 +107,62 @@
 </style>
 </head>
 <body>
+  <!-- Vector chess pieces (hand-drawn, single document, recoloured via currentColor) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+   <filter id="ol-dark"><feMorphology in="SourceAlpha" operator="dilate" radius="1.1" result="d"/>
+     <feFlood flood-color="#1b1b1b" result="c"/><feComposite in="c" in2="d" operator="in" result="o"/>
+     <feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+   <filter id="ol-light"><feMorphology in="SourceAlpha" operator="dilate" radius="1.1" result="d"/>
+     <feFlood flood-color="#efe9dc" result="c"/><feComposite in="c" in2="d" operator="in" result="o"/>
+     <feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+
+   <symbol id="pc-p" viewBox="0 0 45 45">
+     <circle cx="22.5" cy="14" r="5.6"/>
+     <path d="M17 24 C15 27 14.6 30.5 15 33.5 H30 C30.4 30.5 30 27 28 24 C26.4 25.7 24.6 26.6 22.5 26.6 C20.4 26.6 18.6 25.7 17 24 Z"/>
+     <path d="M14.5 33 H30.5 L31.5 36 H13.5 Z"/>
+     <path d="M11 36 H34 L36 41 H9 Z"/>
+   </symbol>
+   <symbol id="pc-r" viewBox="0 0 45 45">
+     <path d="M12.5 11 H15.5 V13.5 H18.5 V11 H21 V13.5 H24 V11 H26.5 V13.5 H29.5 V11 H32.5 V17 H12.5 Z"/>
+     <path d="M14.5 17 H30.5 L29.5 24 H15.5 Z"/>
+     <path d="M15.5 24 H29.5 L31 33 H14 Z"/>
+     <path d="M12.5 33 H32.5 L34 37 H11 Z"/>
+     <path d="M9.5 37 H35.5 L37 41 H8 Z"/>
+   </symbol>
+   <symbol id="pc-b" viewBox="0 0 45 45">
+     <circle cx="22.5" cy="7.5" r="2.4"/>
+     <path d="M22.5 10 C18 12 16 16 16 20 C16 23.5 18.5 26 22.5 26.5 C26.5 26 29 23.5 29 20 C29 16 27 12 22.5 10 Z"/>
+     <path d="M16 27 C13.5 29.5 13 32 13 34 H32 C32 32 31.5 29.5 29 27 C27 28.6 25 29.4 22.5 29.4 C20 29.4 18 28.6 16 27 Z"/>
+     <path d="M12.5 34 H32.5 L34 38 H11 Z"/>
+     <path d="M9.5 38 H35.5 L37 41 H8 Z"/>
+   </symbol>
+   <symbol id="pc-q" viewBox="0 0 45 45">
+     <circle cx="11" cy="11" r="2.4"/><circle cx="22.5" cy="9" r="2.6"/><circle cx="34" cy="11" r="2.4"/>
+     <path d="M11 12 L14.5 24 H30.5 L34 12 L28 20 L24.5 9.5 L22.5 21 L20.5 9.5 L17 20 Z"/>
+     <path d="M14.5 24 H30.5 L32 31 H13 Z"/>
+     <path d="M12.5 31 H32.5 L34 35.5 H11 Z"/>
+     <path d="M10 35.5 H35 L37 41 H8 Z"/>
+   </symbol>
+   <symbol id="pc-k" viewBox="0 0 45 45">
+     <path d="M21 4 H24 V7 H27 V10 H24 V14 H21 V10 H18 V7 H21 Z"/>
+     <path d="M22.5 14 C19 14 16 17 16 21 C16 24 18.5 26.5 22.5 27 C26.5 26.5 29 24 29 21 C29 17 26 14 22.5 14 Z"/>
+     <path d="M14 27 C12.5 29.5 12 32 12 34 H33 C33 32 32.5 29.5 31 27 C28.5 28.8 25.5 29.6 22.5 29.6 C19.5 29.6 16.5 28.8 14 27 Z"/>
+     <path d="M11.5 34 H33.5 L35 38 H10 Z"/>
+     <path d="M8.5 38 H36.5 L38 41 H7 Z"/>
+   </symbol>
+   <symbol id="pc-n" viewBox="0 0 45 45">
+     <path d="M27.5 33.5 C28.2 28 27.5 23.5 24.5 20.5 C22 18 18.5 17 16.5 17.6
+       C16.8 16 17.6 14.4 19 13.2 L20.6 15.4 L22 11.4 L23.6 13.8
+       C26.5 11.8 30 12.5 32 15.5 C34 18.5 34.5 23 34 28 V33.5 Z
+       M16.5 17.6 C14.5 18.6 12.8 20.4 12 22.6 C13.4 22 14.8 22 15.8 22.6
+       C13.5 24.5 12 27 12.5 29.5 C13.2 28 14.4 27 16 26.8
+       C15.6 29 16 31.5 17.5 33.5 H27.5 Z"/>
+     <circle cx="20.5" cy="20" r="1.3" fill="var(--eye)"/>
+     <path d="M12.5 33.5 H32 L33.5 37.5 H11 Z"/>
+     <path d="M9.5 37.5 H34 L35.5 41 H8 Z"/>
+   </symbol>
+  </defs></svg>
+
   <h1>Flip&nbsp;Schach <small>v1.0</small></h1>
 
   <div class="status top" id="statusTop"></div>
@@ -118,8 +177,8 @@
     <button id="resetBtn">↺ Neues Spiel</button>
     <button id="rulesBtn">? Regeln</button>
   </div>
-  <div class="hint">Lila Felder sind <b>Flip-Felder</b>: ziehst du darauf, tauschen beide Spieler die Farbe.
-  Das Brett dreht sich nach jedem Zug zum nächsten Spieler.</div>
+  <div class="hint">Lila Felder sind <b>Flip-Felder</b>: ziehst du darauf, tauschen beide Spieler die Farbe –
+  das Brett dreht sich dann zum anderen Spieler. Sonst bleibt die Ansicht stehen.</div>
 
   <!-- promotion overlay -->
   <div class="overlay" id="promoOverlay">
@@ -167,12 +226,19 @@ const N=8;
 const FLIP=new Set(['4,3','4,4','3,3','3,4']);
 const isFlip=(r,c)=>FLIP.has(r+','+c);
 
-// Solid chess glyphs (U+265A–265F) + U+FE0E variation selector. The selector forces
-// TEXT presentation: without it iOS renders some of these (notably the pawn) as a colored
-// emoji that ignores CSS color, making "white" pieces appear black. With it, every piece is
-// a monochrome shape filled by the CSS color/stroke below.
-const VS='\uFE0E';
-const GLY={k:'♚'+VS,q:'♛'+VS,r:'♜'+VS,b:'♝'+VS,n:'♞'+VS,p:'♟'+VS};
+// Pieces are drawn as inline SVG (see the #pc-* symbols in the markup) instead of font
+// glyphs, so colours render identically everywhere — iOS/WebKit rendered the chess Unicode
+// characters as colour emoji that ignored CSS, making "white" pieces appear black.
+const SVGNS='http://www.w3.org/2000/svg';
+function pieceEl(color,type){
+  const svg=document.createElementNS(SVGNS,'svg');
+  svg.setAttribute('viewBox','0 0 45 45');
+  svg.setAttribute('class','piece '+color);
+  const use=document.createElementNS(SVGNS,'use');
+  use.setAttribute('href','#pc-'+type);
+  svg.appendChild(use);
+  return svg;
+}
 
 // turn = Farbe am Zug. bottomColor = Farbe, die der untere Spieler (Spieler 1) gerade kontrolliert.
 // Das Brett rotiert NUR, wenn bottomColor schwarz ist (also nach einem Flip) – die Spieler
@@ -346,7 +412,7 @@ function render(){
     if(kCheck&&kCheck.r===r&&kCheck.c===c) sq.classList.add('check');
     sq.dataset.r=r; sq.dataset.c=c;
     const p=board[r][c];
-    if(p){const pc=document.createElement('span');pc.className='piece '+p.c;pc.textContent=GLY[p.t];sq.appendChild(pc);}
+    if(p){sq.appendChild(pieceEl(p.c,p.t));}
     const mv=moveTo.get(r+'-'+c);
     if(mv){
       if(mv.flip){const d=document.createElement('div');d.className='flipdot';sq.appendChild(d);}
@@ -434,8 +500,7 @@ function askPromotion(color, cb){
   promoRow.innerHTML='';
   for(const t of ['q','r','b','n']){
     const b=document.createElement('div');
-    b.className='pbtn'; b.textContent=GLY[t];
-    b.style.color = color==='w' ? '#201a1a' : '#201a1a';
+    b.className='pbtn'; b.appendChild(pieceEl(color,t));
     b.addEventListener('click',()=>{promoOverlay.classList.remove('show');cb(t);});
     promoRow.appendChild(b);
   }
