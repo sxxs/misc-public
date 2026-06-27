@@ -195,10 +195,10 @@
       <h2>Flip Schach – Regeln</h2>
       <ul class="rulesList">
         <li>Es gelten die <b>normalen Schachregeln</b> (Rochade, En&nbsp;passant, Umwandlung inklusive).</li>
-        <li>Die vier <b>Flip-Felder</b> in der Mitte sind lila markiert.</li>
-        <li>Ziehst du mit einer Figur auf ein Flip-Feld, <b>tauschen beide Spieler die Farbe</b>: ab sofort spielst du mit der Farbe des anderen. Die <b>gleiche Farbe</b> ist gleich noch einmal am Zug – aber der andere Spieler bewegt sie.</li>
-        <li><b>Matt</b> = König im Schach, kein normaler Ausweg <b>und</b> kein Zug auf ein Flip-Feld möglich.</li>
-        <li>Steht dein König im Schach, du kannst aber auf ein Flip-Feld ziehen: Das ist <b>kein Matt</b> – du flippst und reichst das Schach an den anderen Spieler weiter.</li>
+        <li>Die vier <b>Flip-Felder</b> (lila) liegen versetzt über das Brett verteilt.</li>
+        <li>Ziehst du mit einer Figur auf ein Flip-Feld, <b>tauschen beide Spieler die Farbe</b>: ab sofort spielst du mit der Farbe des anderen. Die <b>gleiche Farbe</b> ist gleich noch einmal am Zug – aber der andere Spieler bewegt sie, und das Brett dreht sich.</li>
+        <li>Ein Zug auf ein Flip-Feld ist nur erlaubt, wenn danach <b>kein König im Schach steht</b>: Du kannst per Flip weder deinen König ins Schach ziehen noch dem Gegner Schach geben.</li>
+        <li><b>Matt</b> wie im normalen Schach: König im Schach und kein legaler Zug.</li>
         <li>Ziel: den Gegner mattsetzen.</li>
       </ul>
       <button class="primary" id="rulesClose">Verstanden</button>
@@ -221,9 +221,12 @@
  Piece = {c:'w'|'b', t:'p'|'n'|'b'|'r'|'q'|'k', moved:bool}
 */
 const N=8;
-// Flip-Felder: die vier Zentrumsfelder d4,e4,d5,e5  -> (row,col)
-// d4=(4,3) e4=(4,4) d5=(3,3) e5=(3,4)
-const FLIP=new Set(['4,3','4,4','3,3','3,4']);
+// Flip-Felder: vier versetzte Felder b6, c4, f5, g3 (row,col). Bewusst so platziert, dass
+// keine zwei benachbart sind und keine zwei auf gleicher Reihe/Linie/Diagonale liegen –
+// so kann weder der König von Feld zu Feld wandern noch ein Läufer/Turm zwischen zwei
+// Flip-Feldern pendeln. 180°-symmetrisch: b6<->g3, c4<->f5.
+// b6=(2,1) c4=(4,2) f5=(3,5) g3=(5,6)
+const FLIP=new Set(['2,1','4,2','3,5','5,6']);
 const isFlip=(r,c)=>FLIP.has(r+','+c);
 
 // Pieces are drawn as inline SVG (see the #pc-* symbols in the markup) instead of font
@@ -375,10 +378,10 @@ function applyMove(b,m,promoType){
 // all legal moves for `color`.
 //  - normal move: must not leave own king in check (standard chess).
 //  - flip move (lands on a flip field): control swaps, so the SAME colour moves again next.
-//    It may leave own king in check (that passes the check to the other player), BUT it must
-//    NOT put the OPPONENT's king in check: after the flip it would be this colour's move again
-//    and the opponent's king could simply be captured, which breaks the game. Such a flip is
-//    therefore illegal.
+//    It must lead to a QUIET position: NEITHER king may be in check afterwards. You therefore
+//    cannot move your own king into check via a flip, cannot leave it in check, and cannot give
+//    check by flipping. (Otherwise the side moving again could capture a king, or a king could
+//    dodge checks forever by hopping onto flip fields.)
 function legalMoves(b,color,ep){
   const out=[];
   for(let r=0;r<N;r++)for(let c=0;c<N;c++){
@@ -388,9 +391,9 @@ function legalMoves(b,color,ep){
       m.flip=isFlip(m.tr,m.tc);
       const nb=cloneBoard(b); applyMove(nb,m,'q');
       if(m.flip){
-        if(!inCheck(nb,opp(color))) out.push(m);   // flip ok unless it checks the opponent's king
+        if(!inCheck(nb,'w') && !inCheck(nb,'b')) out.push(m);  // flip only into a check-free position
       } else {
-        if(!inCheck(nb,color)) out.push(m);         // normal move ok unless it self-checks
+        if(!inCheck(nb,color)) out.push(m);                    // normal move ok unless it self-checks
       }
     }
   }
@@ -494,7 +497,7 @@ function evaluateEnd(){
     const loserSeat = activeSeat();
     const winnerSeat = 1-loserSeat;
     showEnd('Schachmatt!',
-      `Spieler ${loserSeat+1} (${colorName(turn)}) steht matt – kein Ausweg und kein Flip-Feld erreichbar.\n`+
+      `Spieler ${loserSeat+1} (${colorName(turn)}) steht matt.\n`+
       `Spieler ${winnerSeat+1} gewinnt! 🏆`);
   } else {
     showEnd('Patt','Kein legaler Zug, aber kein Schach. Unentschieden.');
