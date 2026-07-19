@@ -39,6 +39,16 @@ Der Wochenplan hat Mo-Fr je ein Essen (bevorzugt einfache Gerichte) und am Woche
 Mittag- und Abendessen; ein Wochenendplatz ist Pizza, Burger oder Grillen (Tag
 `grillen` bzw. Name), ein Platz gehört dem Entdeckungspool.
 
+Steuerung im Wochenplan:
+
+- **↻ Tauschen** ersetzt einen einzelnen Platz durch ein anderes passendes Gericht
+  (Klassiker- und Experiment-Plätze behalten ihre Rolle, solange sie die einzigen sind).
+- **Brotzeit-Woche**: Haken setzen, wenn Brot da ist - der Plan legt zweimal Brotzeit
+  auf Mo/Di oder Di/Mi (Gerichte mit Tag `brotzeit`).
+- **Pausierte Gerichte**: global abschalten, was gerade nicht geht (Raclette ohne
+  Gerät, Grillen ohne Grill-Saison). Fliegt aus dem Plan, Bewertungen bleiben; die
+  Pausenliste wandert mit dem Familien-Code auf die anderen Geräte.
+
 ## Gerichteliste ändern
 
 Die Liste steht in `dishes.json` (Felder: `n` Name, `b` Basis, `p` Protein, `e` Aufwand

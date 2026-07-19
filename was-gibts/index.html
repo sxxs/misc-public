@@ -149,6 +149,12 @@ ol.rank .meta{font-size:12px;color:var(--dim);margin-top:2px}
 textarea.code{width:100%;background:var(--tile);color:var(--chalk);border:0;border-radius:var(--r);padding:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;resize:vertical}
 textarea.code::placeholder{color:var(--dim)}
 .empty{background:var(--tile);border-radius:var(--r);padding:26px;color:var(--dim);font-size:15px}
+/* Wochenplan: Tauschen + Brotzeit-Toggle */
+.slot .swap{margin-top:10px;align-self:flex-start;background:rgba(243,238,226,.08);border:0;border-radius:var(--r);color:var(--dim);font-family:var(--body);font-size:12px;padding:6px 10px;cursor:pointer;transition:background .15s,color .15s}
+.slot .swap:hover{background:var(--tile-hi);color:var(--chalk)}
+.toggle{display:flex;gap:10px;align-items:center;background:var(--tile);border-radius:var(--r);padding:12px 14px;margin:0 0 12px;font-size:14px;cursor:pointer}
+.toggle input{width:18px;height:18px;accent-color:var(--mustard);flex-shrink:0}
+.toggle b{color:var(--mustard);font-weight:600}
 /* Was ist das? */
 .what{font-size:14px;color:var(--dim);margin:6px 0 0;line-height:1.4}
 .what b{color:var(--sage);font-weight:600}
@@ -232,6 +238,7 @@ let S={ratings:{},elo:{},duels:{}};   // ratings[pid][did] = 'gern'|'ok'|'nie'|'
 let tab="start", who=null, mem={}, note="", reviewList=false, bestWho="alle";
 
 function fresh(){
+  S.paused=S.paused||{};   // global pausierte Gerichte (Gerät fehlt o.ä.), id -> true
   PEOPLE.forEach(p=>{
     S.ratings[p.id]=S.ratings[p.id]||{};
     S.elo[p.id]=S.elo[p.id]||{};
@@ -303,6 +310,11 @@ function encodeFamily(){
   const push=(v,n)=>{ for(let i=n-1;i>=0;i--) bits.push((v>>i)&1); };
   push(3,4); push(7,3); push(DALL.length,9); push(PEOPLE.length,3);
   PEOPLE.forEach(p=>bitsPerson(push,p.id));
+  // Pausierte Gerichte hinten anhängen. Alte Decoder ignorieren die Extra-Bits,
+  // alte Codes lesen hier nur Null-Padding und ergeben 0 pausierte Gerichte.
+  const paused=Object.keys(S.paused||{}).filter(id=>S.paused[id]&&DALL[id]).slice(0,511);
+  push(paused.length,9);
+  paused.forEach(id=>push(+id,9));
   return toB64(bits);
 }
 function decode(code){
@@ -322,7 +334,10 @@ function decode(code){
   if(pi===7){
     const pc=take(3);
     if(pc!==PEOPLE.length) throw new Error("Der Familien-Code passt nicht zur Personenliste dieser Version.");
-    return {family:true,n,people:PEOPLE.map(p=>({pid:p.id,...takePerson()}))};
+    const people=PEOPLE.map(p=>({pid:p.id,...takePerson()}));
+    const paused={}, pn=take(9);
+    for(let i=0;i<pn;i++){ const id=take(9); if(DALL[id]) paused[id]=true; }
+    return {family:true,n,people,paused};
   }
   if(!PEOPLE[pi]) throw new Error("Unbekannte Person im Code.");
   return {family:false,n,pid:PEOPLE[pi].id,...takePerson()};
@@ -335,6 +350,7 @@ function applyCode(code){
     for(let i=0;i<p.n;i++){ if(q.ratings[i]) mine[i]=q.ratings[i]; else delete mine[i]; }
     S.ratings[q.pid]=mine; S.elo[q.pid]=q.elo; S.duels[q.pid]=q.duels;
   });
+  if(p.family) S.paused=p.paused||{};
   fresh(); save();
   return p.family?"Familien-Code, alle Personen":PEOPLE.find(x=>x.id===p.pid).name;
 }
@@ -662,46 +678,106 @@ function vErgebnis(v){
 }
 
 function vPlan(v){
-  const A=analyse().filter(a=>!a.veto.length&&a.done>0);
+  const A=analyse().filter(a=>!a.veto.length&&a.done>0&&!S.paused[a.d.id]);
   if(A.length<12){v.appendChild(el(`<div class="empty">Zu wenig bewertet für einen Wochenplan. Mindestens eine Person sollte durch sein.</div>`));return;}
   // Mo-Fr ein Essen (eher einfach), Sa/So jeweils Mittag- und Abendessen
   const SLOTS=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag Mittag","Samstag Abend","Sonntag Mittag","Sonntag Abend"];
   const WE=[5,6,7,8];
   const CAP={nudeln:2,spaetzle:1,teig:1,suess:1,suppe:1,kartoffel:2,reis:2,brot:2,sonst:3};
   const klassiker=a=>/Pizza|Burger/.test(a.d.n)||a.d.t.includes("grillen");
-  const build=()=>{
+  const topPool=()=>{
     const pool=[...A].sort((a,b)=>(b.min*2+b.sum)-(a.min*2+a.sum)).slice(0,44);
     for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+    return pool;
+  };
+  // Belegung zählen; skip = Platz, der gerade getauscht wird
+  const usedOf=(plan,skip)=>{
     const used={};let lief=0;
-    const fits=a=>(used[a.d.b]||0)<(CAP[a.d.b]||1)&&!(a.d.t.includes("liefern")&&lief>=1);
-    const put=a=>{used[a.d.b]=(used[a.d.b]||0)+1;if(a.d.t.includes("liefern"))lief++;};
+    plan.forEach((a,j)=>{ if(a&&j!==skip){ used[a.d.b]=(used[a.d.b]||0)+1; if(a.d.t.includes("liefern"))lief++; } });
+    return {used,lief};
+  };
+  const fitsIn=(plan,skip)=>a=>{
+    const {used,lief}=usedOf(plan,skip);
+    return (used[a.d.b]||0)<(CAP[a.d.b]||1)&&!(a.d.t.includes("liefern")&&lief>=1);
+  };
+  const build=()=>{
+    const pool=topPool();
     const plan=new Array(SLOTS.length).fill(null);
-    const free=pred=>pool.find(a=>!plan.includes(a)&&fits(a)&&(!pred||pred(a)));
-    // 1) Ein Wochenend-Klassiker: Pizza, Burger oder Grillen
+    const free=pred=>{const f=fitsIn(plan,-1);return pool.find(a=>!plan.includes(a)&&f(a)&&(!pred||pred(a)));};
+    // 1) Brotzeit-Woche: zweimal Brotzeit auf Mo+Di oder Di+Mi
+    if(S.brotwoche){
+      const pat=Math.random()<.5?[0,1]:[1,2];
+      for(const i of pat){ const a=free(z=>z.d.t.includes("brotzeit")); if(a)plan[i]=a; }
+    }
+    // 2) Ein Wochenend-Klassiker: Pizza, Burger oder Grillen
     const k=free(klassiker);
-    if(k){plan[WE[Math.floor(Math.random()*WE.length)]]=k;put(k);}
-    // 2) Ein Experiment aus dem Entdeckungspool, bevorzugt am Wochenende
+    if(k)plan[WE[Math.floor(Math.random()*WE.length)]]=k;
+    // 3) Ein Experiment aus dem Entdeckungspool, bevorzugt am Wochenende
     const x=free(a=>a.neu);
-    if(x){const s=WE.find(i=>!plan[i]);plan[s!==undefined?s:plan.indexOf(null)]=x;put(x);}
-    // 3) Wochentage: einfache Gerichte zuerst (Aufwand höchstens 2)
-    for(let i=0;i<5;i++){ if(plan[i])continue; const a=free(z=>z.d.e<=2)||free(); if(a){plan[i]=a;put(a);} }
-    // 4) Übrige Wochenendplätze
-    for(const i of WE){ if(plan[i])continue; const a=free(); if(a){plan[i]=a;put(a);} }
+    if(x){const s=WE.find(i=>!plan[i]);plan[s!==undefined?s:plan.indexOf(null)]=x;}
+    // 4) Wochentage: einfache Gerichte zuerst (Aufwand höchstens 2)
+    for(let i=0;i<5;i++){ if(plan[i])continue; const a=free(z=>z.d.e<=2)||free(); if(a)plan[i]=a; }
+    // 5) Übrige Wochenendplätze
+    for(const i of WE){ if(plan[i])continue; const a=free(); if(a)plan[i]=a; }
     return plan;
   };
   let plan=build();
+  // Einzelnen Platz austauschen; Rolle (Klassiker/Experiment) bleibt erhalten,
+  // wenn es der einzige Platz dieser Art ist
+  const swap=i=>{
+    const pool=topPool(), cur=plan[i], f=fitsIn(plan,i);
+    const cand=pred=>pool.find(a=>!plan.includes(a)&&f(a)&&(!pred||pred(a)));
+    let a=null;
+    if(cur&&WE.includes(i)&&klassiker(cur)&&!plan.some((p,j)=>j!==i&&p&&klassiker(p))) a=cand(klassiker);
+    else if(cur&&cur.neu&&!plan.some((p,j)=>j!==i&&p&&p.neu)) a=cand(z=>z.neu);
+    if(!a) a=i<5?(cand(z=>z.d.e<=2)||cand()):cand();
+    if(a){plan[i]=a;draw();}
+    else{note="Kein passender Ersatz frei – erst neu würfeln oder etwas anderes tauschen.";render();}
+  };
   const draw=()=>{
     box.innerHTML="";
     plan.forEach((a,i)=>{
-      if(!a){box.appendChild(el(`<div class="slot"><div class="day">${SLOTS[i]}</div><div class="dish">–</div><div class="tag">noch zu wenig bewertete Gerichte</div></div>`));return;}
-      box.appendChild(el(`<div class="slot${a.neu?" exp":""}"><div class="day">${SLOTS[i]}${a.neu?" · Experiment":""}</div><div class="dish">${esc(a.d.n)}</div><div class="tag">${BASE[a.d.b]} · ${a.d.e?"Aufwand "+"●".repeat(a.d.e):"geliefert"}</div></div>`));
+      const s=a
+        ?el(`<div class="slot${a.neu?" exp":""}"><div class="day">${SLOTS[i]}${a.neu?" · Experiment":""}</div><div class="dish">${esc(a.d.n)}</div><div class="tag">${BASE[a.d.b]} · ${a.d.e?"Aufwand "+"●".repeat(a.d.e):"geliefert"}</div><button class="swap">↻ Tauschen</button></div>`)
+        :el(`<div class="slot"><div class="day">${SLOTS[i]}</div><div class="dish">–</div><div class="tag">kein Gericht frei</div><button class="swap">↻ Tauschen</button></div>`);
+      s.querySelector(".swap").onclick=()=>swap(i);
+      box.appendChild(s);
     });
   };
-  v.appendChild(el(`<p class="muted">Unter der Woche ein Essen pro Tag, eher einfach. Am Wochenende Mittag- und Abendessen – eines davon ist Pizza, Burger oder Grillen, und ein Platz gehört einem Gericht aus dem Entdeckungspool. Höchstens zweimal Nudeln, einmal Spätzle, einmal Teig, eine Süßspeise, eine Suppe.</p>`));
+  v.appendChild(el(`<p class="muted">Unter der Woche ein Essen pro Tag, eher einfach. Am Wochenende Mittag- und Abendessen – eines davon ist Pizza, Burger oder Grillen, und ein Platz gehört einem Gericht aus dem Entdeckungspool. Höchstens zweimal Nudeln, einmal Spätzle, einmal Teig, eine Süßspeise, eine Suppe. „↻ Tauschen“ ersetzt nur diesen einen Platz.</p>`));
+  const bz=el(`<label class="toggle"><input type="checkbox"${S.brotwoche?" checked":""}> <span><b>Brotzeit-Woche:</b> Brot ist da – zweimal Brotzeit, Mo/Di oder Di/Mi</span></label>`);
+  bz.querySelector("input").onchange=e=>{S.brotwoche=e.target.checked;save();plan=build();draw();};
+  v.appendChild(bz);
   const box=el(`<div class="plan"></div>`); v.appendChild(box); draw();
   const r=el(`<div class="row"><button class="btn">Neu würfeln</button></div>`);
   r.firstChild.onclick=()=>{plan=build();draw();};
   v.appendChild(r);
+
+  // Pausierte Gerichte: gerade nicht machbar, fliegen aus dem Plan
+  v.appendChild(el(`<h3>Pausierte Gerichte</h3>`));
+  v.appendChild(el(`<p class="muted">Für alles, was gerade nicht geht – Raclette ohne Gerät, Grillen ohne Grill. Pausierte Gerichte landen nicht im Wochenplan, Bewertungen bleiben erhalten. Die Liste wandert mit dem Familien-Code auf die anderen Geräte.</p>`));
+  const pchips=el(`<div class="veto" style="margin-bottom:12px"></div>`);
+  const pids=Object.keys(S.paused).filter(id=>S.paused[id]&&DALL[id]);
+  if(!pids.length) pchips.appendChild(el(`<span>Gerade ist nichts pausiert.</span>`));
+  pids.forEach(id=>{
+    const c=el(`<span>${esc(DALL[id].n)}&nbsp;&nbsp;<b style="cursor:pointer;color:var(--mustard)">✕</b></span>`);
+    c.querySelector("b").onclick=()=>{delete S.paused[id];save();render();};
+    pchips.appendChild(c);
+  });
+  v.appendChild(pchips);
+  const ps=el(`<input class="searchbox" type="search" placeholder="Gericht zum Pausieren suchen …">`);
+  v.appendChild(ps);
+  const pres=el(`<div></div>`); v.appendChild(pres);
+  ps.oninput=()=>{
+    pres.innerHTML="";
+    const t=ps.value.trim().toLowerCase();
+    if(t.length<2)return;
+    D.filter(d=>d.n.toLowerCase().includes(t)&&!S.paused[d.id]).slice(0,8).forEach(d=>{
+      const row=el(`<div class="rev"><span class="nm">${esc(d.n)}</span><button class="btn ghost" style="padding:8px 14px">Pausieren</button></div>`);
+      row.querySelector("button").onclick=()=>{S.paused[d.id]=true;save();render();};
+      pres.appendChild(row);
+    });
+  };
 }
 
 loadDishes().then(()=>{load();render();}).catch(()=>{
