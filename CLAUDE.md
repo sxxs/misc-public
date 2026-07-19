@@ -13,7 +13,7 @@ misc-public/
 ├── jumpcat/                   # Christmas cat jump & run (v6.2)
 ├── neon-mind/                 # 2-player reaction game (v1.0.0)
 ├── hashcards-pwa/             # Spaced repetition flashcards (v1.0.0)
-├── was-gibts/                 # Family meal decider PWA (v1.2)
+├── was-gibts/                 # Family meal decider PWA (v1.3)
 ├── wiai25-enhance/            # Static demo
 ├── uni-bamberg-wrapper/       # University website wrapper with CORS proxy
 ├── uni-bamberg-mockup/        # Mockup and crawler for uni-bamberg
@@ -152,7 +152,7 @@ Fast-paced 2-player reaction game (v1.0.0).
 
 ### Was gibt's?
 
-Family meal decider PWA (v1.2). Static, no server, no accounts.
+Family meal decider PWA (v1.3). Static, no server, no accounts.
 
 **Workflow:**
 - People: Felix, Jakob, Moritz, Kathrin, Dominik (v1.1 "Eltern" state auto-migrates to both parents)
@@ -162,10 +162,14 @@ Family meal decider PWA (v1.2). Static, no server, no accounts.
 - Tablet aggregates results ("Ergebnis" incl. Bestenliste per person and overall)
   and builds a weekly plan ("Wochenplan")
 - Family code (person index 7) carries all persons at once - for pushing the
-  tablet's aggregate state back to every device
+  tablet's aggregate state back to every device; also carries the paused-dishes
+  list (appended block, backward/forward compatible with v1.2 codes)
 - Weekly plan: Mon-Fri one simple meal each (effort <= 2 preferred), Sat/Sun lunch +
   dinner; one weekend slot is pizza/burger/grilling (`grillen` tag or name match),
   one slot is an Entdeckungspool experiment
+- Plan controls: per-slot swap button (keeps klassiker/experiment role), Brotzeit-Woche
+  toggle (2x `brotzeit`-tagged dishes on Mon/Tue or Tue/Wed), pause list (globally
+  disable dishes, e.g. Raclette without the device - excluded from plan only)
 
 **Dish list (`dishes.json`):**
 - Position in the file is the dish's stable ID - append-only!
