@@ -149,6 +149,13 @@ ol.rank .meta{font-size:12px;color:var(--dim);margin-top:2px}
 textarea.code{width:100%;background:var(--tile);color:var(--chalk);border:0;border-radius:var(--r);padding:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;resize:vertical}
 textarea.code::placeholder{color:var(--dim)}
 .empty{background:var(--tile);border-radius:var(--r);padding:26px;color:var(--dim);font-size:15px}
+/* Was ist das? */
+.what{font-size:14px;color:var(--dim);margin:6px 0 0;line-height:1.4}
+.what b{color:var(--sage);font-weight:600}
+/* Übertragen: Ablauf-Schritte */
+.steps{margin:0 0 10px;padding-left:22px}
+.steps li{margin-bottom:10px;font-size:14px;line-height:1.5;color:var(--chalk)}
+.steps b{color:var(--mustard);font-weight:600}
 /* Revidier-Liste */
 .searchbox{width:100%;background:var(--tile);border:0;border-radius:var(--r);color:var(--chalk);padding:12px 14px;font-family:var(--body);font-size:16px;margin:14px 0 4px}
 .searchbox::placeholder{color:var(--dim)}
@@ -182,7 +189,8 @@ button:focus-visible,.person:focus-visible{outline:2px solid var(--mustard);outl
 
 <script>
 /* ---------- Daten ---------- */
-// b = Basis, p = Protein, e = Aufwand 1-3, t = Tags
+// b = Basis, p = Protein, e = Aufwand 0-3 (0 = wird geliefert), t = Tags,
+// w = kindgerechte Erklärung ("Was ist das?")
 // Die Gerichteliste liegt in dishes.json (siehe README: nur ans Ende anfügen,
 // nie mittendrin einfügen oder löschen; ausmustern per "aus": true).
 let DALL=[];   // alle Gerichte, Position = feste id (auch ausgemusterte)
@@ -198,7 +206,8 @@ const PEOPLE=[
   {id:"felix",name:"Felix"},
   {id:"jakob",name:"Jakob"},
   {id:"moritz",name:"Moritz"},
-  {id:"eltern",name:"Eltern"}
+  {id:"kathrin",name:"Kathrin"},
+  {id:"dominik",name:"Dominik"}
 ];
 
 // Vorbelegte Vetos aus dem, was ihr schon wisst – spart 30 Klicks pro Kind.
@@ -206,19 +215,21 @@ const SEED_NIE={
   felix:d=>d.p==="huhn"||d.p==="fisch",
   moritz:d=>d.p==="fisch"||d.t.includes("sushi")||d.t.includes("steak"),
   jakob:()=>false,
-  eltern:()=>false
+  kathrin:()=>false,
+  dominik:()=>false
 };
 const SEED_GERN={
-  felix:["Pulled-Pork-Burger","Cheeseburger selbst gemacht","Pommes mit drei Dips","Käsebrot mit Gurke und Karotte","Gurken-Avocado-Maki","Nudeln mit Ragù","Flammkuchen klassisch","Kaiserschmarren mit Apfelmus","Wraps mit Gurke und Tomate","Spätzle mit Rahmsauce"],
-  jakob:["Lachs-Nigiri und -Maki","Rumpsteak mit Kräuterbutter","Nudeln mit Ragù","Pizza Margherita","Flammkuchen klassisch","Kaiserschmarren mit Apfelmus","Apfelstrudel mit Vanillesauce","Wraps mit Hackfleisch und Gemüse","Spätzle mit Rahmsauce"],
+  felix:["Pulled-Pork-Burger","Cheeseburger selbst gemacht","Pommes mit drei Dips","Käsebrot mit Gurke und Karotte","Gurken-Avocado-Maki","Nudeln mit Hackfleischsauce","Flammkuchen klassisch","Kaiserschmarren mit Apfelmus","Wraps mit Gurke und Tomate","Spätzle mit Rahmsauce"],
+  jakob:["Lachs-Nigiri und -Maki","Rumpsteak mit Kräuterbutter","Nudeln mit Hackfleischsauce","Pizza Margherita","Flammkuchen klassisch","Kaiserschmarren mit Apfelmus","Apfelstrudel mit Vanillesauce","Wraps mit Hackfleisch und Gemüse","Spätzle mit Rahmsauce"],
   moritz:["Knusperhähnchen mit Pommes","Nudeln mit Tomatensauce","Pizza Margherita","Pommes mit drei Dips","Dampfnudeln mit Vanillesauce","Kaiserschmarren mit Apfelmus","Wraps mit Gurke und Tomate","Spätzle mit Rahmsauce"],
-  eltern:[]
+  kathrin:[],
+  dominik:[]
 };
 
 /* ---------- Zustand ---------- */
 const KEY="wasgibts:v2";
 let S={ratings:{},elo:{},duels:{}};   // ratings[pid][did] = 'gern'|'ok'|'nie'|'neu'
-let tab="start", who=null, mem={}, note="", reviewList=false;
+let tab="start", who=null, mem={}, note="", reviewList=false, bestWho="alle";
 
 function fresh(){
   PEOPLE.forEach(p=>{
@@ -238,6 +249,14 @@ let canStore=(()=>{try{localStorage.setItem("__t","1");localStorage.removeItem("
 function load(){
   const raw = canStore ? localStorage.getItem(KEY) : mem[KEY];
   if(raw){ try{ S=JSON.parse(raw); }catch(e){} }
+  if(S.ratings&&S.ratings.eltern){ // Migration: bis v1.1 gab es "Eltern" als gemeinsame Person
+    ["kathrin","dominik"].forEach(pid=>{
+      if(!S.ratings[pid]||!Object.keys(S.ratings[pid]).length) S.ratings[pid]={...S.ratings.eltern};
+      if(!S.elo[pid]) S.elo[pid]={...(S.elo.eltern||{})};
+      if(S.duels[pid]===undefined) S.duels[pid]=S.duels.eltern||0;
+    });
+    delete S.ratings.eltern; delete S.elo.eltern; delete S.duels.eltern;
+  }
   fresh();
   if(typeof S.seen==="number" && DALL.length>S.seen){
     const n=DALL.length-S.seen;
@@ -257,18 +276,34 @@ const ST=[null,"gern","ok","nie","neu"];
 /* Format v3: statt eines Listen-Hashs steht die Gerichtezahl im Code. Die Liste
    darf dadurch wachsen (nur ans Ende anfügen!): ein Code von einer älteren,
    kürzeren Liste bleibt lesbar, die neuen Gerichte sind einfach unbewertet. */
-function encode(pid){
-  const pi=PEOPLE.findIndex(p=>p.id===pid);
-  const bits=[];
-  const push=(v,n)=>{ for(let i=n-1;i>=0;i--) bits.push((v>>i)&1); };
-  push(3,4); push(pi,3); push(DALL.length,9); push(Math.min(S.duels[pid]||0,63),6);
+/* Personen-Code: eine Person. Familien-Code (Personen-Index 7): alle Personen in
+   einem Code – damit wandert der Gesamtstand vom Tablet zurück auf alle Geräte. */
+function bitsPerson(push,pid){
+  push(Math.min(S.duels[pid]||0,63),6);
   DALL.forEach(d=>push(ST.indexOf(S.ratings[pid][d.id]||null),3));
   const top=[...D].sort((a,b)=>(S.elo[pid][b.id]||1000)-(S.elo[pid][a.id]||1000)).slice(0,8);
   for(let i=0;i<8;i++) push(top[i]?top[i].id:511,9);
+}
+function toB64(bits){
   while(bits.length%6) bits.push(0);
   let out="";
   for(let i=0;i<bits.length;i+=6){ let v=0; for(let j=0;j<6;j++) v=v*2+bits[i+j]; out+=B64[v]; }
   return out;
+}
+function encode(pid){
+  const pi=PEOPLE.findIndex(p=>p.id===pid);
+  const bits=[];
+  const push=(v,n)=>{ for(let i=n-1;i>=0;i--) bits.push((v>>i)&1); };
+  push(3,4); push(pi,3); push(DALL.length,9);
+  bitsPerson(push,pid);
+  return toB64(bits);
+}
+function encodeFamily(){
+  const bits=[];
+  const push=(v,n)=>{ for(let i=n-1;i>=0;i--) bits.push((v>>i)&1); };
+  push(3,4); push(7,3); push(DALL.length,9); push(PEOPLE.length,3);
+  PEOPLE.forEach(p=>bitsPerson(push,p.id));
+  return toB64(bits);
 }
 function decode(code){
   code=code.trim().replace(/\s+/g,"");
@@ -276,22 +311,32 @@ function decode(code){
   for(const c of code){ const v=B64.indexOf(c); if(v<0) throw new Error("Der Code enthält ungültige Zeichen."); for(let i=5;i>=0;i--) bits.push((v>>i)&1); }
   let k=0; const take=n=>{ let v=0; for(let i=0;i<n;i++) v=v*2+(bits[k++]||0); return v; };
   if(take(4)!==3) throw new Error("Der Code stammt aus einer anderen Version der App. Auf beiden Geräten die Seite neu laden, Code neu erzeugen.");
-  const pi=take(3), n=take(9), du=take(6);
-  if(!PEOPLE[pi]) throw new Error("Unbekannte Person im Code.");
+  const pi=take(3), n=take(9);
   if(n>DALL.length) throw new Error("Der Code stammt von einer neueren Gerichteliste. Dieses Gerät erst neu laden, dann einlesen.");
-  const pid=PEOPLE[pi].id, r={};
-  for(let i=0;i<n;i++){ const v=take(3); if(ST[v]) r[i]=ST[v]; }
-  const elo={}; for(let i=0;i<8;i++){ const id=take(9); if(DALL[id]&&!DALL[id].aus) elo[id]=1200-i*25; }
-  return {pid,ratings:r,elo,duels:du,n};
+  const takePerson=()=>{
+    const du=take(6), r={};
+    for(let i=0;i<n;i++){ const v=take(3); if(ST[v]) r[i]=ST[v]; }
+    const elo={}; for(let i=0;i<8;i++){ const id=take(9); if(DALL[id]&&!DALL[id].aus) elo[id]=1200-i*25; }
+    return {ratings:r,elo,duels:du};
+  };
+  if(pi===7){
+    const pc=take(3);
+    if(pc!==PEOPLE.length) throw new Error("Der Familien-Code passt nicht zur Personenliste dieser Version.");
+    return {family:true,n,people:PEOPLE.map(p=>({pid:p.id,...takePerson()}))};
+  }
+  if(!PEOPLE[pi]) throw new Error("Unbekannte Person im Code.");
+  return {family:false,n,pid:PEOPLE[pi].id,...takePerson()};
 }
 function applyCode(code){
   const p=decode(code);
-  const mine=S.ratings[p.pid]||{};
-  // Nur Gerichte anfassen, die der Code kennt; danach ergänzte behalten ihren Stand.
-  for(let i=0;i<p.n;i++){ if(p.ratings[i]) mine[i]=p.ratings[i]; else delete mine[i]; }
-  S.ratings[p.pid]=mine; S.elo[p.pid]=p.elo; S.duels[p.pid]=p.duels;
+  (p.family?p.people:[p]).forEach(q=>{
+    const mine=S.ratings[q.pid]||{};
+    // Nur Gerichte anfassen, die der Code kennt; danach ergänzte behalten ihren Stand.
+    for(let i=0;i<p.n;i++){ if(q.ratings[i]) mine[i]=q.ratings[i]; else delete mine[i]; }
+    S.ratings[q.pid]=mine; S.elo[q.pid]=q.elo; S.duels[q.pid]=q.duels;
+  });
   fresh(); save();
-  return PEOPLE.find(x=>x.id===p.pid).name;
+  return p.family?"Familien-Code, alle Personen":PEOPLE.find(x=>x.id===p.pid).name;
 }
 function importFromHash(){
   const h=location.hash.replace(/^#c=/,"");
@@ -378,7 +423,7 @@ function vSichten(v){
   v.appendChild(el(`<div class="progress"><span>${p.name}</span><span>${done} von ${D.length}</span></div>`));
   v.appendChild(el(`<div class="bar"><i style="width:${done/D.length*100}%"></i></div>`));
   const chips=[BASE[d.b],d.e?"Aufwand "+"●".repeat(d.e):"wird geliefert"].concat(d.t.includes("bauteil")?["zum Selbstbauen"]:[]);
-  v.appendChild(el(`<div class="card" style="margin-top:16px"><p class="dish">${esc(d.n)}</p><div class="chips">${chips.map(c=>`<span class="chip">${c}</span>`).join("")}</div></div>`));
+  v.appendChild(el(`<div class="card" style="margin-top:16px"><p class="dish">${esc(d.n)}</p>${d.w?`<p class="what"><b>Was ist das?</b> ${esc(d.w)}</p>`:""}<div class="chips">${chips.map(c=>`<span class="chip">${c}</span>`).join("")}</div></div>`));
   const a=el(`<div class="answers">
     <button class="a-gern"><span>★</span>Gern</button>
     <button><span>~</span>Geht so</button>
@@ -466,28 +511,43 @@ function vDuell(v){
 }
 
 function vTeilen(v){
-  v.appendChild(el(`<p class="muted">Jeder füllt auf seinem eigenen Gerät aus. Am Ende erzeugt jeder seinen Code und überträgt ihn auf das Tablet – per QR-Scan, per Link oder indem er die Zeichen abtippt. Es geht nichts über einen Server, die Daten bleiben auf euren Geräten.</p>`));
+  v.appendChild(el(`<p class="muted">Es läuft nichts über einen Server – Stände wandern per QR-Code, Link oder abgetipptem Code direkt von Gerät zu Gerät.</p>`));
+
+  v.appendChild(el(`<h3>So läuft es ab</h3>`));
+  v.appendChild(el(`<ol class="steps">
+    <li><b>Jeder für sich:</b> auf dem eigenen Gerät sichten und Duelle spielen.</li>
+    <li><b>Abgeben:</b> jeder erzeugt unten seinen Code, das Tablet liest alle nacheinander ein. Die Reihenfolge ist egal – jeder Code ändert nur die eigene Person.</li>
+    <li><b>Auswerten:</b> auf dem Tablet stehen jetzt Ergebnis, Bestenliste und Wochenplan für die ganze Familie.</li>
+    <li><b>Zurückspielen:</b> das Tablet erzeugt den Familien-Code, jedes Gerät liest ihn ein – dann hat jeder den kompletten Familienstand. Achtung: Das überschreibt auf dem Gerät auch die eigene Person. Wer seit der Abgabe weiterbewertet hat, gibt erst wieder ab (Schritt 2) und liest dann zurück.</li>
+  </ol>`));
 
   v.appendChild(el(`<h3>Meinen Stand abgeben</h3>`));
   const sel=el(`<div class="row"></div>`);
   PEOPLE.forEach(p=>{
     const b=el(`<button class="btn ghost">${p.name}</button>`);
-    b.onclick=()=>showCode(p.id);
+    b.onclick=()=>showCode(encode(p.id));
     sel.appendChild(b);
   });
   v.appendChild(sel);
+
+  v.appendChild(el(`<h3>Familienstand weitergeben</h3>`));
+  v.appendChild(el(`<p class="muted">Für Schritt 4: den kompletten Stand aller Personen (z.&nbsp;B. vom Tablet) auf die anderen Geräte bringen.</p>`));
+  const fam=el(`<div class="row"><button class="btn ghost">Familien-Code erzeugen</button></div>`);
+  fam.firstChild.onclick=()=>showCode(encodeFamily());
+  v.appendChild(fam);
   const out=el(`<div id="out"></div>`); v.appendChild(out);
 
-  function showCode(pid){
-    const code=encode(pid), url=location.origin+location.pathname+"#c="+code;
+  function showCode(code){
+    const url=location.origin+location.pathname+"#c="+code;
     out.innerHTML="";
     out.appendChild(el(`<div class="card" style="padding:22px"><div id="qr" style="background:#fff;padding:12px;border-radius:3px;line-height:0"></div><p class="codetext">${code}</p></div>`));
     const r=el(`<div class="row"><button class="btn">Link kopieren</button><button class="btn ghost">Code kopieren</button></div>`);
     r.children[0].onclick=()=>navigator.clipboard.writeText(url).then(()=>{note="Link kopiert.";render();});
     r.children[1].onclick=()=>navigator.clipboard.writeText(code).then(()=>{note="Code kopiert.";render();});
     out.appendChild(r);
-    if(window.QRCode){ new QRCode(document.getElementById("qr"),{text:url,width:190,height:190,correctLevel:QRCode.CorrectLevel.M}); }
+    if(window.QRCode){ new QRCode(document.getElementById("qr"),{text:url,width:230,height:230,correctLevel:QRCode.CorrectLevel.L}); }
     else{ document.getElementById("qr").outerHTML='<p class="muted" style="line-height:1.5">QR-Bibliothek nicht geladen – nimm den Link oder den Code darunter.</p>'; }
+    out.scrollIntoView({behavior:"smooth",block:"nearest"});
   }
 
   v.appendChild(el(`<h3>Stand von jemandem einlesen</h3>`));
@@ -558,8 +618,36 @@ function vErgebnis(v){
   v.appendChild(el(`<h3>Fairster Kompromiss</h3>`));
   v.appendChild(el(`<p class="muted">Sortiert nach der schwächsten Stimme am Tisch. Diese Gerichte machen niemanden unglücklich – das ist etwas anderes als „die meisten Punkte“.</p>`));
   v.appendChild(list(byMin,"min"));
-  v.appendChild(el(`<h3>Meiste Punkte insgesamt</h3>`));
-  v.appendChild(list(byAll,"sum"));
+
+  v.appendChild(el(`<h3>Bestenliste</h3>`));
+  v.appendChild(el(`<p class="muted">Die Top-Gerichte – für alle zusammen oder für eine Person allein. Bei einer Person zählt die Sichtung, die Turnier-Duelle sortieren die Favoriten untereinander.</p>`));
+  const chips=el(`<div class="row" style="margin-bottom:12px"></div>`);
+  [["alle","Alle zusammen"]].concat(PEOPLE.map(p=>[p.id,p.name])).forEach(([id,label])=>{
+    const b=el(`<button class="btn ${bestWho===id?"":"ghost"}">${label}</button>`);
+    b.onclick=()=>{bestWho=id;render();};
+    chips.appendChild(b);
+  });
+  v.appendChild(chips);
+  if(bestWho==="alle"){
+    v.appendChild(list(byAll,"sum"));
+  }else{
+    const pn=PEOPLE.find(p=>p.id===bestWho).name;
+    const mine=D.filter(d=>{const r=S.ratings[bestWho][d.id];return r&&r!=="nie";})
+      .map(d=>{const r=S.ratings[bestWho][d.id];
+        return {d,r,score:(r==="gern"?2:r==="ok"?1:.5)+((S.elo[bestWho][d.id]||1000)-1000)/400};})
+      .sort((a,b)=>b.score-a.score).slice(0,15);
+    if(!mine.length){
+      v.appendChild(el(`<div class="empty">Für ${pn} ist noch nichts bewertet.</div>`));
+    }else{
+      const o=el(`<ol class="rank"></ol>`);
+      mine.forEach(m=>{
+        const c=m.r==="gern"?"f-gern":m.r==="ok"?"f-ok":"f-neu";
+        const word=m.r==="gern"?"gern":m.r==="ok"?"geht so":"kennt es noch nicht";
+        o.appendChild(el(`<li><div><div class="nm">${esc(m.d.n)}</div><div class="meta">${BASE[m.d.b]} · ${word}</div></div><div class="faces"><span class="face ${c}" title="${pn}">${pn[0]}</span></div></li>`));
+      });
+      v.appendChild(o);
+    }
+  }
   if(neu.length){
     v.appendChild(el(`<h3>Entdeckungspool</h3>`));
     v.appendChild(el(`<p class="muted">Kennt mindestens eins der Kinder nicht, und niemand hat Veto eingelegt. Genau hier liegt die Chance, aus der Nudel-Schleife rauszukommen.</p>`));
@@ -575,31 +663,41 @@ function vErgebnis(v){
 
 function vPlan(v){
   const A=analyse().filter(a=>!a.veto.length&&a.done>0);
-  if(A.length<10){v.appendChild(el(`<div class="empty">Zu wenig bewertet für einen Wochenplan. Mindestens eine Person sollte durch sein.</div>`));return;}
-  const DAYS=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
-  const CAP={nudeln:1,spaetzle:1,teig:1,suess:1,suppe:1,kartoffel:2,reis:2,brot:2,sonst:2};
+  if(A.length<12){v.appendChild(el(`<div class="empty">Zu wenig bewertet für einen Wochenplan. Mindestens eine Person sollte durch sein.</div>`));return;}
+  // Mo-Fr ein Essen (eher einfach), Sa/So jeweils Mittag- und Abendessen
+  const SLOTS=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag Mittag","Samstag Abend","Sonntag Mittag","Sonntag Abend"];
+  const WE=[5,6,7,8];
+  const CAP={nudeln:2,spaetzle:1,teig:1,suess:1,suppe:1,kartoffel:2,reis:2,brot:2,sonst:3};
+  const klassiker=a=>/Pizza|Burger/.test(a.d.n)||a.d.t.includes("grillen");
   const build=()=>{
-    const pool=[...A].sort((a,b)=>(b.min*2+b.sum)-(a.min*2+a.sum)).slice(0,34);
+    const pool=[...A].sort((a,b)=>(b.min*2+b.sum)-(a.min*2+a.sum)).slice(0,44);
     for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
-    const used={},plan=[];
-    const fits=a=>(used[a.d.b]||0)<CAP[a.d.b] && !(a.d.t.includes("liefern")&&(used.liefern||0)>=1);
-    const expl=pool.filter(a=>a.neu);
-    if(expl.length){const e=expl[0];plan.push(e);used[e.d.b]=1;if(e.d.t.includes("liefern"))used.liefern=1;}
-    for(const a of pool){
-      if(plan.length>=7)break;
-      if(plan.includes(a)||!fits(a))continue;
-      plan.push(a);used[a.d.b]=(used[a.d.b]||0)+1;if(a.d.t.includes("liefern"))used.liefern=(used.liefern||0)+1;
-    }
-    return plan.slice(0,7);
+    const used={};let lief=0;
+    const fits=a=>(used[a.d.b]||0)<(CAP[a.d.b]||1)&&!(a.d.t.includes("liefern")&&lief>=1);
+    const put=a=>{used[a.d.b]=(used[a.d.b]||0)+1;if(a.d.t.includes("liefern"))lief++;};
+    const plan=new Array(SLOTS.length).fill(null);
+    const free=pred=>pool.find(a=>!plan.includes(a)&&fits(a)&&(!pred||pred(a)));
+    // 1) Ein Wochenend-Klassiker: Pizza, Burger oder Grillen
+    const k=free(klassiker);
+    if(k){plan[WE[Math.floor(Math.random()*WE.length)]]=k;put(k);}
+    // 2) Ein Experiment aus dem Entdeckungspool, bevorzugt am Wochenende
+    const x=free(a=>a.neu);
+    if(x){const s=WE.find(i=>!plan[i]);plan[s!==undefined?s:plan.indexOf(null)]=x;put(x);}
+    // 3) Wochentage: einfache Gerichte zuerst (Aufwand höchstens 2)
+    for(let i=0;i<5;i++){ if(plan[i])continue; const a=free(z=>z.d.e<=2)||free(); if(a){plan[i]=a;put(a);} }
+    // 4) Übrige Wochenendplätze
+    for(const i of WE){ if(plan[i])continue; const a=free(); if(a){plan[i]=a;put(a);} }
+    return plan;
   };
   let plan=build();
   const draw=()=>{
     box.innerHTML="";
     plan.forEach((a,i)=>{
-      box.appendChild(el(`<div class="slot${a.neu?" exp":""}"><div class="day">${DAYS[i]}${a.neu?" · Experiment":""}</div><div class="dish">${esc(a.d.n)}</div><div class="tag">${BASE[a.d.b]} · ${a.d.e?"Aufwand "+"●".repeat(a.d.e):"geliefert"}</div></div>`));
+      if(!a){box.appendChild(el(`<div class="slot"><div class="day">${SLOTS[i]}</div><div class="dish">–</div><div class="tag">noch zu wenig bewertete Gerichte</div></div>`));return;}
+      box.appendChild(el(`<div class="slot${a.neu?" exp":""}"><div class="day">${SLOTS[i]}${a.neu?" · Experiment":""}</div><div class="dish">${esc(a.d.n)}</div><div class="tag">${BASE[a.d.b]} · ${a.d.e?"Aufwand "+"●".repeat(a.d.e):"geliefert"}</div></div>`));
     });
   };
-  v.appendChild(el(`<p class="muted">Harte Regeln: höchstens einmal Nudeln, einmal Spätzle, einmal Teig, eine Süßspeise, eine Suppe pro Woche. Genau ein Platz gehört einem Gericht aus dem Entdeckungspool – mit Brot oder Reis als Rückfallebene.</p>`));
+  v.appendChild(el(`<p class="muted">Unter der Woche ein Essen pro Tag, eher einfach. Am Wochenende Mittag- und Abendessen – eines davon ist Pizza, Burger oder Grillen, und ein Platz gehört einem Gericht aus dem Entdeckungspool. Höchstens zweimal Nudeln, einmal Spätzle, einmal Teig, eine Süßspeise, eine Suppe.</p>`));
   const box=el(`<div class="plan"></div>`); v.appendChild(box); draw();
   const r=el(`<div class="row"><button class="btn">Neu würfeln</button></div>`);
   r.firstChild.onclick=()=>{plan=build();draw();};

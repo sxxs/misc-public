@@ -13,7 +13,7 @@ misc-public/
 ├── jumpcat/                   # Christmas cat jump & run (v6.2)
 ├── neon-mind/                 # 2-player reaction game (v1.0.0)
 ├── hashcards-pwa/             # Spaced repetition flashcards (v1.0.0)
-├── was-gibts/                 # Family meal decider PWA (v1.1)
+├── was-gibts/                 # Family meal decider PWA (v1.2)
 ├── wiai25-enhance/            # Static demo
 ├── uni-bamberg-wrapper/       # University website wrapper with CORS proxy
 ├── uni-bamberg-mockup/        # Mockup and crawler for uni-bamberg
@@ -152,18 +152,27 @@ Fast-paced 2-player reaction game (v1.0.0).
 
 ### Was gibt's?
 
-Family meal decider PWA (v1.1). Static, no server, no accounts.
+Family meal decider PWA (v1.2). Static, no server, no accounts.
 
 **Workflow:**
+- People: Felix, Jakob, Moritz, Kathrin, Dominik (v1.1 "Eltern" state auto-migrates to both parents)
 - Each family member rates the dishes ("Sichtung"), optionally plays ranking duels ("Turnier")
 - Any rating can be revised later via the searchable list under "Sichtung"
 - State lives in `localStorage`; transfer between devices via QR code or typed code
-- Tablet aggregates results ("Ergebnis") and builds a weekly plan ("Wochenplan")
+- Tablet aggregates results ("Ergebnis" incl. Bestenliste per person and overall)
+  and builds a weekly plan ("Wochenplan")
+- Family code (person index 7) carries all persons at once - for pushing the
+  tablet's aggregate state back to every device
+- Weekly plan: Mon-Fri one simple meal each (effort <= 2 preferred), Sat/Sun lunch +
+  dinner; one weekend slot is pizza/burger/grilling (`grillen` tag or name match),
+  one slot is an Entdeckungspool experiment
 
 **Dish list (`dishes.json`):**
 - Position in the file is the dish's stable ID - append-only!
 - Never insert, delete, or reorder mid-file; retire dishes with `"aus": true` instead
-- Renaming and fixing fields (`b`, `p`, `e`, `t`) is safe; max 511 entries
+- Renaming and fixing fields (`b`, `p`, `e`, `t`, `w`) is safe; max 511 entries
+- `w` = kid-friendly "Was ist das?" explanation, shown on the Sichtung card
+- Kid-friendly dish names; explain foreign dishes via `w`
 - New dishes show up in everyone's Sichtung queue automatically
 - Transfer codes (format v3) carry the dish count, so codes from older/shorter
   lists stay readable after the list grows
