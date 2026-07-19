@@ -13,7 +13,7 @@ misc-public/
 ├── jumpcat/                   # Christmas cat jump & run (v6.2)
 ├── neon-mind/                 # 2-player reaction game (v1.0.0)
 ├── hashcards-pwa/             # Spaced repetition flashcards (v1.0.0)
-├── was-gibts/                 # Family meal decider PWA (v1.4)
+├── was-gibts/                 # Family meal decider PWA (v1.5)
 ├── wiai25-enhance/            # Static demo
 ├── uni-bamberg-wrapper/       # University website wrapper with CORS proxy
 ├── uni-bamberg-mockup/        # Mockup and crawler for uni-bamberg
@@ -152,7 +152,7 @@ Fast-paced 2-player reaction game (v1.0.0).
 
 ### Was gibt's?
 
-Family meal decider PWA (v1.4). Static, no server, no accounts.
+Family meal decider PWA (v1.5). Static, no server, no accounts.
 
 **Workflow:**
 - People: Felix, Jakob, Moritz, Kathrin, Dominik (v1.1 "Eltern" state auto-migrates to both parents)
@@ -175,6 +175,16 @@ Family meal decider PWA (v1.4). Static, no server, no accounts.
 - Tournament: per-dish duel counters (`S.dcnt`, device-local); demoting a favorite
   clears its Elo, re-promoted dishes get priority in duel pairing; per-person duel
   recommendation on start tiles and tournament reset button
+- Veto model: a single veto no longer blocks a dish - it is plannable with an
+  "Extrawurst" note for that person (max 2 per plan, max 1 per person, -1.5 score
+  malus); 2+ vetoes exclude it. Fairster Kompromiss stays veto-free.
+- Season tags: `sommer` dishes excluded from plan Nov-Mar, `winter` dishes May-Sep
+  (`inSeason()`, plan only)
+- Ergebnis analyses: Streit-Index (most polarizing), Unentdeckte Perlen (all rate
+  >= ok but outside plan's top-44 pool), Veto-Bilanz (sole-veto counts per person),
+  Turnier-Check (favorites losing most local duels)
+- Backup: full device state as JSON download/upload under "Übertragen" (covers
+  dcnt/plan/history/paused - more than the family code)
 
 **Dish list (`dishes.json`):**
 - Position in the file is the dish's stable ID - append-only!
