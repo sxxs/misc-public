@@ -161,6 +161,14 @@ textarea.code::placeholder{color:var(--dim)}
 .toggle{display:flex;gap:10px;align-items:center;background:var(--tile);border-radius:var(--r);padding:12px 14px;margin:0 0 12px;font-size:14px;cursor:pointer}
 .toggle input{width:18px;height:18px;accent-color:var(--mustard);flex-shrink:0}
 .toggle b{color:var(--mustard);font-weight:600}
+/* Einklappbare Abschnitte */
+details.fold{background:var(--tile);border-radius:var(--r);margin:10px 0;overflow:hidden}
+details.fold summary{cursor:pointer;list-style:none;font-family:var(--disp);font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mustard);padding:13px 16px;user-select:none}
+details.fold summary::-webkit-details-marker{display:none}
+details.fold summary::before{content:"▸ ";color:var(--dim)}
+details.fold[open] summary::before{content:"▾ ";color:var(--dim)}
+details.fold .foldbody{padding:2px 16px 16px}
+details.fold .foldbody h3{margin-top:14px}
 /* Was ist das? */
 .what{font-size:14px;color:var(--dim);margin:6px 0 0;line-height:1.4}
 .what b{color:var(--sage);font-weight:600}
@@ -474,7 +482,7 @@ function vSichten(v){
     };
   });
   v.appendChild(a);
-  const back=el(`<div class="row"><button class="btn ghost">Letzte Antwort ändern</button><button class="btn ghost">Alle Bewertungen ansehen</button><button class="btn ghost">Pause, anderer ist dran</button></div>`);
+  const back=el(`<div class="row"><button class="btn ghost">Letzte Antwort ändern</button><button class="btn ghost">Bewertungen ändern</button><button class="btn ghost">Pause, anderer ist dran</button></div>`);
   back.children[0].onclick=()=>{
     const order=shuffled(who), prev=order.slice(0,order.indexOf(d)).reverse().find(x=>S.ratings[who][x.id]);
     if(prev){delete S.ratings[who][prev.id];save();render();}
@@ -576,28 +584,25 @@ function vDuell(v){
 function vTeilen(v){
   v.appendChild(el(`<p class="muted">Es läuft nichts über einen Server – Stände wandern per QR-Code, Link oder abgetipptem Code direkt von Gerät zu Gerät.</p>`));
 
-  v.appendChild(el(`<h3>So läuft es ab</h3>`));
-  v.appendChild(el(`<ol class="steps">
+  v.appendChild(foldEl("Anleitung: So läuft es ab",false,el(`<ol class="steps">
     <li><b>Jeder für sich:</b> auf dem eigenen Gerät sichten und Duelle spielen.</li>
     <li><b>Abgeben:</b> jeder erzeugt unten seinen Code, das Tablet liest alle nacheinander ein. Die Reihenfolge ist egal – jeder Code ändert nur die eigene Person.</li>
     <li><b>Auswerten:</b> auf dem Tablet stehen jetzt Ergebnis, Bestenliste und Wochenplan für die ganze Familie.</li>
     <li><b>Zurückspielen:</b> das Tablet erzeugt den Familien-Code, jedes Gerät liest ihn ein – dann hat jeder den kompletten Familienstand. Achtung: Das überschreibt auf dem Gerät auch die eigene Person. Wer seit der Abgabe weiterbewertet hat, gibt erst wieder ab (Schritt 2) und liest dann zurück.</li>
-  </ol>`));
+  </ol>`)));
 
-  v.appendChild(el(`<h3>Meinen Stand abgeben</h3>`));
+  v.appendChild(el(`<h3>Code erzeugen</h3>`));
+  v.appendChild(el(`<p class="muted">Eine Person gibt ihren Stand ab. „Ganze Familie“ packt alle fünf in einen Code – damit spielt das Tablet seinen Gesamtstand (inkl. Pausenliste) zurück.</p>`));
   const sel=el(`<div class="row"></div>`);
   PEOPLE.forEach(p=>{
     const b=el(`<button class="btn ghost">${p.name}</button>`);
     b.onclick=()=>showCode(encode(p.id));
     sel.appendChild(b);
   });
+  const famB=el(`<button class="btn">Ganze Familie</button>`);
+  famB.onclick=()=>showCode(encodeFamily());
+  sel.appendChild(famB);
   v.appendChild(sel);
-
-  v.appendChild(el(`<h3>Familienstand weitergeben</h3>`));
-  v.appendChild(el(`<p class="muted">Für Schritt 4: den kompletten Stand aller Personen (z.&nbsp;B. vom Tablet) auf die anderen Geräte bringen.</p>`));
-  const fam=el(`<div class="row"><button class="btn ghost">Familien-Code erzeugen</button></div>`);
-  fam.firstChild.onclick=()=>showCode(encodeFamily());
-  v.appendChild(fam);
   const out=el(`<div id="out"></div>`); v.appendChild(out);
 
   function showCode(code){
@@ -613,7 +618,7 @@ function vTeilen(v){
     out.scrollIntoView({behavior:"smooth",block:"nearest"});
   }
 
-  v.appendChild(el(`<h3>Stand von jemandem einlesen</h3>`));
+  v.appendChild(el(`<h3>Code einlesen</h3>`));
   const ta=el(`<textarea class="code" rows="3" placeholder="Code hier einfügen oder abtippen"></textarea>`);
   v.appendChild(ta);
   const r2=el(`<div class="row"><button class="btn">Einlesen</button><button class="btn ghost">Mit Kamera scannen</button></div>`);
@@ -623,15 +628,13 @@ function vTeilen(v){
   };
   r2.children[1].onclick=()=>scan(v);
   v.appendChild(r2);
-  v.appendChild(el(`<p class="muted" style="margin-top:14px">Wenn das Scannen im Browser nicht geht, öffne den QR-Code einfach mit der normalen Kamera-App – der enthaltene Link öffnet diese Seite und liest den Stand direkt ein.</p>`));
+  v.appendChild(el(`<p class="muted" style="margin-top:14px">Scannen geht auch mit der normalen Kamera-App: Der Link im QR-Code öffnet diese Seite und liest den Stand direkt ein.</p>`));
 
   const st=el(`<h3>Wer ist schon eingelesen</h3>`); v.appendChild(st);
   const g=el(`<div class="veto"></div>`);
   PEOPLE.forEach(p=>{const n=rated(p.id);g.appendChild(el(`<span style="background:${n===D.length?'rgba(227,167,47,.2)':'rgba(243,238,226,.08)'}">${p.name}: ${n} von ${D.length}</span>`));});
   v.appendChild(g);
 
-  v.appendChild(el(`<h3>Sicherung</h3>`));
-  v.appendChild(el(`<p class="muted">Der komplette Stand dieses Geräts als Datei – auch Duell-Zähler, Pausenliste und der übernommene Plan, also mehr als der Familien-Code. Gut vor einem Gerätewechsel oder als Absicherung fürs Tablet.</p>`));
   const bk=el(`<div class="row"><button class="btn ghost">Backup herunterladen</button><button class="btn ghost">Backup einlesen</button></div>`);
   const file=el(`<input type="file" accept="application/json,.json" style="display:none">`);
   bk.children[0].onclick=()=>{
@@ -650,7 +653,9 @@ function vTeilen(v){
       render();
     });
   };
-  v.appendChild(bk); v.appendChild(file);
+  v.appendChild(foldEl("Sicherung (Backup-Datei)",false,
+    el(`<p class="muted">Der komplette Stand dieses Geräts als Datei – auch Duell-Zähler, Pausenliste und der übernommene Plan, also mehr als der Familien-Code. Gut vor einem Gerätewechsel.</p>`),
+    bk,file));
 }
 
 function backupJson(){
@@ -744,10 +749,18 @@ function vErgebnis(v){
       v.appendChild(o);
     }
   }
+  // Ab hier: Auswertungen als einklappbare Abschnitte, damit der Tab übersichtlich bleibt
+  const fold=(title,...kids)=>{
+    const f=el(`<details class="fold"><summary>${title}</summary><div class="foldbody"></div></details>`);
+    const b=f.querySelector(".foldbody");
+    kids.forEach(k=>b.appendChild(k));
+    v.appendChild(f);
+  };
+
   if(neu.length){
-    v.appendChild(el(`<h3>Entdeckungspool</h3>`));
-    v.appendChild(el(`<p class="muted">Kennt mindestens eins der Kinder nicht, und niemand hat Veto eingelegt. Genau hier liegt die Chance, aus der Nudel-Schleife rauszukommen.</p>`));
-    v.appendChild(list(neu,"sum"));
+    fold(`Entdeckungspool (${neu.length})`,
+      el(`<p class="muted">Kennt mindestens eins der Kinder nicht, und niemand hat Veto eingelegt. Genau hier liegt die Chance, aus der Nudel-Schleife rauszukommen.</p>`),
+      list(neu,"sum"));
   }
 
   // Streit-Index: größte Meinungsspreizung (mindestens 1x gern und 1x nie)
@@ -756,8 +769,6 @@ function vErgebnis(v){
     return {a,g,n:a.veto.length,score:Math.min(PEOPLE.filter(p=>a.r[p.id]==="gern").length,a.veto.length)*10+a.veto.length};
   }).filter(x=>x.g>=1&&x.n>=1).sort((x,y)=>y.score-x.score||y.a.sum-x.a.sum).slice(0,10);
   if(streit.length){
-    v.appendChild(el(`<h3>Streit-Index</h3>`));
-    v.appendChild(el(`<p class="muted">Die umstrittensten Gerichte: mehrere lieben sie, mindestens einer lehnt ab. Bei einem einzelnen Veto sind sie trotzdem planbar – die Person bekommt eine Extrawurst.</p>`));
     const o=el(`<ol class="rank"></ol>`);
     streit.forEach(x=>{
       const faces=PEOPLE.map(p=>{
@@ -767,7 +778,9 @@ function vErgebnis(v){
       }).join("");
       o.appendChild(el(`<li><div><div class="nm">${esc(x.a.d.n)}</div><div class="meta">${x.g}× gern gegen ${x.n}× nie (${x.a.veto.join(", ")})</div></div><div class="faces">${faces}</div></li>`));
     });
-    v.appendChild(o);
+    fold(`Streit-Index (${streit.length})`,
+      el(`<p class="muted">Die umstrittensten Gerichte: mehrere lieben sie, mindestens einer lehnt ab. Bei einem einzelnen Veto sind sie trotzdem planbar – die Person bekommt eine Extrawurst.</p>`),
+      o);
   }
 
   // Unentdeckte Perlen: planbar (höchstens 1 Veto) und allen anderen mindestens
@@ -776,9 +789,9 @@ function vErgebnis(v){
   const ranked=[...eligible].sort((a,b)=>(b.min*2+b.sum)-(a.min*2+a.sum));
   const perlen=ranked.slice(44).filter(a=>a.min>=1&&a.done>=4).slice(0,8);
   if(perlen.length){
-    v.appendChild(el(`<h3>Unentdeckte Perlen</h3>`));
-    v.appendChild(el(`<p class="muted">Planbar und bei allen (außer höchstens einem Veto) mindestens „geht so“ – aber der Wochenplan zieht sie fast nie, weil sie knapp unter den Top-Gerichten liegen. Gezielt eintauschen und pinnen.</p>`));
-    v.appendChild(list(perlen,"min"));
+    fold(`Unentdeckte Perlen (${perlen.length})`,
+      el(`<p class="muted">Planbar und bei allen (außer höchstens einem Veto) mindestens „geht so“ – aber der Wochenplan zieht sie fast nie, weil sie knapp unter den Top-Gerichten liegen. Gezielt eintauschen und pinnen.</p>`),
+      list(perlen,"min"));
   }
 
   // Veto-Bilanz: wer blockiert wie viel allein
@@ -787,12 +800,13 @@ function vErgebnis(v){
     return {p,solo,total:A.filter(a=>a.veto.includes(p.name)).length};
   }).filter(x=>x.total>0).sort((x,y)=>y.solo.length-x.solo.length);
   if(bilanz.length){
-    v.appendChild(el(`<h3>Veto-Bilanz</h3>`));
-    v.appendChild(el(`<p class="muted">Wer als Einziger blockiert, verursacht Extrawürste. Die Beispiele sind die Gerichte, die dem Rest am besten schmecken würden – die besten Kandidaten fürs Nochmal-Probieren.</p>`));
-    bilanz.forEach(x=>{
+    const rows=bilanz.map(x=>{
       const ex=x.solo.slice(0,3).map(a=>esc(a.d.n)).join(", ");
-      v.appendChild(el(`<p style="font-size:14px;margin-bottom:8px"><b style="color:var(--mustard)">${x.p.name}</b>: ${x.solo.length}× einziges Veto (${x.total} insgesamt)${ex?" – z.&nbsp;B. "+ex:""}</p>`));
+      return el(`<p style="font-size:14px;margin-bottom:8px"><b style="color:var(--mustard)">${x.p.name}</b>: ${x.solo.length}× einziges Veto (${x.total} insgesamt)${ex?" – z.&nbsp;B. "+ex:""}</p>`);
     });
+    fold("Veto-Bilanz",
+      el(`<p class="muted">Wer als Einziger blockiert, verursacht Extrawürste. Die Beispiele sind die Gerichte, die dem Rest am besten schmecken würden – die besten Kandidaten fürs Nochmal-Probieren.</p>`),
+      ...rows);
   }
 
   // Turnier-Check: Favoriten, die auf diesem Gerät fast jedes Duell verlieren
@@ -804,33 +818,37 @@ function vErgebnis(v){
       if(c>=3&&e<970) checks.push({p,d,c,e});
     });
   });
-  v.appendChild(el(`<h3>Turnier-Check</h3>`));
   if(checks.length){
-    v.appendChild(el(`<p class="muted">Diese Favoriten verlieren im Turnier fast immer – vielleicht ist „gern“ doch eher „geht so“? Unter „Sichtung“ lässt sich das revidieren.</p>`));
     const w=el(`<div class="veto"></div>`);
     checks.sort((a,b)=>a.e-b.e).slice(0,10).forEach(x=>
       w.appendChild(el(`<span>${x.p.name}: ${esc(x.d.n)} (${x.c} Duelle)</span>`)));
-    v.appendChild(w);
-  }else{
-    v.appendChild(el(`<p class="muted">Noch nichts auffällig. Dieser Check braucht Duelle auf dem jeweiligen Gerät – die Duell-Zähler wandern nicht im Code mit.</p>`));
+    fold(`Turnier-Check (${Math.min(checks.length,10)})`,
+      el(`<p class="muted">Diese Favoriten verlieren im Turnier fast immer – vielleicht ist „gern“ doch eher „geht so“? Unter „Sichtung“ lässt sich das revidieren.</p>`),
+      w);
   }
 
   const vet1=vet.filter(a=>a.veto.length===1), vet2=vet.filter(a=>a.veto.length>=2);
   if(vet1.length){
-    v.appendChild(el(`<h3>Mit Extrawurst machbar (${vet1.length})</h3>`));
-    v.appendChild(el(`<p class="muted">Genau ein Veto – im Wochenplan erlaubt, die Person bekommt etwas anderes.</p>`));
     const w=el(`<div class="veto"></div>`);
     vet1.forEach(a=>w.appendChild(el(`<span>${esc(a.d.n)} — ${a.veto[0]}</span>`)));
-    v.appendChild(w);
+    fold(`Mit Extrawurst machbar (${vet1.length})`,
+      el(`<p class="muted">Genau ein Veto – im Wochenplan erlaubt, die Person bekommt etwas anderes.</p>`),
+      w);
   }
   if(vet2.length){
-    v.appendChild(el(`<h3>Raus wegen Veto (${vet2.length})</h3>`));
     const w=el(`<div class="veto"></div>`);
     vet2.forEach(a=>w.appendChild(el(`<span>${esc(a.d.n)} — ${a.veto.join(", ")}</span>`)));
-    v.appendChild(w);
+    fold(`Raus wegen Veto (${vet2.length})`,w);
   }
 }
 
+// Einklappbarer Abschnitt (überall verwendbar)
+function foldEl(title,open,...kids){
+  const f=el(`<details class="fold"${open?" open":""}><summary>${title}</summary><div class="foldbody"></div></details>`);
+  const b=f.querySelector(".foldbody");
+  kids.forEach(k=>b.appendChild(k));
+  return f;
+}
 const SLOTS=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag Mittag","Samstag Abend","Sonntag Mittag","Sonntag Abend"];
 const extraFor=id=>PEOPLE.filter(p=>S.ratings[p.id][id]==="nie").map(p=>p.name);
 function planText(ids){
@@ -967,7 +985,9 @@ function vPlan(v){
       box.appendChild(s);
     });
   };
-  v.appendChild(el(`<p class="muted">Unter der Woche ein Essen pro Tag, eher einfach. Am Wochenende Mittag- und Abendessen – eines davon ist Pizza, Burger oder Grillen, ein Platz gehört dem Entdeckungspool. Gerichte der letzten Wochen werden gemieden. Ein einzelnes Veto blockiert nicht: höchstens zwei Gerichte pro Woche mit 🌭 Extrawurst, nie zweimal für dieselbe Person. „↻ Tauschen“ ersetzt einen Platz, „📌 Pinnen“ schützt ihn beim Neu-Würfeln. Passt alles: „Plan übernehmen“.${outSeason?` ${outSeason} Gericht${outSeason===1?" ist":"e sind"} gerade außerhalb der Saison.`:""}</p>`));
+  v.appendChild(el(`<p class="muted">Ein Vorschlag für die Woche. „↻“ tauscht einen einzelnen Platz, „📌“ schützt ihn beim Neu-Würfeln – und wenn alles passt: „Plan übernehmen“.</p>`));
+  v.appendChild(foldEl("So baut die App den Plan",false,
+    el(`<p class="muted">Mo–Fr ein Essen pro Tag, bevorzugt einfach (Aufwand ≤ 2). Sa/So jeweils Mittag- und Abendessen; eines davon ist Pizza, Burger oder Grillen, ein Platz gehört einem Experiment aus dem Entdeckungspool. Höchstens zweimal Nudeln, einmal Spätzle, einmal Teig, eine Süßspeise, eine Suppe. Gerichte der letzten zwei übernommenen Pläne werden gemieden (Brotzeit und Klassiker ausgenommen). Ein einzelnes Veto blockiert nicht: höchstens zwei Gerichte pro Woche mit 🌭 Extrawurst, nie zweimal für dieselbe Person – ab zwei Vetos ist ein Gericht raus. Saison-Gerichte (Raclette, Fondue, Grillen) pausieren automatisch im falschen Halbjahr.${outSeason?` Gerade außerhalb der Saison: ${outSeason} Gericht${outSeason===1?"":"e"}.`:""}</p>`)));
   const bz=el(`<label class="toggle"><input type="checkbox"${S.brotwoche?" checked":""}> <span><b>Brotzeit-Woche:</b> Brot ist da – zweimal Brotzeit, Mo/Di oder Di/Mi</span></label>`);
   bz.querySelector("input").onchange=e=>{S.brotwoche=e.target.checked;save();build(draft.map(x=>x&&x.pin?x:null));draw();};
   v.appendChild(bz);
@@ -983,8 +1003,9 @@ function vPlan(v){
   v.appendChild(r);
 
   // Pausierte Gerichte: gerade nicht machbar, fliegen aus dem Plan
-  v.appendChild(el(`<h3>Pausierte Gerichte</h3>`));
-  v.appendChild(el(`<p class="muted">Für alles, was gerade nicht geht – Raclette ohne Gerät, Grillen ohne Grill. Pausierte Gerichte landen nicht im Wochenplan, Bewertungen bleiben erhalten. Die Liste wandert mit dem Familien-Code auf die anderen Geräte.</p>`));
+  const npaused=Object.keys(S.paused).filter(id=>S.paused[id]&&DALL[id]).length;
+  const pbody=[];
+  pbody.push(el(`<p class="muted">Für alles, was gerade nicht geht – Raclette ohne Gerät, Grillen ohne Grill. Pausierte Gerichte landen nicht im Wochenplan, Bewertungen bleiben erhalten. Die Liste wandert mit dem Familien-Code auf die anderen Geräte.</p>`));
   const pchips=el(`<div class="veto" style="margin-bottom:12px"></div>`);
   const pids=Object.keys(S.paused).filter(id=>S.paused[id]&&DALL[id]);
   if(!pids.length) pchips.appendChild(el(`<span>Gerade ist nichts pausiert.</span>`));
@@ -993,10 +1014,11 @@ function vPlan(v){
     c.querySelector("b").onclick=()=>{delete S.paused[id];save();render();};
     pchips.appendChild(c);
   });
-  v.appendChild(pchips);
+  pbody.push(pchips);
   const ps=el(`<input class="searchbox" type="search" placeholder="Gericht zum Pausieren suchen …">`);
-  v.appendChild(ps);
-  const pres=el(`<div></div>`); v.appendChild(pres);
+  pbody.push(ps);
+  const pres=el(`<div></div>`); pbody.push(pres);
+  v.appendChild(foldEl(`Pausierte Gerichte (${npaused})`,false,...pbody));
   ps.oninput=()=>{
     pres.innerHTML="";
     const t=ps.value.trim().toLowerCase();
