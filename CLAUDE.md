@@ -13,6 +13,7 @@ misc-public/
 ├── jumpcat/                   # Christmas cat jump & run (v6.2)
 ├── neon-mind/                 # 2-player reaction game (v1.0.0)
 ├── hashcards-pwa/             # Spaced repetition flashcards (v1.0.0)
+├── was-gibts/                 # Family meal decider PWA (v1.0)
 ├── wiai25-enhance/            # Static demo
 ├── uni-bamberg-wrapper/       # University website wrapper with CORS proxy
 ├── uni-bamberg-mockup/        # Mockup and crawler for uni-bamberg
@@ -28,6 +29,7 @@ All projects are deployed via GitHub Pages from the `main` branch:
 - https://sxxs.github.io/misc-public/jumpcat/
 - https://sxxs.github.io/misc-public/neon-mind/
 - https://sxxs.github.io/misc-public/hashcards-pwa/
+- https://sxxs.github.io/misc-public/was-gibts/
 - https://sxxs.github.io/misc-public/wiai25-enhance/
 
 ### GitHub Pages Configuration
@@ -147,6 +149,21 @@ Fast-paced 2-player reaction game (v1.0.0).
 - Tailwind CSS for styling
 - Web Audio API for SFX and synthwave music
 - No build step required
+
+### Was gibt's?
+
+Family meal decider PWA (v1.0). Static, no server, no accounts.
+
+**Workflow:**
+- Each family member rates 100 dishes ("Sichtung"), optionally plays ranking duels ("Turnier")
+- State lives in `localStorage`; transfer between devices via QR code or typed code
+- Tablet aggregates results ("Ergebnis") and builds a weekly plan ("Wochenplan")
+
+**Technical:**
+- Single-file architecture (all logic and dish list `D` in `index.html`)
+- Changing the dish list invalidates old transfer codes
+- After changes, bump cache name `C` in `sw.js`
+- Offline-capable PWA (manifest + service worker + icons)
 
 ### Uni Bamberg Wrapper
 
