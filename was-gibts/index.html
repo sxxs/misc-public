@@ -149,6 +149,18 @@ ol.rank .meta{font-size:12px;color:var(--dim);margin-top:2px}
 textarea.code{width:100%;background:var(--tile);color:var(--chalk);border:0;border-radius:var(--r);padding:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;resize:vertical}
 textarea.code::placeholder{color:var(--dim)}
 .empty{background:var(--tile);border-radius:var(--r);padding:26px;color:var(--dim);font-size:15px}
+/* Revidier-Liste */
+.searchbox{width:100%;background:var(--tile);border:0;border-radius:var(--r);color:var(--chalk);padding:12px 14px;font-family:var(--body);font-size:16px;margin:14px 0 4px}
+.searchbox::placeholder{color:var(--dim)}
+.rev{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;background:var(--tile);border-radius:var(--r);padding:8px 12px;margin-bottom:2px}
+.rev .nm{flex:1 1 160px;font-size:14px}
+.rev .mini{display:flex;gap:4px}
+.rev .mini button{width:44px;height:44px;border:0;border-radius:var(--r);background:rgba(243,238,226,.08);color:var(--dim);cursor:pointer;font-size:16px;font-family:var(--body)}
+.rev .mini button:hover{background:var(--tile-hi);color:var(--chalk)}
+.rev .mini button.on-gern{background:var(--mustard);color:#12262B}
+.rev .mini button.on-ok{background:var(--tile-hi);color:var(--chalk)}
+.rev .mini button.on-nie{background:var(--tomato);color:#fff}
+.rev .mini button.on-neu{background:var(--sage);color:#12262B}
 button:focus-visible,.person:focus-visible{outline:2px solid var(--mustard);outline-offset:2px}
 @media (max-width:520px){
   .answers{grid-template-columns:repeat(2,1fr)}
@@ -162,7 +174,7 @@ button:focus-visible,.person:focus-visible{outline:2px solid var(--mustard);outl
 <div class="wrap">
 <header>
   <h1>Was gibt's<em>?</em></h1>
-  <p class="sub">100 Gerichte. Jeder sichtet einmal durch, dann entscheidet die Familie – und nicht der Kühlschrank um 18 Uhr.</p>
+  <p class="sub">Jeder sichtet die Gerichteliste einmal durch, dann entscheidet die Familie – und nicht der Kühlschrank um 18 Uhr.</p>
 </header>
 <nav class="tabs" id="tabs"></nav>
 <main id="view"></main>
@@ -171,108 +183,16 @@ button:focus-visible,.person:focus-visible{outline:2px solid var(--mustard);outl
 <script>
 /* ---------- Daten ---------- */
 // b = Basis, p = Protein, e = Aufwand 1-3, t = Tags
-const D=[
-{n:"Nudeln mit Ragù",b:"nudeln",p:"rind",e:3},
-{n:"Nudeln mit Tomatensauce",b:"nudeln",p:"veg",e:1},
-{n:"Spaghetti Aglio e Olio",b:"nudeln",p:"veg",e:1},
-{n:"Spaghetti Carbonara",b:"nudeln",p:"schwein",e:2},
-{n:"Nudelauflauf mit Schinken",b:"nudeln",p:"schwein",e:2},
-{n:"Mac & Cheese",b:"nudeln",p:"kaese",e:2},
-{n:"Lasagne",b:"nudeln",p:"rind",e:3},
-{n:"Yaki Udon mit Gemüse",b:"nudeln",p:"veg",e:2},
-{n:"Nudelsalat mit Pesto",b:"nudeln",p:"veg",e:1},
-{n:"Ramen mit Ei",b:"nudeln",p:"ei",e:3},
-{n:"Garnelen-Pasta",b:"nudeln",p:"fisch",e:2},
-{n:"Käsespätzle mit Röstzwiebeln",b:"spaetzle",p:"kaese",e:2},
-{n:"Spätzle mit Rahmsauce",b:"spaetzle",p:"veg",e:2},
-{n:"Linsen mit Spätzle und Saitenwurst",b:"spaetzle",p:"schwein",e:2},
-{n:"Krautspätzle",b:"spaetzle",p:"veg",e:2},
-{n:"Maultaschen geschmälzt",b:"spaetzle",p:"gemischt",e:1},
-{n:"Schupfnudeln mit Apfelmus",b:"spaetzle",p:"veg",e:2},
-{n:"Pizza Margherita",b:"teig",p:"kaese",e:2},
-{n:"Pizza Salami",b:"teig",p:"schwein",e:2},
-{n:"Pizza selbst belegen",b:"teig",p:"gemischt",e:2,t:["bauteil"]},
-{n:"Calzone",b:"teig",p:"gemischt",e:2},
-{n:"Flammkuchen klassisch",b:"teig",p:"schwein",e:2},
-{n:"Flammkuchen mit Ziegenkäse und Honig",b:"teig",p:"kaese",e:2},
-{n:"Flammkuchen selbst belegen",b:"teig",p:"gemischt",e:2,t:["bauteil"]},
-{n:"Käsebrot mit Gurke und Karotte",b:"brot",p:"kaese",e:1},
-{n:"Croque Monsieur",b:"brot",p:"schwein",e:1},
-{n:"Toast Hawaii",b:"brot",p:"schwein",e:1},
-{n:"Strammer Max",b:"brot",p:"ei",e:1},
-{n:"Brotzeitbrett",b:"brot",p:"gemischt",e:1,t:["bauteil"]},
-{n:"Baguette-Sandwiches selbst belegen",b:"brot",p:"gemischt",e:1,t:["bauteil"]},
-{n:"Fladenbrot mit Hummus und Gemüse",b:"brot",p:"veg",e:1,t:["bauteil"]},
-{n:"Pita mit Halloumi",b:"brot",p:"kaese",e:2},
-{n:"Pulled-Pork-Burger",b:"brot",p:"schwein",e:3},
-{n:"Cheeseburger selbst gemacht",b:"brot",p:"rind",e:2,t:["bauteil"]},
-{n:"Steak-Sandwich",b:"brot",p:"rind",e:2,t:["steak"]},
-{n:"Souvlaki-Spieße mit Fladenbrot",b:"brot",p:"schwein",e:2},
-{n:"Wraps mit Hackfleisch und Gemüse",b:"brot",p:"rind",e:2,t:["bauteil"]},
-{n:"Wraps mit Gurke und Tomate",b:"brot",p:"veg",e:1,t:["bauteil"]},
-{n:"Wraps mit Rührei",b:"brot",p:"ei",e:1,t:["bauteil"]},
-{n:"Tacos zum Selbstbauen",b:"brot",p:"gemischt",e:2,t:["bauteil"]},
-{n:"Quesadillas",b:"brot",p:"kaese",e:1},
-{n:"Fisch-Tacos",b:"brot",p:"fisch",e:2},
-{n:"Pommes mit drei Dips",b:"kartoffel",p:"veg",e:1},
-{n:"Currywurst mit Pommes",b:"kartoffel",p:"schwein",e:1},
-{n:"Chicken Wings mit Pommes",b:"kartoffel",p:"huhn",e:2},
-{n:"Knusperhähnchen mit Pommes",b:"kartoffel",p:"huhn",e:2},
-{n:"Fischstäbchen mit Kartoffelpüree",b:"kartoffel",p:"fisch",e:1},
-{n:"Kartoffelpuffer mit Apfelmus",b:"kartoffel",p:"veg",e:2},
-{n:"Ofenkartoffel mit Sour Cream",b:"kartoffel",p:"veg",e:2,t:["bauteil"]},
-{n:"Bratkartoffeln mit Spiegelei",b:"kartoffel",p:"ei",e:2},
-{n:"Kartoffelsalat mit Würstchen",b:"kartoffel",p:"schwein",e:2},
-{n:"Kartoffelgratin",b:"kartoffel",p:"kaese",e:3},
-{n:"Rösti mit Kräuterquark",b:"kartoffel",p:"veg",e:2},
-{n:"Pellkartoffeln mit Kräuterquark",b:"kartoffel",p:"veg",e:1},
-{n:"Tortilla Española",b:"kartoffel",p:"ei",e:2},
-{n:"Wedges aus dem Ofen mit Dips",b:"kartoffel",p:"veg",e:1},
-{n:"Frikadellen mit Kartoffelpüree",b:"kartoffel",p:"rind",e:2},
-{n:"Gyros mit Tzatziki und Pommes",b:"kartoffel",p:"schwein",e:2},
-{n:"Bratwurst mit Sauerkraut und Püree",b:"kartoffel",p:"schwein",e:2},
-{n:"Backfisch mit Remoulade",b:"kartoffel",p:"fisch",e:2},
-{n:"Gebratener Reis mit Ei",b:"reis",p:"ei",e:1},
-{n:"Hähnchen-Teriyaki mit Reis",b:"reis",p:"huhn",e:2},
-{n:"Butter Chicken mit Reis und Naan",b:"reis",p:"huhn",e:3},
-{n:"Mildes Gemüsecurry mit Reis",b:"reis",p:"veg",e:2},
-{n:"Bibimbap zum Selbstbauen",b:"reis",p:"gemischt",e:3,t:["bauteil"]},
-{n:"Sushi-Bowl zum Selbstbauen",b:"reis",p:"fisch",e:2,t:["bauteil","sushi"]},
-{n:"Gurken-Avocado-Maki",b:"reis",p:"veg",e:3,t:["sushi"]},
-{n:"Lachs-Nigiri und -Maki",b:"reis",p:"fisch",e:3,t:["sushi"]},
-{n:"Burrito Bowl",b:"reis",p:"gemischt",e:2,t:["bauteil"]},
-{n:"Lachsfilet mit Reis und Brokkoli",b:"reis",p:"fisch",e:2},
-{n:"Milchreis mit Zimt und Zucker",b:"reis",p:"veg",e:1,t:["suess"]},
-{n:"Tomatensuppe mit Croutons",b:"suppe",p:"veg",e:1},
-{n:"Kürbissuppe",b:"suppe",p:"veg",e:2},
-{n:"Kartoffelsuppe mit Würstchen",b:"suppe",p:"schwein",e:2},
-{n:"Gemüsesuppe mit Nudeleinlage",b:"suppe",p:"veg",e:2},
-{n:"Linsensuppe mit Brot",b:"suppe",p:"veg",e:2},
-{n:"Maultaschen in der Brühe",b:"suppe",p:"gemischt",e:1},
-{n:"Chili con Carne mit Brot",b:"sonst",p:"rind",e:3},
-{n:"Rumpsteak mit Kräuterbutter",b:"sonst",p:"rind",e:2,t:["steak"]},
-{n:"Frühlingsrollen",b:"sonst",p:"gemischt",e:2},
-{n:"Gyoza mit Dip",b:"sonst",p:"gemischt",e:3},
-{n:"Ofengemüse mit Feta",b:"sonst",p:"kaese",e:2},
-{n:"Zucchinipuffer mit Joghurtdip",b:"sonst",p:"veg",e:2},
-{n:"Shakshuka mit Brot",b:"sonst",p:"ei",e:2},
-{n:"Raclette",b:"sonst",p:"gemischt",e:2,t:["bauteil"]},
-{n:"Käsefondue",b:"sonst",p:"kaese",e:2,t:["bauteil"]},
-{n:"Fondue chinoise",b:"sonst",p:"gemischt",e:3,t:["bauteil"]},
-{n:"Kaiserschmarren mit Apfelmus",b:"suess",p:"ei",e:2,t:["suess"]},
-{n:"Apfelstrudel mit Vanillesauce",b:"suess",p:"veg",e:3,t:["suess"]},
-{n:"Dampfnudeln mit Vanillesauce",b:"suess",p:"veg",e:3,t:["suess"]},
-{n:"Pfannkuchen süß und herzhaft",b:"suess",p:"ei",e:2,t:["suess","bauteil"]},
-{n:"Dürüm mit Fleisch und Salat",b:"brot",p:"gemischt",e:2},
-{n:"Falafel-Dürüm",b:"brot",p:"veg",e:2},
-{n:"Döner-Teller mit Pommes",b:"kartoffel",p:"gemischt",e:2},
-{n:"Chicken Tikka Masala mit Reis",b:"reis",p:"huhn",e:0,t:["liefern"]},
-{n:"Dal mit Reis und Naan",b:"reis",p:"veg",e:0,t:["liefern"]},
-{n:"Palak Paneer mit Naan",b:"reis",p:"kaese",e:0,t:["liefern"]},
-{n:"Indische Platte zum Teilen",b:"reis",p:"gemischt",e:0,t:["liefern","bauteil"]},
-{n:"Samosas mit Chutney",b:"sonst",p:"veg",e:0,t:["liefern"]},
-{n:"Waffeln mit Beeren",b:"suess",p:"ei",e:2,t:["suess"]}
-].map((d,i)=>({id:i,t:[],...d}));
+// Die Gerichteliste liegt in dishes.json (siehe README: nur ans Ende anfügen,
+// nie mittendrin einfügen oder löschen; ausmustern per "aus": true).
+let DALL=[];   // alle Gerichte, Position = feste id (auch ausgemusterte)
+let D=[];      // nur aktive Gerichte, überall in der Oberfläche verwendet
+async function loadDishes(){
+  const res=await fetch("dishes.json",{cache:"no-cache"});
+  if(!res.ok) throw new Error("HTTP "+res.status);
+  DALL=(await res.json()).map((d,i)=>({id:i,t:[],...d}));
+  D=DALL.filter(d=>!d.aus);
+}
 
 const PEOPLE=[
   {id:"felix",name:"Felix"},
@@ -298,7 +218,7 @@ const SEED_GERN={
 /* ---------- Zustand ---------- */
 const KEY="wasgibts:v2";
 let S={ratings:{},elo:{},duels:{}};   // ratings[pid][did] = 'gern'|'ok'|'nie'|'neu'
-let tab="start", who=null, mem={}, note="";
+let tab="start", who=null, mem={}, note="", reviewList=false;
 
 function fresh(){
   PEOPLE.forEach(p=>{
@@ -319,6 +239,11 @@ function load(){
   const raw = canStore ? localStorage.getItem(KEY) : mem[KEY];
   if(raw){ try{ S=JSON.parse(raw); }catch(e){} }
   fresh();
+  if(typeof S.seen==="number" && DALL.length>S.seen){
+    const n=DALL.length-S.seen;
+    note=n+(n===1?" neues Gericht":" neue Gerichte")+" in der Liste – sie tauchen bei der Sichtung automatisch auf.";
+  }
+  S.seen=DALL.length; save();
   importFromHash();
 }
 function save(){
@@ -329,17 +254,17 @@ function save(){
 /* ---------- Übertragung: Zustand als kurzer Code ---------- */
 const B64="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 const ST=[null,"gern","ok","nie","neu"];
-function listHash(){ // 12 Bit, damit alte Codes nicht auf eine geänderte Gerichteliste treffen
-  let h=0; for(const d of D){ for(const c of d.n) h=(h*31+c.charCodeAt(0))&4095; } return h;
-}
+/* Format v3: statt eines Listen-Hashs steht die Gerichtezahl im Code. Die Liste
+   darf dadurch wachsen (nur ans Ende anfügen!): ein Code von einer älteren,
+   kürzeren Liste bleibt lesbar, die neuen Gerichte sind einfach unbewertet. */
 function encode(pid){
-  const pi=PEOPLE.findIndex(p=>p.id===pid), lh=listHash();
+  const pi=PEOPLE.findIndex(p=>p.id===pid);
   const bits=[];
   const push=(v,n)=>{ for(let i=n-1;i>=0;i--) bits.push((v>>i)&1); };
-  push(2,4); push(pi,3); push(lh,12); push(Math.min(S.duels[pid]||0,63),6);
-  D.forEach(d=>push(ST.indexOf(S.ratings[pid][d.id]||null),3));
+  push(3,4); push(pi,3); push(DALL.length,9); push(Math.min(S.duels[pid]||0,63),6);
+  DALL.forEach(d=>push(ST.indexOf(S.ratings[pid][d.id]||null),3));
   const top=[...D].sort((a,b)=>(S.elo[pid][b.id]||1000)-(S.elo[pid][a.id]||1000)).slice(0,8);
-  top.forEach(d=>push(d.id,7));
+  for(let i=0;i<8;i++) push(top[i]?top[i].id:511,9);
   while(bits.length%6) bits.push(0);
   let out="";
   for(let i=0;i<bits.length;i+=6){ let v=0; for(let j=0;j<6;j++) v=v*2+bits[i+j]; out+=B64[v]; }
@@ -350,18 +275,21 @@ function decode(code){
   const bits=[];
   for(const c of code){ const v=B64.indexOf(c); if(v<0) throw new Error("Der Code enthält ungültige Zeichen."); for(let i=5;i>=0;i--) bits.push((v>>i)&1); }
   let k=0; const take=n=>{ let v=0; for(let i=0;i<n;i++) v=v*2+(bits[k++]||0); return v; };
-  if(take(4)!==2) throw new Error("Der Code stammt aus einer anderen Version der App.");
-  const pi=take(3), lh=take(12), du=take(6);
+  if(take(4)!==3) throw new Error("Der Code stammt aus einer anderen Version der App. Auf beiden Geräten die Seite neu laden, Code neu erzeugen.");
+  const pi=take(3), n=take(9), du=take(6);
   if(!PEOPLE[pi]) throw new Error("Unbekannte Person im Code.");
-  if(lh!==listHash()) throw new Error("Der Code passt nicht zur aktuellen Gerichteliste. Alle müssen dieselbe Version benutzen.");
+  if(n>DALL.length) throw new Error("Der Code stammt von einer neueren Gerichteliste. Dieses Gerät erst neu laden, dann einlesen.");
   const pid=PEOPLE[pi].id, r={};
-  D.forEach(d=>{ const v=take(3); if(ST[v]) r[d.id]=ST[v]; });
-  const elo={}; for(let i=0;i<8;i++){ const id=take(7); if(D[id]) elo[id]=1200-i*25; }
-  return {pid,ratings:r,elo,duels:du};
+  for(let i=0;i<n;i++){ const v=take(3); if(ST[v]) r[i]=ST[v]; }
+  const elo={}; for(let i=0;i<8;i++){ const id=take(9); if(DALL[id]&&!DALL[id].aus) elo[id]=1200-i*25; }
+  return {pid,ratings:r,elo,duels:du,n};
 }
 function applyCode(code){
   const p=decode(code);
-  S.ratings[p.pid]=p.ratings; S.elo[p.pid]=p.elo; S.duels[p.pid]=p.duels;
+  const mine=S.ratings[p.pid]||{};
+  // Nur Gerichte anfassen, die der Code kennt; danach ergänzte behalten ihren Stand.
+  for(let i=0;i<p.n;i++){ if(p.ratings[i]) mine[i]=p.ratings[i]; else delete mine[i]; }
+  S.ratings[p.pid]=mine; S.elo[p.pid]=p.elo; S.duels[p.pid]=p.duels;
   fresh(); save();
   return PEOPLE.find(x=>x.id===p.pid).name;
 }
@@ -411,7 +339,7 @@ function render(){
   tabs.innerHTML="";
   T.forEach(([k,l])=>{
     const b=el(`<button role="tab" aria-selected="${tab===k}">${l}</button>`);
-    b.onclick=()=>{tab=k;render();};
+    b.onclick=()=>{tab=k;reviewList=false;render();};
     tabs.appendChild(b);
   });
   const v=document.getElementById("view"); v.innerHTML="";
@@ -420,12 +348,12 @@ function render(){
 }
 
 function vStart(v){
-  v.appendChild(el(`<p class="muted">Jeder geht die 100 Gerichte einmal durch und sagt bei jedem: gern, geht so, nie, oder kenn ich nicht. Was ihr schon sicher wisst, ist vorbelegt.</p>`));
+  v.appendChild(el(`<p class="muted">Jeder geht die ${D.length} Gerichte einmal durch und sagt bei jedem: gern, geht so, nie, oder kenn ich nicht. Was ihr schon sicher wisst, ist vorbelegt. Meinung geändert? Unter „Sichtung“ lässt sich jede Bewertung nachträglich umstellen.</p>`));
   const g=el(`<div class="people"></div>`);
   PEOPLE.forEach(p=>{
     const n=rated(p.id), pc=Math.round(n/D.length*100);
     const b=el(`<button class="person"><span class="nm">${p.name}</span><div class="bar"><i style="width:${pc}%"></i></div><span class="st">${n} von ${D.length} · ${S.duels[p.id]||0} Duelle</span></button>`);
-    b.onclick=()=>{who=p.id;tab=n<D.length?"sichten":"duell";render();};
+    b.onclick=()=>{who=p.id;reviewList=false;tab=n<D.length?"sichten":"duell";render();};
     g.appendChild(b);
   });
   v.appendChild(g);
@@ -437,11 +365,13 @@ function vStart(v){
 
 function vSichten(v){
   if(!who){v.appendChild(el(`<div class="empty">Wähle oben unter „Wer ist dran“ aus, wer gerade sichtet.</div>`));return;}
+  if(reviewList){vRevidieren(v);return;}
   const q=queue(who), p=PEOPLE.find(x=>x.id===who);
   if(!q.length){
-    v.appendChild(el(`<div class="empty">${p.name} ist durch – alle 100 bewertet. Weiter zum Turnier.</div>`));
-    const b=el(`<div class="row"><button class="btn">Zum Turnier</button></div>`);
-    b.firstChild.onclick=()=>{tab="duell";render();};
+    v.appendChild(el(`<div class="empty">${p.name} ist durch – alle ${D.length} bewertet. Weiter zum Turnier.</div>`));
+    const b=el(`<div class="row"><button class="btn">Zum Turnier</button><button class="btn ghost">Bewertungen ändern</button></div>`);
+    b.children[0].onclick=()=>{tab="duell";render();};
+    b.children[1].onclick=()=>{reviewList=true;render();};
     v.appendChild(b); return;
   }
   const d=q[0], done=D.length-q.length;
@@ -458,13 +388,56 @@ function vSichten(v){
     a.children[i].onclick=()=>{S.ratings[who][d.id]=val;save();render();};
   });
   v.appendChild(a);
-  const back=el(`<div class="row"><button class="btn ghost">Letzte Antwort ändern</button><button class="btn ghost">Pause, anderer ist dran</button></div>`);
+  const back=el(`<div class="row"><button class="btn ghost">Letzte Antwort ändern</button><button class="btn ghost">Alle Bewertungen ansehen</button><button class="btn ghost">Pause, anderer ist dran</button></div>`);
   back.children[0].onclick=()=>{
     const order=shuffled(who), prev=order.slice(0,order.indexOf(d)).reverse().find(x=>S.ratings[who][x.id]);
     if(prev){delete S.ratings[who][prev.id];save();render();}
   };
-  back.children[1].onclick=()=>{who=null;tab="start";render();};
+  back.children[1].onclick=()=>{reviewList=true;render();};
+  back.children[2].onclick=()=>{who=null;tab="start";render();};
   v.appendChild(back);
+}
+
+/* Alle Bewertungen einer Person ansehen und einzeln umstellen */
+function vRevidieren(v){
+  const p=PEOPLE.find(x=>x.id===who);
+  v.appendChild(el(`<div class="progress"><span>${p.name}: Bewertungen ändern</span><span>${rated(who)} von ${D.length}</span></div>`));
+  v.appendChild(el(`<p class="muted">Tippe bei einem Gericht auf ★ gern, ~ geht so, ✕ nie oder ? kenn ich nicht. Die Änderung gilt sofort.</p>`));
+  const back=el(`<div class="row"><button class="btn">Zurück zur Sichtung</button></div>`);
+  back.firstChild.onclick=()=>{reviewList=false;render();};
+  v.appendChild(back);
+  const search=el(`<input class="searchbox" type="search" placeholder="Gericht suchen …">`);
+  v.appendChild(search);
+  const box=el(`<div></div>`); v.appendChild(box);
+  const VALS=["gern","ok","nie","neu"], SYM=["★","~","✕","?"];
+  const groups={};
+  D.forEach(d=>{(groups[d.b]=groups[d.b]||[]).push(d);});
+  Object.keys(groups).forEach(b=>{
+    const h=el(`<h3>${BASE[b]}</h3>`); box.appendChild(h);
+    groups[b].forEach(d=>{
+      const cur=S.ratings[who][d.id];
+      const row=el(`<div class="rev" data-n="${esc(d.n).toLowerCase()}"><span class="nm">${esc(d.n)}</span><span class="mini"></span></div>`);
+      const mini=row.querySelector(".mini");
+      VALS.forEach((val,i)=>{
+        const btn=el(`<button aria-label="${val}" class="${cur===val?"on-"+val:""}">${SYM[i]}</button>`);
+        btn.onclick=()=>{
+          S.ratings[who][d.id]=val; save();
+          [...mini.children].forEach((c,j)=>c.className=VALS[j]===val?"on-"+val:"");
+        };
+        mini.appendChild(btn);
+      });
+      box.appendChild(row);
+    });
+  });
+  search.oninput=()=>{
+    const t=search.value.trim().toLowerCase();
+    box.querySelectorAll(".rev").forEach(r=>{r.style.display=!t||r.dataset.n.includes(t)?"":"none";});
+    box.querySelectorAll("h3").forEach(h=>{
+      let el2=h.nextElementSibling, any=false;
+      while(el2&&el2.classList.contains("rev")){ if(el2.style.display!=="none")any=true; el2=el2.nextElementSibling; }
+      h.style.display=any?"":"none";
+    });
+  };
 }
 
 function vDuell(v){
@@ -633,7 +606,9 @@ function vPlan(v){
   v.appendChild(r);
 }
 
-load(); render();
+loadDishes().then(()=>{load();render();}).catch(()=>{
+  document.getElementById("view").innerHTML='<div class="empty">Die Gerichteliste (dishes.json) konnte nicht geladen werden. Einmal mit Internetverbindung öffnen, danach geht es auch offline.</div>';
+});
 </script>
 <script>if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});</script>
 </body>

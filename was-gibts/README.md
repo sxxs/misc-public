@@ -31,7 +31,29 @@ Danach läuft die Seite offline.
 
 ## Gerichteliste ändern
 
-Die Liste steht als Array `D` in `index.html`. Wird sie geändert, passen alte Codes nicht
-mehr und werden beim Einlesen abgewiesen. Alle Geräte sollten dieselbe Version benutzen.
-Nach einer Änderung in `sw.js` den Cache-Namen `C` hochzählen, sonst liefert der Service
-Worker die alte Fassung aus.
+Die Liste steht in `dishes.json` (Felder: `n` Name, `b` Basis, `p` Protein, `e` Aufwand
+0-3, `t` Tags). Der Service Worker arbeitet network-first: Nach einem Commit reicht es,
+die Seite auf jedem Gerät einmal mit Netz neu zu laden.
+
+**Regeln, damit alte Codes und Bewertungen gültig bleiben:**
+
+- **Neue Gerichte nur ans Ende anfügen.** Die Position in der Datei ist die feste ID
+  eines Gerichts; Bewertungen und Übertragungscodes hängen daran.
+- **Nie mittendrin einfügen, löschen oder umsortieren.** Sonst rutschen alle IDs und
+  die Bewertungen landen bei den falschen Gerichten.
+- **Ausmustern statt löschen:** einem Gericht `"aus": true` geben. Es verschwindet aus
+  Sichtung, Ergebnis und Wochenplan, hält aber die IDs der übrigen stabil.
+- Umbenennen und Felder korrigieren (`b`, `p`, `e`, `t`) ist jederzeit erlaubt.
+- Maximal 511 Einträge (Codeformat).
+
+Neue Gerichte tauchen bei allen automatisch in der Sichtung auf – jeder bewertet nach
+und nach nur die noch fehlenden. Codes von Geräten mit einer älteren Liste lassen sich
+weiterhin einlesen; nur umgekehrt (Code von neuerer Liste auf altem Stand) muss das
+Gerät erst neu laden.
+
+## Meinung ändern
+
+Unter "Sichtung" -> "Alle Bewertungen ansehen" (bzw. "Bewertungen ändern", wenn jemand
+schon durch ist) steht die komplette Liste mit Suchfeld. Dort lässt sich jede Bewertung
+einzeln umstellen; die Änderung gilt sofort und wandert mit dem nächsten Code aufs
+Tablet.
