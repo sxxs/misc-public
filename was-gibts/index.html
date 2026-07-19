@@ -29,7 +29,7 @@
   --disp:"Archivo Black","Arial Black",system-ui,sans-serif;
   --body:"Archivo","Helvetica Neue",system-ui,sans-serif;
 }
-*{box-sizing:border-box}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{
   background:var(--glaze);
@@ -62,7 +62,6 @@ nav.tabs button{
   background:var(--tile);color:var(--dim);border:0;border-radius:var(--r);
   padding:11px 15px;cursor:pointer;transition:background .15s,color .15s;
 }
-nav.tabs button:hover{background:var(--tile-hi);color:var(--chalk)}
 nav.tabs button[aria-selected="true"]{background:var(--mustard);color:#12262B}
 
 /* Personen-Kacheln */
@@ -72,7 +71,6 @@ nav.tabs button[aria-selected="true"]{background:var(--mustard);color:#12262B}
   padding:20px 16px 16px;text-align:left;cursor:pointer;font-family:var(--body);
   transition:background .15s, transform .15s;
 }
-.person:hover{background:var(--tile-hi)}
 .person .nm{font-family:var(--disp);font-size:22px;display:block;margin-bottom:8px}
 .bar{height:5px;background:rgba(243,238,226,.14);border-radius:99px;overflow:hidden;margin:8px 0 6px}
 .bar i{display:block;height:100%;background:var(--mustard);transition:width .3s}
@@ -93,10 +91,6 @@ nav.tabs button[aria-selected="true"]{background:var(--mustard);color:#12262B}
   transition:background .12s,color .12s;line-height:1.3;
 }
 .answers button span{display:block;font-size:22px;margin-bottom:4px;font-weight:400}
-.answers button:hover{background:var(--tile-hi)}
-.a-gern:hover{background:var(--mustard)!important;color:#12262B!important}
-.a-nie:hover{background:var(--tomato)!important}
-.a-neu:hover{background:var(--sage)!important;color:#12262B!important}
 .progress{display:flex;justify-content:space-between;align-items:center;margin:18px 0 10px;font-size:13px;color:var(--dim)}
 
 /* Duell */
@@ -106,7 +100,6 @@ nav.tabs button[aria-selected="true"]{background:var(--mustard);color:#12262B}
   padding:38px 18px;font-family:var(--disp);font-size:clamp(17px,3.4vw,23px);line-height:1.15;
   transition:background .12s,color .12s;
 }
-.duel button:hover{background:var(--mustard);color:#12262B}
 .vs{text-align:center;font-family:var(--disp);color:var(--dim);font-size:12px;letter-spacing:.3em;margin:10px 0}
 
 /* Ergebnisliste */
@@ -140,9 +133,7 @@ ol.rank .meta{font-size:12px;color:var(--dim);margin-top:2px}
   font-family:var(--body);font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;
   background:var(--mustard);color:#12262B;border:0;border-radius:var(--r);padding:13px 20px;cursor:pointer;
 }
-.btn:hover{filter:brightness(1.08)}
 .btn.ghost{background:var(--tile);color:var(--chalk)}
-.btn.ghost:hover{background:var(--tile-hi)}
 .row{display:flex;gap:2px;flex-wrap:wrap;margin:16px 0}
 .notice{background:var(--mustard);color:#12262B;border-radius:var(--r);padding:11px 14px;font-weight:600;font-size:14px;margin-bottom:16px}
 .codetext{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;word-break:break-all;color:var(--dim);margin:14px 0 0;line-height:1.6}
@@ -152,7 +143,6 @@ textarea.code::placeholder{color:var(--dim)}
 /* Wochenplan: Tauschen, Pinnen, Brotzeit-Toggle, Einkaufsliste */
 .slot .slotrow{display:flex;gap:4px;margin-top:10px;flex-wrap:wrap}
 .slot .swap{align-self:flex-start;background:rgba(243,238,226,.08);border:0;border-radius:var(--r);color:var(--dim);font-family:var(--body);font-size:12px;padding:6px 10px;cursor:pointer;transition:background .15s,color .15s}
-.slot .swap:hover{background:var(--tile-hi);color:var(--chalk)}
 .slot.pinned{outline:1px solid var(--mustard)}
 .slot.pinned .pin{background:var(--mustard);color:#12262B}
 .shop{margin:0 0 12px;padding-left:22px;columns:2;column-gap:24px}
@@ -183,11 +173,25 @@ details.fold .foldbody h3{margin-top:14px}
 .rev .nm{flex:1 1 160px;font-size:14px}
 .rev .mini{display:flex;gap:4px}
 .rev .mini button{width:44px;height:44px;border:0;border-radius:var(--r);background:rgba(243,238,226,.08);color:var(--dim);cursor:pointer;font-size:16px;font-family:var(--body)}
-.rev .mini button:hover{background:var(--tile-hi);color:var(--chalk)}
 .rev .mini button.on-gern{background:var(--mustard);color:#12262B}
 .rev .mini button.on-ok{background:var(--tile-hi);color:var(--chalk)}
 .rev .mini button.on-nie{background:var(--tomato);color:#fff}
 .rev .mini button.on-neu{background:var(--sage);color:#12262B}
+/* Hover nur bei echter Maus - auf Touch-Geräten klebt der Hover-Zustand
+   sonst nach dem Tippen an der nachrückenden Karte ("bleibt gelb") */
+@media(hover:hover){
+  nav.tabs button:hover{background:var(--tile-hi);color:var(--chalk)}
+  .person:hover{background:var(--tile-hi)}
+  .answers button:hover{background:var(--tile-hi)}
+  .a-gern:hover{background:var(--mustard)!important;color:#12262B!important}
+  .a-nie:hover{background:var(--tomato)!important}
+  .a-neu:hover{background:var(--sage)!important;color:#12262B!important}
+  .duel button:hover{background:var(--mustard);color:#12262B}
+  .btn:hover{filter:brightness(1.08)}
+  .btn.ghost:hover{background:var(--tile-hi)}
+  .slot .swap:hover{background:var(--tile-hi);color:var(--chalk)}
+  .rev .mini button:hover{background:var(--tile-hi);color:var(--chalk)}
+}
 button:focus-visible,.person:focus-visible{outline:2px solid var(--mustard);outline-offset:2px}
 @media (max-width:520px){
   .answers{grid-template-columns:repeat(2,1fr)}
@@ -251,6 +255,8 @@ const KEY="wasgibts:v2";
 let S={ratings:{},elo:{},duels:{}};   // ratings[pid][did] = 'gern'|'ok'|'nie'|'neu'
 let tab="start", who=null, mem={}, note="", reviewList=false, bestWho="alle";
 let draft=null; // Wochenplan-Entwurf: [{id,pin}|null x9], lebt bis zum Übernehmen/Neuladen
+let undoStack={}; // Sichtung: pro Person die selbst beantworteten Gerichte dieser Sitzung
+let lastDuel=null; // letztes Duell für "Zurücknehmen" (eine Stufe)
 
 function fresh(){
   S.paused=S.paused||{};   // global pausierte Gerichte (Gerät fehlt o.ä.), id -> true
@@ -478,14 +484,19 @@ function vSichten(v){
     a.children[i].onclick=()=>{
       S.ratings[who][d.id]=val;
       if(val!=="gern"){ delete S.elo[who][d.id]; delete S.dcnt[who][d.id]; }
+      (undoStack[who]=undoStack[who]||[]).push(d.id);
       save();render();
     };
   });
   v.appendChild(a);
   const back=el(`<div class="row"><button class="btn ghost">Letzte Antwort ändern</button><button class="btn ghost">Bewertungen ändern</button><button class="btn ghost">Pause, anderer ist dran</button></div>`);
+  // Nimmt exakt die eigene letzte Antwort dieser Sitzung zurück - nicht einfach
+  // die zuletzt bewertete Karte in der Reihenfolge (das traf früher auch
+  // vorbelegte Seed-Bewertungen und wirkte deshalb unzuverlässig)
   back.children[0].onclick=()=>{
-    const order=shuffled(who), prev=order.slice(0,order.indexOf(d)).reverse().find(x=>S.ratings[who][x.id]);
-    if(prev){delete S.ratings[who][prev.id];save();render();}
+    const u=undoStack[who];
+    if(u&&u.length){ delete S.ratings[who][u.pop()]; save(); render(); }
+    else{ note="Nichts zum Zurücknehmen in dieser Sitzung. Ältere Antworten über „Bewertungen ändern“."; render(); }
   };
   back.children[1].onclick=()=>{reviewList=true;render();};
   back.children[2].onclick=()=>{who=null;tab="start";render();};
@@ -558,7 +569,10 @@ function vDuell(v){
   const [x,y]=pick();
   const g=el(`<div class="duel"><button>${esc(x.n)}</button><button>${esc(y.n)}</button></div>`);
   const win=(w,l)=>{
-    const E=S.elo[who], rw=E[w.id]||1000, rl=E[l.id]||1000;
+    const E=S.elo[who];
+    // Vorherigen Zustand für "Zurücknehmen" sichern (undefined = gab keinen Eintrag)
+    lastDuel={who,w:w.id,l:l.id,ew:E[w.id],el:E[l.id],wn:w.n,ln:l.n};
+    const rw=E[w.id]||1000, rl=E[l.id]||1000;
     const exp=1/(1+Math.pow(10,(rl-rw)/400));
     E[w.id]=rw+32*(1-exp); E[l.id]=rl-32*(1-exp);
     S.dcnt[who][w.id]=(S.dcnt[who][w.id]||0)+1;
@@ -572,10 +586,23 @@ function vDuell(v){
   r.children[0].onclick=()=>{who=null;tab="start";render();};
   r.children[1].onclick=()=>{tab="ergebnis";render();};
   v.appendChild(r);
+  if(lastDuel&&lastDuel.who===who){
+    const u=el(`<div class="row"><button class="btn ghost">↶ Letztes Duell zurücknehmen (${esc(lastDuel.wn)} vor ${esc(lastDuel.ln)})</button></div>`);
+    u.firstChild.onclick=()=>{
+      const E=S.elo[who], ld=lastDuel;
+      if(ld.ew===undefined) delete E[ld.w]; else E[ld.w]=ld.ew;
+      if(ld.el===undefined) delete E[ld.l]; else E[ld.l]=ld.el;
+      [ld.w,ld.l].forEach(id=>{ if(--S.dcnt[who][id]<=0) delete S.dcnt[who][id]; });
+      S.duels[who]=Math.max(0,(S.duels[who]||0)-1);
+      lastDuel=null; save();
+      note="Duell zurückgenommen."; render();
+    };
+    v.appendChild(u);
+  }
   const rst=el(`<div class="row"><button class="btn ghost">Turnier von ${p.name} neu starten</button></div>`);
   rst.firstChild.onclick=()=>{
     if(confirm(`Alle Duell-Ergebnisse von ${p.name} löschen und neu anfangen?`)){
-      S.elo[who]={};S.dcnt[who]={};S.duels[who]=0;save();render();
+      S.elo[who]={};S.dcnt[who]={};S.duels[who]=0;lastDuel=null;save();render();
     }
   };
   v.appendChild(rst);
