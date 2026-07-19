@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Was gibt's?</title>
+<meta name="theme-color" content="#0F3239">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Was gibt's?">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&family=Archivo+Black&display=swap" rel="stylesheet">
+<style>
+:root{
+  --glaze:#0F3239;        /* dunkle Glasur, Hintergrund */
+  --tile:#164751;         /* Kachelfläche */
+  --tile-hi:#1D5C68;      /* Kachel hell */
+  --grout:#E9E2D3;        /* Fuge */
+  --chalk:#F3EEE2;        /* Text hell */
+  --mustard:#E3A72F;      /* Akzent: gern */
+  --tomato:#C9452F;       /* Akzent: nie */
+  --sage:#8FAE93;         /* Akzent: unbekannt */
+  --dim:rgba(243,238,226,.55);
+  --r:3px;
+  --disp:"Archivo Black","Arial Black",system-ui,sans-serif;
+  --body:"Archivo","Helvetica Neue",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--glaze);
+  color:var(--chalk);
+  font-family:var(--body);
+  font-size:16px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  padding:0 0 64px;
+}
+/* Fugenraster im Hintergrund */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(var(--grout) 1px,transparent 1px),linear-gradient(90deg,var(--grout) 1px,transparent 1px);
+  background-size:56px 56px;opacity:.045;
+}
+.wrap{position:relative;z-index:1;max-width:840px;margin:0 auto;padding:0 20px}
+header{padding:40px 0 28px;border-bottom:1px solid rgba(233,226,211,.16);margin-bottom:28px}
+h1{font-family:var(--disp);font-size:clamp(34px,7vw,58px);line-height:.95;margin:0 0 10px;letter-spacing:-.02em}
+h1 em{font-style:normal;color:var(--mustard)}
+.sub{color:var(--dim);max-width:52ch;font-size:15px;margin:0}
+h2{font-family:var(--disp);font-size:19px;letter-spacing:.01em;margin:34px 0 12px}
+h3{font-family:var(--disp);font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--mustard);margin:26px 0 10px}
+p{margin:0 0 12px}
+.muted{color:var(--dim);font-size:14px}
+
+nav.tabs{display:flex;gap:2px;margin-bottom:26px;flex-wrap:wrap}
+nav.tabs button{
+  font-family:var(--body);font-weight:600;font-size:13px;letter-spacing:.04em;text-transform:uppercase;
+  background:var(--tile);color:var(--dim);border:0;border-radius:var(--r);
+  padding:11px 15px;cursor:pointer;transition:background .15s,color .15s;
+}
+nav.tabs button:hover{background:var(--tile-hi);color:var(--chalk)}
+nav.tabs button[aria-selected="true"]{background:var(--mustard);color:#12262B}
+
+/* Personen-Kacheln */
+.people{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:2px}
+.person{
+  background:var(--tile);border:0;border-radius:var(--r);color:var(--chalk);
+  padding:20px 16px 16px;text-align:left;cursor:pointer;font-family:var(--body);
+  transition:background .15s, transform .15s;
+}
+.person:hover{background:var(--tile-hi)}
+.person .nm{font-family:var(--disp);font-size:22px;display:block;margin-bottom:8px}
+.bar{height:5px;background:rgba(243,238,226,.14);border-radius:99px;overflow:hidden;margin:8px 0 6px}
+.bar i{display:block;height:100%;background:var(--mustard);transition:width .3s}
+.person .st{font-size:12px;color:var(--dim);letter-spacing:.03em}
+
+/* Sichtungskarte */
+.card{
+  background:var(--tile);border-radius:var(--r);padding:34px 26px;text-align:center;
+  min-height:190px;display:flex;flex-direction:column;justify-content:center;align-items:center;
+}
+.card .dish{font-family:var(--disp);font-size:clamp(24px,5.2vw,36px);line-height:1.1;margin:0 0 14px;max-width:16ch}
+.chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.chip{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);border:1px solid rgba(243,238,226,.2);padding:3px 8px;border-radius:99px}
+.answers{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:2px}
+.answers button{
+  border:0;border-radius:var(--r);padding:18px 6px;cursor:pointer;font-family:var(--body);
+  font-weight:700;font-size:13px;letter-spacing:.03em;background:var(--tile);color:var(--chalk);
+  transition:background .12s,color .12s;line-height:1.3;
+}
+.answers button span{display:block;font-size:22px;margin-bottom:4px;font-weight:400}
+.answers button:hover{background:var(--tile-hi)}
+.a-gern:hover{background:var(--mustard)!important;color:#12262B!important}
+.a-nie:hover{background:var(--tomato)!important}
+.a-neu:hover{background:var(--sage)!important;color:#12262B!important}
+.progress{display:flex;justify-content:space-between;align-items:center;margin:18px 0 10px;font-size:13px;color:var(--dim)}
+
+/* Duell */
+.duel{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+.duel button{
+  background:var(--tile);border:0;border-radius:var(--r);color:var(--chalk);cursor:pointer;
+  padding:38px 18px;font-family:var(--disp);font-size:clamp(17px,3.4vw,23px);line-height:1.15;
+  transition:background .12s,color .12s;
+}
+.duel button:hover{background:var(--mustard);color:#12262B}
+.vs{text-align:center;font-family:var(--disp);color:var(--dim);font-size:12px;letter-spacing:.3em;margin:10px 0}
+
+/* Ergebnisliste */
+ol.rank{list-style:none;margin:0;padding:0;counter-reset:r}
+ol.rank li{
+  counter-increment:r;display:grid;grid-template-columns:38px 1fr auto;gap:12px;align-items:center;
+  background:var(--tile);border-radius:var(--r);padding:12px 14px;margin-bottom:2px;
+}
+ol.rank li::before{content:counter(r);font-family:var(--disp);color:var(--mustard);font-size:15px}
+ol.rank .nm{font-weight:600;font-size:15px}
+ol.rank .meta{font-size:12px;color:var(--dim);margin-top:2px}
+.faces{display:flex;gap:3px}
+.face{width:22px;height:22px;border-radius:2px;display:grid;place-items:center;font-size:10px;font-weight:700;color:#12262B;background:rgba(243,238,226,.16)}
+.f-gern{background:var(--mustard)}
+.f-ok{background:rgba(243,238,226,.42)}
+.f-neu{background:var(--sage)}
+.f-nie{background:var(--tomato);color:var(--chalk)}
+
+.veto{display:flex;flex-wrap:wrap;gap:2px}
+.veto span{background:rgba(201,69,47,.16);color:rgba(243,238,226,.7);border-radius:var(--r);padding:6px 10px;font-size:13px}
+
+/* Wochenplan */
+.plan{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:2px}
+.slot{background:var(--tile);border-radius:var(--r);padding:16px 14px;min-height:118px;display:flex;flex-direction:column}
+.slot .day{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mustard);margin-bottom:8px}
+.slot .dish{font-family:var(--disp);font-size:16px;line-height:1.15;margin-bottom:auto}
+.slot .tag{font-size:11px;color:var(--dim);margin-top:10px;letter-spacing:.03em}
+.slot.exp{background:var(--tile-hi);outline:1px solid var(--sage)}
+
+.btn{
+  font-family:var(--body);font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;
+  background:var(--mustard);color:#12262B;border:0;border-radius:var(--r);padding:13px 20px;cursor:pointer;
+}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:var(--tile);color:var(--chalk)}
+.btn.ghost:hover{background:var(--tile-hi)}
+.row{display:flex;gap:2px;flex-wrap:wrap;margin:16px 0}
+.notice{background:var(--mustard);color:#12262B;border-radius:var(--r);padding:11px 14px;font-weight:600;font-size:14px;margin-bottom:16px}
+.codetext{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;word-break:break-all;color:var(--dim);margin:14px 0 0;line-height:1.6}
+textarea.code{width:100%;background:var(--tile);color:var(--chalk);border:0;border-radius:var(--r);padding:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;resize:vertical}
+textarea.code::placeholder{color:var(--dim)}
+.empty{background:var(--tile);border-radius:var(--r);padding:26px;color:var(--dim);font-size:15px}
+button:focus-visible,.person:focus-visible{outline:2px solid var(--mustard);outline-offset:2px}
+@media (max-width:520px){
+  .answers{grid-template-columns:repeat(2,1fr)}
+  .duel{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Was gibt's<em>?</em></h1>
+  <p class="sub">100 Gerichte. Jeder sichtet einmal durch, dann entscheidet die Familie – und nicht der Kühlschrank um 18 Uhr.</p>
+</header>
+<nav class="tabs" id="tabs"></nav>
+<main id="view"></main>
+</div>
+
+<script>
+/* ---------- Daten ---------- */
+// b = Basis, p = Protein, e = Aufwand 1-3, t = Tags
+const D=[
+{n:"Nudeln mit Ragù",b:"nudeln",p:"rind",e:3},
+{n:"Nudeln mit Tomatensauce",b:"nudeln",p:"veg",e:1},
+{n:"Spaghetti Aglio e Olio",b:"nudeln",p:"veg",e:1},
+{n:"Spaghetti Carbonara",b:"nudeln",p:"schwein",e:2},
+{n:"Nudelauflauf mit Schinken",b:"nudeln",p:"schwein",e:2},
+{n:"Mac & Cheese",b:"nudeln",p:"kaese",e:2},
+{n:"Lasagne",b:"nudeln",p:"rind",e:3},
+{n:"Yaki Udon mit Gemüse",b:"nudeln",p:"veg",e:2},
+{n:"Nudelsalat mit Pesto",b:"nudeln",p:"veg",e:1},
+{n:"Ramen mit Ei",b:"nudeln",p:"ei",e:3},
+{n:"Garnelen-Pasta",b:"nudeln",p:"fisch",e:2},
+{n:"Käsespätzle mit Röstzwiebeln",b:"spaetzle",p:"kaese",e:2},
+{n:"Spätzle mit Rahmsauce",b:"spaetzle",p:"veg",e:2},
+{n:"Linsen mit Spätzle und Saitenwurst",b:"spaetzle",p:"schwein",e:2},
+{n:"Krautspätzle",b:"spaetzle",p:"veg",e:2},
+{n:"Maultaschen geschmälzt",b:"spaetzle",p:"gemischt",e:1},
+{n:"Schupfnudeln mit Apfelmus",b:"spaetzle",p:"veg",e:2},
+{n:"Pizza Margherita",b:"teig",p:"kaese",e:2},
+{n:"Pizza Salami",b:"teig",p:"schwein",e:2},
+{n:"Pizza selbst belegen",b:"teig",p:"gemischt",e:2,t:["bauteil"]},
+{n:"Calzone",b:"teig",p:"gemischt",e:2},
+{n:"Flammkuchen klassisch",b:"teig",p:"schwein",e:2},
+{n:"Flammkuchen mit Ziegenkäse und Honig",b:"teig",p:"kaese",e:2},
+{n:"Flammkuchen selbst belegen",b:"teig",p:"gemischt",e:2,t:["bauteil"]},
+{n:"Käsebrot mit Gurke und Karotte",b:"brot",p:"kaese",e:1},
+{n:"Croque Monsieur",b:"brot",p:"schwein",e:1},
+{n:"Toast Hawaii",b:"brot",p:"schwein",e:1},
+{n:"Strammer Max",b:"brot",p:"ei",e:1},
+{n:"Brotzeitbrett",b:"brot",p:"gemischt",e:1,t:["bauteil"]},
+{n:"Baguette-Sandwiches selbst belegen",b:"brot",p:"gemischt",e:1,t:["bauteil"]},
+{n:"Fladenbrot mit Hummus und Gemüse",b:"brot",p:"veg",e:1,t:["bauteil"]},
+{n:"Pita mit Halloumi",b:"brot",p:"kaese",e:2},
+{n:"Pulled-Pork-Burger",b:"brot",p:"schwein",e:3},
+{n:"Cheeseburger selbst gemacht",b:"brot",p:"rind",e:2,t:["bauteil"]},
+{n:"Steak-Sandwich",b:"brot",p:"rind",e:2,t:["steak"]},
+{n:"Souvlaki-Spieße mit Fladenbrot",b:"brot",p:"schwein",e:2},
+{n:"Wraps mit Hackfleisch und Gemüse",b:"brot",p:"rind",e:2,t:["bauteil"]},
+{n:"Wraps mit Gurke und Tomate",b:"brot",p:"veg",e:1,t:["bauteil"]},
+{n:"Wraps mit Rührei",b:"brot",p:"ei",e:1,t:["bauteil"]},
+{n:"Tacos zum Selbstbauen",b:"brot",p:"gemischt",e:2,t:["bauteil"]},
+{n:"Quesadillas",b:"brot",p:"kaese",e:1},
+{n:"Fisch-Tacos",b:"brot",p:"fisch",e:2},
+{n:"Pommes mit drei Dips",b:"kartoffel",p:"veg",e:1},
+{n:"Currywurst mit Pommes",b:"kartoffel",p:"schwein",e:1},
+{n:"Chicken Wings mit Pommes",b:"kartoffel",p:"huhn",e:2},
+{n:"Knusperhähnchen mit Pommes",b:"kartoffel",p:"huhn",e:2},
+{n:"Fischstäbchen mit Kartoffelpüree",b:"kartoffel",p:"fisch",e:1},
+{n:"Kartoffelpuffer mit Apfelmus",b:"kartoffel",p:"veg",e:2},
+{n:"Ofenkartoffel mit Sour Cream",b:"kartoffel",p:"veg",e:2,t:["bauteil"]},
+{n:"Bratkartoffeln mit Spiegelei",b:"kartoffel",p:"ei",e:2},
+{n:"Kartoffelsalat mit Würstchen",b:"kartoffel",p:"schwein",e:2},
+{n:"Kartoffelgratin",b:"kartoffel",p:"kaese",e:3},
+{n:"Rösti mit Kräuterquark",b:"kartoffel",p:"veg",e:2},
+{n:"Pellkartoffeln mit Kräuterquark",b:"kartoffel",p:"veg",e:1},
+{n:"Tortilla Española",b:"kartoffel",p:"ei",e:2},
+{n:"Wedges aus dem Ofen mit Dips",b:"kartoffel",p:"veg",e:1},
+{n:"Frikadellen mit Kartoffelpüree",b:"kartoffel",p:"rind",e:2},
+{n:"Gyros mit Tzatziki und Pommes",b:"kartoffel",p:"schwein",e:2},
+{n:"Bratwurst mit Sauerkraut und Püree",b:"kartoffel",p:"schwein",e:2},
+{n:"Backfisch mit Remoulade",b:"kartoffel",p:"fisch",e:2},
+{n:"Gebratener Reis mit Ei",b:"reis",p:"ei",e:1},
+{n:"Hähnchen-Teriyaki mit Reis",b:"reis",p:"huhn",e:2},
+{n:"Butter Chicken mit Reis und Naan",b:"reis",p:"huhn",e:3},
+{n:"Mildes Gemüsecurry mit Reis",b:"reis",p:"veg",e:2},
+{n:"Bibimbap zum Selbstbauen",b:"reis",p:"gemischt",e:3,t:["bauteil"]},
+{n:"Sushi-Bowl zum Selbstbauen",b:"reis",p:"fisch",e:2,t:["bauteil","sushi"]},
+{n:"Gurken-Avocado-Maki",b:"reis",p:"veg",e:3,t:["sushi"]},
+{n:"Lachs-Nigiri und -Maki",b:"reis",p:"fisch",e:3,t:["sushi"]},
+{n:"Burrito Bowl",b:"reis",p:"gemischt",e:2,t:["bauteil"]},
+{n:"Lachsfilet mit Reis und Brokkoli",b:"reis",p:"fisch",e:2},
+{n:"Milchreis mit Zimt und Zucker",b:"reis",p:"veg",e:1,t:["suess"]},
+{n:"Tomatensuppe mit Croutons",b:"suppe",p:"veg",e:1},
+{n:"Kürbissuppe",b:"suppe",p:"veg",e:2},
+{n:"Kartoffelsuppe mit Würstchen",b:"suppe",p:"schwein",e:2},
+{n:"Gemüsesuppe mit Nudeleinlage",b:"suppe",p:"veg",e:2},
+{n:"Linsensuppe mit Brot",b:"suppe",p:"veg",e:2},
+{n:"Maultaschen in der Brühe",b:"suppe",p:"gemischt",e:1},
+{n:"Chili con Carne mit Brot",b:"sonst",p:"rind",e:3},
+{n:"Rumpsteak mit Kräuterbutter",b:"sonst",p:"rind",e:2,t:["steak"]},
+{n:"Frühlingsrollen",b:"sonst",p:"gemischt",e:2},
+{n:"Gyoza mit Dip",b:"sonst",p:"gemischt",e:3},
+{n:"Ofengemüse mit Feta",b:"sonst",p:"kaese",e:2},
+{n:"Zucchinipuffer mit Joghurtdip",b:"sonst",p:"veg",e:2},
+{n:"Shakshuka mit Brot",b:"sonst",p:"ei",e:2},
+{n:"Raclette",b:"sonst",p:"gemischt",e:2,t:["bauteil"]},
+{n:"Käsefondue",b:"sonst",p:"kaese",e:2,t:["bauteil"]},
+{n:"Fondue chinoise",b:"sonst",p:"gemischt",e:3,t:["bauteil"]},
+{n:"Kaiserschmarren mit Apfelmus",b:"suess",p:"ei",e:2,t:["suess"]},
+{n:"Apfelstrudel mit Vanillesauce",b:"suess",p:"veg",e:3,t:["suess"]},
+{n:"Dampfnudeln mit Vanillesauce",b:"suess",p:"veg",e:3,t:["suess"]},
+{n:"Pfannkuchen süß und herzhaft",b:"suess",p:"ei",e:2,t:["suess","bauteil"]},
+{n:"Dürüm mit Fleisch und Salat",b:"brot",p:"gemischt",e:2},
+{n:"Falafel-Dürüm",b:"brot",p:"veg",e:2},
+{n:"Döner-Teller mit Pommes",b:"kartoffel",p:"gemischt",e:2},
+{n:"Chicken Tikka Masala mit Reis",b:"reis",p:"huhn",e:0,t:["liefern"]},
+{n:"Dal mit Reis und Naan",b:"reis",p:"veg",e:0,t:["liefern"]},
+{n:"Palak Paneer mit Naan",b:"reis",p:"kaese",e:0,t:["liefern"]},
+{n:"Indische Platte zum Teilen",b:"reis",p:"gemischt",e:0,t:["liefern","bauteil"]},
+{n:"Samosas mit Chutney",b:"sonst",p:"veg",e:0,t:["liefern"]},
+{n:"Waffeln mit Beeren",b:"suess",p:"ei",e:2,t:["suess"]}
+].map((d,i)=>({id:i,t:[],...d}));
+
+const PEOPLE=[
+  {id:"felix",name:"Felix"},
+  {id:"jakob",name:"Jakob"},
+  {id:"moritz",name:"Moritz"},
+  {id:"eltern",name:"Eltern"}
+];
+
+// Vorbelegte Vetos aus dem, was ihr schon wisst – spart 30 Klicks pro Kind.
+const SEED_NIE={
+  felix:d=>d.p==="huhn"||d.p==="fisch",
+  moritz:d=>d.p==="fisch"||d.t.includes("sushi")||d.t.includes("steak"),
+  jakob:()=>false,
+  eltern:()=>false
+};
+const SEED_GERN={
+  felix:["Pulled-Pork-Burger","Cheeseburger selbst gemacht","Pommes mit drei Dips","Käsebrot mit Gurke und Karotte","Gurken-Avocado-Maki","Nudeln mit Ragù","Flammkuchen klassisch","Kaiserschmarren mit Apfelmus","Wraps mit Gurke und Tomate","Spätzle mit Rahmsauce"],
+  jakob:["Lachs-Nigiri und -Maki","Rumpsteak mit Kräuterbutter","Nudeln mit Ragù","Pizza Margherita","Flammkuchen klassisch","Kaiserschmarren mit Apfelmus","Apfelstrudel mit Vanillesauce","Wraps mit Hackfleisch und Gemüse","Spätzle mit Rahmsauce"],
+  moritz:["Knusperhähnchen mit Pommes","Nudeln mit Tomatensauce","Pizza Margherita","Pommes mit drei Dips","Dampfnudeln mit Vanillesauce","Kaiserschmarren mit Apfelmus","Wraps mit Gurke und Tomate","Spätzle mit Rahmsauce"],
+  eltern:[]
+};
+
+/* ---------- Zustand ---------- */
+const KEY="wasgibts:v2";
+let S={ratings:{},elo:{},duels:{}};   // ratings[pid][did] = 'gern'|'ok'|'nie'|'neu'
+let tab="start", who=null, mem={}, note="";
+
+function fresh(){
+  PEOPLE.forEach(p=>{
+    S.ratings[p.id]=S.ratings[p.id]||{};
+    S.elo[p.id]=S.elo[p.id]||{};
+    S.duels[p.id]=S.duels[p.id]||0;
+    D.forEach(d=>{
+      if(S.ratings[p.id][d.id]) return;
+      if(SEED_NIE[p.id](d)) S.ratings[p.id][d.id]="nie";
+      else if(SEED_GERN[p.id].includes(d.n)) S.ratings[p.id][d.id]="gern";
+    });
+  });
+}
+/* Persistenz: localStorage, mit In-Memory-Rückfallebene falls der Browser
+   sie blockiert (Privatmodus, eingebettetes iframe ohne Storage Access). */
+let canStore=(()=>{try{localStorage.setItem("__t","1");localStorage.removeItem("__t");return true;}catch(e){return false;}})();
+function load(){
+  const raw = canStore ? localStorage.getItem(KEY) : mem[KEY];
+  if(raw){ try{ S=JSON.parse(raw); }catch(e){} }
+  fresh();
+  importFromHash();
+}
+function save(){
+  const v=JSON.stringify(S); mem[KEY]=v;
+  if(canStore){ try{ localStorage.setItem(KEY,v); }catch(e){ canStore=false; } }
+}
+
+/* ---------- Übertragung: Zustand als kurzer Code ---------- */
+const B64="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+const ST=[null,"gern","ok","nie","neu"];
+function listHash(){ // 12 Bit, damit alte Codes nicht auf eine geänderte Gerichteliste treffen
+  let h=0; for(const d of D){ for(const c of d.n) h=(h*31+c.charCodeAt(0))&4095; } return h;
+}
+function encode(pid){
+  const pi=PEOPLE.findIndex(p=>p.id===pid), lh=listHash();
+  const bits=[];
+  const push=(v,n)=>{ for(let i=n-1;i>=0;i--) bits.push((v>>i)&1); };
+  push(2,4); push(pi,3); push(lh,12); push(Math.min(S.duels[pid]||0,63),6);
+  D.forEach(d=>push(ST.indexOf(S.ratings[pid][d.id]||null),3));
+  const top=[...D].sort((a,b)=>(S.elo[pid][b.id]||1000)-(S.elo[pid][a.id]||1000)).slice(0,8);
+  top.forEach(d=>push(d.id,7));
+  while(bits.length%6) bits.push(0);
+  let out="";
+  for(let i=0;i<bits.length;i+=6){ let v=0; for(let j=0;j<6;j++) v=v*2+bits[i+j]; out+=B64[v]; }
+  return out;
+}
+function decode(code){
+  code=code.trim().replace(/\s+/g,"");
+  const bits=[];
+  for(const c of code){ const v=B64.indexOf(c); if(v<0) throw new Error("Der Code enthält ungültige Zeichen."); for(let i=5;i>=0;i--) bits.push((v>>i)&1); }
+  let k=0; const take=n=>{ let v=0; for(let i=0;i<n;i++) v=v*2+(bits[k++]||0); return v; };
+  if(take(4)!==2) throw new Error("Der Code stammt aus einer anderen Version der App.");
+  const pi=take(3), lh=take(12), du=take(6);
+  if(!PEOPLE[pi]) throw new Error("Unbekannte Person im Code.");
+  if(lh!==listHash()) throw new Error("Der Code passt nicht zur aktuellen Gerichteliste. Alle müssen dieselbe Version benutzen.");
+  const pid=PEOPLE[pi].id, r={};
+  D.forEach(d=>{ const v=take(3); if(ST[v]) r[d.id]=ST[v]; });
+  const elo={}; for(let i=0;i<8;i++){ const id=take(7); if(D[id]) elo[id]=1200-i*25; }
+  return {pid,ratings:r,elo,duels:du};
+}
+function applyCode(code){
+  const p=decode(code);
+  S.ratings[p.pid]=p.ratings; S.elo[p.pid]=p.elo; S.duels[p.pid]=p.duels;
+  fresh(); save();
+  return PEOPLE.find(x=>x.id===p.pid).name;
+}
+function importFromHash(){
+  const h=location.hash.replace(/^#c=/,"");
+  if(!h||h===location.hash) return;
+  try{ note="Eingelesen: "+applyCode(h); }
+  catch(e){ note="Konnte nicht einlesen: "+e.message; }
+  history.replaceState(null,"",location.pathname+location.search);
+}
+
+/* ---------- Hilfen ---------- */
+function shuffled(pid){
+  // stabile Reihenfolge pro Person
+  let seed=[...pid].reduce((a,c)=>a+c.charCodeAt(0),7);
+  const rnd=()=>{seed=(seed*1103515245+12345)%2147483648;return seed/2147483648;};
+  return [...D].map(d=>[rnd(),d]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+}
+const rated=pid=>D.filter(d=>S.ratings[pid][d.id]).length;
+const queue=pid=>shuffled(pid).filter(d=>!S.ratings[pid][d.id]);
+const el=(h)=>{const t=document.createElement("template");t.innerHTML=h.trim();return t.content.firstChild;};
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const BASE={nudeln:"Nudeln",spaetzle:"Spätzle",teig:"Teig",brot:"Brot",kartoffel:"Kartoffel",reis:"Reis",suppe:"Suppe",suess:"Süßspeise",sonst:"Ohne feste Basis"};
+
+function analyse(){
+  const kids=["felix","jakob","moritz"];
+  return D.map(d=>{
+    const r={},pts=[];
+    PEOPLE.forEach(p=>{
+      const v=S.ratings[p.id][d.id]||null; r[p.id]=v;
+      if(v==="gern")pts.push(2); else if(v==="ok")pts.push(1); else if(v==="neu")pts.push(.5); else if(v==="nie")pts.push(-99);
+    });
+    const veto=PEOPLE.filter(p=>r[p.id]==="nie").map(p=>p.name);
+    const scored=pts.filter(x=>x>-90);
+    const sum=scored.reduce((a,b)=>a+b,0);
+    const min=scored.length?Math.min(...scored):0;
+    const elo=PEOPLE.reduce((a,p)=>a+((S.elo[p.id][d.id]||1000)-1000),0)/400;
+    const neu=kids.some(k=>r[k]==="neu")&&!veto.length;
+    return {d,r,veto,sum:sum+elo,min,neu,done:PEOPLE.filter(p=>r[p.id]).length};
+  });
+}
+
+/* ---------- Ansichten ---------- */
+function render(){
+  const tabs=document.getElementById("tabs");
+  const T=[["start","Wer ist dran"],["sichten","Sichtung"],["duell","Turnier"],["teilen","Übertragen"],["ergebnis","Ergebnis"],["plan","Wochenplan"]];
+  tabs.innerHTML="";
+  T.forEach(([k,l])=>{
+    const b=el(`<button role="tab" aria-selected="${tab===k}">${l}</button>`);
+    b.onclick=()=>{tab=k;render();};
+    tabs.appendChild(b);
+  });
+  const v=document.getElementById("view"); v.innerHTML="";
+  if(note){const b=el(`<div class="notice">${esc(note)}</div>`);v.appendChild(b);note="";}
+  ({start:vStart,sichten:vSichten,duell:vDuell,teilen:vTeilen,ergebnis:vErgebnis,plan:vPlan})[tab](v);
+}
+
+function vStart(v){
+  v.appendChild(el(`<p class="muted">Jeder geht die 100 Gerichte einmal durch und sagt bei jedem: gern, geht so, nie, oder kenn ich nicht. Was ihr schon sicher wisst, ist vorbelegt.</p>`));
+  const g=el(`<div class="people"></div>`);
+  PEOPLE.forEach(p=>{
+    const n=rated(p.id), pc=Math.round(n/D.length*100);
+    const b=el(`<button class="person"><span class="nm">${p.name}</span><div class="bar"><i style="width:${pc}%"></i></div><span class="st">${n} von ${D.length} · ${S.duels[p.id]||0} Duelle</span></button>`);
+    b.onclick=()=>{who=p.id;tab=n<D.length?"sichten":"duell";render();};
+    g.appendChild(b);
+  });
+  v.appendChild(g);
+  const row=el(`<div class="row"></div>`);
+  const rst=el(`<button class="btn ghost">Alles zurücksetzen</button>`);
+  rst.onclick=()=>{if(confirm("Alle Bewertungen löschen?")){S={ratings:{},elo:{},duels:{}};fresh();save();render();}};
+  row.appendChild(rst); v.appendChild(row);
+}
+
+function vSichten(v){
+  if(!who){v.appendChild(el(`<div class="empty">Wähle oben unter „Wer ist dran“ aus, wer gerade sichtet.</div>`));return;}
+  const q=queue(who), p=PEOPLE.find(x=>x.id===who);
+  if(!q.length){
+    v.appendChild(el(`<div class="empty">${p.name} ist durch – alle 100 bewertet. Weiter zum Turnier.</div>`));
+    const b=el(`<div class="row"><button class="btn">Zum Turnier</button></div>`);
+    b.firstChild.onclick=()=>{tab="duell";render();};
+    v.appendChild(b); return;
+  }
+  const d=q[0], done=D.length-q.length;
+  v.appendChild(el(`<div class="progress"><span>${p.name}</span><span>${done} von ${D.length}</span></div>`));
+  v.appendChild(el(`<div class="bar"><i style="width:${done/D.length*100}%"></i></div>`));
+  const chips=[BASE[d.b],d.e?"Aufwand "+"●".repeat(d.e):"wird geliefert"].concat(d.t.includes("bauteil")?["zum Selbstbauen"]:[]);
+  v.appendChild(el(`<div class="card" style="margin-top:16px"><p class="dish">${esc(d.n)}</p><div class="chips">${chips.map(c=>`<span class="chip">${c}</span>`).join("")}</div></div>`));
+  const a=el(`<div class="answers">
+    <button class="a-gern"><span>★</span>Gern</button>
+    <button><span>~</span>Geht so</button>
+    <button class="a-nie"><span>✕</span>Nie</button>
+    <button class="a-neu"><span>?</span>Kenn ich nicht</button></div>`);
+  ["gern","ok","nie","neu"].forEach((val,i)=>{
+    a.children[i].onclick=()=>{S.ratings[who][d.id]=val;save();render();};
+  });
+  v.appendChild(a);
+  const back=el(`<div class="row"><button class="btn ghost">Letzte Antwort ändern</button><button class="btn ghost">Pause, anderer ist dran</button></div>`);
+  back.children[0].onclick=()=>{
+    const order=shuffled(who), prev=order.slice(0,order.indexOf(d)).reverse().find(x=>S.ratings[who][x.id]);
+    if(prev){delete S.ratings[who][prev.id];save();render();}
+  };
+  back.children[1].onclick=()=>{who=null;tab="start";render();};
+  v.appendChild(back);
+}
+
+function vDuell(v){
+  if(!who){v.appendChild(el(`<div class="empty">Wähle zuerst aus, wer dran ist.</div>`));return;}
+  const p=PEOPLE.find(x=>x.id===who);
+  const pool=D.filter(d=>S.ratings[who][d.id]==="gern");
+  if(pool.length<4){v.appendChild(el(`<div class="empty">${p.name} hat noch zu wenige Lieblingsgerichte für ein Turnier. Erst weiter sichten.</div>`));return;}
+  v.appendChild(el(`<p class="muted">Beide Gerichte mag ${p.name}. Welches lieber? Das sortiert die Favoriten untereinander – 15 bis 20 Duelle reichen.</p>`));
+  v.appendChild(el(`<div class="progress"><span>${p.name}</span><span>${S.duels[who]||0} Duelle gespielt</span></div>`));
+  const pick=()=>{const a=pool[Math.floor(Math.random()*pool.length)];let b;do{b=pool[Math.floor(Math.random()*pool.length)];}while(b===a);return [a,b];};
+  const [x,y]=pick();
+  const g=el(`<div class="duel"><button>${esc(x.n)}</button><button>${esc(y.n)}</button></div>`);
+  const win=(w,l)=>{
+    const E=S.elo[who], rw=E[w.id]||1000, rl=E[l.id]||1000;
+    const exp=1/(1+Math.pow(10,(rl-rw)/400));
+    E[w.id]=rw+32*(1-exp); E[l.id]=rl-32*(1-exp);
+    S.duels[who]=(S.duels[who]||0)+1; save(); render();
+  };
+  g.children[0].onclick=()=>win(x,y);
+  g.children[1].onclick=()=>win(y,x);
+  v.appendChild(g);
+  const r=el(`<div class="row"><button class="btn ghost">Fertig, nächste Person</button><button class="btn">Ergebnis ansehen</button></div>`);
+  r.children[0].onclick=()=>{who=null;tab="start";render();};
+  r.children[1].onclick=()=>{tab="ergebnis";render();};
+  v.appendChild(r);
+}
+
+function vTeilen(v){
+  v.appendChild(el(`<p class="muted">Jeder füllt auf seinem eigenen Gerät aus. Am Ende erzeugt jeder seinen Code und überträgt ihn auf das Tablet – per QR-Scan, per Link oder indem er die Zeichen abtippt. Es geht nichts über einen Server, die Daten bleiben auf euren Geräten.</p>`));
+
+  v.appendChild(el(`<h3>Meinen Stand abgeben</h3>`));
+  const sel=el(`<div class="row"></div>`);
+  PEOPLE.forEach(p=>{
+    const b=el(`<button class="btn ghost">${p.name}</button>`);
+    b.onclick=()=>showCode(p.id);
+    sel.appendChild(b);
+  });
+  v.appendChild(sel);
+  const out=el(`<div id="out"></div>`); v.appendChild(out);
+
+  function showCode(pid){
+    const code=encode(pid), url=location.origin+location.pathname+"#c="+code;
+    out.innerHTML="";
+    out.appendChild(el(`<div class="card" style="padding:22px"><div id="qr" style="background:#fff;padding:12px;border-radius:3px;line-height:0"></div><p class="codetext">${code}</p></div>`));
+    const r=el(`<div class="row"><button class="btn">Link kopieren</button><button class="btn ghost">Code kopieren</button></div>`);
+    r.children[0].onclick=()=>navigator.clipboard.writeText(url).then(()=>{note="Link kopiert.";render();});
+    r.children[1].onclick=()=>navigator.clipboard.writeText(code).then(()=>{note="Code kopiert.";render();});
+    out.appendChild(r);
+    if(window.QRCode){ new QRCode(document.getElementById("qr"),{text:url,width:190,height:190,correctLevel:QRCode.CorrectLevel.M}); }
+    else{ document.getElementById("qr").outerHTML='<p class="muted" style="line-height:1.5">QR-Bibliothek nicht geladen – nimm den Link oder den Code darunter.</p>'; }
+  }
+
+  v.appendChild(el(`<h3>Stand von jemandem einlesen</h3>`));
+  const ta=el(`<textarea class="code" rows="3" placeholder="Code hier einfügen oder abtippen"></textarea>`);
+  v.appendChild(ta);
+  const r2=el(`<div class="row"><button class="btn">Einlesen</button><button class="btn ghost">Mit Kamera scannen</button></div>`);
+  r2.children[0].onclick=()=>{
+    try{ note="Eingelesen: "+applyCode(ta.value); }catch(e){ note=e.message; }
+    render();
+  };
+  r2.children[1].onclick=()=>scan(v);
+  v.appendChild(r2);
+  v.appendChild(el(`<p class="muted" style="margin-top:14px">Wenn das Scannen im Browser nicht geht, öffne den QR-Code einfach mit der normalen Kamera-App – der enthaltene Link öffnet diese Seite und liest den Stand direkt ein.</p>`));
+
+  const st=el(`<h3>Wer ist schon eingelesen</h3>`); v.appendChild(st);
+  const g=el(`<div class="veto"></div>`);
+  PEOPLE.forEach(p=>{const n=rated(p.id);g.appendChild(el(`<span style="background:${n===D.length?'rgba(227,167,47,.2)':'rgba(243,238,226,.08)'}">${p.name}: ${n} von ${D.length}</span>`));});
+  v.appendChild(g);
+}
+
+async function scan(v){
+  if(!("BarcodeDetector" in window)){ note="Dieser Browser kann keine QR-Codes scannen. Nimm die Kamera-App oder tippe den Code ab."; render(); return; }
+  let stream;
+  try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}); }
+  catch(e){ note="Kein Kamerazugriff. Nimm die Kamera-App oder tippe den Code ab."; render(); return; }
+  const vid=el(`<video playsinline style="width:100%;border-radius:3px;margin-top:8px"></video>`);
+  v.appendChild(vid); vid.srcObject=stream; await vid.play();
+  const det=new BarcodeDetector({formats:["qr_code"]});
+  const stop=()=>stream.getTracks().forEach(t=>t.stop());
+  const tick=async()=>{
+    if(!vid.isConnected){ stop(); return; }
+    try{
+      const found=await det.detect(vid);
+      if(found.length){
+        stop();
+        const m=found[0].rawValue.match(/#c=(.+)$/);
+        try{ note="Eingelesen: "+applyCode(m?m[1]:found[0].rawValue); }catch(e){ note=e.message; }
+        render(); return;
+      }
+    }catch(e){}
+    requestAnimationFrame(tick);
+  };
+  tick();
+}
+
+function vErgebnis(v){
+  const A=analyse().filter(a=>a.done>0);
+  if(!A.length){v.appendChild(el(`<div class="empty">Noch nichts bewertet. Fangt bei „Wer ist dran“ an.</div>`));return;}
+  const ok=A.filter(a=>!a.veto.length);
+  const byMin=[...ok].sort((a,b)=>b.min-a.min||b.sum-a.sum).slice(0,15);
+  const byAll=[...ok].sort((a,b)=>b.sum-a.sum||b.min-a.min).slice(0,15);
+  const vet=A.filter(a=>a.veto.length);
+  const neu=ok.filter(a=>a.neu).sort((a,b)=>b.sum-a.sum).slice(0,12);
+
+  const list=(arr,key)=>{
+    const o=el(`<ol class="rank"></ol>`);
+    arr.forEach(a=>{
+      const faces=PEOPLE.map(p=>{
+        const r=a.r[p.id];
+        const c=r==="gern"?"f-gern":r==="ok"?"f-ok":r==="neu"?"f-neu":r==="nie"?"f-nie":"";
+        return `<span class="face ${c}" title="${p.name}: ${r||"noch nichts"}">${p.name[0]}</span>`;
+      }).join("");
+      o.appendChild(el(`<li><div><div class="nm">${esc(a.d.n)}</div><div class="meta">${BASE[a.d.b]} · ${key==="min"?"schwächste Stimme "+a.min.toFixed(1):"Summe "+a.sum.toFixed(1)}</div></div><div class="faces">${faces}</div></li>`));
+    });
+    return o;
+  };
+
+  v.appendChild(el(`<h3>Fairster Kompromiss</h3>`));
+  v.appendChild(el(`<p class="muted">Sortiert nach der schwächsten Stimme am Tisch. Diese Gerichte machen niemanden unglücklich – das ist etwas anderes als „die meisten Punkte“.</p>`));
+  v.appendChild(list(byMin,"min"));
+  v.appendChild(el(`<h3>Meiste Punkte insgesamt</h3>`));
+  v.appendChild(list(byAll,"sum"));
+  if(neu.length){
+    v.appendChild(el(`<h3>Entdeckungspool</h3>`));
+    v.appendChild(el(`<p class="muted">Kennt mindestens eins der Kinder nicht, und niemand hat Veto eingelegt. Genau hier liegt die Chance, aus der Nudel-Schleife rauszukommen.</p>`));
+    v.appendChild(list(neu,"sum"));
+  }
+  if(vet.length){
+    v.appendChild(el(`<h3>Raus wegen Veto (${vet.length})</h3>`));
+    const w=el(`<div class="veto"></div>`);
+    vet.forEach(a=>w.appendChild(el(`<span>${esc(a.d.n)} — ${a.veto.join(", ")}</span>`)));
+    v.appendChild(w);
+  }
+}
+
+function vPlan(v){
+  const A=analyse().filter(a=>!a.veto.length&&a.done>0);
+  if(A.length<10){v.appendChild(el(`<div class="empty">Zu wenig bewertet für einen Wochenplan. Mindestens eine Person sollte durch sein.</div>`));return;}
+  const DAYS=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+  const CAP={nudeln:1,spaetzle:1,teig:1,suess:1,suppe:1,kartoffel:2,reis:2,brot:2,sonst:2};
+  const build=()=>{
+    const pool=[...A].sort((a,b)=>(b.min*2+b.sum)-(a.min*2+a.sum)).slice(0,34);
+    for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+    const used={},plan=[];
+    const fits=a=>(used[a.d.b]||0)<CAP[a.d.b] && !(a.d.t.includes("liefern")&&(used.liefern||0)>=1);
+    const expl=pool.filter(a=>a.neu);
+    if(expl.length){const e=expl[0];plan.push(e);used[e.d.b]=1;if(e.d.t.includes("liefern"))used.liefern=1;}
+    for(const a of pool){
+      if(plan.length>=7)break;
+      if(plan.includes(a)||!fits(a))continue;
+      plan.push(a);used[a.d.b]=(used[a.d.b]||0)+1;if(a.d.t.includes("liefern"))used.liefern=(used.liefern||0)+1;
+    }
+    return plan.slice(0,7);
+  };
+  let plan=build();
+  const draw=()=>{
+    box.innerHTML="";
+    plan.forEach((a,i)=>{
+      box.appendChild(el(`<div class="slot${a.neu?" exp":""}"><div class="day">${DAYS[i]}${a.neu?" · Experiment":""}</div><div class="dish">${esc(a.d.n)}</div><div class="tag">${BASE[a.d.b]} · ${a.d.e?"Aufwand "+"●".repeat(a.d.e):"geliefert"}</div></div>`));
+    });
+  };
+  v.appendChild(el(`<p class="muted">Harte Regeln: höchstens einmal Nudeln, einmal Spätzle, einmal Teig, eine Süßspeise, eine Suppe pro Woche. Genau ein Platz gehört einem Gericht aus dem Entdeckungspool – mit Brot oder Reis als Rückfallebene.</p>`));
+  const box=el(`<div class="plan"></div>`); v.appendChild(box); draw();
+  const r=el(`<div class="row"><button class="btn">Neu würfeln</button></div>`);
+  r.firstChild.onclick=()=>{plan=build();draw();};
+  v.appendChild(r);
+}
+
+load(); render();
+</script>
+<script>if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});</script>
+</body>
+</html>
