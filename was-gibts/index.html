@@ -145,6 +145,8 @@ textarea.code::placeholder{color:var(--dim)}
 .slot .swap{align-self:flex-start;background:rgba(243,238,226,.08);border:0;border-radius:var(--r);color:var(--dim);font-family:var(--body);font-size:12px;padding:6px 10px;cursor:pointer;transition:background .15s,color .15s}
 .slot.pinned{outline:1px solid var(--mustard)}
 .slot.pinned .pin{background:var(--mustard);color:#12262B}
+.slot .ex{margin-top:8px;font-size:12.5px;line-height:1.45;color:var(--mustard);background:rgba(227,167,47,.12);border-radius:var(--r);padding:7px 9px}
+.slot .ex b{font-weight:600}
 .shop{margin:0 0 12px;padding-left:22px;columns:2;column-gap:24px}
 .shop li{margin-bottom:6px;font-size:14px;break-inside:avoid}
 @media(max-width:520px){.shop{columns:1}}
@@ -911,7 +913,8 @@ function vPlan(v){
       const d=id!=null?DALL[id]:null;
       const ex=d?extraFor(d.id):[];
       const sug=ex.length?extraSuggestion(ex,d.id):null;
-      box.appendChild(el(`<div class="slot"><div class="day">${SLOTS[i]}</div><div class="dish">${d?esc(d.n):"–"}</div><div class="tag">${d?BASE[d.b]+" · "+(d.e?"Aufwand "+"●".repeat(d.e):"geliefert")+(ex.length?` · 🌭 Extrawurst für ${ex.join(", ")}${sug?` – z.B. ${esc(sug.n)}`:""}`:""):""}</div></div>`));
+      const exLine=ex.length?`<div class="ex">🌭 <b>${ex.join(" und ")}</b> ${ex.length>1?"bekommen":"bekommt"} stattdessen: ${sug?esc(sug.n):"eigenes Essen wählen"}</div>`:"";
+      box.appendChild(el(`<div class="slot"><div class="day">${SLOTS[i]}</div><div class="dish">${d?esc(d.n):"–"}</div><div class="tag">${d?BASE[d.b]+" · "+(d.e?"Aufwand "+"●".repeat(d.e):"geliefert"):""}</div>${exLine}</div>`));
     });
     v.appendChild(box);
     const r=el(`<div class="row"><button class="btn">Plan teilen</button><button class="btn ghost">Neuen Plan machen</button></div>`);
@@ -1026,9 +1029,14 @@ function vPlan(v){
     box.innerHTML="";
     draft.forEach((e,i)=>{
       const a=e&&byId[e.id];
-      const s=a
-        ?el(`<div class="slot${a.neu?" exp":""}${e.pin?" pinned":""}"><div class="day">${SLOTS[i]}${a.neu?" · Experiment":""}</div><div class="dish">${esc(a.d.n)}</div><div class="tag">${BASE[a.d.b]} · ${a.d.e?"Aufwand "+"●".repeat(a.d.e):"geliefert"}${a.veto.length?` · 🌭 Extrawurst für ${a.veto.join(", ")}`:""}</div><div class="slotrow"><button class="swap">↻ Tauschen</button><button class="swap pin">${e.pin?"📌 Gepinnt":"📌 Pinnen"}</button></div></div>`)
-        :el(`<div class="slot"><div class="day">${SLOTS[i]}</div><div class="dish">–</div><div class="tag">kein Gericht frei</div><div class="slotrow"><button class="swap">↻ Tauschen</button></div></div>`);
+      let s;
+      if(a){
+        const sug=a.veto.length?extraSuggestion(a.veto,a.d.id):null;
+        const exLine=a.veto.length?`<div class="ex">🌭 <b>${a.veto.join(" und ")}</b> ${a.veto.length>1?"bekommen":"bekommt"} stattdessen: ${sug?esc(sug.n):"eigenes Essen wählen"}</div>`:"";
+        s=el(`<div class="slot${a.neu?" exp":""}${e.pin?" pinned":""}"><div class="day">${SLOTS[i]}${a.neu?" · Experiment":""}</div><div class="dish">${esc(a.d.n)}</div><div class="tag">${BASE[a.d.b]} · ${a.d.e?"Aufwand "+"●".repeat(a.d.e):"geliefert"}</div>${exLine}<div class="slotrow"><button class="swap">↻ Tauschen</button><button class="swap pin">${e.pin?"📌 Gepinnt":"📌 Pinnen"}</button></div></div>`);
+      }else{
+        s=el(`<div class="slot"><div class="day">${SLOTS[i]}</div><div class="dish">–</div><div class="tag">kein Gericht frei</div><div class="slotrow"><button class="swap">↻ Tauschen</button></div></div>`);
+      }
       s.querySelector(".swap").onclick=()=>swap(i);
       const pb=s.querySelector(".pin");
       if(pb)pb.onclick=()=>{e.pin=!e.pin;draw();};
@@ -1042,12 +1050,15 @@ function vPlan(v){
   bz.querySelector("input").onchange=e=>{S.brotwoche=e.target.checked;save();build(draft.map(x=>x&&x.pin?x:null));draw();};
   v.appendChild(bz);
   const box=el(`<div class="plan"></div>`); v.appendChild(box); draw();
-  const r=el(`<div class="row"><button class="btn">Plan übernehmen</button><button class="btn ghost">Neu würfeln (Pins bleiben)</button></div>`);
+  v.appendChild(el(`<p class="muted" style="margin-top:16px">„Plan übernehmen“ macht diesen Entwurf zum festen Wochenplan: Er bleibt gespeichert stehen (auch nach Neuladen), und ihr bekommt ihn zum Teilen plus eine fertige Einkaufsliste. Ändern geht danach jederzeit über „Neuen Plan machen“.</p>`));
+  const r=el(`<div class="row"><button class="btn">✓ Plan übernehmen</button><button class="btn ghost">Neu würfeln (Pins bleiben)</button></div>`);
   r.children[0].onclick=()=>{
     const ids=planIds();
     S.plan={ids};
     S.history=[ids.filter(x=>x!=null),...(S.history||[])].slice(0,2);
-    save();draft=null;render();
+    save();draft=null;
+    note="Plan übernommen – hier stehen jetzt Teilen und Einkaufsliste.";
+    render();
   };
   r.children[1].onclick=()=>{build(draft.map(x=>x&&x.pin?x:null));draw();};
   v.appendChild(r);
