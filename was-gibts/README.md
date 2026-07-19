@@ -22,18 +22,34 @@ Danach läuft die Seite offline.
 
 ## Ablauf
 
-1. Jeder öffnet die Seite auf seinem Gerät und sichtet unter "Sichtung" die 100 Gerichte.
+1. Jeder öffnet die Seite auf seinem Gerät und sichtet unter "Sichtung" die Gerichte.
 2. Wer mag, spielt anschließend ein paar Duelle unter "Turnier".
 3. Unter "Übertragen" erzeugt jeder seinen Code und zeigt den QR-Code dem Tablet.
    Alternative ohne Kamera: den QR-Code mit der normalen Kamera-App öffnen, der Link
-   liest den Stand direkt ein. Oder die Zeichenfolge abtippen.
-4. Auf dem Tablet stehen dann unter "Ergebnis" und "Wochenplan" die ausgewerteten Daten.
+   liest den Stand direkt ein. Oder die Zeichenfolge abtippen. Die Reihenfolge beim
+   Einlesen ist egal - jeder Code ändert nur die eigene Person.
+4. Auf dem Tablet stehen dann unter "Ergebnis" (inkl. Bestenliste pro Person und für
+   alle) und "Wochenplan" die ausgewerteten Daten.
+5. Rückweg: Das Tablet erzeugt unter "Übertragen" den **Familien-Code** (alle Personen
+   in einem Code). Liest ein Gerät ihn ein, hat es den kompletten Familienstand.
+   Achtung: Das überschreibt dort auch die eigene Person - wer seit der Abgabe
+   weiterbewertet hat, gibt erst wieder ab und liest dann zurück.
+
+Der Wochenplan hat Mo-Fr je ein Essen (bevorzugt einfache Gerichte) und am Wochenende
+Mittag- und Abendessen; ein Wochenendplatz ist Pizza, Burger oder Grillen (Tag
+`grillen` bzw. Name), ein Platz gehört dem Entdeckungspool.
 
 ## Gerichteliste ändern
 
 Die Liste steht in `dishes.json` (Felder: `n` Name, `b` Basis, `p` Protein, `e` Aufwand
-0-3, `t` Tags). Der Service Worker arbeitet network-first: Nach einem Commit reicht es,
-die Seite auf jedem Gerät einmal mit Netz neu zu laden.
+0-3 mit 0 = wird geliefert, `t` Tags, `w` kindgerechte Erklärung "Was ist das?").
+Der Service Worker arbeitet network-first: Nach einem Commit reicht es, die Seite auf
+jedem Gerät einmal mit Netz neu zu laden.
+
+Namen kindgerecht wählen; bei ausländischen Gerichten eine kurze Erklärung in `w`
+mitgeben, sie erscheint in der Sichtung unter dem Namen. Der Tag `"grillen"` markiert
+Grill-Gerichte für den Wochenend-Klassiker im Wochenplan (Pizza und Burger werden am
+Namen erkannt).
 
 **Regeln, damit alte Codes und Bewertungen gültig bleiben:**
 
