@@ -57,9 +57,14 @@ Steuerung im Wochenplan:
 
 Vetos und Extrawurst:
 
-- Ein einzelnes Veto blockiert ein Gericht nicht mehr: Es ist im Wochenplan erlaubt
-  und wird mit "Extrawurst für X" markiert (höchstens zwei pro Woche, nie zweimal
-  für dieselbe Person). Ab zwei Vetos ist das Gericht raus.
+- Bis zu drei Vetos blockieren ein Gericht nicht: Es ist im Wochenplan erlaubt und
+  wird mit "Extrawurst für X, Y" markiert (höchstens zwei Extrawurst-Essen pro
+  Woche, niemand braucht zweimal pro Woche eine). Jedes Veto kostet 1,5 Punkte -
+  Mehrfach-Veto-Gerichte wie Lachs kommen so vor, aber selten. Ab vier Vetos ist
+  das Gericht raus.
+- Die App schlägt als Extrawurst ein Gericht vor, das alle Veto-Leute "gern" oder
+  "geht so" mögen (einfach, verfügbar, in Saison) - im übernommenen Plan, im
+  geteilten Text und in der Einkaufsliste samt Zutaten.
 - Saison-Tags: `sommer`-Gerichte pausieren Nov-Mär automatisch, `winter`-Gerichte
   (Raclette, Fondue, Kürbissuppe) Mai-Sep - nur im Wochenplan.
 

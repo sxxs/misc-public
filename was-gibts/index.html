@@ -408,9 +408,10 @@ function analyse(){
       if(v==="gern")pts.push(2); else if(v==="ok")pts.push(1); else if(v==="neu")pts.push(.5);
     });
     const veto=PEOPLE.filter(p=>r[p.id]==="nie").map(p=>p.name);
-    // Ein einzelnes Veto blockiert nicht mehr (Extrawurst), kostet aber Punkte.
-    // Ab zwei Vetos ist das Gericht raus (Konsumenten filtern veto.length>=2).
-    const sum=pts.reduce((a,b)=>a+b,0)-(veto.length?1.5:0);
+    // Bis zu drei Vetos blockieren nicht (Extrawurst), kosten aber je 1,5 Punkte -
+    // Mehrfach-Veto-Gerichte kommen so vor, aber selten. Ab vier Vetos ist das
+    // Gericht raus (Konsumenten filtern veto.length>3).
+    const sum=pts.reduce((a,b)=>a+b,0)-1.5*veto.length;
     const min=pts.length?Math.min(...pts):0;
     const elo=PEOPLE.reduce((a,p)=>a+((S.elo[p.id][d.id]||1000)-1000),0)/400;
     const neu=kids.some(k=>r[k]==="neu")&&!veto.length;
@@ -806,13 +807,13 @@ function vErgebnis(v){
       o.appendChild(el(`<li><div><div class="nm">${esc(x.a.d.n)}</div><div class="meta">${x.g}× gern gegen ${x.n}× nie (${x.a.veto.join(", ")})</div></div><div class="faces">${faces}</div></li>`));
     });
     fold(`Streit-Index (${streit.length})`,
-      el(`<p class="muted">Die umstrittensten Gerichte: mehrere lieben sie, mindestens einer lehnt ab. Bei einem einzelnen Veto sind sie trotzdem planbar – die Person bekommt eine Extrawurst.</p>`),
+      el(`<p class="muted">Die umstrittensten Gerichte: mehrere lieben sie, mindestens einer lehnt ab. Mit bis zu drei Vetos sind sie trotzdem planbar – die Veto-Leute bekommen eine Extrawurst.</p>`),
       o);
   }
 
   // Unentdeckte Perlen: planbar (höchstens 1 Veto) und allen anderen mindestens
   // "geht so", aber außerhalb der Top 44, aus denen der Wochenplan zieht
-  const eligible=A.filter(a=>a.veto.length<2&&a.done>0&&!S.paused[a.d.id]);
+  const eligible=A.filter(a=>a.veto.length<=3&&a.done>0&&!S.paused[a.d.id]);
   const ranked=[...eligible].sort((a,b)=>(b.min*2+b.sum)-(a.min*2+a.sum));
   const perlen=ranked.slice(44).filter(a=>a.min>=1&&a.done>=4).slice(0,8);
   if(perlen.length){
@@ -854,12 +855,12 @@ function vErgebnis(v){
       w);
   }
 
-  const vet1=vet.filter(a=>a.veto.length===1), vet2=vet.filter(a=>a.veto.length>=2);
+  const vet1=vet.filter(a=>a.veto.length<=3), vet2=vet.filter(a=>a.veto.length>3);
   if(vet1.length){
     const w=el(`<div class="veto"></div>`);
-    vet1.forEach(a=>w.appendChild(el(`<span>${esc(a.d.n)} — ${a.veto[0]}</span>`)));
+    vet1.forEach(a=>w.appendChild(el(`<span>${esc(a.d.n)} — ${a.veto.join(", ")}</span>`)));
     fold(`Mit Extrawurst machbar (${vet1.length})`,
-      el(`<p class="muted">Genau ein Veto – im Wochenplan erlaubt, die Person bekommt etwas anderes.</p>`),
+      el(`<p class="muted">Ein bis drei Vetos – im Wochenplan erlaubt. Die Veto-Leute bekommen eine Extrawurst; die App schlägt dafür ein Gericht vor, das sie alle mögen.</p>`),
       w);
   }
   if(vet2.length){
@@ -878,11 +879,23 @@ function foldEl(title,open,...kids){
 }
 const SLOTS=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag Mittag","Samstag Abend","Sonntag Mittag","Sonntag Abend"];
 const extraFor=id=>PEOPLE.filter(p=>S.ratings[p.id][id]==="nie").map(p=>p.name);
+// Vorschlag fürs Extrawurst-Essen: einfach, verfügbar, und alle Veto-Leute
+// mögen es "gern" oder "geht so" (gern bevorzugt, Duell-Elo als Feinsortierung)
+function extraSuggestion(vetoNames,excludeId){
+  const pids=PEOPLE.filter(p=>vetoNames.includes(p.name)).map(p=>p.id);
+  if(!pids.length)return null;
+  const cand=D.filter(d=>d.id!==excludeId&&!S.paused[d.id]&&inSeason(d)&&d.e>0&&d.e<=2
+    &&pids.every(pid=>["gern","ok"].includes(S.ratings[pid][d.id])));
+  if(!cand.length)return null;
+  const score=d=>pids.reduce((a,pid)=>a+(S.ratings[pid][d.id]==="gern"?2:1)+((S.elo[pid][d.id]||1000)-1000)/400,0);
+  return cand.sort((a,b)=>score(b)-score(a))[0];
+}
 function planText(ids){
   return "Wochenplan:\n"+SLOTS.map((s,i)=>{
     const d=ids[i]!=null?DALL[ids[i]]:null;
     const ex=d?extraFor(d.id):[];
-    return s+": "+(d?d.n+(ex.length?" (Extrawurst für "+ex.join(", ")+")":""):"–");
+    const sug=ex.length?extraSuggestion(ex,d.id):null;
+    return s+": "+(d?d.n+(ex.length?" (Extrawurst für "+ex.join(", ")+(sug?": z.B. "+sug.n:"")+")":""):"–");
   }).join("\n");
 }
 function shareText(txt,okMsg){
@@ -897,7 +910,8 @@ function vPlan(v){
     S.plan.ids.forEach((id,i)=>{
       const d=id!=null?DALL[id]:null;
       const ex=d?extraFor(d.id):[];
-      box.appendChild(el(`<div class="slot"><div class="day">${SLOTS[i]}</div><div class="dish">${d?esc(d.n):"–"}</div><div class="tag">${d?BASE[d.b]+" · "+(d.e?"Aufwand "+"●".repeat(d.e):"geliefert")+(ex.length?` · 🌭 Extrawurst für ${ex.join(", ")}`:""):""}</div></div>`));
+      const sug=ex.length?extraSuggestion(ex,d.id):null;
+      box.appendChild(el(`<div class="slot"><div class="day">${SLOTS[i]}</div><div class="dish">${d?esc(d.n):"–"}</div><div class="tag">${d?BASE[d.b]+" · "+(d.e?"Aufwand "+"●".repeat(d.e):"geliefert")+(ex.length?` · 🌭 Extrawurst für ${ex.join(", ")}${sug?` – z.B. ${esc(sug.n)}`:""}`:""):""}</div></div>`));
     });
     v.appendChild(box);
     const r=el(`<div class="row"><button class="btn">Plan teilen</button><button class="btn ghost">Neuen Plan machen</button></div>`);
@@ -916,6 +930,14 @@ function vPlan(v){
     const ul=el(`<ul class="shop"></ul>`);
     lines.forEach(l=>ul.appendChild(el(`<li>${esc(l)}</li>`)));
     v.appendChild(ul);
+    const sugs=[];
+    S.plan.ids.forEach((id,i)=>{
+      const d=id!=null?DALL[id]:null; if(!d)return;
+      const ex=extraFor(d.id); if(!ex.length)return;
+      const sug=extraSuggestion(ex,d.id);
+      if(sug)sugs.push(`${SLOTS[i]}: ${esc(sug.n)} (für ${ex.join(", ")}${sug.z?" – "+sug.z.map(esc).join(", "):""})`);
+    });
+    if(sugs.length) v.appendChild(el(`<p class="muted">🌭 Extrawurst-Vorschläge dazu einkaufen:<br>${sugs.join("<br>")}</p>`));
     if(liefer.length) v.appendChild(el(`<p class="muted">Wird geliefert: ${liefer.map(esc).join(", ")}</p>`));
     if(noz.length) v.appendChild(el(`<p class="muted">Ohne Zutatenliste: ${noz.map(esc).join(", ")}</p>`));
     const r2=el(`<div class="row"><button class="btn ghost">Einkaufsliste teilen</button></div>`);
@@ -925,9 +947,9 @@ function vPlan(v){
   }
 
   const allA=analyse();
-  const outSeason=allA.filter(a=>a.veto.length<2&&a.done>0&&!S.paused[a.d.id]&&!inSeason(a.d)).length;
-  // Ein einzelnes Veto ist erlaubt (Extrawurst für die Person), ab zwei ist Schluss
-  const A=allA.filter(a=>a.veto.length<2&&a.done>0&&!S.paused[a.d.id]&&inSeason(a.d));
+  const outSeason=allA.filter(a=>a.veto.length<=3&&a.done>0&&!S.paused[a.d.id]&&!inSeason(a.d)).length;
+  // Bis zu drei Vetos sind erlaubt (Extrawurst für die Veto-Leute), ab vier ist Schluss
+  const A=allA.filter(a=>a.veto.length<=3&&a.done>0&&!S.paused[a.d.id]&&inSeason(a.d));
   if(A.length<12){v.appendChild(el(`<div class="empty">Zu wenig bewertet für einen Wochenplan. Mindestens eine Person sollte durch sein.</div>`));return;}
   const byId={}; A.forEach(a=>byId[a.d.id]=a);
   const WE=[5,6,7,8];
@@ -960,10 +982,11 @@ function vPlan(v){
   const fitsIn=skip=>a=>{
     const {used,lief}=usedOf(skip);
     if((used[a.d.b]||0)>=(CAP[a.d.b]||1)||(a.d.t.includes("liefern")&&lief>=1))return false;
-    // Extrawurst-Grenzen: höchstens 2 pro Woche, höchstens 1 pro Person
+    // Extrawurst-Grenzen: höchstens 2 Extrawurst-Essen pro Woche,
+    // und niemand braucht zweimal pro Woche eine Extrawurst
     if(a.veto.length){
       const ex=draft.map((e,j)=>e&&j!==skip&&byId[e.id]).filter(x=>x&&x.veto.length);
-      if(ex.length>=2||ex.some(x=>x.veto[0]===a.veto[0]))return false;
+      if(ex.length>=2||ex.some(x=>x.veto.some(n=>a.veto.includes(n))))return false;
     }
     return true;
   };
@@ -1004,7 +1027,7 @@ function vPlan(v){
     draft.forEach((e,i)=>{
       const a=e&&byId[e.id];
       const s=a
-        ?el(`<div class="slot${a.neu?" exp":""}${e.pin?" pinned":""}"><div class="day">${SLOTS[i]}${a.neu?" · Experiment":""}</div><div class="dish">${esc(a.d.n)}</div><div class="tag">${BASE[a.d.b]} · ${a.d.e?"Aufwand "+"●".repeat(a.d.e):"geliefert"}${a.veto.length?` · 🌭 Extrawurst für ${a.veto[0]}`:""}</div><div class="slotrow"><button class="swap">↻ Tauschen</button><button class="swap pin">${e.pin?"📌 Gepinnt":"📌 Pinnen"}</button></div></div>`)
+        ?el(`<div class="slot${a.neu?" exp":""}${e.pin?" pinned":""}"><div class="day">${SLOTS[i]}${a.neu?" · Experiment":""}</div><div class="dish">${esc(a.d.n)}</div><div class="tag">${BASE[a.d.b]} · ${a.d.e?"Aufwand "+"●".repeat(a.d.e):"geliefert"}${a.veto.length?` · 🌭 Extrawurst für ${a.veto.join(", ")}`:""}</div><div class="slotrow"><button class="swap">↻ Tauschen</button><button class="swap pin">${e.pin?"📌 Gepinnt":"📌 Pinnen"}</button></div></div>`)
         :el(`<div class="slot"><div class="day">${SLOTS[i]}</div><div class="dish">–</div><div class="tag">kein Gericht frei</div><div class="slotrow"><button class="swap">↻ Tauschen</button></div></div>`);
       s.querySelector(".swap").onclick=()=>swap(i);
       const pb=s.querySelector(".pin");
@@ -1014,7 +1037,7 @@ function vPlan(v){
   };
   v.appendChild(el(`<p class="muted">Ein Vorschlag für die Woche. „↻“ tauscht einen einzelnen Platz, „📌“ schützt ihn beim Neu-Würfeln – und wenn alles passt: „Plan übernehmen“.</p>`));
   v.appendChild(foldEl("So baut die App den Plan",false,
-    el(`<p class="muted">Mo–Fr ein Essen pro Tag, bevorzugt einfach (Aufwand ≤ 2). Sa/So jeweils Mittag- und Abendessen; eines davon ist Pizza, Burger oder Grillen, ein Platz gehört einem Experiment aus dem Entdeckungspool. Höchstens zweimal Nudeln, einmal Spätzle, einmal Teig, eine Süßspeise, eine Suppe. Gerichte der letzten zwei übernommenen Pläne werden gemieden (Brotzeit und Klassiker ausgenommen). Ein einzelnes Veto blockiert nicht: höchstens zwei Gerichte pro Woche mit 🌭 Extrawurst, nie zweimal für dieselbe Person – ab zwei Vetos ist ein Gericht raus. Saison-Gerichte (Raclette, Fondue, Grillen) pausieren automatisch im falschen Halbjahr.${outSeason?` Gerade außerhalb der Saison: ${outSeason} Gericht${outSeason===1?"":"e"}.`:""}</p>`)));
+    el(`<p class="muted">Mo–Fr ein Essen pro Tag, bevorzugt einfach (Aufwand ≤ 2). Sa/So jeweils Mittag- und Abendessen; eines davon ist Pizza, Burger oder Grillen, ein Platz gehört einem Experiment aus dem Entdeckungspool. Höchstens zweimal Nudeln, einmal Spätzle, einmal Teig, eine Süßspeise, eine Suppe. Gerichte der letzten zwei übernommenen Pläne werden gemieden (Brotzeit und Klassiker ausgenommen). Bis zu drei Vetos blockieren nicht: höchstens zwei Gerichte pro Woche mit 🌭 Extrawurst, niemand braucht zweimal pro Woche eine – und die App schlägt als Extrawurst ein Gericht vor, das alle Veto-Leute mögen. Jedes Veto kostet Punkte, Mehrfach-Veto-Gerichte kommen also selten. Ab vier Vetos ist ein Gericht raus. Saison-Gerichte (Raclette, Fondue, Grillen) pausieren automatisch im falschen Halbjahr.${outSeason?` Gerade außerhalb der Saison: ${outSeason} Gericht${outSeason===1?"":"e"}.`:""}</p>`)));
   const bz=el(`<label class="toggle"><input type="checkbox"${S.brotwoche?" checked":""}> <span><b>Brotzeit-Woche:</b> Brot ist da – zweimal Brotzeit, Mo/Di oder Di/Mi</span></label>`);
   bz.querySelector("input").onchange=e=>{S.brotwoche=e.target.checked;save();build(draft.map(x=>x&&x.pin?x:null));draw();};
   v.appendChild(bz);
