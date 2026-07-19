@@ -55,6 +55,23 @@ Steuerung im Wochenplan:
   Gerät, Grillen ohne Grill-Saison). Fliegt aus dem Plan, Bewertungen bleiben; die
   Pausenliste wandert mit dem Familien-Code auf die anderen Geräte.
 
+Vetos und Extrawurst:
+
+- Ein einzelnes Veto blockiert ein Gericht nicht mehr: Es ist im Wochenplan erlaubt
+  und wird mit "Extrawurst für X" markiert (höchstens zwei pro Woche, nie zweimal
+  für dieselbe Person). Ab zwei Vetos ist das Gericht raus.
+- Saison-Tags: `sommer`-Gerichte pausieren Nov-Mär automatisch, `winter`-Gerichte
+  (Raclette, Fondue, Kürbissuppe) Mai-Sep - nur im Wochenplan.
+
+Auswertungen unter "Ergebnis": Streit-Index (größte Meinungsspreizung), Unentdeckte
+Perlen (mag jeder, zieht der Plan aber nie), Veto-Bilanz (wer allein wie viel
+blockiert, mit Probier-Kandidaten), Turnier-Check (Favoriten, die fast jedes Duell
+verlieren - Kandidaten fürs Revidieren).
+
+Sicherung: Unter "Übertragen" lässt sich der komplette Gerätestand als Datei
+herunterladen und wieder einlesen (inkl. Duell-Zähler, Pausenliste, übernommenem
+Plan - mehr als der Familien-Code abdeckt).
+
 Turnier und Revidieren:
 
 - Wird ein Favorit unter "Sichtung" heruntergestuft, fliegt er aus dem Turnier-Ranking.
