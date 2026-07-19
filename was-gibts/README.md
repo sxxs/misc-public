@@ -43,16 +43,31 @@ Steuerung im Wochenplan:
 
 - **↻ Tauschen** ersetzt einen einzelnen Platz durch ein anderes passendes Gericht
   (Klassiker- und Experiment-Plätze behalten ihre Rolle, solange sie die einzigen sind).
+- **📌 Pinnen** schützt einen Platz beim Neu-Würfeln ("Donnerstag ist gesetzt").
+- **Plan übernehmen** friert den Plan ein: Er bleibt beim Tab-Wechsel stehen und lässt
+  sich als Text teilen; dazu gibt es eine **Einkaufsliste** aus den Hauptzutaten
+  (Feld `z` in dishes.json). "Neuen Plan machen" startet den nächsten Entwurf.
+- **Wiederholungs-Bremse**: Gerichte der letzten zwei übernommenen Pläne werden
+  gemieden (Brotzeit und Pizza/Burger/Grillen dürfen sich wiederholen).
 - **Brotzeit-Woche**: Haken setzen, wenn Brot da ist - der Plan legt zweimal Brotzeit
   auf Mo/Di oder Di/Mi (Gerichte mit Tag `brotzeit`).
 - **Pausierte Gerichte**: global abschalten, was gerade nicht geht (Raclette ohne
   Gerät, Grillen ohne Grill-Saison). Fliegt aus dem Plan, Bewertungen bleiben; die
   Pausenliste wandert mit dem Familien-Code auf die anderen Geräte.
 
+Turnier und Revidieren:
+
+- Wird ein Favorit unter "Sichtung" heruntergestuft, fliegt er aus dem Turnier-Ranking.
+- Neu oder wieder auf "gern" gestufte Gerichte haben Duellzähler 0 und kommen bei den
+  nächsten Duellen zuerst dran - so wiederholt man gezielt die Teile des Turniers,
+  die nicht mehr passen. "Turnier neu starten" pro Person gibt es auch.
+- Die Startseite zeigt pro Person eine Duell-Empfehlung ("noch ~X Duelle").
+
 ## Gerichteliste ändern
 
 Die Liste steht in `dishes.json` (Felder: `n` Name, `b` Basis, `p` Protein, `e` Aufwand
-0-3 mit 0 = wird geliefert, `t` Tags, `w` kindgerechte Erklärung "Was ist das?").
+0-3 mit 0 = wird geliefert, `t` Tags, `w` kindgerechte Erklärung "Was ist das?",
+`z` Hauptzutaten für die Einkaufsliste).
 Der Service Worker arbeitet network-first: Nach einem Commit reicht es, die Seite auf
 jedem Gerät einmal mit Netz neu zu laden.
 
