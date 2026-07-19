@@ -391,16 +391,24 @@ function analyse(){
     const r={},pts=[];
     PEOPLE.forEach(p=>{
       const v=S.ratings[p.id][d.id]||null; r[p.id]=v;
-      if(v==="gern")pts.push(2); else if(v==="ok")pts.push(1); else if(v==="neu")pts.push(.5); else if(v==="nie")pts.push(-99);
+      if(v==="gern")pts.push(2); else if(v==="ok")pts.push(1); else if(v==="neu")pts.push(.5);
     });
     const veto=PEOPLE.filter(p=>r[p.id]==="nie").map(p=>p.name);
-    const scored=pts.filter(x=>x>-90);
-    const sum=scored.reduce((a,b)=>a+b,0);
-    const min=scored.length?Math.min(...scored):0;
+    // Ein einzelnes Veto blockiert nicht mehr (Extrawurst), kostet aber Punkte.
+    // Ab zwei Vetos ist das Gericht raus (Konsumenten filtern veto.length>=2).
+    const sum=pts.reduce((a,b)=>a+b,0)-(veto.length?1.5:0);
+    const min=pts.length?Math.min(...pts):0;
     const elo=PEOPLE.reduce((a,p)=>a+((S.elo[p.id][d.id]||1000)-1000),0)/400;
     const neu=kids.some(k=>r[k]==="neu")&&!veto.length;
     return {d,r,veto,sum:sum+elo,min,neu,done:PEOPLE.filter(p=>r[p.id]).length};
   });
+}
+// Saison: "sommer"-Gerichte nicht Nov-Mär, "winter"-Gerichte nicht Mai-Sep
+function inSeason(d,m){
+  m=m||new Date().getMonth()+1;
+  if(d.t.includes("sommer")&&(m<=3||m>=11))return false;
+  if(d.t.includes("winter")&&m>=5&&m<=9)return false;
+  return true;
 }
 
 /* ---------- Ansichten ---------- */
@@ -621,6 +629,39 @@ function vTeilen(v){
   const g=el(`<div class="veto"></div>`);
   PEOPLE.forEach(p=>{const n=rated(p.id);g.appendChild(el(`<span style="background:${n===D.length?'rgba(227,167,47,.2)':'rgba(243,238,226,.08)'}">${p.name}: ${n} von ${D.length}</span>`));});
   v.appendChild(g);
+
+  v.appendChild(el(`<h3>Sicherung</h3>`));
+  v.appendChild(el(`<p class="muted">Der komplette Stand dieses Geräts als Datei – auch Duell-Zähler, Pausenliste und der übernommene Plan, also mehr als der Familien-Code. Gut vor einem Gerätewechsel oder als Absicherung fürs Tablet.</p>`));
+  const bk=el(`<div class="row"><button class="btn ghost">Backup herunterladen</button><button class="btn ghost">Backup einlesen</button></div>`);
+  const file=el(`<input type="file" accept="application/json,.json" style="display:none">`);
+  bk.children[0].onclick=()=>{
+    const blob=new Blob([backupJson()],{type:"application/json"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download="wasgibts-backup-"+new Date().toISOString().slice(0,10)+".json";
+    a.click(); URL.revokeObjectURL(a.href);
+  };
+  bk.children[1].onclick=()=>file.click();
+  file.onchange=()=>{
+    const f=file.files[0]; if(!f)return;
+    f.text().then(t=>{
+      try{ note="Backup eingelesen (Stand vom "+restoreBackup(t)+")."; }
+      catch(e){ note="Backup konnte nicht gelesen werden: "+e.message; }
+      render();
+    });
+  };
+  v.appendChild(bk); v.appendChild(file);
+}
+
+function backupJson(){
+  return JSON.stringify({app:"wasgibts",v:2,dishes:DALL.length,ts:new Date().toISOString(),state:S});
+}
+function restoreBackup(text){
+  const b=JSON.parse(text);
+  if(b.app!=="wasgibts"||!b.state||!b.state.ratings) throw new Error("Das ist keine Was-gibt's-Sicherung.");
+  if(b.dishes>DALL.length) throw new Error("Die Sicherung stammt von einer neueren Gerichteliste. Erst die Seite aktualisieren.");
+  S=b.state; fresh(); save(); draft=null;
+  return (b.ts||"").slice(0,10)||"unbekannt";
 }
 
 async function scan(v){
@@ -708,19 +749,95 @@ function vErgebnis(v){
     v.appendChild(el(`<p class="muted">Kennt mindestens eins der Kinder nicht, und niemand hat Veto eingelegt. Genau hier liegt die Chance, aus der Nudel-Schleife rauszukommen.</p>`));
     v.appendChild(list(neu,"sum"));
   }
-  if(vet.length){
-    v.appendChild(el(`<h3>Raus wegen Veto (${vet.length})</h3>`));
+
+  // Streit-Index: größte Meinungsspreizung (mindestens 1x gern und 1x nie)
+  const streit=A.filter(a=>a.done>=3).map(a=>{
+    const g=PEOPLE.filter(p=>a.r[p.id]==="gern").length;
+    return {a,g,n:a.veto.length,score:Math.min(PEOPLE.filter(p=>a.r[p.id]==="gern").length,a.veto.length)*10+a.veto.length};
+  }).filter(x=>x.g>=1&&x.n>=1).sort((x,y)=>y.score-x.score||y.a.sum-x.a.sum).slice(0,10);
+  if(streit.length){
+    v.appendChild(el(`<h3>Streit-Index</h3>`));
+    v.appendChild(el(`<p class="muted">Die umstrittensten Gerichte: mehrere lieben sie, mindestens einer lehnt ab. Bei einem einzelnen Veto sind sie trotzdem planbar – die Person bekommt eine Extrawurst.</p>`));
+    const o=el(`<ol class="rank"></ol>`);
+    streit.forEach(x=>{
+      const faces=PEOPLE.map(p=>{
+        const r=x.a.r[p.id];
+        const c=r==="gern"?"f-gern":r==="ok"?"f-ok":r==="neu"?"f-neu":r==="nie"?"f-nie":"";
+        return `<span class="face ${c}" title="${p.name}: ${r||"noch nichts"}">${p.name[0]}</span>`;
+      }).join("");
+      o.appendChild(el(`<li><div><div class="nm">${esc(x.a.d.n)}</div><div class="meta">${x.g}× gern gegen ${x.n}× nie (${x.a.veto.join(", ")})</div></div><div class="faces">${faces}</div></li>`));
+    });
+    v.appendChild(o);
+  }
+
+  // Unentdeckte Perlen: planbar (höchstens 1 Veto) und allen anderen mindestens
+  // "geht so", aber außerhalb der Top 44, aus denen der Wochenplan zieht
+  const eligible=A.filter(a=>a.veto.length<2&&a.done>0&&!S.paused[a.d.id]);
+  const ranked=[...eligible].sort((a,b)=>(b.min*2+b.sum)-(a.min*2+a.sum));
+  const perlen=ranked.slice(44).filter(a=>a.min>=1&&a.done>=4).slice(0,8);
+  if(perlen.length){
+    v.appendChild(el(`<h3>Unentdeckte Perlen</h3>`));
+    v.appendChild(el(`<p class="muted">Planbar und bei allen (außer höchstens einem Veto) mindestens „geht so“ – aber der Wochenplan zieht sie fast nie, weil sie knapp unter den Top-Gerichten liegen. Gezielt eintauschen und pinnen.</p>`));
+    v.appendChild(list(perlen,"min"));
+  }
+
+  // Veto-Bilanz: wer blockiert wie viel allein
+  const bilanz=PEOPLE.map(p=>{
+    const solo=A.filter(a=>a.veto.length===1&&a.veto[0]===p.name).sort((a,b)=>b.sum-a.sum);
+    return {p,solo,total:A.filter(a=>a.veto.includes(p.name)).length};
+  }).filter(x=>x.total>0).sort((x,y)=>y.solo.length-x.solo.length);
+  if(bilanz.length){
+    v.appendChild(el(`<h3>Veto-Bilanz</h3>`));
+    v.appendChild(el(`<p class="muted">Wer als Einziger blockiert, verursacht Extrawürste. Die Beispiele sind die Gerichte, die dem Rest am besten schmecken würden – die besten Kandidaten fürs Nochmal-Probieren.</p>`));
+    bilanz.forEach(x=>{
+      const ex=x.solo.slice(0,3).map(a=>esc(a.d.n)).join(", ");
+      v.appendChild(el(`<p style="font-size:14px;margin-bottom:8px"><b style="color:var(--mustard)">${x.p.name}</b>: ${x.solo.length}× einziges Veto (${x.total} insgesamt)${ex?" – z.&nbsp;B. "+ex:""}</p>`));
+    });
+  }
+
+  // Turnier-Check: Favoriten, die auf diesem Gerät fast jedes Duell verlieren
+  const checks=[];
+  PEOPLE.forEach(p=>{
+    D.forEach(d=>{
+      if(S.ratings[p.id][d.id]!=="gern")return;
+      const c=S.dcnt[p.id][d.id]||0, e=S.elo[p.id][d.id]||1000;
+      if(c>=3&&e<970) checks.push({p,d,c,e});
+    });
+  });
+  v.appendChild(el(`<h3>Turnier-Check</h3>`));
+  if(checks.length){
+    v.appendChild(el(`<p class="muted">Diese Favoriten verlieren im Turnier fast immer – vielleicht ist „gern“ doch eher „geht so“? Unter „Sichtung“ lässt sich das revidieren.</p>`));
     const w=el(`<div class="veto"></div>`);
-    vet.forEach(a=>w.appendChild(el(`<span>${esc(a.d.n)} — ${a.veto.join(", ")}</span>`)));
+    checks.sort((a,b)=>a.e-b.e).slice(0,10).forEach(x=>
+      w.appendChild(el(`<span>${x.p.name}: ${esc(x.d.n)} (${x.c} Duelle)</span>`)));
+    v.appendChild(w);
+  }else{
+    v.appendChild(el(`<p class="muted">Noch nichts auffällig. Dieser Check braucht Duelle auf dem jeweiligen Gerät – die Duell-Zähler wandern nicht im Code mit.</p>`));
+  }
+
+  const vet1=vet.filter(a=>a.veto.length===1), vet2=vet.filter(a=>a.veto.length>=2);
+  if(vet1.length){
+    v.appendChild(el(`<h3>Mit Extrawurst machbar (${vet1.length})</h3>`));
+    v.appendChild(el(`<p class="muted">Genau ein Veto – im Wochenplan erlaubt, die Person bekommt etwas anderes.</p>`));
+    const w=el(`<div class="veto"></div>`);
+    vet1.forEach(a=>w.appendChild(el(`<span>${esc(a.d.n)} — ${a.veto[0]}</span>`)));
+    v.appendChild(w);
+  }
+  if(vet2.length){
+    v.appendChild(el(`<h3>Raus wegen Veto (${vet2.length})</h3>`));
+    const w=el(`<div class="veto"></div>`);
+    vet2.forEach(a=>w.appendChild(el(`<span>${esc(a.d.n)} — ${a.veto.join(", ")}</span>`)));
     v.appendChild(w);
   }
 }
 
 const SLOTS=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag Mittag","Samstag Abend","Sonntag Mittag","Sonntag Abend"];
+const extraFor=id=>PEOPLE.filter(p=>S.ratings[p.id][id]==="nie").map(p=>p.name);
 function planText(ids){
   return "Wochenplan:\n"+SLOTS.map((s,i)=>{
     const d=ids[i]!=null?DALL[ids[i]]:null;
-    return s+": "+(d?d.n:"–");
+    const ex=d?extraFor(d.id):[];
+    return s+": "+(d?d.n+(ex.length?" (Extrawurst für "+ex.join(", ")+")":""):"–");
   }).join("\n");
 }
 function shareText(txt,okMsg){
@@ -734,7 +851,8 @@ function vPlan(v){
     const box=el(`<div class="plan"></div>`);
     S.plan.ids.forEach((id,i)=>{
       const d=id!=null?DALL[id]:null;
-      box.appendChild(el(`<div class="slot"><div class="day">${SLOTS[i]}</div><div class="dish">${d?esc(d.n):"–"}</div><div class="tag">${d?BASE[d.b]+" · "+(d.e?"Aufwand "+"●".repeat(d.e):"geliefert"):""}</div></div>`));
+      const ex=d?extraFor(d.id):[];
+      box.appendChild(el(`<div class="slot"><div class="day">${SLOTS[i]}</div><div class="dish">${d?esc(d.n):"–"}</div><div class="tag">${d?BASE[d.b]+" · "+(d.e?"Aufwand "+"●".repeat(d.e):"geliefert")+(ex.length?` · 🌭 Extrawurst für ${ex.join(", ")}`:""):""}</div></div>`));
     });
     v.appendChild(box);
     const r=el(`<div class="row"><button class="btn">Plan teilen</button><button class="btn ghost">Neuen Plan machen</button></div>`);
@@ -761,7 +879,10 @@ function vPlan(v){
     return;
   }
 
-  const A=analyse().filter(a=>!a.veto.length&&a.done>0&&!S.paused[a.d.id]);
+  const allA=analyse();
+  const outSeason=allA.filter(a=>a.veto.length<2&&a.done>0&&!S.paused[a.d.id]&&!inSeason(a.d)).length;
+  // Ein einzelnes Veto ist erlaubt (Extrawurst für die Person), ab zwei ist Schluss
+  const A=allA.filter(a=>a.veto.length<2&&a.done>0&&!S.paused[a.d.id]&&inSeason(a.d));
   if(A.length<12){v.appendChild(el(`<div class="empty">Zu wenig bewertet für einen Wochenplan. Mindestens eine Person sollte durch sein.</div>`));return;}
   const byId={}; A.forEach(a=>byId[a.d.id]=a);
   const WE=[5,6,7,8];
@@ -793,7 +914,13 @@ function vPlan(v){
   };
   const fitsIn=skip=>a=>{
     const {used,lief}=usedOf(skip);
-    return (used[a.d.b]||0)<(CAP[a.d.b]||1)&&!(a.d.t.includes("liefern")&&lief>=1);
+    if((used[a.d.b]||0)>=(CAP[a.d.b]||1)||(a.d.t.includes("liefern")&&lief>=1))return false;
+    // Extrawurst-Grenzen: höchstens 2 pro Woche, höchstens 1 pro Person
+    if(a.veto.length){
+      const ex=draft.map((e,j)=>e&&j!==skip&&byId[e.id]).filter(x=>x&&x.veto.length);
+      if(ex.length>=2||ex.some(x=>x.veto[0]===a.veto[0]))return false;
+    }
+    return true;
   };
   const inDraft=a=>draft.some(e=>e&&e.id===a.d.id);
   const build=keep=>{
@@ -832,7 +959,7 @@ function vPlan(v){
     draft.forEach((e,i)=>{
       const a=e&&byId[e.id];
       const s=a
-        ?el(`<div class="slot${a.neu?" exp":""}${e.pin?" pinned":""}"><div class="day">${SLOTS[i]}${a.neu?" · Experiment":""}</div><div class="dish">${esc(a.d.n)}</div><div class="tag">${BASE[a.d.b]} · ${a.d.e?"Aufwand "+"●".repeat(a.d.e):"geliefert"}</div><div class="slotrow"><button class="swap">↻ Tauschen</button><button class="swap pin">${e.pin?"📌 Gepinnt":"📌 Pinnen"}</button></div></div>`)
+        ?el(`<div class="slot${a.neu?" exp":""}${e.pin?" pinned":""}"><div class="day">${SLOTS[i]}${a.neu?" · Experiment":""}</div><div class="dish">${esc(a.d.n)}</div><div class="tag">${BASE[a.d.b]} · ${a.d.e?"Aufwand "+"●".repeat(a.d.e):"geliefert"}${a.veto.length?` · 🌭 Extrawurst für ${a.veto[0]}`:""}</div><div class="slotrow"><button class="swap">↻ Tauschen</button><button class="swap pin">${e.pin?"📌 Gepinnt":"📌 Pinnen"}</button></div></div>`)
         :el(`<div class="slot"><div class="day">${SLOTS[i]}</div><div class="dish">–</div><div class="tag">kein Gericht frei</div><div class="slotrow"><button class="swap">↻ Tauschen</button></div></div>`);
       s.querySelector(".swap").onclick=()=>swap(i);
       const pb=s.querySelector(".pin");
@@ -840,7 +967,7 @@ function vPlan(v){
       box.appendChild(s);
     });
   };
-  v.appendChild(el(`<p class="muted">Unter der Woche ein Essen pro Tag, eher einfach. Am Wochenende Mittag- und Abendessen – eines davon ist Pizza, Burger oder Grillen, ein Platz gehört dem Entdeckungspool. Gerichte der letzten Wochen werden gemieden. „↻ Tauschen“ ersetzt einen Platz, „📌 Pinnen“ schützt ihn beim Neu-Würfeln. Passt alles: „Plan übernehmen“.</p>`));
+  v.appendChild(el(`<p class="muted">Unter der Woche ein Essen pro Tag, eher einfach. Am Wochenende Mittag- und Abendessen – eines davon ist Pizza, Burger oder Grillen, ein Platz gehört dem Entdeckungspool. Gerichte der letzten Wochen werden gemieden. Ein einzelnes Veto blockiert nicht: höchstens zwei Gerichte pro Woche mit 🌭 Extrawurst, nie zweimal für dieselbe Person. „↻ Tauschen“ ersetzt einen Platz, „📌 Pinnen“ schützt ihn beim Neu-Würfeln. Passt alles: „Plan übernehmen“.${outSeason?` ${outSeason} Gericht${outSeason===1?" ist":"e sind"} gerade außerhalb der Saison.`:""}</p>`));
   const bz=el(`<label class="toggle"><input type="checkbox"${S.brotwoche?" checked":""}> <span><b>Brotzeit-Woche:</b> Brot ist da – zweimal Brotzeit, Mo/Di oder Di/Mi</span></label>`);
   bz.querySelector("input").onchange=e=>{S.brotwoche=e.target.checked;save();build(draft.map(x=>x&&x.pin?x:null));draw();};
   v.appendChild(bz);
