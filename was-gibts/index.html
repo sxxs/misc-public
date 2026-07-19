@@ -149,9 +149,15 @@ ol.rank .meta{font-size:12px;color:var(--dim);margin-top:2px}
 textarea.code{width:100%;background:var(--tile);color:var(--chalk);border:0;border-radius:var(--r);padding:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;resize:vertical}
 textarea.code::placeholder{color:var(--dim)}
 .empty{background:var(--tile);border-radius:var(--r);padding:26px;color:var(--dim);font-size:15px}
-/* Wochenplan: Tauschen + Brotzeit-Toggle */
-.slot .swap{margin-top:10px;align-self:flex-start;background:rgba(243,238,226,.08);border:0;border-radius:var(--r);color:var(--dim);font-family:var(--body);font-size:12px;padding:6px 10px;cursor:pointer;transition:background .15s,color .15s}
+/* Wochenplan: Tauschen, Pinnen, Brotzeit-Toggle, Einkaufsliste */
+.slot .slotrow{display:flex;gap:4px;margin-top:10px;flex-wrap:wrap}
+.slot .swap{align-self:flex-start;background:rgba(243,238,226,.08);border:0;border-radius:var(--r);color:var(--dim);font-family:var(--body);font-size:12px;padding:6px 10px;cursor:pointer;transition:background .15s,color .15s}
 .slot .swap:hover{background:var(--tile-hi);color:var(--chalk)}
+.slot.pinned{outline:1px solid var(--mustard)}
+.slot.pinned .pin{background:var(--mustard);color:#12262B}
+.shop{margin:0 0 12px;padding-left:22px;columns:2;column-gap:24px}
+.shop li{margin-bottom:6px;font-size:14px;break-inside:avoid}
+@media(max-width:520px){.shop{columns:1}}
 .toggle{display:flex;gap:10px;align-items:center;background:var(--tile);border-radius:var(--r);padding:12px 14px;margin:0 0 12px;font-size:14px;cursor:pointer}
 .toggle input{width:18px;height:18px;accent-color:var(--mustard);flex-shrink:0}
 .toggle b{color:var(--mustard);font-weight:600}
@@ -196,7 +202,7 @@ button:focus-visible,.person:focus-visible{outline:2px solid var(--mustard);outl
 <script>
 /* ---------- Daten ---------- */
 // b = Basis, p = Protein, e = Aufwand 0-3 (0 = wird geliefert), t = Tags,
-// w = kindgerechte Erklärung ("Was ist das?")
+// w = kindgerechte Erklärung ("Was ist das?"), z = Hauptzutaten (Einkaufsliste)
 // Die Gerichteliste liegt in dishes.json (siehe README: nur ans Ende anfügen,
 // nie mittendrin einfügen oder löschen; ausmustern per "aus": true).
 let DALL=[];   // alle Gerichte, Position = feste id (auch ausgemusterte)
@@ -236,12 +242,16 @@ const SEED_GERN={
 const KEY="wasgibts:v2";
 let S={ratings:{},elo:{},duels:{}};   // ratings[pid][did] = 'gern'|'ok'|'nie'|'neu'
 let tab="start", who=null, mem={}, note="", reviewList=false, bestWho="alle";
+let draft=null; // Wochenplan-Entwurf: [{id,pin}|null x9], lebt bis zum Übernehmen/Neuladen
 
 function fresh(){
   S.paused=S.paused||{};   // global pausierte Gerichte (Gerät fehlt o.ä.), id -> true
+  S.dcnt=S.dcnt||{};       // Duelle pro Person und Gericht (Gerät-lokal, nicht im Code)
+  S.history=S.history||[]; // Gericht-IDs der letzten übernommenen Wochenpläne
   PEOPLE.forEach(p=>{
     S.ratings[p.id]=S.ratings[p.id]||{};
     S.elo[p.id]=S.elo[p.id]||{};
+    S.dcnt[p.id]=S.dcnt[p.id]||{};
     S.duels[p.id]=S.duels[p.id]||0;
     D.forEach(d=>{
       if(S.ratings[p.id][d.id]) return;
@@ -413,7 +423,10 @@ function vStart(v){
   const g=el(`<div class="people"></div>`);
   PEOPLE.forEach(p=>{
     const n=rated(p.id), pc=Math.round(n/D.length*100);
-    const b=el(`<button class="person"><span class="nm">${p.name}</span><div class="bar"><i style="width:${pc}%"></i></div><span class="st">${n} von ${D.length} · ${S.duels[p.id]||0} Duelle</span></button>`);
+    const gern=D.filter(d=>S.ratings[p.id][d.id]==="gern").length;
+    const rem=Math.max(0,Math.min(30,gern)-(S.duels[p.id]||0));
+    const hint=n<D.length?"":rem>0?` · noch ~${rem} Duelle empfohlen`:" · Ranking stabil";
+    const b=el(`<button class="person"><span class="nm">${p.name}</span><div class="bar"><i style="width:${pc}%"></i></div><span class="st">${n} von ${D.length} · ${S.duels[p.id]||0} Duelle${hint}</span></button>`);
     b.onclick=()=>{who=p.id;reviewList=false;tab=n<D.length?"sichten":"duell";render();};
     g.appendChild(b);
   });
@@ -446,7 +459,11 @@ function vSichten(v){
     <button class="a-nie"><span>✕</span>Nie</button>
     <button class="a-neu"><span>?</span>Kenn ich nicht</button></div>`);
   ["gern","ok","nie","neu"].forEach((val,i)=>{
-    a.children[i].onclick=()=>{S.ratings[who][d.id]=val;save();render();};
+    a.children[i].onclick=()=>{
+      S.ratings[who][d.id]=val;
+      if(val!=="gern"){ delete S.elo[who][d.id]; delete S.dcnt[who][d.id]; }
+      save();render();
+    };
   });
   v.appendChild(a);
   const back=el(`<div class="row"><button class="btn ghost">Letzte Antwort ändern</button><button class="btn ghost">Alle Bewertungen ansehen</button><button class="btn ghost">Pause, anderer ist dran</button></div>`);
@@ -463,7 +480,7 @@ function vSichten(v){
 function vRevidieren(v){
   const p=PEOPLE.find(x=>x.id===who);
   v.appendChild(el(`<div class="progress"><span>${p.name}: Bewertungen ändern</span><span>${rated(who)} von ${D.length}</span></div>`));
-  v.appendChild(el(`<p class="muted">Tippe bei einem Gericht auf ★ gern, ~ geht so, ✕ nie oder ? kenn ich nicht. Die Änderung gilt sofort.</p>`));
+  v.appendChild(el(`<p class="muted">Tippe bei einem Gericht auf ★ gern, ~ geht so, ✕ nie oder ? kenn ich nicht. Die Änderung gilt sofort. Stufst du einen Favoriten herunter, fliegt er aus dem Turnier-Ranking; neue Favoriten kommen bei den nächsten Duellen zuerst dran.</p>`));
   const back=el(`<div class="row"><button class="btn">Zurück zur Sichtung</button></div>`);
   back.firstChild.onclick=()=>{reviewList=false;render();};
   v.appendChild(back);
@@ -482,7 +499,11 @@ function vRevidieren(v){
       VALS.forEach((val,i)=>{
         const btn=el(`<button aria-label="${val}" class="${cur===val?"on-"+val:""}">${SYM[i]}</button>`);
         btn.onclick=()=>{
-          S.ratings[who][d.id]=val; save();
+          S.ratings[who][d.id]=val;
+          // Heruntergestufte Favoriten fliegen aus dem Turnier-Ranking;
+          // neu hochgestufte kommen im Turnier zuerst dran (Duellzähler 0)
+          if(val!=="gern"){ delete S.elo[who][d.id]; delete S.dcnt[who][d.id]; }
+          save();
           [...mini.children].forEach((c,j)=>c.className=VALS[j]===val?"on-"+val:"");
         };
         mini.appendChild(btn);
@@ -508,13 +529,24 @@ function vDuell(v){
   if(pool.length<4){v.appendChild(el(`<div class="empty">${p.name} hat noch zu wenige Lieblingsgerichte für ein Turnier. Erst weiter sichten.</div>`));return;}
   v.appendChild(el(`<p class="muted">Beide Gerichte mag ${p.name}. Welches lieber? Das sortiert die Favoriten untereinander – 15 bis 20 Duelle reichen.</p>`));
   v.appendChild(el(`<div class="progress"><span>${p.name}</span><span>${S.duels[who]||0} Duelle gespielt</span></div>`));
-  const pick=()=>{const a=pool[Math.floor(Math.random()*pool.length)];let b;do{b=pool[Math.floor(Math.random()*pool.length)];}while(b===a);return [a,b];};
+  const cnt=d=>S.dcnt[who][d.id]||0;
+  const fresh0=pool.filter(d=>cnt(d)===0).length;
+  if(fresh0) v.appendChild(el(`<p class="muted">${fresh0} Favorit${fresh0===1?" war":"en waren"} noch nie im Duell (neu bewertet oder revidiert) – die kommen zuerst dran.</p>`));
+  // Nachzügler zuerst: einer der beiden Kandidaten kommt aus den am wenigsten geduellten
+  const pick=()=>{
+    const sorted=[...pool].sort((a,b)=>cnt(a)-cnt(b)||Math.random()-.5);
+    const a=sorted[Math.floor(Math.random()*Math.min(3,sorted.length))];
+    let b;do{b=pool[Math.floor(Math.random()*pool.length)];}while(b===a);
+    return [a,b];
+  };
   const [x,y]=pick();
   const g=el(`<div class="duel"><button>${esc(x.n)}</button><button>${esc(y.n)}</button></div>`);
   const win=(w,l)=>{
     const E=S.elo[who], rw=E[w.id]||1000, rl=E[l.id]||1000;
     const exp=1/(1+Math.pow(10,(rl-rw)/400));
     E[w.id]=rw+32*(1-exp); E[l.id]=rl-32*(1-exp);
+    S.dcnt[who][w.id]=(S.dcnt[who][w.id]||0)+1;
+    S.dcnt[who][l.id]=(S.dcnt[who][l.id]||0)+1;
     S.duels[who]=(S.duels[who]||0)+1; save(); render();
   };
   g.children[0].onclick=()=>win(x,y);
@@ -524,6 +556,13 @@ function vDuell(v){
   r.children[0].onclick=()=>{who=null;tab="start";render();};
   r.children[1].onclick=()=>{tab="ergebnis";render();};
   v.appendChild(r);
+  const rst=el(`<div class="row"><button class="btn ghost">Turnier von ${p.name} neu starten</button></div>`);
+  rst.firstChild.onclick=()=>{
+    if(confirm(`Alle Duell-Ergebnisse von ${p.name} löschen und neu anfangen?`)){
+      S.elo[who]={};S.dcnt[who]={};S.duels[who]=0;save();render();
+    }
+  };
+  v.appendChild(rst);
 }
 
 function vTeilen(v){
@@ -677,80 +716,143 @@ function vErgebnis(v){
   }
 }
 
+const SLOTS=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag Mittag","Samstag Abend","Sonntag Mittag","Sonntag Abend"];
+function planText(ids){
+  return "Wochenplan:\n"+SLOTS.map((s,i)=>{
+    const d=ids[i]!=null?DALL[ids[i]]:null;
+    return s+": "+(d?d.n:"–");
+  }).join("\n");
+}
+function shareText(txt,okMsg){
+  if(navigator.share){ navigator.share({text:txt}).catch(()=>{}); }
+  else navigator.clipboard.writeText(txt).then(()=>{note=okMsg;render();});
+}
 function vPlan(v){
+  // Übernommener Plan: feste Ansicht mit Teilen + Einkaufsliste
+  if(S.plan){
+    v.appendChild(el(`<p class="muted">Dieser Plan ist übernommen und bleibt so stehen, bis ihr einen neuen macht.</p>`));
+    const box=el(`<div class="plan"></div>`);
+    S.plan.ids.forEach((id,i)=>{
+      const d=id!=null?DALL[id]:null;
+      box.appendChild(el(`<div class="slot"><div class="day">${SLOTS[i]}</div><div class="dish">${d?esc(d.n):"–"}</div><div class="tag">${d?BASE[d.b]+" · "+(d.e?"Aufwand "+"●".repeat(d.e):"geliefert"):""}</div></div>`));
+    });
+    v.appendChild(box);
+    const r=el(`<div class="row"><button class="btn">Plan teilen</button><button class="btn ghost">Neuen Plan machen</button></div>`);
+    r.children[0].onclick=()=>shareText(planText(S.plan.ids),"Plan kopiert – einfach in die Familien-Gruppe einfügen.");
+    r.children[1].onclick=()=>{S.plan=null;save();draft=null;render();};
+    v.appendChild(r);
+
+    v.appendChild(el(`<h3>Einkaufsliste</h3>`));
+    const items={},noz=[],liefer=[];
+    S.plan.ids.forEach(id=>{
+      const d=id!=null?DALL[id]:null; if(!d)return;
+      if(d.t.includes("liefern")){liefer.push(d.n);return;}
+      if(d.z)d.z.forEach(z=>items[z]=(items[z]||0)+1); else noz.push(d.n);
+    });
+    const lines=Object.keys(items).sort((a,b)=>a.localeCompare(b,"de")).map(z=>(items[z]>1?items[z]+"× ":"")+z);
+    const ul=el(`<ul class="shop"></ul>`);
+    lines.forEach(l=>ul.appendChild(el(`<li>${esc(l)}</li>`)));
+    v.appendChild(ul);
+    if(liefer.length) v.appendChild(el(`<p class="muted">Wird geliefert: ${liefer.map(esc).join(", ")}</p>`));
+    if(noz.length) v.appendChild(el(`<p class="muted">Ohne Zutatenliste: ${noz.map(esc).join(", ")}</p>`));
+    const r2=el(`<div class="row"><button class="btn ghost">Einkaufsliste teilen</button></div>`);
+    r2.firstChild.onclick=()=>shareText("Einkauf für den Wochenplan:\n"+lines.map(l=>"- "+l).join("\n"),"Einkaufsliste kopiert.");
+    v.appendChild(r2);
+    return;
+  }
+
   const A=analyse().filter(a=>!a.veto.length&&a.done>0&&!S.paused[a.d.id]);
   if(A.length<12){v.appendChild(el(`<div class="empty">Zu wenig bewertet für einen Wochenplan. Mindestens eine Person sollte durch sein.</div>`));return;}
-  // Mo-Fr ein Essen (eher einfach), Sa/So jeweils Mittag- und Abendessen
-  const SLOTS=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag Mittag","Samstag Abend","Sonntag Mittag","Sonntag Abend"];
+  const byId={}; A.forEach(a=>byId[a.d.id]=a);
   const WE=[5,6,7,8];
   const CAP={nudeln:2,spaetzle:1,teig:1,suess:1,suppe:1,kartoffel:2,reis:2,brot:2,sonst:3};
   const klassiker=a=>/Pizza|Burger/.test(a.d.n)||a.d.t.includes("grillen");
+  // Wiederholungs-Bremse: Gerichte der letzten übernommenen Pläne meiden
+  // (Brotzeit und Wochenend-Klassiker dürfen sich wiederholen)
   const topPool=()=>{
-    const pool=[...A].sort((a,b)=>(b.min*2+b.sum)-(a.min*2+a.sum)).slice(0,44);
+    const sorted=[...A].sort((a,b)=>(b.min*2+b.sum)-(a.min*2+a.sum));
+    let hist=S.history||[];
+    let pool=[];
+    for(let h=hist.length;h>=0;h--){
+      const recent=new Set(hist.slice(0,h).flat());
+      pool=sorted.filter(a=>!recent.has(a.d.id)||a.d.t.includes("brotzeit")||klassiker(a));
+      if(pool.length>=20)break;
+    }
+    pool=pool.slice(0,44);
     for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
     return pool;
   };
-  // Belegung zählen; skip = Platz, der gerade getauscht wird
-  const usedOf=(plan,skip)=>{
+  const planIds=()=>draft.map(e=>e?e.id:null);
+  const usedOf=skip=>{
     const used={};let lief=0;
-    plan.forEach((a,j)=>{ if(a&&j!==skip){ used[a.d.b]=(used[a.d.b]||0)+1; if(a.d.t.includes("liefern"))lief++; } });
+    draft.forEach((e,j)=>{
+      const a=e&&byId[e.id]; if(!a||j===skip)return;
+      used[a.d.b]=(used[a.d.b]||0)+1; if(a.d.t.includes("liefern"))lief++;
+    });
     return {used,lief};
   };
-  const fitsIn=(plan,skip)=>a=>{
-    const {used,lief}=usedOf(plan,skip);
+  const fitsIn=skip=>a=>{
+    const {used,lief}=usedOf(skip);
     return (used[a.d.b]||0)<(CAP[a.d.b]||1)&&!(a.d.t.includes("liefern")&&lief>=1);
   };
-  const build=()=>{
+  const inDraft=a=>draft.some(e=>e&&e.id===a.d.id);
+  const build=keep=>{
+    draft=keep?keep.map(e=>e&&byId[e.id]?e:null):new Array(SLOTS.length).fill(null);
     const pool=topPool();
-    const plan=new Array(SLOTS.length).fill(null);
-    const free=pred=>{const f=fitsIn(plan,-1);return pool.find(a=>!plan.includes(a)&&f(a)&&(!pred||pred(a)));};
-    // 1) Brotzeit-Woche: zweimal Brotzeit auf Mo+Di oder Di+Mi
+    const free=pred=>{const f=fitsIn(-1);return pool.find(a=>!inDraft(a)&&f(a)&&(!pred||pred(a)));};
     if(S.brotwoche){
       const pat=Math.random()<.5?[0,1]:[1,2];
-      for(const i of pat){ const a=free(z=>z.d.t.includes("brotzeit")); if(a)plan[i]=a; }
+      for(const i of pat){ if(draft[i])continue; const a=free(z=>z.d.t.includes("brotzeit")); if(a)draft[i]={id:a.d.id,pin:false}; }
     }
-    // 2) Ein Wochenend-Klassiker: Pizza, Burger oder Grillen
-    const k=free(klassiker);
-    if(k)plan[WE[Math.floor(Math.random()*WE.length)]]=k;
-    // 3) Ein Experiment aus dem Entdeckungspool, bevorzugt am Wochenende
-    const x=free(a=>a.neu);
-    if(x){const s=WE.find(i=>!plan[i]);plan[s!==undefined?s:plan.indexOf(null)]=x;}
-    // 4) Wochentage: einfache Gerichte zuerst (Aufwand höchstens 2)
-    for(let i=0;i<5;i++){ if(plan[i])continue; const a=free(z=>z.d.e<=2)||free(); if(a)plan[i]=a; }
-    // 5) Übrige Wochenendplätze
-    for(const i of WE){ if(plan[i])continue; const a=free(); if(a)plan[i]=a; }
-    return plan;
+    if(!draft.some(e=>e&&klassiker(byId[e.id]))){
+      const k=free(klassiker);
+      if(k){const s=WE.filter(i=>!draft[i]);if(s.length)draft[s[Math.floor(Math.random()*s.length)]]={id:k.d.id,pin:false};}
+    }
+    if(!draft.some(e=>e&&byId[e.id].neu)){
+      const x=free(a=>a.neu);
+      if(x){const s=WE.find(i=>!draft[i]);const t=s!==undefined?s:draft.indexOf(null);if(t>=0)draft[t]={id:x.d.id,pin:false};}
+    }
+    for(let i=0;i<5;i++){ if(draft[i])continue; const a=free(z=>z.d.e<=2)||free(); if(a)draft[i]={id:a.d.id,pin:false}; }
+    for(const i of WE){ if(draft[i])continue; const a=free(); if(a)draft[i]={id:a.d.id,pin:false}; }
   };
-  let plan=build();
-  // Einzelnen Platz austauschen; Rolle (Klassiker/Experiment) bleibt erhalten,
-  // wenn es der einzige Platz dieser Art ist
+  if(!draft||draft.length!==SLOTS.length) build();
+  else draft=draft.map(e=>e&&byId[e.id]?e:null); // pausierte/vetote Gerichte fliegen raus
   const swap=i=>{
-    const pool=topPool(), cur=plan[i], f=fitsIn(plan,i);
-    const cand=pred=>pool.find(a=>!plan.includes(a)&&f(a)&&(!pred||pred(a)));
+    const pool=topPool(), cur=draft[i]&&byId[draft[i].id], f=fitsIn(i);
+    const cand=pred=>pool.find(a=>!inDraft(a)&&f(a)&&(!pred||pred(a)));
     let a=null;
-    if(cur&&WE.includes(i)&&klassiker(cur)&&!plan.some((p,j)=>j!==i&&p&&klassiker(p))) a=cand(klassiker);
-    else if(cur&&cur.neu&&!plan.some((p,j)=>j!==i&&p&&p.neu)) a=cand(z=>z.neu);
+    if(cur&&WE.includes(i)&&klassiker(cur)&&!draft.some((e,j)=>j!==i&&e&&klassiker(byId[e.id]))) a=cand(klassiker);
+    else if(cur&&cur.neu&&!draft.some((e,j)=>j!==i&&e&&byId[e.id].neu)) a=cand(z=>z.neu);
     if(!a) a=i<5?(cand(z=>z.d.e<=2)||cand()):cand();
-    if(a){plan[i]=a;draw();}
+    if(a){draft[i]={id:a.d.id,pin:draft[i]?draft[i].pin:false};draw();}
     else{note="Kein passender Ersatz frei – erst neu würfeln oder etwas anderes tauschen.";render();}
   };
   const draw=()=>{
     box.innerHTML="";
-    plan.forEach((a,i)=>{
+    draft.forEach((e,i)=>{
+      const a=e&&byId[e.id];
       const s=a
-        ?el(`<div class="slot${a.neu?" exp":""}"><div class="day">${SLOTS[i]}${a.neu?" · Experiment":""}</div><div class="dish">${esc(a.d.n)}</div><div class="tag">${BASE[a.d.b]} · ${a.d.e?"Aufwand "+"●".repeat(a.d.e):"geliefert"}</div><button class="swap">↻ Tauschen</button></div>`)
-        :el(`<div class="slot"><div class="day">${SLOTS[i]}</div><div class="dish">–</div><div class="tag">kein Gericht frei</div><button class="swap">↻ Tauschen</button></div>`);
+        ?el(`<div class="slot${a.neu?" exp":""}${e.pin?" pinned":""}"><div class="day">${SLOTS[i]}${a.neu?" · Experiment":""}</div><div class="dish">${esc(a.d.n)}</div><div class="tag">${BASE[a.d.b]} · ${a.d.e?"Aufwand "+"●".repeat(a.d.e):"geliefert"}</div><div class="slotrow"><button class="swap">↻ Tauschen</button><button class="swap pin">${e.pin?"📌 Gepinnt":"📌 Pinnen"}</button></div></div>`)
+        :el(`<div class="slot"><div class="day">${SLOTS[i]}</div><div class="dish">–</div><div class="tag">kein Gericht frei</div><div class="slotrow"><button class="swap">↻ Tauschen</button></div></div>`);
       s.querySelector(".swap").onclick=()=>swap(i);
+      const pb=s.querySelector(".pin");
+      if(pb)pb.onclick=()=>{e.pin=!e.pin;draw();};
       box.appendChild(s);
     });
   };
-  v.appendChild(el(`<p class="muted">Unter der Woche ein Essen pro Tag, eher einfach. Am Wochenende Mittag- und Abendessen – eines davon ist Pizza, Burger oder Grillen, und ein Platz gehört einem Gericht aus dem Entdeckungspool. Höchstens zweimal Nudeln, einmal Spätzle, einmal Teig, eine Süßspeise, eine Suppe. „↻ Tauschen“ ersetzt nur diesen einen Platz.</p>`));
+  v.appendChild(el(`<p class="muted">Unter der Woche ein Essen pro Tag, eher einfach. Am Wochenende Mittag- und Abendessen – eines davon ist Pizza, Burger oder Grillen, ein Platz gehört dem Entdeckungspool. Gerichte der letzten Wochen werden gemieden. „↻ Tauschen“ ersetzt einen Platz, „📌 Pinnen“ schützt ihn beim Neu-Würfeln. Passt alles: „Plan übernehmen“.</p>`));
   const bz=el(`<label class="toggle"><input type="checkbox"${S.brotwoche?" checked":""}> <span><b>Brotzeit-Woche:</b> Brot ist da – zweimal Brotzeit, Mo/Di oder Di/Mi</span></label>`);
-  bz.querySelector("input").onchange=e=>{S.brotwoche=e.target.checked;save();plan=build();draw();};
+  bz.querySelector("input").onchange=e=>{S.brotwoche=e.target.checked;save();build(draft.map(x=>x&&x.pin?x:null));draw();};
   v.appendChild(bz);
   const box=el(`<div class="plan"></div>`); v.appendChild(box); draw();
-  const r=el(`<div class="row"><button class="btn">Neu würfeln</button></div>`);
-  r.firstChild.onclick=()=>{plan=build();draw();};
+  const r=el(`<div class="row"><button class="btn">Plan übernehmen</button><button class="btn ghost">Neu würfeln (Pins bleiben)</button></div>`);
+  r.children[0].onclick=()=>{
+    const ids=planIds();
+    S.plan={ids};
+    S.history=[ids.filter(x=>x!=null),...(S.history||[])].slice(0,2);
+    save();draft=null;render();
+  };
+  r.children[1].onclick=()=>{build(draft.map(x=>x&&x.pin?x:null));draw();};
   v.appendChild(r);
 
   // Pausierte Gerichte: gerade nicht machbar, fliegen aus dem Plan
