@@ -2,6 +2,11 @@
 
 Tools zum Crawlen und Extrahieren von Inhalten der uni-bamberg.de Website.
 
+> **Hinweis:** `output/` und `extracted/` sind nicht im Repo. Der Crawl-Dump
+> (~200 MB fremder Website-Inhalte inkl. PDFs) wurde entfernt, weil er sich
+> jederzeit mit den Skripten hier neu erzeugen lässt. Die unten beschriebenen
+> Pfade entstehen also erst, wenn du `crawl.sh` und `extract.py` laufen lässt.
+
 ## Crawling
 
 `crawl.sh` nutzt wget um Seiten zu laden.

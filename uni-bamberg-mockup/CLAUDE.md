@@ -25,8 +25,12 @@ python3 -m http.server 8000   # Lokaler Server (im mockup/ Ordner)
 Siehe [`crawler/README.md`](crawler/README.md) für Details zu Crawling, Extraktion und Cluster-Logik.
 
 ### Extrahierte Inhalte (`crawler/extracted/`)
+
+**Nicht im Repo.** Der Crawl-Dump wurde entfernt (~200 MB fremde Website-Inhalte);
+er ist mit den Skripten in `crawler/` reproduzierbar. Nach einem Lauf entstehen:
+
 - `clusters/` - Gecrawlte Inhalte gruppiert nach Themenbereich (Markdown)
 - `cluster-summaries/` - Kurze Zusammenfassungen jedes Clusters
 - `pages.json`, `struktur.json` - Strukturierte Metadaten
 
-**Wichtig:** Für Inhalts-Überprüfung der Mockups: Erst `cluster-summaries/` lesen, dann bei Bedarf in `clusters/` nachschlagen.
+**Wichtig:** Für Inhalts-Überprüfung der Mockups: Erst `cluster-summaries/` lesen, dann bei Bedarf in `clusters/` nachschlagen — vorher den Crawl neu erzeugen.
