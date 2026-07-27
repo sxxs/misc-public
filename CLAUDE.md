@@ -13,6 +13,7 @@ misc-public/
 ├── jumpcat/                   # Christmas cat jump & run (v6.2)
 ├── neon-mind/                 # 2-player reaction game (v1.0.0)
 ├── hashcards-pwa/             # Spaced repetition flashcards (v1.0.0)
+├── was-gibts/                 # Family meal decider PWA (v1.7)
 ├── wiai25-enhance/            # Static demo
 ├── uni-bamberg-wrapper/       # University website wrapper with CORS proxy
 ├── uni-bamberg-mockup/        # Mockup and crawler for uni-bamberg
@@ -28,6 +29,7 @@ All projects are deployed via GitHub Pages from the `main` branch:
 - https://sxxs.github.io/misc-public/jumpcat/
 - https://sxxs.github.io/misc-public/neon-mind/
 - https://sxxs.github.io/misc-public/hashcards-pwa/
+- https://sxxs.github.io/misc-public/was-gibts/
 - https://sxxs.github.io/misc-public/wiai25-enhance/
 
 ### GitHub Pages Configuration
@@ -147,6 +149,61 @@ Fast-paced 2-player reaction game (v1.0.0).
 - Tailwind CSS for styling
 - Web Audio API for SFX and synthwave music
 - No build step required
+
+### Was gibt's?
+
+Family meal decider PWA (v1.7). Static, no server, no accounts.
+
+**Workflow:**
+- People: Felix, Jakob, Moritz, Kathrin, Dominik (v1.1 "Eltern" state auto-migrates to both parents)
+- Each family member rates the dishes ("Sichtung"), optionally plays ranking duels ("Turnier")
+- Any rating can be revised later via the searchable list under "Sichtung"
+- State lives in `localStorage`; transfer between devices via QR code or typed code
+- Tablet aggregates results ("Ergebnis" incl. Bestenliste per person and overall)
+  and builds a weekly plan ("Wochenplan")
+- Family code (person index 7) carries all persons at once - for pushing the
+  tablet's aggregate state back to every device; also carries the paused-dishes
+  list (appended block, backward/forward compatible with v1.2 codes)
+- Weekly plan: Mon-Fri one simple meal each (effort <= 2 preferred), Sat/Sun lunch +
+  dinner; one weekend slot is pizza/burger/grilling (`grillen` tag or name match),
+  one slot is an Entdeckungspool experiment
+- Plan controls: per-slot swap button (keeps klassiker/experiment role), per-slot pin
+  (survives reroll), accept plan (freezes it, share as text, shopping list from `z`
+  ingredients), repetition brake (avoids dishes of last 2 accepted plans, brotzeit +
+  klassiker exempt), Brotzeit-Woche toggle (2x `brotzeit`-tagged dishes on Mon/Tue or
+  Tue/Wed), pause list (globally disable dishes - excluded from plan only)
+- Tournament: per-dish duel counters (`S.dcnt`, device-local); demoting a favorite
+  clears its Elo, re-promoted dishes get priority in duel pairing; per-person duel
+  recommendation on start tiles and tournament reset button
+- Veto model: up to 3 vetoes keep a dish plannable with an "Extrawurst" note for
+  the veto people (max 2 Extrawurst meals per plan, nobody twice a week, -1.5
+  score malus PER veto so multi-veto dishes appear rarely); 4+ vetoes exclude it.
+  The app suggests an Extrawurst dish that all veto people rate gern/ok (simple,
+  in season, not paused) - shown in the accepted plan, shared text, and shopping
+  list (with its ingredients). Fairster Kompromiss stays veto-free.
+- Season tags: `sommer` dishes excluded from plan Nov-Mar, `winter` dishes May-Sep
+  (`inSeason()`, plan only)
+- Ergebnis analyses: Streit-Index (most polarizing), Unentdeckte Perlen (all rate
+  >= ok but outside plan's top-44 pool), Veto-Bilanz (sole-veto counts per person),
+  Turnier-Check (favorites losing most local duels)
+- Backup: full device state as JSON download/upload under "Übertragen" (covers
+  dcnt/plan/history/paused - more than the family code)
+
+**Dish list (`dishes.json`):**
+- Position in the file is the dish's stable ID - append-only!
+- Never insert, delete, or reorder mid-file; retire dishes with `"aus": true` instead
+- Renaming and fixing fields (`b`, `p`, `e`, `t`, `w`) is safe; max 511 entries
+- `w` = kid-friendly "Was ist das?" explanation, shown on the Sichtung card
+- Kid-friendly dish names; explain foreign dishes via `w`
+- New dishes show up in everyone's Sichtung queue automatically
+- Transfer codes (format v3) carry the dish count, so codes from older/shorter
+  lists stay readable after the list grows
+
+**Technical:**
+- App logic in `index.html`, dish list fetched from `dishes.json`
+- Network-first service worker: list updates propagate on next online load
+  (no cache-name bump needed for content changes)
+- Offline-capable PWA (manifest + service worker + icons)
 
 ### Uni Bamberg Wrapper
 
