@@ -13,7 +13,7 @@ misc-public/
 ├── jumpcat/                   # Christmas cat jump & run (v6.2)
 ├── neon-mind/                 # 2-player reaction game (v1.0.0)
 ├── hashcards-pwa/             # Spaced repetition flashcards (v1.0.0)
-├── was-gibts/                 # Family meal decider PWA (v1.7)
+├── was-gibts/                 # Family meal decider PWA (v1.8)
 ├── wiai25-enhance/            # Static demo
 ├── uni-bamberg-wrapper/       # University website wrapper with CORS proxy
 ├── uni-bamberg-mockup/        # Mockup and crawler for uni-bamberg
@@ -152,7 +152,7 @@ Fast-paced 2-player reaction game (v1.0.0).
 
 ### Was gibt's?
 
-Family meal decider PWA (v1.7). Static, no server, no accounts.
+Family meal decider PWA (v1.8). Static, no server, no accounts.
 
 **Workflow:**
 - People: Felix, Jakob, Moritz, Kathrin, Dominik (v1.1 "Eltern" state auto-migrates to both parents)
@@ -164,14 +164,25 @@ Family meal decider PWA (v1.7). Static, no server, no accounts.
 - Family code (person index 7) carries all persons at once - for pushing the
   tablet's aggregate state back to every device; also carries the paused-dishes
   list (appended block, backward/forward compatible with v1.2 codes)
-- Weekly plan: Mon-Fri one simple meal each (effort <= 2 preferred), Sat/Sun lunch +
+- Weekly plan: Mon-Fri one simple dinner each (effort <= 2 preferred), Sat/Sun lunch +
   dinner; one weekend slot is pizza/burger/grilling (`grillen` tag or name match),
-  one slot is an Entdeckungspool experiment
+  one slot is an experiment picked from the WHOLE Entdeckungspool (fresh-not-in-history
+  preferred at 70%). Optional weekday lunches via per-day chips (Mo-Fr, persisted in
+  `S.lunch`): very simple dishes (effort 1 preferred) or sometimes "Reste vom
+  Vorabend" (needs a previous-day dinner, so never Monday; no shopping items)
+- Fill order: brotzeit -> klassiker -> experiment -> weekend -> weekday dinners ->
+  lunches (weekend first because candidates are scarcest there). If the top-44 pool
+  can't fill a slot, the rest of the eligible list is used as reserve - slots
+  practically never stay empty. Diversity caps (2x nudeln, 1x spaetzle/teig/suess/
+  suppe, 2x kartoffel/reis/brot, 3x sonst at 9 meals) scale with meal count;
+  brotzeit-tagged dishes don't count toward the brot cap
 - Plan controls: per-slot swap button (keeps klassiker/experiment role), per-slot pin
   (survives reroll), accept plan (freezes it, share as text, shopping list from `z`
   ingredients), repetition brake (avoids dishes of last 2 accepted plans, brotzeit +
   klassiker exempt), Brotzeit-Woche toggle (2x `brotzeit`-tagged dishes on Mon/Tue or
-  Tue/Wed), pause list (globally disable dishes - excluded from plan only)
+  Tue/Wed evenings), pause list (globally disable dishes - excluded from plan only)
+- Accepted plan is stored as `S.plan.slots` [{l,id}|{l,reste:1}]; the old v1.7
+  format `S.plan.ids` (fixed 9 slots) is migrated on load
 - Tournament: per-dish duel counters (`S.dcnt`, device-local); demoting a favorite
   clears its Elo, re-promoted dishes get priority in duel pairing; per-person duel
   recommendation on start tiles and tournament reset button
