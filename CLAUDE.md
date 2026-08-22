@@ -188,7 +188,8 @@ Family meal decider PWA (v1.9). Static, no server, no accounts.
   mouse can drag the whole card; "Reste" only lands on a weekday lunch from Tuesday
   on), per-slot pin (survives reroll), accept plan (freezes it, share as text,
   shopping list from `z` ingredients), "Plan bearbeiten" (accepted plan goes back to
-  an all-pinned draft and drops its history entry), repetition brake (avoids dishes
+  an all-pinned draft, drops its history entry and adds the plan's lunch days to
+  `S.lunch` without discarding the stored chip selection), repetition brake (avoids dishes
   of last 2 accepted plans, brotzeit + klassiker exempt), Brotzeit-Woche toggle (2x
   `brotzeit`-tagged dishes on Mon/Tue or Tue/Wed evenings), pause list (globally
   disable dishes - excluded from plan only)
@@ -227,6 +228,7 @@ Family meal decider PWA (v1.9). Static, no server, no accounts.
   lists stay readable after the list grows
 
 **Technical:**
+- Version shown in the header (`.ver` element) - bump it together with README/CLAUDE.md
 - App logic in `index.html`, dish list fetched from `dishes.json`
 - Network-first service worker: list updates propagate on next online load
   (no cache-name bump needed for content changes)

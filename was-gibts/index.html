@@ -51,6 +51,7 @@ header{padding:40px 0 28px;border-bottom:1px solid rgba(233,226,211,.16);margin-
 h1{font-family:var(--disp);font-size:clamp(34px,7vw,58px);line-height:.95;margin:0 0 10px;letter-spacing:-.02em}
 h1 em{font-style:normal;color:var(--mustard)}
 .sub{color:var(--dim);max-width:52ch;font-size:15px;margin:0}
+.ver{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(243,238,226,.3);margin:12px 0 0}
 h2{font-family:var(--disp);font-size:19px;letter-spacing:.01em;margin:34px 0 12px}
 h3{font-family:var(--disp);font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--mustard);margin:26px 0 10px}
 p{margin:0 0 12px}
@@ -271,6 +272,8 @@ button:focus-visible,.person:focus-visible{outline:2px solid var(--mustard);outl
 <header>
   <h1>Was gibt's<em>?</em></h1>
   <p class="sub">Jeder sichtet die Gerichteliste einmal durch, dann entscheidet die Familie – und nicht der Kühlschrank um 18 Uhr.</p>
+  <!-- Bei jedem Release hochzählen (auch in README.md und CLAUDE.md) -->
+  <p class="ver">Version 1.9</p>
 </header>
 <nav class="tabs" id="tabs"></nav>
 <main id="view"></main>
@@ -1076,10 +1079,16 @@ function vPlan(v){
     // Der beim Übernehmen gemerkte Verlauf-Eintrag fliegt raus, sonst zählt
     // dieselbe Woche nach dem erneuten Übernehmen doppelt.
     r.children[1].onclick=()=>{
-      const by={}; PS.forEach(s=>by[s.l]=s);
-      S.lunch={}; WDAYS.forEach((d,i)=>{if(by[d+" Mittag"])S.lunch[i]=true;});
+      // Mittag/Abend statt der reinen Beschriftung vergleichen: "Montag" und
+      // "Montag Abend" meinen denselben Platz, je nachdem ob der Tag ein
+      // Mittagessen hat. Die Mittagstage des Plans kommen dazu, die gespeicherte
+      // Auswahl bleibt aber stehen - sonst geht eine Einstellung verloren.
+      const skey=l=>/Mittag$/.test(l)?l:l.replace(/ Abend$/,"")+" Abend";
+      const by={}; PS.forEach(s=>by[skey(s.l)]=s);
+      S.lunch=S.lunch||{};
+      WDAYS.forEach((d,i)=>{if(by[d+" Mittag"])S.lunch[i]=true;});
       draft=slotDefs().map(df=>{
-        const s=by[df.l]; if(!s)return null;
+        const s=by[skey(df.l)]; if(!s)return null;
         if(s.reste)return {reste:1,pin:true};
         return s.id!=null?{id:s.id,pin:true,man:1}:null;
       });
@@ -1415,7 +1424,7 @@ function vPlan(v){
       const exLine=a.veto.length?`<div class="ex">🌭 <b>${a.veto.join(" und ")}</b> ${a.veto.length>1?"bekommen":"bekommt"} stattdessen: ${sug?esc(sug.n):"eigenes Essen wählen"}</div>`:"";
       s=el(`<div class="${cls}${e.exp?" exp":""}${e.pin?" pinned":""}" data-i="${i}"><div class="day">${lab}${e.exp?" · Experiment":""}</div><div class="dish">${esc(a.d.n)}</div><div class="tag">${BASE[a.d.b]} · ${a.d.e?"Aufwand "+"●".repeat(a.d.e):"geliefert"}</div>${exLine}${tools}${grip}</div>`);
     }else{
-      s=el(`<div class="${cls}" data-i="${i}"><div class="day">${lab}</div><div class="dish">–</div><div class="tag">kein Gericht frei</div>${tools}${grip}</div>`);
+      s=el(`<div class="${cls}" data-i="${i}"><div class="day">${lab}</div><div class="dish">–</div><div class="tag">noch frei – ↻ würfelt, 🔍 sucht</div>${tools}${grip}</div>`);
     }
     s.querySelector(".swap").onclick=()=>swap(i);
     s.querySelector(".rep").onclick=()=>openPicker(i);

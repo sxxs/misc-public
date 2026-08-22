@@ -4,6 +4,10 @@ Familien-Essensentscheider. Statische Seite, keine Serverkomponente, keine Konte
 Der Zustand liegt im `localStorage` des jeweiligen Geräts. Übertragen wird per QR-Code
 oder per Code zum Abtippen.
 
+Die laufende Version steht klein unter der Überschrift ("Version 1.9") - praktisch, um
+auf jedem Gerät zu prüfen, ob die neue Fassung schon geladen ist. Beim Release in
+`index.html` (Element `.ver`), in dieser Datei und in `CLAUDE.md` hochzählen.
+
 ## Auf GitHub Pages veröffentlichen
 
 1. Neues Repository anlegen, diese Dateien in den Wurzelordner legen.
@@ -78,8 +82,10 @@ Steuerung im Wochenplan:
 - **Plan übernehmen** friert den Plan ein: Er bleibt beim Tab-Wechsel stehen und lässt
   sich als Text teilen; dazu gibt es eine **Einkaufsliste** aus den Hauptzutaten
   (Feld `z` in dishes.json). "✎ Plan bearbeiten" holt den übernommenen Plan als
-  Entwurf zurück (alle Plätze gepinnt, der Verlaufseintrag wird zurückgenommen),
-  "Neuen Plan machen" startet den nächsten Entwurf von vorn.
+  Entwurf zurück (alle Plätze gepinnt, der Verlaufseintrag wird zurückgenommen);
+  Mittagessen-Tage des Plans werden dabei dazugeschaltet, die gespeicherte
+  Chip-Auswahl bleibt erhalten. "Neuen Plan machen" startet den nächsten Entwurf
+  von vorn.
 - **Wiederholungs-Bremse**: Gerichte der letzten zwei übernommenen Pläne werden
   gemieden (Brotzeit und Pizza/Burger/Grillen dürfen sich wiederholen).
 - **Brotzeit-Woche**: Haken setzen, wenn Brot da ist - der Plan legt zweimal Brotzeit
