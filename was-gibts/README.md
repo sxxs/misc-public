@@ -35,9 +35,15 @@ Danach läuft die Seite offline.
    Achtung: Das überschreibt dort auch die eigene Person - wer seit der Abgabe
    weiterbewertet hat, gibt erst wieder ab und liest dann zurück.
 
-Der Wochenplan hat Mo-Fr je ein Essen (bevorzugt einfache Gerichte) und am Wochenende
-Mittag- und Abendessen; ein Wochenendplatz ist Pizza, Burger oder Grillen (Tag
-`grillen` bzw. Name), ein Platz gehört dem Entdeckungspool.
+Der Wochenplan hat Mo-Fr je ein Abendessen (bevorzugt einfache Gerichte) und am
+Wochenende Mittag- und Abendessen; ein Wochenendplatz ist Pizza, Burger oder Grillen
+(Tag `grillen` bzw. Name), ein Platz gehört einem Experiment aus dem ganzen
+Entdeckungspool. Über die Mittagessen-Chips (Mo-Fr, Auswahl bleibt gespeichert)
+bekommen gewählte Werktage zusätzlich ein Mittagessen: sehr einfache Gerichte
+(Aufwand 1) oder ab und zu "Reste vom Vorabend" (ohne Einkaufslisten-Zutaten).
+Das Wochenende wird zuerst befüllt; reicht die Spitzengruppe (Top 44) nicht, rückt
+der Rest der Liste nach, damit kein Platz leer bleibt. Die Abwechslungs-Limits
+wachsen mit der Zahl der Mahlzeiten mit, Brotzeit zählt nicht gegen das Brot-Limit.
 
 Steuerung im Wochenplan:
 

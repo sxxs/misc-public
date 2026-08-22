@@ -153,6 +153,9 @@ textarea.code::placeholder{color:var(--dim)}
 .toggle{display:flex;gap:10px;align-items:center;background:var(--tile);border-radius:var(--r);padding:12px 14px;margin:0 0 12px;font-size:14px;cursor:pointer}
 .toggle input{width:18px;height:18px;accent-color:var(--mustard);flex-shrink:0}
 .toggle b{color:var(--mustard);font-weight:600}
+.daychips{display:inline-flex;gap:4px;flex-wrap:wrap}
+.daychip{min-width:44px;height:36px;border:0;border-radius:var(--r);background:rgba(243,238,226,.08);color:var(--dim);font-family:var(--body);font-weight:600;font-size:13px;cursor:pointer;padding:0 10px}
+.daychip.on{background:var(--mustard);color:#12262B}
 /* Einklappbare Abschnitte */
 details.fold{background:var(--tile);border-radius:var(--r);margin:10px 0;overflow:hidden}
 details.fold summary{cursor:pointer;list-style:none;font-family:var(--disp);font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mustard);padding:13px 16px;user-select:none}
@@ -264,6 +267,11 @@ function fresh(){
   S.paused=S.paused||{};   // global pausierte Gerichte (Gerät fehlt o.ä.), id -> true
   S.dcnt=S.dcnt||{};       // Duelle pro Person und Gericht (Gerät-lokal, nicht im Code)
   S.history=S.history||[]; // Gericht-IDs der letzten übernommenen Wochenpläne
+  S.lunch=S.lunch||{};     // Werktage mit Mittagessen-Slot (0=Mo ... 4=Fr)
+  // Migration: bis v1.7 war der übernommene Plan ein festes 9er-Array von IDs
+  if(S.plan&&S.plan.ids&&!S.plan.slots){
+    S.plan={slots:S.plan.ids.map((id,i)=>id!=null?{l:SLOTS9[i],id}:{l:SLOTS9[i]})};
+  }
   PEOPLE.forEach(p=>{
     S.ratings[p.id]=S.ratings[p.id]||{};
     S.elo[p.id]=S.elo[p.id]||{};
@@ -879,7 +887,20 @@ function foldEl(title,open,...kids){
   kids.forEach(k=>b.appendChild(k));
   return f;
 }
-const SLOTS=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag Mittag","Samstag Abend","Sonntag Mittag","Sonntag Abend"];
+const SLOTS9=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag Mittag","Samstag Abend","Sonntag Mittag","Sonntag Abend"]; // altes 9-Slot-Layout (für Migration)
+const WDAYS=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"];
+// Slot-Liste dynamisch: Werktage optional mit Mittagessen (S.lunch), Sa/So immer Mittag+Abend
+function slotDefs(){
+  const defs=[];
+  WDAYS.forEach((d,i)=>{
+    if(S.lunch&&S.lunch[i]){
+      defs.push({l:d+" Mittag",kind:"lunch",day:i});
+      defs.push({l:d+" Abend",kind:"wd",day:i});
+    }else defs.push({l:d,kind:"wd",day:i});
+  });
+  ["Samstag Mittag","Samstag Abend","Sonntag Mittag","Sonntag Abend"].forEach(l=>defs.push({l,kind:"we"}));
+  return defs;
+}
 const extraFor=id=>PEOPLE.filter(p=>S.ratings[p.id][id]==="nie").map(p=>p.name);
 // Vorschlag fürs Extrawurst-Essen: einfach, verfügbar, und alle Veto-Leute
 // mögen es "gern" oder "geht so" (gern bevorzugt, Duell-Elo als Feinsortierung)
@@ -892,12 +913,14 @@ function extraSuggestion(vetoNames,excludeId){
   const score=d=>pids.reduce((a,pid)=>a+(S.ratings[pid][d.id]==="gern"?2:1)+((S.elo[pid][d.id]||1000)-1000)/400,0);
   return cand.sort((a,b)=>score(b)-score(a))[0];
 }
-function planText(ids){
-  return "Wochenplan:\n"+SLOTS.map((s,i)=>{
-    const d=ids[i]!=null?DALL[ids[i]]:null;
-    const ex=d?extraFor(d.id):[];
+function planText(slots){
+  return "Wochenplan:\n"+slots.map(s=>{
+    if(s.reste)return s.l+": Reste vom Vorabend";
+    const d=s.id!=null?DALL[s.id]:null;
+    if(!d)return s.l+": –";
+    const ex=extraFor(d.id);
     const sug=ex.length?extraSuggestion(ex,d.id):null;
-    return s+": "+(d?d.n+(ex.length?" (Extrawurst für "+ex.join(", ")+(sug?": z.B. "+sug.n:"")+")":""):"–");
+    return s.l+": "+d.n+(ex.length?" (Extrawurst für "+ex.join(", ")+(sug?": z.B. "+sug.n:"")+")":"");
   }).join("\n");
 }
 function shareText(txt,okMsg){
@@ -907,25 +930,30 @@ function shareText(txt,okMsg){
 function vPlan(v){
   // Übernommener Plan: feste Ansicht mit Teilen + Einkaufsliste
   if(S.plan){
+    const PS=S.plan.slots;
     v.appendChild(el(`<p class="muted">Dieser Plan ist übernommen und bleibt so stehen, bis ihr einen neuen macht.</p>`));
     const box=el(`<div class="plan"></div>`);
-    S.plan.ids.forEach((id,i)=>{
-      const d=id!=null?DALL[id]:null;
+    PS.forEach(s=>{
+      if(s.reste){
+        box.appendChild(el(`<div class="slot"><div class="day">${esc(s.l)}</div><div class="dish">Reste vom Vorabend</div><div class="tag">aus dem Kühlschrank · Aufwand 0</div></div>`));
+        return;
+      }
+      const d=s.id!=null?DALL[s.id]:null;
       const ex=d?extraFor(d.id):[];
       const sug=ex.length?extraSuggestion(ex,d.id):null;
       const exLine=ex.length?`<div class="ex">🌭 <b>${ex.join(" und ")}</b> ${ex.length>1?"bekommen":"bekommt"} stattdessen: ${sug?esc(sug.n):"eigenes Essen wählen"}</div>`:"";
-      box.appendChild(el(`<div class="slot"><div class="day">${SLOTS[i]}</div><div class="dish">${d?esc(d.n):"–"}</div><div class="tag">${d?BASE[d.b]+" · "+(d.e?"Aufwand "+"●".repeat(d.e):"geliefert"):""}</div>${exLine}</div>`));
+      box.appendChild(el(`<div class="slot"><div class="day">${esc(s.l)}</div><div class="dish">${d?esc(d.n):"–"}</div><div class="tag">${d?BASE[d.b]+" · "+(d.e?"Aufwand "+"●".repeat(d.e):"geliefert"):""}</div>${exLine}</div>`));
     });
     v.appendChild(box);
     const r=el(`<div class="row"><button class="btn">Plan teilen</button><button class="btn ghost">Neuen Plan machen</button></div>`);
-    r.children[0].onclick=()=>shareText(planText(S.plan.ids),"Plan kopiert – einfach in die Familien-Gruppe einfügen.");
+    r.children[0].onclick=()=>shareText(planText(PS),"Plan kopiert – einfach in die Familien-Gruppe einfügen.");
     r.children[1].onclick=()=>{S.plan=null;save();draft=null;render();};
     v.appendChild(r);
 
     v.appendChild(el(`<h3>Einkaufsliste</h3>`));
     const items={},noz=[],liefer=[];
-    S.plan.ids.forEach(id=>{
-      const d=id!=null?DALL[id]:null; if(!d)return;
+    PS.forEach(s=>{
+      const d=!s.reste&&s.id!=null?DALL[s.id]:null; if(!d)return;
       if(d.t.includes("liefern")){liefer.push(d.n);return;}
       if(d.z)d.z.forEach(z=>items[z]=(items[z]||0)+1); else noz.push(d.n);
     });
@@ -934,11 +962,11 @@ function vPlan(v){
     lines.forEach(l=>ul.appendChild(el(`<li>${esc(l)}</li>`)));
     v.appendChild(ul);
     const sugs=[];
-    S.plan.ids.forEach((id,i)=>{
-      const d=id!=null?DALL[id]:null; if(!d)return;
+    PS.forEach(s=>{
+      const d=!s.reste&&s.id!=null?DALL[s.id]:null; if(!d)return;
       const ex=extraFor(d.id); if(!ex.length)return;
       const sug=extraSuggestion(ex,d.id);
-      if(sug)sugs.push(`${SLOTS[i]}: ${esc(sug.n)} (für ${ex.join(", ")}${sug.z?" – "+sug.z.map(esc).join(", "):""})`);
+      if(sug)sugs.push(`${esc(s.l)}: ${esc(sug.n)} (für ${ex.join(", ")}${sug.z?" – "+sug.z.map(esc).join(", "):""})`);
     });
     if(sugs.length) v.appendChild(el(`<p class="muted">🌭 Extrawurst-Vorschläge dazu einkaufen:<br>${sugs.join("<br>")}</p>`));
     if(liefer.length) v.appendChild(el(`<p class="muted">Wird geliefert: ${liefer.map(esc).join(", ")}</p>`));
@@ -955,87 +983,150 @@ function vPlan(v){
   const A=allA.filter(a=>a.veto.length<=3&&a.done>0&&!S.paused[a.d.id]&&inSeason(a.d));
   if(A.length<12){v.appendChild(el(`<div class="empty">Zu wenig bewertet für einen Wochenplan. Mindestens eine Person sollte durch sein.</div>`));return;}
   const byId={}; A.forEach(a=>byId[a.d.id]=a);
-  const WE=[5,6,7,8];
-  const CAP={nudeln:2,spaetzle:1,teig:1,suess:1,suppe:1,kartoffel:2,reis:2,brot:2,sonst:3};
+  const defs=slotDefs();
+  const N=defs.length;
+  // Grundlimits gelten für 9 Mahlzeiten; mit Mittag-Slots wachsen sie mit
+  const CAP0={nudeln:2,spaetzle:1,teig:1,suess:1,suppe:1,kartoffel:2,reis:2,brot:2,sonst:3};
+  const capOf=b=>Math.max(CAP0[b]||1,Math.round((CAP0[b]||1)*N/9));
   const klassiker=a=>/Pizza|Burger/.test(a.d.n)||a.d.t.includes("grillen");
+  const sortedA=()=>[...A].sort((a,b)=>(b.min*2+b.sum)-(a.min*2+a.sum));
+  const shuffle=arr=>{for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;};
   // Wiederholungs-Bremse: Gerichte der letzten übernommenen Pläne meiden
   // (Brotzeit und Wochenend-Klassiker dürfen sich wiederholen)
-  const topPool=()=>{
-    const sorted=[...A].sort((a,b)=>(b.min*2+b.sum)-(a.min*2+a.sum));
-    let hist=S.history||[];
+  const pools=()=>{
+    const sorted=sortedA();
+    const hist=S.history||[];
     let pool=[];
     for(let h=hist.length;h>=0;h--){
       const recent=new Set(hist.slice(0,h).flat());
       pool=sorted.filter(a=>!recent.has(a.d.id)||a.d.t.includes("brotzeit")||klassiker(a));
       if(pool.length>=20)break;
     }
-    pool=pool.slice(0,44);
-    for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
-    return pool;
+    // Primär: die besten 44, gemischt. Reserve: der komplette Rest in
+    // Qualitätsreihenfolge - damit ein Platz nie leer bleibt, nur weil die
+    // Top-Gerichte an den Wochenregeln hängen
+    const top=shuffle(pool.slice(0,44));
+    const rest=pool.slice(44).concat(sorted.filter(a=>!pool.includes(a)));
+    return {top,rest};
   };
-  const planIds=()=>draft.map(e=>e?e.id:null);
+  const planIds=()=>draft.map(e=>e&&e.id!=null?e.id:null);
   const usedOf=skip=>{
     const used={};let lief=0;
     draft.forEach((e,j)=>{
-      const a=e&&byId[e.id]; if(!a||j===skip)return;
-      used[a.d.b]=(used[a.d.b]||0)+1; if(a.d.t.includes("liefern"))lief++;
+      const a=e&&!e.reste&&byId[e.id]; if(!a||j===skip)return;
+      // Brotzeit ist ein bewusster Wiederholungs-Baustein und zählt nicht
+      // gegen das Brot-Limit (sonst blockiert die Brotzeit-Woche Burger & Co.)
+      if(!a.d.t.includes("brotzeit")) used[a.d.b]=(used[a.d.b]||0)+1;
+      if(a.d.t.includes("liefern"))lief++;
     });
     return {used,lief};
   };
   const fitsIn=skip=>a=>{
     const {used,lief}=usedOf(skip);
-    if((used[a.d.b]||0)>=(CAP[a.d.b]||1)||(a.d.t.includes("liefern")&&lief>=1))return false;
+    if(!a.d.t.includes("brotzeit")&&(used[a.d.b]||0)>=capOf(a.d.b))return false;
+    if(a.d.t.includes("liefern")&&lief>=1)return false;
     // Extrawurst-Grenzen: höchstens 2 Extrawurst-Essen pro Woche,
     // und niemand braucht zweimal pro Woche eine Extrawurst
     if(a.veto.length){
-      const ex=draft.map((e,j)=>e&&j!==skip&&byId[e.id]).filter(x=>x&&x.veto.length);
+      const ex=draft.map((e,j)=>e&&j!==skip&&!e.reste&&byId[e.id]).filter(x=>x&&x.veto.length);
       if(ex.length>=2||ex.some(x=>x.veto.some(n=>a.veto.includes(n))))return false;
     }
     return true;
   };
   const inDraft=a=>draft.some(e=>e&&e.id===a.d.id);
+  // Vorabend-Abendessen für einen Mittag-Slot (für "Reste vom Vorabend")
+  const prevDinner=i=>{
+    if(defs[i].kind!=="lunch"||defs[i].day===0)return null;
+    const j=defs.findIndex(df=>df.kind==="wd"&&df.day===defs[i].day-1);
+    return j>=0&&draft[j]&&!draft[j].reste&&byId[draft[j].id]?byId[draft[j].id]:null;
+  };
   const build=keep=>{
-    draft=keep?keep.map(e=>e&&byId[e.id]?e:null):new Array(SLOTS.length).fill(null);
-    const pool=topPool();
-    const free=pred=>{const f=fitsIn(-1);return pool.find(a=>!inDraft(a)&&f(a)&&(!pred||pred(a)));};
+    draft=keep?keep.map(e=>e?(e.reste?e:(byId[e.id]?e:null)):null):new Array(N).fill(null);
+    if(draft.length!==N)draft=new Array(N).fill(null);
+    const {top,rest}=pools();
+    const free=pred=>{
+      const f=fitsIn(-1);
+      return top.find(a=>!inDraft(a)&&f(a)&&(!pred||pred(a)))
+          ||rest.find(a=>!inDraft(a)&&f(a)&&(!pred||pred(a)));
+    };
+    const WEIDX=defs.map((df,i)=>df.kind==="we"?i:-1).filter(i=>i>=0);
+    // 1) Brotzeit-Woche: zweimal Brotzeit abends auf Mo+Di oder Di+Mi
     if(S.brotwoche){
       const pat=Math.random()<.5?[0,1]:[1,2];
-      for(const i of pat){ if(draft[i])continue; const a=free(z=>z.d.t.includes("brotzeit")); if(a)draft[i]={id:a.d.id,pin:false}; }
+      for(const day of pat){
+        const i=defs.findIndex(df=>df.kind==="wd"&&df.day===day);
+        if(i<0||draft[i])continue;
+        const a=free(z=>z.d.t.includes("brotzeit")); if(a)draft[i]={id:a.d.id,pin:false};
+      }
     }
-    if(!draft.some(e=>e&&klassiker(byId[e.id]))){
+    // 2) Ein Wochenend-Klassiker: Pizza, Burger oder Grillen
+    if(!draft.some(e=>e&&!e.reste&&klassiker(byId[e.id]))){
       const k=free(klassiker);
-      if(k){const s=WE.filter(i=>!draft[i]);if(s.length)draft[s[Math.floor(Math.random()*s.length)]]={id:k.d.id,pin:false};}
+      if(k){const s=WEIDX.filter(i=>!draft[i]);if(s.length)draft[s[Math.floor(Math.random()*s.length)]]={id:k.d.id,pin:false};}
     }
-    if(!draft.some(e=>e&&byId[e.id].neu)){
-      const x=free(a=>a.neu);
-      if(x){const s=WE.find(i=>!draft[i]);const t=s!==undefined?s:draft.indexOf(null);if(t>=0)draft[t]={id:x.d.id,pin:false};}
+    // 3) Ein Experiment - aus dem GANZEN Entdeckungspool, nicht nur den Top 44.
+    // Noch nie verplante Experimente werden bevorzugt (70%), aber nicht immer -
+    // sonst zeigt jedes Neu-Würfeln dasselbe Experiment
+    if(!draft.some(e=>e&&e.exp)){
+      const f=fitsIn(-1);
+      const neuAll=shuffle(A.filter(a=>a.neu&&!inDraft(a)&&f(a)));
+      const hist=new Set((S.history||[]).flat());
+      const freshNeu=neuAll.filter(a=>!hist.has(a.d.id));
+      const x=(freshNeu.length&&Math.random()<.7?freshNeu:neuAll)[0];
+      if(x){const s=WEIDX.find(i=>!draft[i]);const t=s!==undefined?s:draft.indexOf(null);if(t>=0)draft[t]={id:x.d.id,pin:false,exp:true};}
     }
-    for(let i=0;i<5;i++){ if(draft[i])continue; const a=free(z=>z.d.e<=2)||free(); if(a)draft[i]={id:a.d.id,pin:false}; }
-    for(const i of WE){ if(draft[i])continue; const a=free(); if(a)draft[i]={id:a.d.id,pin:false}; }
+    // 4) Wochenende zuerst füllen - hier sind die Kandidaten am knappsten
+    for(const i of WEIDX){ if(draft[i])continue; const a=free(); if(a)draft[i]={id:a.d.id,pin:false}; }
+    // 5) Werktags-Abende: einfache Gerichte zuerst (Aufwand höchstens 2)
+    defs.forEach((df,i)=>{
+      if(df.kind!=="wd"||draft[i])return;
+      const a=free(z=>z.d.e>0&&z.d.e<=2)||free(); if(a)draft[i]={id:a.d.id,pin:false};
+    });
+    // 6) Werktags-Mittage: sehr einfach (Aufwand 1), manchmal Reste vom Vorabend
+    defs.forEach((df,i)=>{
+      if(df.kind!=="lunch"||draft[i])return;
+      if(prevDinner(i)&&Math.random()<.35){draft[i]={reste:true,pin:false};return;}
+      const a=free(z=>z.d.e===1)||free(z=>z.d.e>0&&z.d.e<=2)||free();
+      if(a)draft[i]={id:a.d.id,pin:false};
+    });
   };
-  if(!draft||draft.length!==SLOTS.length) build();
-  else draft=draft.map(e=>e&&byId[e.id]?e:null); // pausierte/vetote Gerichte fliegen raus
+  if(!draft||draft.length!==N) build();
+  else draft=draft.map((e,i)=>{ // pausierte/vetote Gerichte fliegen raus, Reste nur auf Mittag-Slots
+    if(!e)return null;
+    if(e.reste)return defs[i].kind==="lunch"?e:null;
+    return byId[e.id]?e:null;
+  });
   const swap=i=>{
-    const pool=topPool(), cur=draft[i]&&byId[draft[i].id], f=fitsIn(i);
-    const cand=pred=>pool.find(a=>!inDraft(a)&&f(a)&&(!pred||pred(a)));
-    let a=null;
-    if(cur&&WE.includes(i)&&klassiker(cur)&&!draft.some((e,j)=>j!==i&&e&&klassiker(byId[e.id]))) a=cand(klassiker);
-    else if(cur&&cur.neu&&!draft.some((e,j)=>j!==i&&e&&byId[e.id].neu)) a=cand(z=>z.neu);
-    if(!a) a=i<5?(cand(z=>z.d.e<=2)||cand()):cand();
-    if(a){draft[i]={id:a.d.id,pin:draft[i]?draft[i].pin:false};draw();}
+    const {top,rest}=pools(), cur=draft[i]&&!draft[i].reste&&byId[draft[i].id], f=fitsIn(i);
+    const cand=pred=>top.find(a=>!inDraft(a)&&f(a)&&(!pred||pred(a)))
+                  ||rest.find(a=>!inDraft(a)&&f(a)&&(!pred||pred(a)));
+    const kind=defs[i].kind, pin=draft[i]?draft[i].pin:false;
+    // Mittag-Slot: Gericht -> ab und zu Reste, Reste -> Gericht
+    if(kind==="lunch"&&!((draft[i]||{}).reste)&&prevDinner(i)&&Math.random()<.3){draft[i]={reste:true,pin};draw();return;}
+    let a=null,keepExp=false;
+    if(cur&&kind==="we"&&klassiker(cur)&&!draft.some((e,j)=>j!==i&&e&&!e.reste&&klassiker(byId[e.id]))) a=cand(klassiker);
+    else if(draft[i]&&draft[i].exp){ a=cand(z=>z.neu); if(a)keepExp=true; }
+    if(!a) a=kind==="lunch"?(cand(z=>z.d.e===1)||cand(z=>z.d.e>0&&z.d.e<=2)||cand())
+           :kind==="wd"?(cand(z=>z.d.e>0&&z.d.e<=2)||cand())
+           :cand();
+    if(a){draft[i]={id:a.d.id,pin,exp:keepExp};draw();}
     else{note="Kein passender Ersatz frei – erst neu würfeln oder etwas anderes tauschen.";render();}
   };
   const draw=()=>{
     box.innerHTML="";
     draft.forEach((e,i)=>{
-      const a=e&&byId[e.id];
+      const label=defs[i].l;
       let s;
-      if(a){
+      if(e&&e.reste){
+        const pd=prevDinner(i);
+        s=el(`<div class="slot${e.pin?" pinned":""}"><div class="day">${label}</div><div class="dish">Reste vom Vorabend</div><div class="tag">${pd?"von: "+esc(pd.d.n):"aus dem Kühlschrank"} · Aufwand 0</div><div class="slotrow"><button class="swap">↻ Tauschen</button><button class="swap pin">${e.pin?"📌 Gepinnt":"📌 Pinnen"}</button></div></div>`);
+      }else if(e&&byId[e.id]){
+        const a=byId[e.id];
         const sug=a.veto.length?extraSuggestion(a.veto,a.d.id):null;
         const exLine=a.veto.length?`<div class="ex">🌭 <b>${a.veto.join(" und ")}</b> ${a.veto.length>1?"bekommen":"bekommt"} stattdessen: ${sug?esc(sug.n):"eigenes Essen wählen"}</div>`:"";
-        s=el(`<div class="slot${a.neu?" exp":""}${e.pin?" pinned":""}"><div class="day">${SLOTS[i]}${a.neu?" · Experiment":""}</div><div class="dish">${esc(a.d.n)}</div><div class="tag">${BASE[a.d.b]} · ${a.d.e?"Aufwand "+"●".repeat(a.d.e):"geliefert"}</div>${exLine}<div class="slotrow"><button class="swap">↻ Tauschen</button><button class="swap pin">${e.pin?"📌 Gepinnt":"📌 Pinnen"}</button></div></div>`);
+        s=el(`<div class="slot${e.exp?" exp":""}${e.pin?" pinned":""}"><div class="day">${label}${e.exp?" · Experiment":""}</div><div class="dish">${esc(a.d.n)}</div><div class="tag">${BASE[a.d.b]} · ${a.d.e?"Aufwand "+"●".repeat(a.d.e):"geliefert"}</div>${exLine}<div class="slotrow"><button class="swap">↻ Tauschen</button><button class="swap pin">${e.pin?"📌 Gepinnt":"📌 Pinnen"}</button></div></div>`);
       }else{
-        s=el(`<div class="slot"><div class="day">${SLOTS[i]}</div><div class="dish">–</div><div class="tag">kein Gericht frei</div><div class="slotrow"><button class="swap">↻ Tauschen</button></div></div>`);
+        s=el(`<div class="slot"><div class="day">${label}</div><div class="dish">–</div><div class="tag">kein Gericht frei</div><div class="slotrow"><button class="swap">↻ Tauschen</button></div></div>`);
       }
       s.querySelector(".swap").onclick=()=>swap(i);
       const pb=s.querySelector(".pin");
@@ -1045,17 +1136,34 @@ function vPlan(v){
   };
   v.appendChild(el(`<p class="muted">Ein Vorschlag für die Woche. „↻“ tauscht einen einzelnen Platz, „📌“ schützt ihn beim Neu-Würfeln – und wenn alles passt: „Plan übernehmen“.</p>`));
   v.appendChild(foldEl("So baut die App den Plan",false,
-    el(`<p class="muted">Mo–Fr ein Essen pro Tag, bevorzugt einfach (Aufwand ≤ 2). Sa/So jeweils Mittag- und Abendessen; eines davon ist Pizza, Burger oder Grillen, ein Platz gehört einem Experiment aus dem Entdeckungspool. Höchstens zweimal Nudeln, einmal Spätzle, einmal Teig, eine Süßspeise, eine Suppe. Gerichte der letzten zwei übernommenen Pläne werden gemieden (Brotzeit und Klassiker ausgenommen). Bis zu drei Vetos blockieren nicht: höchstens zwei Gerichte pro Woche mit 🌭 Extrawurst, niemand braucht zweimal pro Woche eine – und die App schlägt als Extrawurst ein Gericht vor, das alle Veto-Leute mögen. Jedes Veto kostet Punkte, Mehrfach-Veto-Gerichte kommen also selten. Ab vier Vetos ist ein Gericht raus. Saison-Gerichte (Raclette, Fondue, Grillen) pausieren automatisch im falschen Halbjahr.${outSeason?` Gerade außerhalb der Saison: ${outSeason} Gericht${outSeason===1?"":"e"}.`:""}</p>`)));
+    el(`<p class="muted">Mo–Fr abends ein einfaches Essen (Aufwand ≤ 2); über die Mittagessen-Chips gibt es an gewählten Werktagen zusätzlich ein Mittagessen – sehr einfach (Aufwand 1) oder ab und zu „Reste vom Vorabend“. Sa/So jeweils Mittag- und Abendessen; eines davon ist Pizza, Burger oder Grillen, ein Platz gehört einem Experiment aus dem ganzen Entdeckungspool. Das Wochenende wird zuerst befüllt, dort sind die Kandidaten am knappsten. Abwechslungs-Limits (bei 9 Mahlzeiten: höchstens zweimal Nudeln, einmal Spätzle, einmal Teig, eine Süßspeise, eine Suppe) wachsen mit der Zahl der Mahlzeiten mit; Brotzeit zählt nicht gegen das Brot-Limit. Reicht die Spitzengruppe nicht, rückt der Rest der Liste nach – ein Platz bleibt praktisch nie leer. Gerichte der letzten zwei übernommenen Pläne werden gemieden (Brotzeit und Klassiker ausgenommen). Bis zu drei Vetos blockieren nicht: höchstens zwei Gerichte pro Woche mit 🌭 Extrawurst, niemand braucht zweimal pro Woche eine – die App schlägt als Extrawurst ein Gericht vor, das alle Veto-Leute mögen. Ab vier Vetos ist ein Gericht raus. Saison-Gerichte pausieren automatisch im falschen Halbjahr.${outSeason?` Gerade außerhalb der Saison: ${outSeason} Gericht${outSeason===1?"":"e"}.`:""}</p>`)));
   const bz=el(`<label class="toggle"><input type="checkbox"${S.brotwoche?" checked":""}> <span><b>Brotzeit-Woche:</b> Brot ist da – zweimal Brotzeit, Mo/Di oder Di/Mi</span></label>`);
   bz.querySelector("input").onchange=e=>{S.brotwoche=e.target.checked;save();build(draft.map(x=>x&&x.pin?x:null));draw();};
   v.appendChild(bz);
+  // Mittagessen-Tage: Chips Mo-Fr, Auswahl bleibt gespeichert
+  const lc=el(`<div class="toggle" style="flex-wrap:wrap"><span><b>Mittagessen:</b></span><span class="daychips"></span><span class="muted" style="font-size:12.5px">sehr einfach oder Reste vom Vorabend</span></div>`);
+  const chips=lc.querySelector(".daychips");
+  const allOn=()=>WDAYS.every((_,i)=>S.lunch&&S.lunch[i]);
+  WDAYS.forEach((d,i)=>{
+    const c=el(`<button class="daychip${S.lunch&&S.lunch[i]?" on":""}">${d.slice(0,2)}</button>`);
+    c.onclick=()=>{S.lunch=S.lunch||{};S.lunch[i]=!S.lunch[i];save();draft=null;render();};
+    chips.appendChild(c);
+  });
+  const call=el(`<button class="daychip${allOn()?" on":""}">alle</button>`);
+  call.onclick=()=>{const on=!allOn();S.lunch={};if(on)WDAYS.forEach((_,i)=>S.lunch[i]=true);save();draft=null;render();};
+  chips.appendChild(call);
+  v.appendChild(lc);
   const box=el(`<div class="plan"></div>`); v.appendChild(box); draw();
   v.appendChild(el(`<p class="muted" style="margin-top:16px">„Plan übernehmen“ macht diesen Entwurf zum festen Wochenplan: Er bleibt gespeichert stehen (auch nach Neuladen), und ihr bekommt ihn zum Teilen plus eine fertige Einkaufsliste. Ändern geht danach jederzeit über „Neuen Plan machen“.</p>`));
   const r=el(`<div class="row"><button class="btn">✓ Plan übernehmen</button><button class="btn ghost">Neu würfeln (Pins bleiben)</button></div>`);
   r.children[0].onclick=()=>{
-    const ids=planIds();
-    S.plan={ids};
-    S.history=[ids.filter(x=>x!=null),...(S.history||[])].slice(0,2);
+    S.plan={slots:defs.map((df,i)=>{
+      const e=draft[i];
+      if(!e)return {l:df.l};
+      if(e.reste)return {l:df.l,reste:1};
+      return {l:df.l,id:e.id};
+    })};
+    S.history=[planIds().filter(x=>x!=null),...(S.history||[])].slice(0,2);
     save();draft=null;
     note="Plan übernommen – hier stehen jetzt Teilen und Einkaufsliste.";
     render();
