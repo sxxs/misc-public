@@ -13,7 +13,7 @@ misc-public/
 ├── jumpcat/                   # Christmas cat jump & run (v6.2)
 ├── neon-mind/                 # 2-player reaction game (v1.0.0)
 ├── hashcards-pwa/             # Spaced repetition flashcards (v1.0.0)
-├── was-gibts/                 # Family meal decider PWA (v1.8)
+├── was-gibts/                 # Family meal decider PWA (v1.9)
 ├── wiai25-enhance/            # Static demo
 ├── uni-bamberg-wrapper/       # University website wrapper with CORS proxy
 ├── uni-bamberg-mockup/        # Mockup and crawler for uni-bamberg
@@ -152,7 +152,7 @@ Fast-paced 2-player reaction game (v1.0.0).
 
 ### Was gibt's?
 
-Family meal decider PWA (v1.8). Static, no server, no accounts.
+Family meal decider PWA (v1.9). Static, no server, no accounts.
 
 **Workflow:**
 - People: Felix, Jakob, Moritz, Kathrin, Dominik (v1.1 "Eltern" state auto-migrates to both parents)
@@ -176,11 +176,27 @@ Family meal decider PWA (v1.8). Static, no server, no accounts.
   practically never stay empty. Diversity caps (2x nudeln, 1x spaetzle/teig/suess/
   suppe, 2x kartoffel/reis/brot, 3x sonst at 9 meals) scale with meal count;
   brotzeit-tagged dishes don't count toward the brot cap
-- Plan controls: per-slot swap button (keeps klassiker/experiment role), per-slot pin
-  (survives reroll), accept plan (freezes it, share as text, shopping list from `z`
-  ingredients), repetition brake (avoids dishes of last 2 accepted plans, brotzeit +
-  klassiker exempt), Brotzeit-Woche toggle (2x `brotzeit`-tagged dishes on Mon/Tue or
-  Tue/Wed evenings), pause list (globally disable dishes - excluded from plan only)
+- Plan layout: one row per day - day name, lunch (compact + dimmed), dinner. All
+  dinners line up in one column; weekdays without lunch show a "+ Mittagessen" cell
+  (`groupSlots()` derives the rows from the slot labels, so accepted and draft plans
+  share the layout)
+- Plan controls: per-slot swap button (keeps klassiker/experiment role), per-slot
+  replace via full-text search (name/tags/base/ingredients/`w`, shows per-person
+  ratings and the resulting change in the family average; hand-picked dishes get
+  `man:1` + auto-pin and survive the eligibility filter), drag & drop via the ⠿ grip
+  (card on card swaps two meals, day bar on day bar swaps whole days; pointer events,
+  mouse can drag the whole card; "Reste" only lands on a weekday lunch from Tuesday
+  on), per-slot pin (survives reroll), accept plan (freezes it, share as text,
+  shopping list from `z` ingredients), "Plan bearbeiten" (accepted plan goes back to
+  an all-pinned draft and drops its history entry), repetition brake (avoids dishes
+  of last 2 accepted plans, brotzeit + klassiker exempt), Brotzeit-Woche toggle (2x
+  `brotzeit`-tagged dishes on Mon/Tue or Tue/Wed evenings), pause list (globally
+  disable dishes - excluded from plan only)
+- Happiness meter (`happyOf`/`happyBox`): per-person bar above the plan, live on every
+  edit (gern 2, ok 1, unknown 0.75, veto 0.5 -> percent of "all gern"), plus the values
+  of the last accepted plans and a hint who came off worst - so a weak week can be
+  balanced out the next one. `S.history` keeps 8 plans for this; the repetition brake
+  still only reads the first 2
 - Accepted plan is stored as `S.plan.slots` [{l,id}|{l,reste:1}]; the old v1.7
   format `S.plan.ids` (fixed 9 slots) is migrated on load
 - Tournament: per-dish duel counters (`S.dcnt`, device-local); demoting a favorite

@@ -121,13 +121,31 @@ ol.rank .meta{font-size:12px;color:var(--dim);margin-top:2px}
 .veto{display:flex;flex-wrap:wrap;gap:2px}
 .veto span{background:rgba(201,69,47,.16);color:rgba(243,238,226,.7);border-radius:var(--r);padding:6px 10px;font-size:13px}
 
-/* Wochenplan */
-.plan{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:2px}
-.slot{background:var(--tile);border-radius:var(--r);padding:16px 14px;min-height:118px;display:flex;flex-direction:column}
-.slot .day{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mustard);margin-bottom:8px}
+/* Wochenplan: eine Zeile je Tag - Tagesname, Mittagessen, Abendessen.
+   Dadurch stehen die Abendessen aller Tage sauber in einer Spalte untereinander. */
+.plan{display:flex;flex-direction:column;gap:2px}
+.pday{display:grid;grid-template-columns:116px minmax(0,.88fr) minmax(0,1.32fr);gap:2px;align-items:stretch}
+.pdname{background:var(--tile);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:8px;font-family:var(--disp);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--mustard)}
+.pdname>span{min-width:0;overflow-wrap:anywhere;line-height:1.15}
+.slot{background:var(--tile);border-radius:var(--r);padding:14px 14px 12px;min-height:112px;display:flex;flex-direction:column;position:relative}
+.slot .day{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:6px;padding-right:38px}
 .slot .dish{font-family:var(--disp);font-size:16px;line-height:1.15;margin-bottom:auto}
-.slot .tag{font-size:11px;color:var(--dim);margin-top:10px;letter-spacing:.03em}
+.slot .tag{font-size:11px;color:var(--dim);margin-top:8px;letter-spacing:.03em}
 .slot.exp{background:var(--tile-hi);outline:1px solid var(--sage)}
+/* Mittagessen bleibt kleiner und gedimmt - der Abend ist die Hauptmahlzeit */
+.slot.mit{min-height:0;padding:10px 12px;background:rgba(22,71,81,.55)}
+.slot.mit .day{font-size:10px;margin-bottom:3px;padding-right:32px}
+.slot.mit .dish{font-family:var(--body);font-weight:600;font-size:13.5px;color:rgba(243,238,226,.72)}
+.slot.mit .tag{font-size:10.5px;margin-top:6px}
+.slot.mit .ex{font-size:11.5px;padding:5px 7px}
+.slot.mit .slotrow{gap:3px;margin-top:8px}
+.slot.mit .swap{font-size:13px;padding:0;min-width:42px;height:34px}
+.lunchoff{background:transparent;border:1px dashed rgba(243,238,226,.13);border-radius:var(--r);color:rgba(243,238,226,.3);font-family:var(--body);font-size:12px;padding:8px;cursor:pointer;min-height:44px}
+@media(max-width:640px){
+  .pday{grid-template-columns:1fr}
+  .pdname{flex-direction:row;align-items:center;justify-content:space-between;padding:8px 8px 8px 12px;font-size:11px}
+  .slot{min-height:0}
+}
 
 .btn{
   font-family:var(--body);font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;
@@ -147,6 +165,45 @@ textarea.code::placeholder{color:var(--dim)}
 .slot.pinned .pin{background:var(--mustard);color:#12262B}
 .slot .ex{margin-top:8px;font-size:12.5px;line-height:1.45;color:var(--mustard);background:rgba(227,167,47,.12);border-radius:var(--r);padding:7px 9px}
 .slot .ex b{font-weight:600}
+/* Ziehgriff und Drag & Drop (Karte auf Karte, Tagesleiste auf Tagesleiste) */
+.grip{position:absolute;top:6px;right:6px;width:34px;height:34px;border:0;border-radius:var(--r);background:rgba(243,238,226,.07);color:var(--dim);font-size:14px;line-height:1;cursor:grab;touch-action:none;display:grid;place-items:center;padding:0}
+.slot.mit .grip{width:30px;height:30px;top:4px;right:4px;font-size:12px}
+.pdname .grip{position:static;width:30px;height:30px;flex:0 0 30px}
+.dragsrc{opacity:.28}
+.dropok{outline:2px dashed var(--mustard);outline-offset:-3px}
+.dropno{outline:2px dashed var(--tomato);outline-offset:-3px}
+.dragghost{position:fixed;left:0;top:0;z-index:70;pointer-events:none;opacity:.95;box-shadow:0 18px 36px rgba(0,0,0,.5)}
+body.dragging-on{user-select:none;-webkit-user-select:none}
+/* Zufriedenheit: pro Person ein Balken, live zum aktuellen Entwurf */
+.happy{background:var(--tile);border-radius:var(--r);padding:14px 16px 12px;margin-bottom:2px}
+.hhead{font-family:var(--disp);font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--mustard);margin-bottom:10px}
+.hhead b{color:var(--chalk)}
+.hhead span{text-transform:none;letter-spacing:0;font-family:var(--body)}
+.hrow{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin-bottom:7px;font-size:13px}
+.hrow .hnm{flex:0 0 70px;font-weight:600}
+.hrow .bar{display:block;flex:1 1 90px;min-width:70px;margin:0}
+.hrow .hpct{flex:0 0 44px;text-align:right;font-variant-numeric:tabular-nums}
+.hrow .hmeta{flex:1 1 100%;font-size:12px;color:var(--dim);padding-left:80px}
+.hrow.low .hpct{color:var(--tomato)}
+.hnote{font-size:12.5px;color:var(--dim);margin:8px 0 0;line-height:1.45}
+@media(max-width:520px){.hrow .hmeta{padding-left:0}}
+/* Ersetzen: Suchblatt mit Volltextsuche */
+.modal{position:fixed;inset:0;z-index:80;background:rgba(6,20,23,.74);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--glaze);border-top:1px solid rgba(233,226,211,.18);border-radius:var(--r) var(--r) 0 0;width:100%;max-width:660px;max-height:90vh;display:flex;flex-direction:column;padding:14px 16px 18px}
+@media(min-width:660px){.modal{align-items:center;padding:24px}.sheet{border:1px solid rgba(233,226,211,.18);border-radius:var(--r)}}
+.sheethead{display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:var(--disp);font-size:14px;letter-spacing:.04em}
+.sheethead .x{background:rgba(243,238,226,.08);border:0;border-radius:var(--r);color:var(--chalk);width:38px;height:38px;font-size:15px;cursor:pointer}
+.sheet .searchbox{margin:12px 0 6px}
+.sheet .hint{font-size:12px;color:var(--dim);margin:0 0 4px}
+.sheet .legend{margin-bottom:10px}
+.results{overflow-y:auto;min-height:0;-webkit-overflow-scrolling:touch}
+.res{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;width:100%;text-align:left;background:var(--tile);border:0;border-radius:var(--r);color:var(--chalk);font-family:var(--body);padding:11px 13px;margin-bottom:2px;cursor:pointer}
+.res .resn{flex:1 1 150px;font-weight:600;font-size:14.5px}
+.res .resd{flex:0 0 auto;font-size:12.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+.res .resd.up{color:var(--mustard)}
+.res .resd.down{color:var(--tomato)}
+.res .resf{flex:0 0 auto;display:flex;gap:3px}
+.res .resm{flex:1 1 100%;font-size:11.5px;color:var(--dim)}
 .shop{margin:0 0 12px;padding-left:22px;columns:2;column-gap:24px}
 .shop li{margin-bottom:6px;font-size:14px;break-inside:avoid}
 @media(max-width:520px){.shop{columns:1}}
@@ -195,6 +252,9 @@ details.fold .foldbody h3{margin-top:14px}
   .btn:hover{filter:brightness(1.08)}
   .btn.ghost:hover{background:var(--tile-hi)}
   .slot .swap:hover{background:var(--tile-hi);color:var(--chalk)}
+  .grip:hover{background:var(--tile-hi);color:var(--chalk)}
+  .res:hover{background:var(--tile-hi)}
+  .lunchoff:hover{border-color:rgba(243,238,226,.3);color:var(--dim)}
   .rev .mini button:hover{background:var(--tile-hi);color:var(--chalk)}
 }
 button:focus-visible,.person:focus-visible{outline:2px solid var(--mustard);outline-offset:2px}
@@ -927,27 +987,108 @@ function shareText(txt,okMsg){
   if(navigator.share){ navigator.share({text:txt}).catch(()=>{}); }
   else navigator.clipboard.writeText(txt).then(()=>{note=okMsg;render();});
 }
+/* ---------- Zufriedenheit mit einem Plan ---------- */
+// Wie gut trifft ein Plan jede einzelne Person? gern = 2, geht so = 1,
+// kenn ich nicht / unbewertet = 0,75, Veto = 0,5 (es gibt zwar eine Extrawurst,
+// aber das Familienessen ist es trotzdem nicht). 100 % = überall "gern".
+const HAPPY={gern:2,ok:1,neu:.75,nie:.5};
+function happyOf(ids){
+  return PEOPLE.map(p=>{
+    let sum=0,g=0,ok=0,q=0,nie=0;
+    ids.forEach(id=>{
+      const r=S.ratings[p.id][id]||"neu";
+      sum+=HAPPY[r]!==undefined?HAPPY[r]:.75;
+      if(r==="gern")g++; else if(r==="ok")ok++; else if(r==="nie")nie++; else q++;
+    });
+    return {p,pct:ids.length?Math.round(sum/(2*ids.length)*100):0,g,ok,q,nie};
+  });
+}
+const happyAvg=ids=>{const h=happyOf(ids);return Math.round(h.reduce((a,x)=>a+x.pct,0)/h.length);};
+// Kasten über dem Plan: pro Person ein Balken, dazu die Werte der letzten
+// übernommenen Pläne - damit sich ein schwacher Wert nächste Woche ausgleichen lässt.
+function happyBox(ids,skip){
+  const box=el(`<div class="happy"></div>`);
+  const h=happyOf(ids), past=(S.history||[]).slice(skip||0,(skip||0)+3).map(x=>happyOf(x));
+  box.appendChild(el(`<div class="hhead">Wie happy ist die Familie? <b>Ø ${ids.length?happyAvg(ids):0} %</b> <span>(${ids.length} Essen)</span></div>`));
+  const low=Math.min(...h.map(x=>x.pct));
+  h.forEach((x,i)=>{
+    const parts=[];
+    if(x.g)parts.push(x.g+"× gern");
+    if(x.ok)parts.push(x.ok+"× geht so");
+    if(x.q)parts.push(x.q+"× unbekannt");
+    if(x.nie)parts.push(x.nie+"× 🌭 Extrawurst");
+    const tr=past.map(pp=>pp[i].pct+" %").join(" · ");
+    box.appendChild(el(`<div class="hrow${ids.length&&x.pct===low?" low":""}"><span class="hnm">${x.p.name}</span><span class="bar"><i style="width:${x.pct}%"></i></span><span class="hpct">${x.pct} %</span><span class="hmeta">${parts.join(" · ")||"nichts verplant"}${tr?" · zuletzt "+tr:""}</span></div>`));
+  });
+  if(ids.length){
+    const names=h.filter(x=>x.pct===low).map(x=>x.p.name);
+    const prev=past[0];
+    const again=prev&&h.some((x,i)=>x.pct===low&&prev[i].pct===Math.min(...prev.map(y=>y.pct)));
+    box.appendChild(el(`<p class="hnote">${names.join(" und ")} ${names.length>1?"kommen":"kommt"} in diesem Plan am kürzesten weg (${low} %).${again?" Das war im letzten Plan schon so – jetzt oder nächste Woche gezielt ein Lieblingsgericht einbauen.":" Beim Ersetzen steht neben jedem Vorschlag, wie er den Familien-Schnitt verändert."}</p>`));
+  }
+  return box;
+}
+// Tageszeilen aus den Slot-Beschriftungen: "Montag Mittag"/"Montag Abend"/"Montag"
+// landen in einer Zeile. Funktioniert für Entwurf und übernommenen Plan gleich.
+function groupSlots(labels){
+  const out=[];
+  labels.forEach((l,i)=>{
+    const m=l.match(/^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag)/);
+    const name=m?m[1]:l;
+    let g=out.find(x=>x.name===name);
+    if(!g){g={name,lunch:null,dinner:null};out.push(g);}
+    if(/Mittag$/.test(l))g.lunch=i; else g.dinner=i;
+  });
+  return out;
+}
+const shortLabel=l=>/Mittag$/.test(l)?"Mittag":"Abend";
+function dayRowEl(name,lunchNode,dinnerNode){
+  const r=el(`<div class="pday"><div class="pdname"><span>${esc(name)}</span></div></div>`);
+  r.appendChild(lunchNode||el(`<div></div>`));
+  r.appendChild(dinnerNode);
+  return r;
+}
+
 function vPlan(v){
   // Übernommener Plan: feste Ansicht mit Teilen + Einkaufsliste
   if(S.plan){
     const PS=S.plan.slots;
+    const planIdsFixed=PS.filter(s=>!s.reste&&s.id!=null).map(s=>s.id);
     v.appendChild(el(`<p class="muted">Dieser Plan ist übernommen und bleibt so stehen, bis ihr einen neuen macht.</p>`));
-    const box=el(`<div class="plan"></div>`);
-    PS.forEach(s=>{
-      if(s.reste){
-        box.appendChild(el(`<div class="slot"><div class="day">${esc(s.l)}</div><div class="dish">Reste vom Vorabend</div><div class="tag">aus dem Kühlschrank · Aufwand 0</div></div>`));
-        return;
-      }
+    v.appendChild(happyBox(planIdsFixed,1)); // Verlauf[0] ist dieser Plan selbst
+    const card=(s,lunch)=>{
+      const cls="slot"+(lunch?" mit":"");
+      if(s.reste) return el(`<div class="${cls}"><div class="day">${shortLabel(s.l)}</div><div class="dish">Reste vom Vorabend</div><div class="tag">aus dem Kühlschrank · Aufwand 0</div></div>`);
       const d=s.id!=null?DALL[s.id]:null;
       const ex=d?extraFor(d.id):[];
       const sug=ex.length?extraSuggestion(ex,d.id):null;
       const exLine=ex.length?`<div class="ex">🌭 <b>${ex.join(" und ")}</b> ${ex.length>1?"bekommen":"bekommt"} stattdessen: ${sug?esc(sug.n):"eigenes Essen wählen"}</div>`:"";
-      box.appendChild(el(`<div class="slot"><div class="day">${esc(s.l)}</div><div class="dish">${d?esc(d.n):"–"}</div><div class="tag">${d?BASE[d.b]+" · "+(d.e?"Aufwand "+"●".repeat(d.e):"geliefert"):""}</div>${exLine}</div>`));
+      return el(`<div class="${cls}"><div class="day">${shortLabel(s.l)}</div><div class="dish">${d?esc(d.n):"–"}</div><div class="tag">${d?BASE[d.b]+" · "+(d.e?"Aufwand "+"●".repeat(d.e):"geliefert"):""}</div>${exLine}</div>`);
+    };
+    const box=el(`<div class="plan"></div>`);
+    groupSlots(PS.map(s=>s.l)).forEach(g=>{
+      box.appendChild(dayRowEl(g.name,g.lunch!=null?card(PS[g.lunch],true):null,g.dinner!=null?card(PS[g.dinner],false):el(`<div></div>`)));
     });
     v.appendChild(box);
-    const r=el(`<div class="row"><button class="btn">Plan teilen</button><button class="btn ghost">Neuen Plan machen</button></div>`);
+    const r=el(`<div class="row"><button class="btn">Plan teilen</button><button class="btn ghost">✎ Plan bearbeiten</button><button class="btn ghost">Neuen Plan machen</button></div>`);
     r.children[0].onclick=()=>shareText(planText(PS),"Plan kopiert – einfach in die Familien-Gruppe einfügen.");
-    r.children[1].onclick=()=>{S.plan=null;save();draft=null;render();};
+    // Bearbeiten: der Plan geht als gepinnter Entwurf zurück in die Bearbeitung.
+    // Der beim Übernehmen gemerkte Verlauf-Eintrag fliegt raus, sonst zählt
+    // dieselbe Woche nach dem erneuten Übernehmen doppelt.
+    r.children[1].onclick=()=>{
+      const by={}; PS.forEach(s=>by[s.l]=s);
+      S.lunch={}; WDAYS.forEach((d,i)=>{if(by[d+" Mittag"])S.lunch[i]=true;});
+      draft=slotDefs().map(df=>{
+        const s=by[df.l]; if(!s)return null;
+        if(s.reste)return {reste:1,pin:true};
+        return s.id!=null?{id:s.id,pin:true,man:1}:null;
+      });
+      S.history=(S.history||[]).slice(1);
+      S.plan=null; save();
+      note="Plan zum Bearbeiten geöffnet – alle Plätze sind gepinnt, bis ihr sie löst.";
+      render();
+    };
+    r.children[2].onclick=()=>{S.plan=null;save();draft=null;render();};
     v.appendChild(r);
 
     v.appendChild(el(`<h3>Einkaufsliste</h3>`));
@@ -982,7 +1123,8 @@ function vPlan(v){
   // Bis zu drei Vetos sind erlaubt (Extrawurst für die Veto-Leute), ab vier ist Schluss
   const A=allA.filter(a=>a.veto.length<=3&&a.done>0&&!S.paused[a.d.id]&&inSeason(a.d));
   if(A.length<12){v.appendChild(el(`<div class="empty">Zu wenig bewertet für einen Wochenplan. Mindestens eine Person sollte durch sein.</div>`));return;}
-  const byId={}; A.forEach(a=>byId[a.d.id]=a);
+  const byId={}; A.forEach(a=>byId[a.d.id]=a);       // planbare Gerichte (Automatik zieht nur hieraus)
+  const info={}; allA.forEach(a=>info[a.d.id]=a);    // alle aktiven Gerichte (auch handverlesene)
   const defs=slotDefs();
   const N=defs.length;
   // Grundlimits gelten für 9 Mahlzeiten; mit Mittag-Slots wachsen sie mit
@@ -991,11 +1133,12 @@ function vPlan(v){
   const klassiker=a=>/Pizza|Burger/.test(a.d.n)||a.d.t.includes("grillen");
   const sortedA=()=>[...A].sort((a,b)=>(b.min*2+b.sum)-(a.min*2+a.sum));
   const shuffle=arr=>{for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;};
-  // Wiederholungs-Bremse: Gerichte der letzten übernommenen Pläne meiden
-  // (Brotzeit und Wochenend-Klassiker dürfen sich wiederholen)
+  // Wiederholungs-Bremse: Gerichte der letzten zwei übernommenen Pläne meiden
+  // (Brotzeit und Wochenend-Klassiker dürfen sich wiederholen). Der Verlauf
+  // selbst reicht weiter zurück - er trägt die Zufriedenheits-Werte.
   const pools=()=>{
     const sorted=sortedA();
-    const hist=S.history||[];
+    const hist=(S.history||[]).slice(0,2);
     let pool=[];
     for(let h=hist.length;h>=0;h--){
       const recent=new Set(hist.slice(0,h).flat());
@@ -1013,7 +1156,7 @@ function vPlan(v){
   const usedOf=skip=>{
     const used={};let lief=0;
     draft.forEach((e,j)=>{
-      const a=e&&!e.reste&&byId[e.id]; if(!a||j===skip)return;
+      const a=e&&!e.reste&&info[e.id]; if(!a||j===skip)return;
       // Brotzeit ist ein bewusster Wiederholungs-Baustein und zählt nicht
       // gegen das Brot-Limit (sonst blockiert die Brotzeit-Woche Burger & Co.)
       if(!a.d.t.includes("brotzeit")) used[a.d.b]=(used[a.d.b]||0)+1;
@@ -1028,7 +1171,7 @@ function vPlan(v){
     // Extrawurst-Grenzen: höchstens 2 Extrawurst-Essen pro Woche,
     // und niemand braucht zweimal pro Woche eine Extrawurst
     if(a.veto.length){
-      const ex=draft.map((e,j)=>e&&j!==skip&&!e.reste&&byId[e.id]).filter(x=>x&&x.veto.length);
+      const ex=draft.map((e,j)=>e&&j!==skip&&!e.reste&&info[e.id]).filter(x=>x&&x.veto.length);
       if(ex.length>=2||ex.some(x=>x.veto.some(n=>a.veto.includes(n))))return false;
     }
     return true;
@@ -1038,10 +1181,10 @@ function vPlan(v){
   const prevDinner=i=>{
     if(defs[i].kind!=="lunch"||defs[i].day===0)return null;
     const j=defs.findIndex(df=>df.kind==="wd"&&df.day===defs[i].day-1);
-    return j>=0&&draft[j]&&!draft[j].reste&&byId[draft[j].id]?byId[draft[j].id]:null;
+    return j>=0&&draft[j]&&!draft[j].reste&&info[draft[j].id]?info[draft[j].id]:null;
   };
   const build=keep=>{
-    draft=keep?keep.map(e=>e?(e.reste?e:(byId[e.id]?e:null)):null):new Array(N).fill(null);
+    draft=keep?keep.map(e=>e?(e.reste?e:(info[e.id]?e:null)):null):new Array(N).fill(null);
     if(draft.length!==N)draft=new Array(N).fill(null);
     const {top,rest}=pools();
     const free=pred=>{
@@ -1060,7 +1203,7 @@ function vPlan(v){
       }
     }
     // 2) Ein Wochenend-Klassiker: Pizza, Burger oder Grillen
-    if(!draft.some(e=>e&&!e.reste&&klassiker(byId[e.id]))){
+    if(!draft.some(e=>e&&!e.reste&&info[e.id]&&klassiker(info[e.id]))){
       const k=free(klassiker);
       if(k){const s=WEIDX.filter(i=>!draft[i]);if(s.length)draft[s[Math.floor(Math.random()*s.length)]]={id:k.d.id,pin:false};}
     }
@@ -1091,20 +1234,22 @@ function vPlan(v){
     });
   };
   if(!draft||draft.length!==N) build();
-  else draft=draft.map((e,i)=>{ // pausierte/vetote Gerichte fliegen raus, Reste nur auf Mittag-Slots
+  else draft=draft.map((e,i)=>{ // pausierte/ausgemusterte Gerichte fliegen raus, Reste nur auf Mittag-Slots
     if(!e)return null;
     if(e.reste)return defs[i].kind==="lunch"?e:null;
-    return byId[e.id]?e:null;
+    if(!info[e.id]||S.paused[e.id])return null;
+    // Handverlesenes bleibt auch außerhalb der Planungsliste stehen (Saison, Vetos)
+    return (e.man||byId[e.id])?e:null;
   });
   const swap=i=>{
-    const {top,rest}=pools(), cur=draft[i]&&!draft[i].reste&&byId[draft[i].id], f=fitsIn(i);
+    const {top,rest}=pools(), cur=draft[i]&&!draft[i].reste&&info[draft[i].id], f=fitsIn(i);
     const cand=pred=>top.find(a=>!inDraft(a)&&f(a)&&(!pred||pred(a)))
                   ||rest.find(a=>!inDraft(a)&&f(a)&&(!pred||pred(a)));
     const kind=defs[i].kind, pin=draft[i]?draft[i].pin:false;
     // Mittag-Slot: Gericht -> ab und zu Reste, Reste -> Gericht
     if(kind==="lunch"&&!((draft[i]||{}).reste)&&prevDinner(i)&&Math.random()<.3){draft[i]={reste:true,pin};draw();return;}
     let a=null,keepExp=false;
-    if(cur&&kind==="we"&&klassiker(cur)&&!draft.some((e,j)=>j!==i&&e&&!e.reste&&klassiker(byId[e.id]))) a=cand(klassiker);
+    if(cur&&kind==="we"&&klassiker(cur)&&!draft.some((e,j)=>j!==i&&e&&!e.reste&&info[e.id]&&klassiker(info[e.id]))) a=cand(klassiker);
     else if(draft[i]&&draft[i].exp){ a=cand(z=>z.neu); if(a)keepExp=true; }
     if(!a) a=kind==="lunch"?(cand(z=>z.d.e===1)||cand(z=>z.d.e>0&&z.d.e<=2)||cand())
            :kind==="wd"?(cand(z=>z.d.e>0&&z.d.e<=2)||cand())
@@ -1112,31 +1257,210 @@ function vPlan(v){
     if(a){draft[i]={id:a.d.id,pin,exp:keepExp};draw();}
     else{note="Kein passender Ersatz frei – erst neu würfeln oder etwas anderes tauschen.";render();}
   };
-  const draw=()=>{
-    box.innerHTML="";
-    draft.forEach((e,i)=>{
-      const label=defs[i].l;
-      let s;
-      if(e&&e.reste){
-        const pd=prevDinner(i);
-        s=el(`<div class="slot${e.pin?" pinned":""}"><div class="day">${label}</div><div class="dish">Reste vom Vorabend</div><div class="tag">${pd?"von: "+esc(pd.d.n):"aus dem Kühlschrank"} · Aufwand 0</div><div class="slotrow"><button class="swap">↻ Tauschen</button><button class="swap pin">${e.pin?"📌 Gepinnt":"📌 Pinnen"}</button></div></div>`);
-      }else if(e&&byId[e.id]){
-        const a=byId[e.id];
-        const sug=a.veto.length?extraSuggestion(a.veto,a.d.id):null;
-        const exLine=a.veto.length?`<div class="ex">🌭 <b>${a.veto.join(" und ")}</b> ${a.veto.length>1?"bekommen":"bekommt"} stattdessen: ${sug?esc(sug.n):"eigenes Essen wählen"}</div>`:"";
-        s=el(`<div class="slot${e.exp?" exp":""}${e.pin?" pinned":""}"><div class="day">${label}${e.exp?" · Experiment":""}</div><div class="dish">${esc(a.d.n)}</div><div class="tag">${BASE[a.d.b]} · ${a.d.e?"Aufwand "+"●".repeat(a.d.e):"geliefert"}</div>${exLine}<div class="slotrow"><button class="swap">↻ Tauschen</button><button class="swap pin">${e.pin?"📌 Gepinnt":"📌 Pinnen"}</button></div></div>`);
-      }else{
-        s=el(`<div class="slot"><div class="day">${label}</div><div class="dish">–</div><div class="tag">kein Gericht frei</div><div class="slotrow"><button class="swap">↻ Tauschen</button></div></div>`);
+
+  /* ---- Umsortieren per Drag & Drop ---- */
+  // "Reste vom Vorabend" ergeben nur auf einem Werktags-Mittag ab Dienstag Sinn
+  const canPlace=(e,i)=>!e||!e.reste||(defs[i].kind==="lunch"&&defs[i].day>0);
+  const swapSlots=(i,j)=>{
+    if(i===j)return;
+    if(!canPlace(draft[i],j)||!canPlace(draft[j],i)){
+      note="„Reste vom Vorabend“ passen nur auf ein Mittagessen ab Dienstag."; render(); return;
+    }
+    const a=draft[i]; draft[i]=draft[j]; draft[j]=a; draw();
+  };
+  const swapDays=(g1,g2)=>{
+    if(g1===g2)return;
+    if(g1.dinner!=null&&g2.dinner!=null){const a=draft[g1.dinner];draft[g1.dinner]=draft[g2.dinner];draft[g2.dinner]=a;}
+    // Mittagessen wechseln nur, wenn beide Tage eines haben
+    if(g1.lunch!=null&&g2.lunch!=null){
+      if(canPlace(draft[g1.lunch],g2.lunch)&&canPlace(draft[g2.lunch],g1.lunch)){
+        const b=draft[g1.lunch];draft[g1.lunch]=draft[g2.lunch];draft[g2.lunch]=b;
+      }else note="Die Mittagessen blieben stehen: „Reste vom Vorabend“ passen nur ab Dienstag.";
+    }
+    if(note)render(); else draw();
+  };
+  // Zieh-Geste ohne Bibliothek: Pointer-Events, damit Maus und Finger gleich laufen.
+  // Der Griff hat touch-action:none, sonst scrollt das Ziehen die Seite.
+  const drag=(ev,src,sel,ok,drop)=>{
+    if(ev.button!==undefined&&ev.button>0)return;
+    ev.preventDefault();
+    const sx=ev.clientX, sy=ev.clientY;
+    let started=false,ghost=null,off=null,cur=null,vy=0,raf=0;
+    const clear=()=>{if(cur){cur.classList.remove("dropok","dropno");cur=null;}};
+    const begin=e=>{
+      const r=src.getBoundingClientRect();
+      ghost=src.cloneNode(true);
+      ghost.classList.add("dragghost");
+      ghost.style.width=r.width+"px"; ghost.style.height=r.height+"px";
+      document.body.appendChild(ghost);
+      document.body.classList.add("dragging-on");
+      src.classList.add("dragsrc");
+      off={x:e.clientX-r.left,y:e.clientY-r.top};
+      raf=requestAnimationFrame(step);
+      started=true;
+    };
+    const step=()=>{ if(vy)window.scrollBy(0,vy); raf=requestAnimationFrame(step); };
+    const move=e=>{
+      if(!started){ if(Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy)<6)return; begin(e); }
+      ghost.style.transform=`translate(${e.clientX-off.x}px,${e.clientY-off.y}px)`;
+      const under=document.elementFromPoint(e.clientX,e.clientY);
+      const t=under?under.closest(sel):null;
+      if(t!==cur){ clear(); if(t&&t!==src){cur=t;cur.classList.add(ok(t)?"dropok":"dropno");} }
+      vy=e.clientY<70?-14:e.clientY>window.innerHeight-70?14:0;
+    };
+    const end=e=>{
+      window.removeEventListener("pointermove",move);
+      window.removeEventListener("pointerup",end);
+      window.removeEventListener("pointercancel",end);
+      if(!started)return;
+      cancelAnimationFrame(raf);
+      const t=cur; clear();
+      ghost.remove(); document.body.classList.remove("dragging-on"); src.classList.remove("dragsrc");
+      if(t&&e.type==="pointerup")drop(t); // drop() prüft selbst und erklärt eine Absage
+    };
+    window.addEventListener("pointermove",move);
+    window.addEventListener("pointerup",end);
+    window.addEventListener("pointercancel",end);
+  };
+
+  /* ---- Einzelnes Gericht ersetzen: Volltextsuche über die ganze Liste ---- */
+  const norm=s=>(s||"").toLowerCase().replace(/ä/g,"a").replace(/ö/g,"o").replace(/ü/g,"u").replace(/ß/g,"ss");
+  const hay=d=>norm([d.n,(d.t||[]).join(" "),BASE[d.b],d.p,(d.z||[]).join(" "),d.w].join(" "));
+  const faces=d=>PEOPLE.map(p=>{
+    const r=S.ratings[p.id][d.id];
+    const c=r==="gern"?"f-gern":r==="ok"?"f-ok":r==="nie"?"f-nie":"f-neu";
+    return `<span class="face ${c}" title="${p.name}: ${r==="gern"?"gern":r==="ok"?"geht so":r==="nie"?"nie":"kennt es nicht"}">${p.name[0]}</span>`;
+  }).join("");
+  const openPicker=i=>{
+    const curIds=planIds().filter(x=>x!=null);
+    const base=curIds.length?happyAvg(curIds):0;
+    const withDish=id=>{const a=planIds();a[i]=id;const l=a.filter(x=>x!=null);return l.length?happyAvg(l):0;};
+    const hNow=happyOf(curIds), lowPct=Math.min(...hNow.map(x=>x.pct));
+    const lowP=(hNow.find(x=>x.pct===lowPct)||hNow[0]).p;
+    const taken=id=>draft.some((e,j)=>j!==i&&e&&e.id===id);
+    const pool=D.filter(d=>!S.paused[d.id]&&!taken(d.id));
+    const m=el(`<div class="modal"><div class="sheet"><div class="sheethead"><span>${esc(defs[i].l)} ersetzen</span><button class="x" aria-label="Schließen">✕</button></div><input class="searchbox" type="search" placeholder="Suchen: Name, Zutat, Tag …" autocomplete="off"><p class="hint"></p><p class="hint legend">Kürzel = ${PEOPLE.map(x=>x.name).join(", ")}. Gelb: gern · hell: geht so · grün: kennt es nicht · rot: nie.</p><div class="results"></div></div></div>`);
+    const q=m.querySelector(".searchbox"), hint=m.querySelector(".hint"), res=m.querySelector(".results");
+    const close=()=>{m.remove();document.removeEventListener("keydown",esckey);};
+    const esckey=e=>{if(e.key==="Escape")close();};
+    const pick=entry=>{draft[i]=entry;close();draw();};
+    const rowFor=d=>{
+      const dl=withDish(d.id)-base;
+      const a=info[d.id];
+      const marks=[];
+      if(a&&a.veto.length)marks.push("🌭 Extrawurst für "+a.veto.join(", "));
+      if(!inSeason(d))marks.push("außerhalb der Saison");
+      if(a&&a.veto.length>3)marks.push("4 Vetos");
+      const b=el(`<button class="res"><span class="resn">${esc(d.n)}</span><span class="resf">${faces(d)}</span><span class="resd ${dl>0?"up":dl<0?"down":""}">${dl>0?"+":""}${dl} %</span><span class="resm">${BASE[d.b]} · ${d.e?"Aufwand "+"●".repeat(d.e):"geliefert"}${marks.length?" · "+marks.join(" · "):""}</span></button>`);
+      b.onclick=()=>pick({id:d.id,pin:true,man:1});
+      return b;
+    };
+    const extras=()=>{
+      const out=[];
+      const dl0=(curIds.length?withDish(null):0)-base;
+      const badge=`<span class="resd ${dl0>0?"up":dl0<0?"down":""}">${dl0>0?"+":""}${dl0} %</span>`;
+      if(canPlace({reste:1},i)){
+        const b=el(`<button class="res"><span class="resn">Reste vom Vorabend</span>${badge}<span class="resm">aus dem Kühlschrank · Aufwand 0 · zählt nicht in die Zufriedenheit</span></button>`);
+        b.onclick=()=>pick({reste:true,pin:true});
+        out.push(b);
       }
-      s.querySelector(".swap").onclick=()=>swap(i);
-      const pb=s.querySelector(".pin");
-      if(pb)pb.onclick=()=>{e.pin=!e.pin;draw();};
-      box.appendChild(s);
+      if(draft[i]){
+        const b=el(`<button class="res"><span class="resn">Platz leeren</span>${badge}<span class="resm">bleibt frei, bis ihr etwas hinlegt</span></button>`);
+        b.onclick=()=>pick(null);
+        out.push(b);
+      }
+      return out;
+    };
+    const show=()=>{
+      res.innerHTML="";
+      const t=norm(q.value.trim());
+      let list;
+      if(t.length<2){
+        // Ohne Suchbegriff: was den aktuell schwächsten Wert am meisten hebt
+        const val=d=>{const r=S.ratings[lowP.id][d.id];return (r==="gern"?2:r==="ok"?1:r==="nie"?-3:0)*10+(withDish(d.id)-base);};
+        list=pool.filter(d=>inSeason(d)&&info[d.id]&&info[d.id].veto.length<=3).sort((a,b)=>val(b)-val(a)).slice(0,12);
+        hint.textContent=`Vorschläge, die ${lowP.name} (${lowPct} %) am meisten helfen. Die Prozentzahl ist die Änderung am Familien-Schnitt (${base} %).`;
+      }else{
+        const words=t.split(/\s+/);
+        list=pool.filter(d=>{const h=hay(d);return words.every(w=>h.includes(w));}).slice(0,25);
+        hint.textContent=list.length?`Die Prozentzahl ist die Änderung am Familien-Schnitt (${base} %).`:"Nichts gefunden – anderer Begriff? Pausierte Gerichte tauchen hier nicht auf.";
+      }
+      extras().forEach(x=>res.appendChild(x));
+      list.forEach(d=>res.appendChild(rowFor(d)));
+    };
+    q.oninput=show;
+    m.querySelector(".x").onclick=close;
+    m.onclick=e=>{if(e.target===m)close();};
+    document.addEventListener("keydown",esckey);
+    document.body.appendChild(m);
+    show();
+    setTimeout(()=>{if(!("ontouchstart" in window))q.focus();},30);
+  };
+
+  /* ---- Zeichnen ---- */
+  const slotCard=(i,lunch)=>{
+    const e=draft[i], lab=shortLabel(defs[i].l), cls="slot"+(lunch?" mit":"");
+    // Mittagskarten bleiben flach: nur Symbole statt beschrifteter Knöpfe
+    const tools=lunch
+      ?`<div class="slotrow"><button class="swap" title="Neu würfeln" aria-label="Neu würfeln">↻</button><button class="swap rep" title="Gericht suchen und ersetzen" aria-label="Ersetzen">🔍</button>${e?`<button class="swap pin" title="${e.pin?"Gepinnt – schützt den Platz beim Neu-Würfeln":"Pinnen"}" aria-label="Pinnen">📌</button>`:""}</div>`
+      :`<div class="slotrow"><button class="swap">↻ Tauschen</button><button class="swap rep">🔍 Ersetzen</button>${e?`<button class="swap pin">${e.pin?"📌 Gepinnt":"📌 Pinnen"}</button>`:""}</div>`;
+    const grip=`<button class="grip" aria-label="Verschieben" title="Ziehen: mit einem anderen Essen tauschen">⠿</button>`;
+    let s;
+    if(e&&e.reste){
+      const pd=prevDinner(i);
+      s=el(`<div class="${cls}${e.pin?" pinned":""}" data-i="${i}"><div class="day">${lab}</div><div class="dish">Reste vom Vorabend</div><div class="tag">${pd?"von: "+esc(pd.d.n):"aus dem Kühlschrank"} · Aufwand 0</div>${tools}${grip}</div>`);
+    }else if(e&&info[e.id]){
+      const a=info[e.id];
+      const sug=a.veto.length?extraSuggestion(a.veto,a.d.id):null;
+      const exLine=a.veto.length?`<div class="ex">🌭 <b>${a.veto.join(" und ")}</b> ${a.veto.length>1?"bekommen":"bekommt"} stattdessen: ${sug?esc(sug.n):"eigenes Essen wählen"}</div>`:"";
+      s=el(`<div class="${cls}${e.exp?" exp":""}${e.pin?" pinned":""}" data-i="${i}"><div class="day">${lab}${e.exp?" · Experiment":""}</div><div class="dish">${esc(a.d.n)}</div><div class="tag">${BASE[a.d.b]} · ${a.d.e?"Aufwand "+"●".repeat(a.d.e):"geliefert"}</div>${exLine}${tools}${grip}</div>`);
+    }else{
+      s=el(`<div class="${cls}" data-i="${i}"><div class="day">${lab}</div><div class="dish">–</div><div class="tag">kein Gericht frei</div>${tools}${grip}</div>`);
+    }
+    s.querySelector(".swap").onclick=()=>swap(i);
+    s.querySelector(".rep").onclick=()=>openPicker(i);
+    const pb=s.querySelector(".pin");
+    if(pb)pb.onclick=()=>{draft[i].pin=!draft[i].pin;draw();};
+    const ok=t=>{const j=+t.dataset.i;return canPlace(draft[i],j)&&canPlace(draft[j],i);};
+    const go=t=>swapSlots(i,+t.dataset.i);
+    s.querySelector(".grip").addEventListener("pointerdown",ev=>drag(ev,s,".slot[data-i]",ok,go));
+    // Mit der Maus lässt sich die ganze Karte ziehen, auf dem Touchscreen nur der Griff
+    s.addEventListener("pointerdown",ev=>{
+      if(ev.pointerType!=="mouse"||ev.target.closest("button"))return;
+      drag(ev,s,".slot[data-i]",ok,go);
+    });
+    return s;
+  };
+  const draw=()=>{
+    const ids=planIds().filter(x=>x!=null);
+    hbox.innerHTML=""; hbox.appendChild(happyBox(ids));
+    box.innerHTML="";
+    const groups=groupSlots(defs.map(d=>d.l));
+    groups.forEach((g,gi)=>{
+      let lunchNode;
+      if(g.lunch!=null) lunchNode=slotCard(g.lunch,true);
+      else{
+        const day=WDAYS.indexOf(g.name);
+        lunchNode=el(`<button class="lunchoff">+ Mittagessen</button>`);
+        lunchNode.onclick=()=>{S.lunch=S.lunch||{};S.lunch[day]=true;save();draft=null;render();};
+      }
+      const row=dayRowEl(g.name,lunchNode,g.dinner!=null?slotCard(g.dinner,false):el(`<div></div>`));
+      row.dataset.g=gi;
+      const head=row.querySelector(".pdname");
+      head.appendChild(el(`<button class="grip" aria-label="Tag verschieben" title="Ziehen: den ganzen Tag mit einem anderen tauschen">⠿</button>`));
+      const okd=()=>true, god=t=>swapDays(g,groups[+t.dataset.g]);
+      head.querySelector(".grip").addEventListener("pointerdown",ev=>drag(ev,row,".pday",okd,god));
+      head.addEventListener("pointerdown",ev=>{
+        if(ev.pointerType!=="mouse"||ev.target.closest("button"))return;
+        drag(ev,row,".pday",okd,god);
+      });
+      box.appendChild(row);
     });
   };
-  v.appendChild(el(`<p class="muted">Ein Vorschlag für die Woche. „↻“ tauscht einen einzelnen Platz, „📌“ schützt ihn beim Neu-Würfeln – und wenn alles passt: „Plan übernehmen“.</p>`));
+  v.appendChild(el(`<p class="muted">Ein Vorschlag für die Woche. „↻“ würfelt einen Platz neu, „🔍 Ersetzen“ sucht gezielt ein Gericht, „📌“ schützt den Platz beim Neu-Würfeln. Mit dem Griff ⠿ lässt sich ziehen: Karte auf Karte tauscht zwei Essen (Mittag ↔ Abend oder von Tag zu Tag), Tagesleiste auf Tagesleiste tauscht zwei ganze Tage. Oben steht immer, wie happy jede Person mit dem aktuellen Stand ist.</p>`));
   v.appendChild(foldEl("So baut die App den Plan",false,
-    el(`<p class="muted">Mo–Fr abends ein einfaches Essen (Aufwand ≤ 2); über die Mittagessen-Chips gibt es an gewählten Werktagen zusätzlich ein Mittagessen – sehr einfach (Aufwand 1) oder ab und zu „Reste vom Vorabend“. Sa/So jeweils Mittag- und Abendessen; eines davon ist Pizza, Burger oder Grillen, ein Platz gehört einem Experiment aus dem ganzen Entdeckungspool. Das Wochenende wird zuerst befüllt, dort sind die Kandidaten am knappsten. Abwechslungs-Limits (bei 9 Mahlzeiten: höchstens zweimal Nudeln, einmal Spätzle, einmal Teig, eine Süßspeise, eine Suppe) wachsen mit der Zahl der Mahlzeiten mit; Brotzeit zählt nicht gegen das Brot-Limit. Reicht die Spitzengruppe nicht, rückt der Rest der Liste nach – ein Platz bleibt praktisch nie leer. Gerichte der letzten zwei übernommenen Pläne werden gemieden (Brotzeit und Klassiker ausgenommen). Bis zu drei Vetos blockieren nicht: höchstens zwei Gerichte pro Woche mit 🌭 Extrawurst, niemand braucht zweimal pro Woche eine – die App schlägt als Extrawurst ein Gericht vor, das alle Veto-Leute mögen. Ab vier Vetos ist ein Gericht raus. Saison-Gerichte pausieren automatisch im falschen Halbjahr.${outSeason?` Gerade außerhalb der Saison: ${outSeason} Gericht${outSeason===1?"":"e"}.`:""}</p>`)));
+    el(`<p class="muted">Mo–Fr abends ein einfaches Essen (Aufwand ≤ 2); über die Mittagessen-Chips gibt es an gewählten Werktagen zusätzlich ein Mittagessen – sehr einfach (Aufwand 1) oder ab und zu „Reste vom Vorabend“. Sa/So jeweils Mittag- und Abendessen; eines davon ist Pizza, Burger oder Grillen, ein Platz gehört einem Experiment aus dem ganzen Entdeckungspool. Das Wochenende wird zuerst befüllt, dort sind die Kandidaten am knappsten. Abwechslungs-Limits (bei 9 Mahlzeiten: höchstens zweimal Nudeln, einmal Spätzle, einmal Teig, eine Süßspeise, eine Suppe) wachsen mit der Zahl der Mahlzeiten mit; Brotzeit zählt nicht gegen das Brot-Limit. Reicht die Spitzengruppe nicht, rückt der Rest der Liste nach – ein Platz bleibt praktisch nie leer. Gerichte der letzten zwei übernommenen Pläne werden gemieden (Brotzeit und Klassiker ausgenommen). Bis zu drei Vetos blockieren nicht: höchstens zwei Gerichte pro Woche mit 🌭 Extrawurst, niemand braucht zweimal pro Woche eine – die App schlägt als Extrawurst ein Gericht vor, das alle Veto-Leute mögen. Ab vier Vetos ist ein Gericht raus. Saison-Gerichte pausieren automatisch im falschen Halbjahr.${outSeason?` Gerade außerhalb der Saison: ${outSeason} Gericht${outSeason===1?"":"e"}.`:""}</p>`),
+    el(`<p class="muted">Von Hand gesetzte Gerichte (Ersetzen oder Ziehen) hält die App fest: Sie werden automatisch gepinnt und bleiben auch dann stehen, wenn die Automatik sie selbst nie ziehen würde – etwa außerhalb der Saison oder mit vier Vetos. Die Zufriedenheits-Balken rechnen mit gern = 100 %, geht so = 50 %, unbekannt = 37 %, Veto = 25 % und zeigen zum Vergleich die letzten übernommenen Pläne.</p>`)));
   const bz=el(`<label class="toggle"><input type="checkbox"${S.brotwoche?" checked":""}> <span><b>Brotzeit-Woche:</b> Brot ist da – zweimal Brotzeit, Mo/Di oder Di/Mi</span></label>`);
   bz.querySelector("input").onchange=e=>{S.brotwoche=e.target.checked;save();build(draft.map(x=>x&&x.pin?x:null));draw();};
   v.appendChild(bz);
@@ -1153,8 +1477,9 @@ function vPlan(v){
   call.onclick=()=>{const on=!allOn();S.lunch={};if(on)WDAYS.forEach((_,i)=>S.lunch[i]=true);save();draft=null;render();};
   chips.appendChild(call);
   v.appendChild(lc);
+  const hbox=el(`<div></div>`); v.appendChild(hbox);
   const box=el(`<div class="plan"></div>`); v.appendChild(box); draw();
-  v.appendChild(el(`<p class="muted" style="margin-top:16px">„Plan übernehmen“ macht diesen Entwurf zum festen Wochenplan: Er bleibt gespeichert stehen (auch nach Neuladen), und ihr bekommt ihn zum Teilen plus eine fertige Einkaufsliste. Ändern geht danach jederzeit über „Neuen Plan machen“.</p>`));
+  v.appendChild(el(`<p class="muted" style="margin-top:16px">„Plan übernehmen“ macht diesen Entwurf zum festen Wochenplan: Er bleibt gespeichert stehen (auch nach Neuladen), und ihr bekommt ihn zum Teilen plus eine fertige Einkaufsliste. Ändern geht danach jederzeit über „✎ Plan bearbeiten“ oder „Neuen Plan machen“.</p>`));
   const r=el(`<div class="row"><button class="btn">✓ Plan übernehmen</button><button class="btn ghost">Neu würfeln (Pins bleiben)</button></div>`);
   r.children[0].onclick=()=>{
     S.plan={slots:defs.map((df,i)=>{
@@ -1163,7 +1488,9 @@ function vPlan(v){
       if(e.reste)return {l:df.l,reste:1};
       return {l:df.l,id:e.id};
     })};
-    S.history=[planIds().filter(x=>x!=null),...(S.history||[])].slice(0,2);
+    // Verlauf: die Wiederholungs-Bremse liest die letzten zwei Pläne,
+    // die Zufriedenheits-Anzeige den längeren Rückblick
+    S.history=[planIds().filter(x=>x!=null),...(S.history||[])].slice(0,8);
     save();draft=null;
     note="Plan übernommen – hier stehen jetzt Teilen und Einkaufsliste.";
     render();

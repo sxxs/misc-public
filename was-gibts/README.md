@@ -45,14 +45,41 @@ Das Wochenende wird zuerst befüllt; reicht die Spitzengruppe (Top 44) nicht, r�
 der Rest der Liste nach, damit kein Platz leer bleibt. Die Abwechslungs-Limits
 wachsen mit der Zahl der Mahlzeiten mit, Brotzeit zählt nicht gegen das Brot-Limit.
 
+Ansicht: Der Plan steht als eine Zeile pro Tag - links der Tagesname, in der Mitte das
+Mittagessen (klein und gedimmt), rechts das Abendessen. Dadurch stehen die Abendessen
+aller Tage sauber untereinander. Tage ohne Mittagessen zeigen an der Stelle ein
+"+ Mittagessen" zum Anschalten.
+
 Steuerung im Wochenplan:
 
 - **↻ Tauschen** ersetzt einen einzelnen Platz durch ein anderes passendes Gericht
   (Klassiker- und Experiment-Plätze behalten ihre Rolle, solange sie die einzigen sind).
+- **🔍 Ersetzen** öffnet die Volltextsuche über die ganze Gerichteliste (Name, Tags,
+  Basis, Zutaten, "Was ist das?"). Jeder Treffer zeigt, wie jede Person das Gericht
+  bewertet hat und um wie viel Prozent sich der Familien-Schnitt ändert. Ohne
+  Suchbegriff stehen dort Vorschläge, die der aktuell schlechtesten Person am meisten
+  helfen. Auf Mittag-Plätzen lässt sich auch "Reste vom Vorabend" wählen, jeder Platz
+  lässt sich leeren. Von Hand gesetzte Gerichte werden automatisch gepinnt und bleiben
+  auch dann stehen, wenn die Automatik sie nie ziehen würde (außer Saison, vier Vetos).
+- **Ziehen (Griff ⠿)**: Karte auf Karte tauscht zwei Essen - Mittag gegen Abend am
+  selben Tag oder von Tag zu Tag. Tagesleiste auf Tagesleiste tauscht zwei ganze Tage
+  (Mittagessen wechseln nur, wenn beide Tage eines haben). Mit der Maus lässt sich auch
+  die ganze Karte ziehen, auf dem Touchscreen nur der Griff. "Reste vom Vorabend"
+  landen nur auf einem Mittagessen ab Dienstag - sonst zeigt das Ziel einen roten
+  Rahmen und die App sagt, warum nichts passiert ist.
 - **📌 Pinnen** schützt einen Platz beim Neu-Würfeln ("Donnerstag ist gesetzt").
+- **Zufriedenheit**: Über dem Plan steht für jede Person ein Balken, der sich bei jeder
+  Änderung sofort mitrechnet (gern = 100 %, geht so = 50 %, unbekannt = 37 %, Veto mit
+  Extrawurst = 25 %). Daneben stehen die Werte der letzten übernommenen Pläne, dazu ein
+  Hinweis, wer diesmal am kürzesten wegkommt - und ob das schon in der Vorwoche so war.
+  So lässt sich gezielt eine Woche später ausgleichen. Der Verlauf merkt sich dafür die
+  letzten acht übernommenen Pläne (die Wiederholungs-Bremse nutzt weiter nur die
+  letzten zwei).
 - **Plan übernehmen** friert den Plan ein: Er bleibt beim Tab-Wechsel stehen und lässt
   sich als Text teilen; dazu gibt es eine **Einkaufsliste** aus den Hauptzutaten
-  (Feld `z` in dishes.json). "Neuen Plan machen" startet den nächsten Entwurf.
+  (Feld `z` in dishes.json). "✎ Plan bearbeiten" holt den übernommenen Plan als
+  Entwurf zurück (alle Plätze gepinnt, der Verlaufseintrag wird zurückgenommen),
+  "Neuen Plan machen" startet den nächsten Entwurf von vorn.
 - **Wiederholungs-Bremse**: Gerichte der letzten zwei übernommenen Pläne werden
   gemieden (Brotzeit und Pizza/Burger/Grillen dürfen sich wiederholen).
 - **Brotzeit-Woche**: Haken setzen, wenn Brot da ist - der Plan legt zweimal Brotzeit
