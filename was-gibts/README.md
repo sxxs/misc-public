@@ -4,7 +4,7 @@ Familien-Essensentscheider. Statische Seite, keine Serverkomponente, keine Konte
 Der Zustand liegt im `localStorage` des jeweiligen Geräts. Übertragen wird per QR-Code
 oder per Code zum Abtippen.
 
-Die laufende Version steht klein unter der Überschrift ("Version 1.9") - praktisch, um
+Die laufende Version steht klein unter der Überschrift ("Version 1.10") - praktisch, um
 auf jedem Gerät zu prüfen, ob die neue Fassung schon geladen ist. Beim Release in
 `index.html` (Element `.ver`), in dieser Datei und in `CLAUDE.md` hochzählen.
 
@@ -28,16 +28,17 @@ Danach läuft die Seite offline.
 
 1. Jeder öffnet die Seite auf seinem Gerät und sichtet unter "Sichtung" die Gerichte.
 2. Wer mag, spielt anschließend ein paar Duelle unter "Turnier".
-3. Unter "Übertragen" erzeugt jeder seinen Code und zeigt den QR-Code dem Tablet.
-   Alternative ohne Kamera: den QR-Code mit der normalen Kamera-App öffnen, der Link
-   liest den Stand direkt ein. Oder die Zeichenfolge abtippen. Die Reihenfolge beim
-   Einlesen ist egal - jeder Code ändert nur die eigene Person.
+3. Unter "Übertragen" erzeugt jeder seinen **Link** und schickt ihn ans Tablet -
+   per Nachricht, oder indem das Tablet den QR-Code scannt. Die Reihenfolge ist egal,
+   ein Personen-Link ändert nur diese eine Person.
 4. Auf dem Tablet stehen dann unter "Ergebnis" (inkl. Bestenliste pro Person und für
    alle) und "Wochenplan" die ausgewerteten Daten.
-5. Rückweg: Das Tablet erzeugt unter "Übertragen" den **Familien-Code** (alle Personen
-   in einem Code). Liest ein Gerät ihn ein, hat es den kompletten Familienstand.
+5. Rückweg: Das Tablet erzeugt den **Familien-Link** (alle Personen, Pausenliste,
+   übernommener Wochenplan und Zufriedenheits-Verlauf in einem Link) und schickt ihn
+   in die Familiengruppe. Wer ihn antippt, bekommt einen Dialog und übernimmt.
    Achtung: Das überschreibt dort auch die eigene Person - wer seit der Abgabe
-   weiterbewertet hat, gibt erst wieder ab und liest dann zurück.
+   weiterbewertet hat, gibt erst wieder ab und liest dann zurück. Der Dialog warnt,
+   wenn auf dem Gerät mehr Bewertungen liegen als im Link stehen.
 
 Der Wochenplan hat Mo-Fr je ein Abendessen (bevorzugt einfache Gerichte) und am
 Wochenende Mittag- und Abendessen; ein Wochenendplatz ist Pizza, Burger oder Grillen
@@ -113,8 +114,8 @@ blockiert, mit Probier-Kandidaten), Turnier-Check (Favoriten, die fast jedes Due
 verlieren - Kandidaten fürs Revidieren).
 
 Sicherung: Unter "Übertragen" lässt sich der komplette Gerätestand als Datei
-herunterladen und wieder einlesen (inkl. Duell-Zähler, Pausenliste, übernommenem
-Plan - mehr als der Familien-Code abdeckt).
+herunterladen und wieder einlesen (inkl. Duell-Zähler und Mittagessen-Auswahl - noch
+etwas mehr als der Familien-Link abdeckt).
 
 Turnier und Revidieren:
 
@@ -123,6 +124,37 @@ Turnier und Revidieren:
   nächsten Duellen zuerst dran - so wiederholt man gezielt die Teile des Turniers,
   die nicht mehr passen. "Turnier neu starten" pro Person gibt es auch.
 - Die Startseite zeigt pro Person eine Duell-Empfehlung ("noch ~X Duelle").
+
+## Übertragen per Link
+
+Jeder Stand passt in einen Link; alles Interessante steht im Fragment hinter dem `#`
+und wird deshalb nie an einen Server geschickt.
+
+| Link | Inhalt | Länge |
+| --- | --- | --- |
+| Person | Bewertungen und Duell-Ranking einer Person | ~90 Zeichen |
+| Ganze Familie | alle fünf Personen, Pausenliste, Wochenplan, Verlauf | ~490 Zeichen |
+| Nur Wochenplan | der übernommene Plan, sonst nichts | ~25 Zeichen |
+
+- **Erzeugen** unter "Übertragen"; den Wochenplan-Link gibt es zusätzlich direkt im
+  Wochenplan ("🔗 Plan-Link"). Jede Karte hat einen QR-Code, "Link teilen" (öffnet das
+  Teilen-Menü des Geräts) und "Link kopieren". Der abtippbare Code steht eingeklappt
+  darunter, falls ein Link unterwegs zerbricht.
+- **Einlesen:** Wer den Link antippt, bekommt zuerst einen Dialog: Was steckt drin
+  (welche Personen, wie viele Bewertungen, Pausenliste, Plan, Verlauf), was wird
+  überschrieben - mit einem Häkchen je Teil zum Abwählen. Erst "Übernehmen" ändert
+  etwas. Danach steht oben ein **Rückgängig**: Der Stand von vor dem Einlesen wird
+  gesichert und lässt sich einen Tag lang mit einem Klick zurückholen.
+- **iPhone/iPad mit App auf dem Home-Bildschirm:** Diese App hat einen eigenen
+  Speicher, getrennt von Safari. Ein Link aus WhatsApp öffnet den Browser und landet
+  deshalb dort. Deswegen nimmt das Feld "Link oder Code einlesen" auch einen ganzen
+  eingefügten Link an - so wirkt er in der App, in der man ihn einfügt.
+- **Codeformat:** Der Code ist bitgepackt (3 Bit je Bewertung) und dann Base64url -
+  in dieser Form kleiner als jede nachträgliche Komprimierung (gzip darauf wird
+  größer, gemessen). Wochenplan und Verlauf hängen als eigene Blöcke hinten dran:
+  Ältere App-Stände lesen sie nicht und ignorieren sie, ältere Codes liefern an der
+  Stelle nichts - beide Richtungen bleiben also lesbar. Der Plan-Link nutzt den
+  Personen-Index 6, ältere Stände melden dafür sauber "Unbekannte Person im Code".
 
 ## Gerichteliste ändern
 

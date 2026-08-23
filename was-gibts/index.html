@@ -205,6 +205,13 @@ body.dragging-on{user-select:none;-webkit-user-select:none}
 .res .resd.down{color:var(--tomato)}
 .res .resf{flex:0 0 auto;display:flex;gap:3px}
 .res .resm{flex:1 1 100%;font-size:11.5px;color:var(--dim)}
+.qr img,.qr canvas{max-width:100%;height:auto;display:block}
+.sheet .imp .toggle{margin:0 0 6px;line-height:1.45}
+.sheet .imp .row{margin:14px 0 0}
+.undobar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--tile);border-radius:var(--r);padding:11px 14px;margin-bottom:16px;font-size:14px}
+.undobar span{flex:1 1 220px}
+.undobar button{border:0;border-radius:var(--r);background:rgba(243,238,226,.1);color:var(--chalk);font-family:var(--body);font-size:13px;padding:10px 13px;cursor:pointer}
+.undobar button.go{background:var(--mustard);color:#12262B;font-weight:600}
 .shop{margin:0 0 12px;padding-left:22px;columns:2;column-gap:24px}
 .shop li{margin-bottom:6px;font-size:14px;break-inside:avoid}
 @media(max-width:520px){.shop{columns:1}}
@@ -273,7 +280,7 @@ button:focus-visible,.person:focus-visible{outline:2px solid var(--mustard);outl
   <h1>Was gibt's<em>?</em></h1>
   <p class="sub">Jeder sichtet die Gerichteliste einmal durch, dann entscheidet die Familie – und nicht der Kühlschrank um 18 Uhr.</p>
   <!-- Bei jedem Release hochzählen (auch in README.md und CLAUDE.md) -->
-  <p class="ver">Version 1.9</p>
+  <p class="ver">Version 1.10</p>
 </header>
 <nav class="tabs" id="tabs"></nav>
 <main id="view"></main>
@@ -381,7 +388,11 @@ const ST=[null,"gern","ok","nie","neu"];
    darf dadurch wachsen (nur ans Ende anfügen!): ein Code von einer älteren,
    kürzeren Liste bleibt lesbar, die neuen Gerichte sind einfach unbewertet. */
 /* Personen-Code: eine Person. Familien-Code (Personen-Index 7): alle Personen in
-   einem Code – damit wandert der Gesamtstand vom Tablet zurück auf alle Geräte. */
+   einem Code – damit wandert der Gesamtstand vom Tablet zurück auf alle Geräte.
+   Plan-Code (Personen-Index 6): nur der Wochenplan, rührt keine Bewertung an. */
+/* Erweitert wird nur hinten: Wochenplan und Verlauf hängen hinter dem Pausen-Block.
+   Ein alter Decoder liest sie nicht und ignoriert sie einfach; ein alter Code
+   liefert an der Stelle nur Null-Padding, was hier als "kein Plan" ankommt. */
 function bitsPerson(push,pid){
   push(Math.min(S.duels[pid]||0,63),6);
   DALL.forEach(d=>push(ST.indexOf(S.ratings[pid][d.id]||null),3));
@@ -392,6 +403,48 @@ function toB64(bits){
   while(bits.length%6) bits.push(0);
   let out="";
   for(let i=0;i<bits.length;i+=6){ let v=0; for(let j=0;j<6;j++) v=v*2+bits[i+j]; out+=B64[v]; }
+  return out;
+}
+// Wochenplan: Anzahl Slots, Mittagessen-Bitmaske (daraus entstehen die
+// Beschriftungen) und je Slot 2 Bit Art + 9 Bit Gericht. Kostet rund 26 Zeichen.
+function pushPlan(push){
+  const P=S.plan&&S.plan.slots?S.plan.slots.slice(0,31):null;
+  if(!P||!P.length){ push(0,5); return; }
+  let mask=0; WDAYS.forEach((d,i)=>{ if(P.some(x=>x.l===d+" Mittag")) mask|=1<<i; });
+  push(P.length,5); push(mask,5);
+  P.forEach(x=>{
+    if(x.reste){ push(2,2); return; }
+    if(x.id!=null&&DALL[x.id]){ push(1,2); push(x.id,9); return; }
+    push(0,2);
+  });
+}
+function takePlan(take){
+  const cnt=take(5); if(!cnt) return null;
+  const mask=take(5), labels=slotDefs(mask).map(d=>d.l), slots=[];
+  for(let i=0;i<cnt;i++){
+    const l=labels[i]||("Platz "+(i+1)), t=take(2);
+    if(t===1){ const id=take(9); slots.push(DALL[id]?{l,id}:{l}); }
+    else if(t===2) slots.push({l,reste:1});
+    else slots.push({l});
+  }
+  return {slots,mask};
+}
+// Zufriedenheits-Verlauf: bis zu 8 übernommene Pläne als reine Gericht-IDs
+function pushHist(push){
+  const H=(S.history||[]).slice(0,8);
+  push(H.length,4);
+  H.forEach(ids=>{
+    const a=(ids||[]).filter(id=>DALL[id]).slice(0,31);
+    push(a.length,5); a.forEach(id=>push(id,9));
+  });
+}
+function takeHist(take){
+  const h=take(4), out=[];
+  for(let i=0;i<h;i++){
+    const m=take(5), a=[];
+    for(let j=0;j<m;j++){ const id=take(9); if(DALL[id]) a.push(id); }
+    out.push(a);
+  }
   return out;
 }
 function encode(pid){
@@ -412,6 +465,16 @@ function encodeFamily(){
   const paused=Object.keys(S.paused||{}).filter(id=>S.paused[id]&&DALL[id]).slice(0,511);
   push(paused.length,9);
   paused.forEach(id=>push(+id,9));
+  pushPlan(push);
+  pushHist(push);
+  return toB64(bits);
+}
+// Nur der Wochenplan - für "hier ist der Plan für die Woche" in die Familiengruppe
+function encodePlan(){
+  const bits=[];
+  const push=(v,n)=>{ for(let i=n-1;i>=0;i--) bits.push((v>>i)&1); };
+  push(3,4); push(6,3); push(DALL.length,9);
+  pushPlan(push);
   return toB64(bits);
 }
 function decode(code){
@@ -428,35 +491,191 @@ function decode(code){
     const elo={}; for(let i=0;i<8;i++){ const id=take(9); if(DALL[id]&&!DALL[id].aus) elo[id]=1200-i*25; }
     return {ratings:r,elo,duels:du};
   };
+  if(pi===6){
+    const plan=takePlan(take);
+    if(!plan) throw new Error("In diesem Link steckt kein Wochenplan.");
+    return {planOnly:true,n,plan};
+  }
   if(pi===7){
     const pc=take(3);
     if(pc!==PEOPLE.length) throw new Error("Der Familien-Code passt nicht zur Personenliste dieser Version.");
     const people=PEOPLE.map(p=>({pid:p.id,...takePerson()}));
     const paused={}, pn=take(9);
     for(let i=0;i<pn;i++){ const id=take(9); if(DALL[id]) paused[id]=true; }
-    return {family:true,n,people,paused};
+    // Ab hier stand in älteren Codes nichts mehr: take() liefert dann 0 = kein Plan
+    const plan=takePlan(take), hist=takeHist(take);
+    return {family:true,n,people,paused,plan,hist};
   }
   if(!PEOPLE[pi]) throw new Error("Unbekannte Person im Code.");
   return {family:false,n,pid:PEOPLE[pi].id,...takePerson()};
 }
-function applyCode(code){
-  const p=decode(code);
-  (p.family?p.people:[p]).forEach(q=>{
-    const mine=S.ratings[q.pid]||{};
-    // Nur Gerichte anfassen, die der Code kennt; danach ergänzte behalten ihren Stand.
-    for(let i=0;i<p.n;i++){ if(q.ratings[i]) mine[i]=q.ratings[i]; else delete mine[i]; }
-    S.ratings[q.pid]=mine; S.elo[q.pid]=q.elo; S.duels[q.pid]=q.duels;
-  });
-  if(p.family) S.paused=p.paused||{};
+/* Anwenden: `parts` sagt, welche Teile übernommen werden (der Dialog beim
+   Empfänger setzt die Häkchen). Ohne Angabe kommt alles, was im Code steckt. */
+function applyCode(code,parts){
+  const p=typeof code==="string"?decode(code):code;
+  const on=k=>!parts||parts[k]!==false;
+  const done=[];
+  if(!p.planOnly&&on("ratings")){
+    (p.family?p.people:[p]).forEach(q=>{
+      const mine=S.ratings[q.pid]||{};
+      // Nur Gerichte anfassen, die der Code kennt; danach ergänzte behalten ihren Stand.
+      for(let i=0;i<p.n;i++){ if(q.ratings[i]) mine[i]=q.ratings[i]; else delete mine[i]; }
+      S.ratings[q.pid]=mine; S.elo[q.pid]=q.elo; S.duels[q.pid]=q.duels;
+    });
+    done.push(p.family?"Bewertungen aller Personen":"Bewertungen von "+PEOPLE.find(x=>x.id===p.pid).name);
+  }
+  if(p.family&&on("paused")){ S.paused=p.paused||{}; done.push("Pausenliste"); }
+  if(p.plan&&on("plan")){
+    S.plan={slots:p.plan.slots};
+    // Die Mittagessen-Tage des Plans dazuschalten, die eigene Auswahl bleibt stehen
+    S.lunch=S.lunch||{};
+    WDAYS.forEach((d,i)=>{ if(p.plan.mask&(1<<i)) S.lunch[i]=true; });
+    draft=null;
+    done.push("Wochenplan");
+  }
+  if(p.hist&&p.hist.length&&on("hist")){ S.history=p.hist; done.push("Verlauf"); }
   fresh(); save();
-  return p.family?"Familien-Code, alle Personen":PEOPLE.find(x=>x.id===p.pid).name;
+  return done.join(", ")||"nichts";
+}
+/* ---------- Links: erzeugen, nachfragen, rückgängig machen ---------- */
+// Aus einem eingefügten Link (oder einem abgetippten Code) den Code herausziehen
+const codeFromText=t=>{
+  t=(t||"").trim();
+  const m=t.match(/[#?&]c=([A-Za-z0-9_-]+)/);
+  return m?m[1]:t.replace(/\s+/g,"");
+};
+const linkFor=code=>location.origin+location.pathname+"#c="+code;
+
+/* Rückgängig: vor jedem Einlesen wandert der bisherige Gerätestand in einen
+   eigenen Speicherschlüssel. Einen Schritt zurück, höchstens einen Tag lang. */
+const UKEY=KEY+":undo";
+let undoBar=false;   // Zeile über der Ansicht, nur direkt nach dem Einlesen
+function undoSave(what){
+  const v=JSON.stringify({t:Date.now(),what,state:S});
+  mem[UKEY]=v;
+  if(canStore){ try{ localStorage.setItem(UKEY,v); }catch(e){} }
+}
+function undoRead(){
+  const raw=canStore?localStorage.getItem(UKEY):mem[UKEY];
+  if(!raw) return null;
+  try{ const u=JSON.parse(raw); return (Date.now()-u.t<86400000)?u:null; }catch(e){ return null; }
+}
+function undoDrop(){ delete mem[UKEY]; if(canStore){ try{ localStorage.removeItem(UKEY); }catch(e){} } }
+function undoRun(){
+  const u=undoRead(); if(!u) return false;
+  S=u.state; fresh(); save(); draft=null; undoDrop(); undoBar=false;
+  return true;
+}
+
+// Karte mit QR-Code und Teilen/Kopieren. Der abtippbare Code steht eingeklappt
+// darunter - seit es Links gibt, braucht ihn kaum noch jemand.
+function linkCard(code,shareText,hint){
+  const url=linkFor(code);
+  const box=el(`<div></div>`);
+  const size=code.length>500?300:230;   // längere Codes brauchen ein größeres Bild
+  const card=el(`<div class="card" style="padding:22px"><div class="qr" style="background:#fff;padding:12px;border-radius:3px;line-height:0"></div></div>`);
+  box.appendChild(card);
+  // Rückmeldung am Knopf statt Neuzeichnen - sonst verschwindet die QR-Karte
+  // genau in dem Moment, in dem man sie jemandem hinhalten will
+  const copy=(btn,txt)=>navigator.clipboard.writeText(txt).then(()=>{
+    const o=btn.textContent; btn.textContent="✓ Kopiert";
+    setTimeout(()=>{ btn.textContent=o; },1600);
+  },()=>{ note="Kopieren hat nicht geklappt – Text von Hand markieren."; render(); });
+  const r=el(`<div class="row"></div>`);
+  if(navigator.share){
+    const sh=el(`<button class="btn">Link teilen</button>`);
+    sh.onclick=()=>navigator.share({title:"Was gibt's?",text:shareText,url}).catch(()=>{});
+    r.appendChild(sh);
+  }
+  const cp=el(`<button class="btn${navigator.share?" ghost":""}">Link kopieren</button>`);
+  cp.onclick=()=>copy(cp,url);
+  r.appendChild(cp);
+  box.appendChild(r);
+  if(hint) box.appendChild(el(`<p class="muted">${hint}</p>`));
+  const codeP=el(`<p class="codetext" style="margin-top:0">${code}</p>`);
+  const codeR=el(`<div class="row" style="margin-bottom:0"><button class="btn ghost">Code kopieren</button></div>`);
+  codeR.firstChild.onclick=()=>copy(codeR.firstChild,code);
+  box.appendChild(foldEl("Code zum Abtippen ("+code.length+" Zeichen)",false,
+    el(`<p class="muted" style="margin-top:0">Nur nötig, wenn der Link unterwegs zerbricht – abtippen und drüben unter „Link oder Code einlesen“ einfügen.</p>`),
+    codeP,codeR));
+  const q=card.querySelector(".qr");
+  if(window.QRCode){ new QRCode(q,{text:url,width:size,height:size,correctLevel:QRCode.CorrectLevel.L}); }
+  else{ q.outerHTML='<p class="muted" style="line-height:1.5">QR-Bibliothek nicht geladen – nimm den Link oder den Code darunter.</p>'; }
+  return box;
+}
+
+/* Beim Empfänger: erst zeigen, was der Link mitbringt und was er überschreibt,
+   dann übernehmen. Jeder Teil lässt sich einzeln abwählen. */
+function askImport(text){
+  let p;
+  try{ p=decode(codeFromText(text)); }
+  catch(e){ note=e.message||"Der Code konnte nicht gelesen werden."; render(); return; }
+  const parts=[];
+  if(!p.planOnly){
+    const rows=(p.family?p.people:[p]).map(q=>({
+      nm:PEOPLE.find(x=>x.id===q.pid).name,
+      cnt:D.filter(d=>q.ratings[d.id]).length,          // wie in der App: nur aktive Gerichte
+      mine:D.filter(d=>(S.ratings[q.pid]||{})[d.id]).length
+    }));
+    const loss=rows.filter(r=>r.mine>r.cnt);
+    parts.push({key:"ratings",label:"Bewertungen",
+      detail:rows.map(r=>r.nm+": "+r.cnt).join(" · ")+" – ersetzt diese Bewertungen (samt Duell-Ranking) auf diesem Gerät.",
+      warn:loss.length?"Hier auf dem Gerät sind mehr Bewertungen gespeichert – "+loss.map(r=>r.nm+" "+r.mine+" statt "+r.cnt).join(", ")+". Die wären danach weg. Erst den eigenen Stand abgeben, dann einlesen.":""});
+  }
+  if(p.family){
+    const n=Object.keys(p.paused||{}).length;
+    parts.push({key:"paused",label:"Pausierte Gerichte",
+      detail:(n?n+" Gericht"+(n===1?"":"e"):"keine")+" – ersetzt die Pausenliste hier."});
+  }
+  if(p.plan){
+    const meals=p.plan.slots.filter(x=>x.reste||x.id!=null).length;
+    parts.push({key:"plan",label:"Wochenplan",
+      detail:meals+" Essen"+(S.plan?" – ersetzt den Plan, der hier gerade steht.":" – hier steht bisher kein übernommener Plan.")});
+  }
+  if(p.hist&&p.hist.length){
+    parts.push({key:"hist",label:"Zufriedenheits-Verlauf",
+      detail:p.hist.length+" frühere Pläne – ersetzt den Verlauf und damit die Wiederholungs-Bremse."});
+  }
+  const title=p.planOnly?"Wochenplan aus dem Link":p.family?"Familienstand aus dem Link":"Stand von "+PEOPLE.find(x=>x.id===p.pid).name;
+  const m=el(`<div class="modal"><div class="sheet"><div class="sheethead"><span>${esc(title)}</span><button class="x" aria-label="Schließen">✕</button></div><div class="results imp"></div></div></div>`);
+  const body=m.querySelector(".imp");
+  body.appendChild(el(`<p class="hint">Nichts ist bisher passiert. Häkchen setzen, was übernommen werden soll – der Rest bleibt auf diesem Gerät unverändert.</p>`));
+  const sel={};
+  parts.forEach(x=>{
+    sel[x.key]=true;
+    const row=el(`<label class="toggle" style="align-items:flex-start"><input type="checkbox" checked> <span><b>${esc(x.label)}</b><br><span class="muted" style="font-size:13px">${esc(x.detail)}</span>${x.warn?`<br><span style="color:var(--tomato);font-size:13px">${esc(x.warn)}</span>`:""}</span></label>`);
+    row.querySelector("input").onchange=e=>{sel[x.key]=e.target.checked;};
+    body.appendChild(row);
+  });
+  body.appendChild(el(`<p class="hint">Der bisherige Stand dieses Geräts wird vorher gesichert – direkt danach steht oben ein „Rückgängig“.</p>`));
+  const close=()=>{ m.remove(); document.removeEventListener("keydown",key); };
+  const key=e=>{ if(e.key==="Escape") close(); };
+  const r=el(`<div class="row" style="margin-bottom:0"><button class="btn">Übernehmen</button><button class="btn ghost">Abbrechen</button></div>`);
+  r.children[0].onclick=()=>{
+    if(!parts.some(x=>sel[x.key])){ close(); note="Nichts ausgewählt – es wurde nichts geändert."; render(); return; }
+    undoSave(title);
+    let applied;
+    try{ applied=applyCode(p,sel); }
+    catch(e){ close(); note="Konnte nicht einlesen: "+e.message; render(); return; }
+    close();
+    undoBar=true;
+    note="Übernommen: "+applied+".";
+    tab=p.planOnly?"plan":"teilen";
+    render();
+  };
+  r.children[1].onclick=close;
+  body.appendChild(r);
+  m.querySelector(".x").onclick=close;
+  m.onclick=e=>{ if(e.target===m) close(); };
+  document.addEventListener("keydown",key);
+  document.body.appendChild(m);
 }
 function importFromHash(){
   const h=location.hash.replace(/^#c=/,"");
   if(!h||h===location.hash) return;
-  try{ note="Eingelesen: "+applyCode(h); }
-  catch(e){ note="Konnte nicht einlesen: "+e.message; }
   history.replaceState(null,"",location.pathname+location.search);
+  // Erst nachfragen - der Link überschreibt Bewertungen, das passiert nicht ungefragt
+  setTimeout(()=>askImport(h),0);
 }
 
 /* ---------- Hilfen ---------- */
@@ -511,6 +730,14 @@ function render(){
   });
   const v=document.getElementById("view"); v.innerHTML="";
   if(note){const b=el(`<div class="notice">${esc(note)}</div>`);v.appendChild(b);note="";}
+  // Direkt nach einem Einlesen: ein Schritt zurück, solange die Sicherung steht
+  const uu=undoBar&&undoRead();
+  if(uu){
+    const ub=el(`<div class="undobar"><span>Eingelesen: ${esc(uu.what)}. Der Stand davor ist gesichert.</span><button class="go">Rückgängig</button><button aria-label="Ausblenden">✕</button></div>`);
+    ub.children[1].onclick=()=>{ if(undoRun()){note="Zurückgesetzt auf den Stand vor dem Einlesen.";} render(); };
+    ub.children[2].onclick=()=>{ undoBar=false; render(); };
+    v.appendChild(ub);
+  }
   ({start:vStart,sichten:vSichten,duell:vDuell,teilen:vTeilen,ergebnis:vErgebnis,plan:vPlan})[tab](v);
 }
 
@@ -683,57 +910,70 @@ function vDuell(v){
 }
 
 function vTeilen(v){
-  v.appendChild(el(`<p class="muted">Es läuft nichts über einen Server – Stände wandern per QR-Code, Link oder abgetipptem Code direkt von Gerät zu Gerät.</p>`));
+  v.appendChild(el(`<p class="muted">Es läuft nichts über einen Server – Stände wandern per Link, QR-Code oder abgetipptem Code direkt von Gerät zu Gerät. Alles hinter dem <b>#</b> im Link bleibt im Browser und wird nie an einen Server geschickt.</p>`));
 
   v.appendChild(foldEl("Anleitung: So läuft es ab",false,el(`<ol class="steps">
     <li><b>Jeder für sich:</b> auf dem eigenen Gerät sichten und Duelle spielen.</li>
-    <li><b>Abgeben:</b> jeder erzeugt unten seinen Code, das Tablet liest alle nacheinander ein. Die Reihenfolge ist egal – jeder Code ändert nur die eigene Person.</li>
+    <li><b>Abgeben:</b> jeder erzeugt unten seinen Link und schickt ihn ans Tablet (oder zeigt den QR-Code). Die Reihenfolge ist egal – ein Personen-Link ändert nur diese eine Person.</li>
     <li><b>Auswerten:</b> auf dem Tablet stehen jetzt Ergebnis, Bestenliste und Wochenplan für die ganze Familie.</li>
-    <li><b>Zurückspielen:</b> das Tablet erzeugt den Familien-Code, jedes Gerät liest ihn ein – dann hat jeder den kompletten Familienstand. Achtung: Das überschreibt auf dem Gerät auch die eigene Person. Wer seit der Abgabe weiterbewertet hat, gibt erst wieder ab (Schritt 2) und liest dann zurück.</li>
+    <li><b>Zurückspielen:</b> das Tablet schickt den Familien-Link in die Familiengruppe, jeder tippt ihn an – dann hat jeder den kompletten Familienstand samt Wochenplan. Achtung: Das überschreibt auf dem Gerät auch die eigene Person. Wer seit der Abgabe weiterbewertet hat, gibt erst wieder ab (Schritt 2) und liest dann zurück; der Dialog beim Einlesen warnt davor.</li>
   </ol>`)));
 
-  v.appendChild(el(`<h3>Code erzeugen</h3>`));
-  v.appendChild(el(`<p class="muted">Eine Person gibt ihren Stand ab. „Ganze Familie“ packt alle fünf in einen Code – damit spielt das Tablet seinen Gesamtstand (inkl. Pausenliste) zurück.</p>`));
+  // Steht die Zeile schon über der Ansicht (direkt nach dem Einlesen), nicht doppeln
+  const u=!undoBar&&undoRead();
+  if(u){
+    const ub=el(`<div class="undobar"><span>Zuletzt eingelesen: ${esc(u.what)}. Der Stand davor ist noch gesichert.</span><button class="go">Rückgängig</button><button>Sicherung verwerfen</button></div>`);
+    ub.children[1].onclick=()=>{ if(undoRun()){note="Zurückgesetzt auf den Stand vor dem Einlesen.";} render(); };
+    ub.children[2].onclick=()=>{ undoDrop(); undoBar=false; render(); };
+    v.appendChild(ub);
+  }
+
+  v.appendChild(el(`<h3>Link erzeugen</h3>`));
+  v.appendChild(el(`<p class="muted">Eine Person gibt ihren Stand ab. „Ganze Familie“ packt alle fünf Personen plus Pausenliste, übernommenen Wochenplan und Zufriedenheits-Verlauf in einen Link – damit spielt das Tablet seinen Gesamtstand zurück. Wer den Link antippt, bekommt zuerst einen Dialog, der zeigt, was übernommen wird, und kann Teile abwählen.</p>`));
   const sel=el(`<div class="row"></div>`);
-  PEOPLE.forEach(p=>{
-    const b=el(`<button class="btn ghost">${p.name}</button>`);
-    b.onclick=()=>showCode(encode(p.id));
+  PEOPLE.forEach(pp=>{
+    const b=el(`<button class="btn ghost">${pp.name}</button>`);
+    b.onclick=()=>show(encode(pp.id),
+      pp.name+" gibt den Stand für „Was gibt's?“ ab.",
+      "Diesen Link ans Tablet schicken. Er trägt nur die Bewertungen von "+pp.name+" – alle anderen bleiben dort unberührt.");
     sel.appendChild(b);
   });
   const famB=el(`<button class="btn">Ganze Familie</button>`);
-  famB.onclick=()=>showCode(encodeFamily());
+  famB.onclick=()=>show(encodeFamily(),
+    "Der Familienstand von „Was gibt's?“ – antippen und übernehmen.",
+    "Diesen Link in die Familiengruppe schicken. Jedes Gerät, das ihn antippt und bestätigt, hat danach den kompletten Stand" + (S.plan?" samt Wochenplan":"") + ".");
   sel.appendChild(famB);
+  if(S.plan){
+    const planB=el(`<button class="btn ghost">Nur Wochenplan</button>`);
+    planB.onclick=()=>show(encodePlan(),
+      "Unser Wochenplan – antippen zum Übernehmen.",
+      "Kurzer Link, der nur den übernommenen Wochenplan überträgt. Bewertungen, Pausenliste und Verlauf bleiben auf dem anderen Gerät unangetastet.");
+    sel.appendChild(planB);
+  }
   v.appendChild(sel);
   const out=el(`<div id="out"></div>`); v.appendChild(out);
-
-  function showCode(code){
-    const url=location.origin+location.pathname+"#c="+code;
+  function show(code,shareText,hint){
     out.innerHTML="";
-    out.appendChild(el(`<div class="card" style="padding:22px"><div id="qr" style="background:#fff;padding:12px;border-radius:3px;line-height:0"></div><p class="codetext">${code}</p></div>`));
-    const r=el(`<div class="row"><button class="btn">Link kopieren</button><button class="btn ghost">Code kopieren</button></div>`);
-    r.children[0].onclick=()=>navigator.clipboard.writeText(url).then(()=>{note="Link kopiert.";render();});
-    r.children[1].onclick=()=>navigator.clipboard.writeText(code).then(()=>{note="Code kopiert.";render();});
-    out.appendChild(r);
-    if(window.QRCode){ new QRCode(document.getElementById("qr"),{text:url,width:230,height:230,correctLevel:QRCode.CorrectLevel.L}); }
-    else{ document.getElementById("qr").outerHTML='<p class="muted" style="line-height:1.5">QR-Bibliothek nicht geladen – nimm den Link oder den Code darunter.</p>'; }
+    out.appendChild(linkCard(code,shareText,hint));
     out.scrollIntoView({behavior:"smooth",block:"nearest"});
   }
 
-  v.appendChild(el(`<h3>Code einlesen</h3>`));
-  const ta=el(`<textarea class="code" rows="3" placeholder="Code hier einfügen oder abtippen"></textarea>`);
+  v.appendChild(el(`<h3>Link oder Code einlesen</h3>`));
+  v.appendChild(el(`<p class="muted">Normalerweise reicht Antippen. Liegt die App aber auf dem Home-Bildschirm, öffnet ein Link aus WhatsApp den Browser – und der hat auf iPhone und iPad einen eigenen Speicher. Dann den Link hier einfügen, so landet er in dieser App.</p>`));
+  const ta=el(`<textarea class="code" rows="3" placeholder="Link oder Code hier einfügen"></textarea>`);
   v.appendChild(ta);
   const r2=el(`<div class="row"><button class="btn">Einlesen</button><button class="btn ghost">Mit Kamera scannen</button></div>`);
   r2.children[0].onclick=()=>{
-    try{ note="Eingelesen: "+applyCode(ta.value); }catch(e){ note=e.message; }
-    render();
+    if(!ta.value.trim()){ note="Erst einen Link oder Code einfügen."; render(); return; }
+    askImport(ta.value);
   };
   r2.children[1].onclick=()=>scan(v);
   v.appendChild(r2);
-  v.appendChild(el(`<p class="muted" style="margin-top:14px">Scannen geht auch mit der normalen Kamera-App: Der Link im QR-Code öffnet diese Seite und liest den Stand direkt ein.</p>`));
+  v.appendChild(el(`<p class="muted" style="margin-top:14px">Scannen geht auch mit der normalen Kamera-App: Der Link im QR-Code öffnet diese Seite, dort kommt derselbe Dialog.</p>`));
 
   const st=el(`<h3>Wer ist schon eingelesen</h3>`); v.appendChild(st);
   const g=el(`<div class="veto"></div>`);
-  PEOPLE.forEach(p=>{const n=rated(p.id);g.appendChild(el(`<span style="background:${n===D.length?'rgba(227,167,47,.2)':'rgba(243,238,226,.08)'}">${p.name}: ${n} von ${D.length}</span>`));});
+  PEOPLE.forEach(pp=>{const n=rated(pp.id);g.appendChild(el(`<span style="background:${n===D.length?'rgba(227,167,47,.2)':'rgba(243,238,226,.08)'}">${pp.name}: ${n} von ${D.length}</span>`));});
   v.appendChild(g);
 
   const bk=el(`<div class="row"><button class="btn ghost">Backup herunterladen</button><button class="btn ghost">Backup einlesen</button></div>`);
@@ -749,27 +989,15 @@ function vTeilen(v){
   file.onchange=()=>{
     const f=file.files[0]; if(!f)return;
     f.text().then(t=>{
-      try{ note="Backup eingelesen (Stand vom "+restoreBackup(t)+")."; }
+      try{ undoSave("Backup-Datei"); note="Backup eingelesen (Stand vom "+restoreBackup(t)+")."; undoBar=true; }
       catch(e){ note="Backup konnte nicht gelesen werden: "+e.message; }
       render();
     });
   };
   v.appendChild(foldEl("Sicherung (Backup-Datei)",false,
-    el(`<p class="muted">Der komplette Stand dieses Geräts als Datei – auch Duell-Zähler, Pausenliste und der übernommene Plan, also mehr als der Familien-Code. Gut vor einem Gerätewechsel.</p>`),
+    el(`<p class="muted">Der komplette Stand dieses Geräts als Datei – auch Duell-Zähler und Mittagessen-Auswahl, also noch etwas mehr als der Familien-Link. Gut vor einem Gerätewechsel.</p>`),
     bk,file));
 }
-
-function backupJson(){
-  return JSON.stringify({app:"wasgibts",v:2,dishes:DALL.length,ts:new Date().toISOString(),state:S});
-}
-function restoreBackup(text){
-  const b=JSON.parse(text);
-  if(b.app!=="wasgibts"||!b.state||!b.state.ratings) throw new Error("Das ist keine Was-gibt's-Sicherung.");
-  if(b.dishes>DALL.length) throw new Error("Die Sicherung stammt von einer neueren Gerichteliste. Erst die Seite aktualisieren.");
-  S=b.state; fresh(); save(); draft=null;
-  return (b.ts||"").slice(0,10)||"unbekannt";
-}
-
 async function scan(v){
   if(!("BarcodeDetector" in window)){ note="Dieser Browser kann keine QR-Codes scannen. Nimm die Kamera-App oder tippe den Code ab."; render(); return; }
   let stream;
@@ -785,9 +1013,8 @@ async function scan(v){
       const found=await det.detect(vid);
       if(found.length){
         stop();
-        const m=found[0].rawValue.match(/#c=(.+)$/);
-        try{ note="Eingelesen: "+applyCode(m?m[1]:found[0].rawValue); }catch(e){ note=e.message; }
-        render(); return;
+        askImport(found[0].rawValue);
+        return;
       }
     }catch(e){}
     requestAnimationFrame(tick);
@@ -952,11 +1179,12 @@ function foldEl(title,open,...kids){
 }
 const SLOTS9=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag Mittag","Samstag Abend","Sonntag Mittag","Sonntag Abend"]; // altes 9-Slot-Layout (für Migration)
 const WDAYS=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"];
-// Slot-Liste dynamisch: Werktage optional mit Mittagessen (S.lunch), Sa/So immer Mittag+Abend
-function slotDefs(){
+// Slot-Liste dynamisch: Werktage optional mit Mittagessen (S.lunch), Sa/So immer Mittag+Abend.
+// Mit Maske aufgerufen (Bit je Werktag) liefert sie die Slots eines fremden Plans.
+function slotDefs(mask){
   const defs=[];
   WDAYS.forEach((d,i)=>{
-    if(S.lunch&&S.lunch[i]){
+    if(mask===undefined?(S.lunch&&S.lunch[i]):(mask&(1<<i))){
       defs.push({l:d+" Mittag",kind:"lunch",day:i});
       defs.push({l:d+" Abend",kind:"wd",day:i});
     }else defs.push({l:d,kind:"wd",day:i});
@@ -1073,12 +1301,20 @@ function vPlan(v){
       box.appendChild(dayRowEl(g.name,g.lunch!=null?card(PS[g.lunch],true):null,g.dinner!=null?card(PS[g.dinner],false):el(`<div></div>`)));
     });
     v.appendChild(box);
-    const r=el(`<div class="row"><button class="btn">Plan teilen</button><button class="btn ghost">✎ Plan bearbeiten</button><button class="btn ghost">Neuen Plan machen</button></div>`);
+    const r=el(`<div class="row"><button class="btn">Plan teilen</button><button class="btn ghost">🔗 Plan-Link</button><button class="btn ghost">✎ Plan bearbeiten</button><button class="btn ghost">Neuen Plan machen</button></div>`);
     r.children[0].onclick=()=>shareText(planText(PS),"Plan kopiert – einfach in die Familien-Gruppe einfügen.");
+    // Als Link: der Empfänger sieht den Plan in seiner App, Bewertungen bleiben unberührt
+    const linkOut=el(`<div></div>`);
+    r.children[1].onclick=()=>{
+      linkOut.innerHTML="";
+      linkOut.appendChild(linkCard(encodePlan(),"Unser Wochenplan – antippen zum Übernehmen.",
+        "Dieser Link trägt nur den Plan. Wer ihn antippt, bekommt einen Dialog und entscheidet selbst, ob er ihn übernimmt – Bewertungen und Pausenliste bleiben unangetastet."));
+      linkOut.scrollIntoView({behavior:"smooth",block:"nearest"});
+    };
     // Bearbeiten: der Plan geht als gepinnter Entwurf zurück in die Bearbeitung.
     // Der beim Übernehmen gemerkte Verlauf-Eintrag fliegt raus, sonst zählt
     // dieselbe Woche nach dem erneuten Übernehmen doppelt.
-    r.children[1].onclick=()=>{
+    r.children[2].onclick=()=>{
       // Mittag/Abend statt der reinen Beschriftung vergleichen: "Montag" und
       // "Montag Abend" meinen denselben Platz, je nachdem ob der Tag ein
       // Mittagessen hat. Die Mittagstage des Plans kommen dazu, die gespeicherte
@@ -1097,8 +1333,8 @@ function vPlan(v){
       note="Plan zum Bearbeiten geöffnet – alle Plätze sind gepinnt, bis ihr sie löst.";
       render();
     };
-    r.children[2].onclick=()=>{S.plan=null;save();draft=null;render();};
-    v.appendChild(r);
+    r.children[3].onclick=()=>{S.plan=null;save();draft=null;render();};
+    v.appendChild(r); v.appendChild(linkOut);
 
     v.appendChild(el(`<h3>Einkaufsliste</h3>`));
     const items={},noz=[],liefer=[];

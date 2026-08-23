@@ -13,7 +13,7 @@ misc-public/
 ├── jumpcat/                   # Christmas cat jump & run (v6.2)
 ├── neon-mind/                 # 2-player reaction game (v1.0.0)
 ├── hashcards-pwa/             # Spaced repetition flashcards (v1.0.0)
-├── was-gibts/                 # Family meal decider PWA (v1.9)
+├── was-gibts/                 # Family meal decider PWA (v1.10)
 ├── wiai25-enhance/            # Static demo
 ├── uni-bamberg-wrapper/       # University website wrapper with CORS proxy
 ├── uni-bamberg-mockup/        # Mockup and crawler for uni-bamberg
@@ -152,18 +152,27 @@ Fast-paced 2-player reaction game (v1.0.0).
 
 ### Was gibt's?
 
-Family meal decider PWA (v1.9). Static, no server, no accounts.
+Family meal decider PWA (v1.10). Static, no server, no accounts.
 
 **Workflow:**
 - People: Felix, Jakob, Moritz, Kathrin, Dominik (v1.1 "Eltern" state auto-migrates to both parents)
 - Each family member rates the dishes ("Sichtung"), optionally plays ranking duels ("Turnier")
 - Any rating can be revised later via the searchable list under "Sichtung"
-- State lives in `localStorage`; transfer between devices via QR code or typed code
+- State lives in `localStorage`; transfer between devices via link (share/copy button
+  + QR code), or the typed code as fallback
 - Tablet aggregates results ("Ergebnis" incl. Bestenliste per person and overall)
   and builds a weekly plan ("Wochenplan")
 - Family code (person index 7) carries all persons at once - for pushing the
   tablet's aggregate state back to every device; also carries the paused-dishes
-  list (appended block, backward/forward compatible with v1.2 codes)
+  list, the accepted plan and the happiness history (appended blocks, backward and
+  forward compatible: old decoders ignore trailing blocks, old codes read as zeros).
+  Plan-only code = person index 6 (~25 chars), shares just the week's plan
+- Links carry the code in the `#` fragment (never sent to a server). Receiving one
+  opens a dialog first: what's inside, what gets overwritten, one checkbox per part
+  (ratings / paused / plan / history), then "Übernehmen". The state from before is
+  snapshotted to `wasgibts:v2:undo` for a one-click undo, valid 24h. The import field
+  also accepts a pasted full link - on iOS a home-screen app has its own storage, so
+  a link from WhatsApp lands in Safari instead
 - Weekly plan: Mon-Fri one simple dinner each (effort <= 2 preferred), Sat/Sun lunch +
   dinner; one weekend slot is pizza/burger/grilling (`grillen` tag or name match),
   one slot is an experiment picked from the WHOLE Entdeckungspool (fresh-not-in-history
