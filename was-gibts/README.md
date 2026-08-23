@@ -1,8 +1,8 @@
 # Was gibt's?
 
 Familien-Essensentscheider. Statische Seite, keine Serverkomponente, keine Konten.
-Der Zustand liegt im `localStorage` des jeweiligen Geräts. Übertragen wird per QR-Code
-oder per Code zum Abtippen.
+Der Zustand liegt im `localStorage` des jeweiligen Geräts. Übertragen wird per Link
+(weitergeben oder als QR-Code zeigen); der abgetippte Code bleibt als Rückfallebene.
 
 Die laufende Version steht klein unter der Überschrift ("Version 1.10") - praktisch, um
 auf jedem Gerät zu prüfen, ob die neue Fassung schon geladen ist. Beim Release in

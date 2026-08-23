@@ -342,6 +342,14 @@ function fresh(){
   if(S.plan&&S.plan.ids&&!S.plan.slots){
     S.plan={slots:S.plan.ids.map((id,i)=>id!=null?{l:SLOTS9[i],id}:{l:SLOTS9[i]})};
   }
+  // Zusage, auf die sich Zufriedenheits-Anzeige und "Plan bearbeiten" verlassen:
+  // Steht ein Plan, ist er der erste Eintrag im Verlauf. Beim Übernehmen stimmt das
+  // von selbst; ein per Link eingelesener Plan wird hier nachgetragen.
+  if(S.plan&&S.plan.slots){
+    const ids=S.plan.slots.filter(x=>!x.reste&&x.id!=null).map(x=>x.id);
+    const h=S.history||[];
+    if(!(h[0]&&h[0].length===ids.length&&h[0].every((x,i)=>x===ids[i]))) S.history=[ids,...h].slice(0,8);
+  }
   PEOPLE.forEach(p=>{
     S.ratings[p.id]=S.ratings[p.id]||{};
     S.elo[p.id]=S.elo[p.id]||{};
@@ -989,8 +997,14 @@ function vTeilen(v){
   file.onchange=()=>{
     const f=file.files[0]; if(!f)return;
     f.text().then(t=>{
-      try{ undoSave("Backup-Datei"); note="Backup eingelesen (Stand vom "+restoreBackup(t)+")."; undoBar=true; }
-      catch(e){ note="Backup konnte nicht gelesen werden: "+e.message; }
+      try{
+        undoSave("Backup-Datei");
+        note="Backup eingelesen (Stand vom "+restoreBackup(t)+").";
+        undoBar=true;
+      }catch(e){
+        undoDrop(); undoBar=false;   // nichts passiert, also auch keine Sicherung stehen lassen
+        note="Backup konnte nicht gelesen werden: "+e.message;
+      }
       render();
     });
   };
@@ -998,8 +1012,22 @@ function vTeilen(v){
     el(`<p class="muted">Der komplette Stand dieses Geräts als Datei – auch Duell-Zähler und Mittagessen-Auswahl, also noch etwas mehr als der Familien-Link. Gut vor einem Gerätewechsel.</p>`),
     bk,file));
 }
+/* Sicherung als Datei: der komplette Gerätestand, mehr als in einen Link passt */
+function backupJson(){
+  return JSON.stringify({app:"wasgibts",v:2,dishes:DALL.length,ts:new Date().toISOString(),state:S});
+}
+function restoreBackup(text){
+  const b=JSON.parse(text);
+  if(b.app!=="wasgibts"||!b.state||!b.state.ratings) throw new Error("Das ist keine Was-gibt's-Sicherung.");
+  if(b.dishes>DALL.length) throw new Error("Die Sicherung stammt von einer neueren Gerichteliste. Erst die Seite aktualisieren.");
+  S=b.state; fresh(); save(); draft=null;
+  return (b.ts||"").slice(0,10)||"unbekannt";
+}
+
 async function scan(v){
   if(!("BarcodeDetector" in window)){ note="Dieser Browser kann keine QR-Codes scannen. Nimm die Kamera-App oder tippe den Code ab."; render(); return; }
+  const running=v.querySelector("video");
+  if(running){ if(running.srcObject) running.srcObject.getTracks().forEach(t=>t.stop()); running.remove(); }
   let stream;
   try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}); }
   catch(e){ note="Kein Kamerazugriff. Nimm die Kamera-App oder tippe den Code ab."; render(); return; }
@@ -1013,7 +1041,9 @@ async function scan(v){
       const found=await det.detect(vid);
       if(found.length){
         stop();
-        askImport(found[0].rawValue);
+        const code=found[0].rawValue;
+        vid.remove(); render();      // Standbild raus, bevor der Dialog kommt
+        askImport(code);
         return;
       }
     }catch(e){}
