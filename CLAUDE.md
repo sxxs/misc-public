@@ -14,6 +14,7 @@ misc-public/
 ├── neon-mind/                 # 2-player reaction game (v1.0.0)
 ├── hashcards-pwa/             # Spaced repetition flashcards (v1.0.0)
 ├── was-gibts/                 # Family meal decider PWA (v1.10)
+├── beach/                     # Sandcastle & tide simulation game (v1.0)
 ├── wiai25-enhance/            # Static demo
 ├── uni-bamberg-wrapper/       # University website wrapper with CORS proxy
 ├── uni-bamberg-mockup/        # Mockup and crawler for uni-bamberg
@@ -30,6 +31,7 @@ All projects are deployed via GitHub Pages from the `main` branch:
 - https://sxxs.github.io/misc-public/neon-mind/
 - https://sxxs.github.io/misc-public/hashcards-pwa/
 - https://sxxs.github.io/misc-public/was-gibts/
+- https://sxxs.github.io/misc-public/beach/
 - https://sxxs.github.io/misc-public/wiai25-enhance/
 
 ### GitHub Pages Configuration
@@ -242,6 +244,24 @@ Family meal decider PWA (v1.10). Static, no server, no accounts.
 - Network-first service worker: list updates propagate on next online load
   (no cache-name bump needed for content changes)
 - Offline-capable PWA (manifest + service worker + icons)
+
+### Beach
+
+Casual sandcastle game for kids (v1.0). Single file `beach/index.html`, three.js r128 from cdnjs.
+
+**Simulation (heightfield, 128x136 cells):**
+- Water: virtual-pipes shallow water; bottom rows and the open sea floor (`seaMask`) follow the tide curve
+- Hydraulic erosion + sediment advection; slumping with wetness-dependent angle of repose
+- Packed sand (`pk`) for towers: steep walls, loosened when water stands on or next to it
+- Sand is conserved: digging throws sand beside the stroke, piling pulls it in, towers take it from a ring (never from other towers)
+
+**View:** orthographic 3D camera (45°, rotatable/zoomable with two fingers or buttons), rendered at 180x290 for a pixel look; skirt mesh and sea sheet around the play area
+
+**Decor:** Claude crab (peeks in from the screen edge, waves/winks, scratches its head at obstacles), seagull (steals shells), jumping fish at high water, shells at falling tide, drift line (Spülsaum)
+
+**Modes:** free play (daily beach seeded by date, or random) and 5 missions in `MISSIONS` (shells, rescue fish, moat, towel, castle); progress in `localStorage` key `beach:done`
+
+**Audio:** Web Audio only: sand scrape + grains, sea noise, generative music (Karplus-Strong guitar or ukulele/marimba), more tense at high water
 
 ### Uni Bamberg Wrapper
 

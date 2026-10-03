@@ -51,6 +51,18 @@ Spaced Repetition Karteikarten-App mit FSRS-Algorithmus. Importiere Markdown-Dat
 - Hell/Dunkel/System Theme
 - PWA (installierbar, offline-faehig)
 
+### [Beach](beach/)
+
+Sandstrand-Spiel in 3D-Pixeloptik: Kanäle graben, Sand zusammenschieben, Türme bauen und zuschauen, was Flut und Wellen daraus machen.
+
+**[Play](https://sxxs.github.io/misc-public/beach/)** | v1.0
+
+- Wasser- und Erosionssimulation mit Ebbe und Flut
+- Freier Modus mit Tagesstrand und fünf Missionen
+- Drehbare Kamera, Krabbe, Möwe, Fische und Muscheln
+- Generative Gitarren- oder Ukulele-Musik
+- PWA (installierbar)
+
 ### [WIAI25 Enhance](wiai25-enhance/)
 
 Static demo for WIAI 25 Collective Enhance project.

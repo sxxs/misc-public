@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Beach</title>
+<meta name="theme-color" content="#0e4766">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Beach">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Layout: one portrait beach canvas, slim tide bar on top, chunky tool bar below */
+:root {
+  --sea: #0e4766;
+  --sea-deep: #082f47;
+  --sand: #f3dca2;
+  --sand-dark: #c79a58;
+  --ink: #2b1a14;
+  --crab: #d97757;
+  --foam: #eafcff;
+  --font-px: "Pixelify Sans", ui-monospace, monospace;
+  --font-body: "Nunito", system-ui, sans-serif;
+  color-scheme: light;
+}
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body {
+  background: var(--sea); color: var(--foam); font-family: var(--font-body);
+  box-sizing: border-box; padding-inline: 16px; padding-block: 8px;
+  overflow: hidden; -webkit-user-select: none; user-select: none;
+}
+.app { height: 100%; max-width: 520px; margin: 0 auto; display: grid; grid-template-rows: auto 1fr auto; gap: 8px; }
+header { display: flex; align-items: center; gap: 12px; }
+h1 { font-family: var(--font-px); font-weight: 700; font-size: clamp(15px, 4.6vw, 20px); margin: 0; color: var(--sand); letter-spacing: .02em; flex: none; }
+.meters { display: flex; gap: 10px; flex: 1; min-width: 0; }
+.meter { flex: 1; min-width: 0; display: grid; gap: 3px; }
+.meter label { font-family: var(--font-px); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--foam); opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar { height: 10px; border: 2px solid var(--ink); background: var(--sea-deep); position: relative; }
+.bar i { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--sand); }
+.bar.tide i { background: #45b4c6; }
+.stage { position: relative; min-height: 0; display: grid; place-items: center; }
+canvas { display: block; image-rendering: pixelated; touch-action: none; border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--sea-deep); background: #cdeaf2; }
+.toast {
+  position: absolute; top: 40%; left: 50%; transform: translateX(-50%); z-index: 2;
+  font-family: var(--font-px); font-size: 16px; color: var(--ink); background: var(--sand);
+  border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); padding: 4px 10px; white-space: nowrap; pointer-events: none;
+}
+.tools { display: flex; gap: 8px; }
+.mcard {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: min(92%, 380px);
+  background: var(--sand); color: var(--ink); border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink);
+  padding: 8px 12px; display: grid; gap: 4px; font-size: 14px;
+}
+.mcard strong { font-family: var(--font-px); font-size: 17px; }
+.mcard p { margin: 0; line-height: 1.35; }
+.mstatus { font-family: var(--font-px); font-size: 14px; color: #8a3b22; font-variant-numeric: tabular-nums; }
+.mcard button { min-height: 44px; background: var(--crab); color: #fff8f0; font-size: 17px; }
+.menu, .mresult {
+  position: absolute; inset: 8px; background: var(--sand); color: var(--ink); border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink);
+  padding: 16px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; z-index: 3;
+}
+.mresult { inset: auto 8px 64px 8px; }
+.menu h2, .mresult h2 { font-family: var(--font-px); font-size: 26px; margin: 0; color: #b4532f; }
+.menu h3 { font-family: var(--font-px); font-size: 16px; margin: 8px 0 0; letter-spacing: .04em; text-transform: uppercase; }
+.menu p, .mresult p { margin: 0; line-height: 1.4; font-size: 15px; }
+.menu .big { min-height: 56px; font-size: 20px; background: var(--crab); color: #fff8f0; }
+.mlist { display: grid; gap: 8px; }
+.mbtn { flex-direction: row; justify-content: flex-start; gap: 10px; text-align: left; min-height: 48px; }
+.mbtn .mnum { width: 1.6em; height: 1.6em; display: grid; place-items: center; background: var(--ink); color: var(--sand); font-size: 14px; }
+.mbtn .mtitle { flex: 1; min-width: 0; font-size: 16px; }
+.mbtn .mok { color: #e0a01e; font-size: 20px; width: 1em; }
+.rbtns { display: flex; flex-wrap: wrap; gap: 8px; }
+.rbtns button { flex: 1 1 auto; }
+#rnext { background: var(--crab); color: #fff8f0; }
+.camctl { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
+.camctl button { min-height: 40px; width: 44px; padding: 0; font-size: 22px; line-height: 1; background: rgba(243, 220, 162, 0.9); }
+button {
+  font: inherit; font-family: var(--font-px); font-size: 15px; color: var(--ink); background: var(--sand);
+  border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); padding: 6px 8px; min-height: 48px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+}
+button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+button:focus-visible { outline: 3px solid var(--foam); outline-offset: 2px; }
+.tools .tool { flex: 1; }
+.tools .tool[aria-pressed="true"] { background: var(--crab); color: #fff8f0; }
+.tools .small { flex: none; width: 68px; font-size: 13px; }
+svg.ico { width: 22px; height: 22px; shape-rendering: crispEdges; }
+.sheet {
+  position: absolute; left: 8px; right: 8px; bottom: 8px; background: var(--sand); color: var(--ink);
+  border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 12px; display: grid; gap: 8px;
+  font-size: 14px;
+}
+.sheet h2 { font-family: var(--font-px); font-size: 16px; margin: 0; }
+.row { display: grid; grid-template-columns: 7.5em 1fr 3em; align-items: center; gap: 8px; }
+.row output { font-variant-numeric: tabular-nums; text-align: right; }
+.row input { width: 100%; accent-color: var(--crab); }
+.sheet .btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.sheet .btns button { min-height: 40px; flex: 1 1 auto; font-size: 14px; }
+.seed { font-size: 12px; opacity: .7; }
+@media (prefers-reduced-motion: reduce) { button:active { transform: none; } }
+html, body { margin: 0; touch-action: manipulation; }
+body { padding-top: max(8px, env(safe-area-inset-top)); padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+.ver { font-family: var(--font-px); font-size: 11px; color: var(--foam); opacity: .6; margin-left: -6px; align-self: flex-end; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <h1>Beach</h1><span class="ver">v1.0</span>
+    <div class="meters">
+      <div class="meter"><label id="tideLbl">Ebbe</label><div class="bar tide"><i id="tideBar"></i></div></div>
+    </div>
+  </header>
+
+  <div class="stage" id="stage">
+    <canvas id="cv" width="180" height="290" aria-label="Strand"></canvas>
+    <div class="toast" id="toast" hidden></div>
+    <div class="mcard" id="mcard" hidden>
+      <strong id="mtitle"></strong>
+      <p id="mtext"></p>
+      <div class="mstatus" id="mstatus"></div>
+      <button id="mgo" type="button">Los!</button>
+    </div>
+    <div class="menu" id="menu" hidden>
+      <h2>Beach</h2>
+      <p>Grab Kanäle, bau Burgen und schau, was die Flut daraus macht.</p>
+      <button id="bFree" class="big" type="button">Frei spielen</button>
+      <h3>Missionen</h3>
+      <div class="mlist" id="mlist"></div>
+    </div>
+    <div class="mresult" id="mresult" hidden>
+      <h2 id="rtitle"></h2>
+      <p id="rtext"></p>
+      <div class="rbtns">
+        <button id="rnext" type="button">Weiter</button>
+        <button id="rretry" type="button">Nochmal</button>
+        <button id="rmenu" type="button">Menü</button>
+      </div>
+    </div>
+    <div class="camctl" role="group" aria-label="Ansicht">
+      <button id="bMenu" type="button" aria-label="Menü">☰</button>
+      <button id="bRotL" type="button" aria-label="Nach links drehen">⟲</button>
+      <button id="bHome" type="button" aria-label="Ansicht zurücksetzen">⌂</button>
+      <button id="bRotR" type="button" aria-label="Nach rechts drehen">⟳</button>
+    </div>
+    <div class="sheet" id="sheet" hidden>
+      <h2>Regler (Prototyp)</h2>
+      <div class="row"><label for="rFlow">Fließtempo</label><input id="rFlow" type="range" min="1" max="6" step="1" value="3"><output id="oFlow">3</output></div>
+      <div class="row"><label for="rEro">Erosion</label><input id="rEro" type="range" min="0" max="3" step="0.1" value="1"><output id="oEro">1</output></div>
+      <div class="row"><label for="rSlump">Abrutschen</label><input id="rSlump" type="range" min="0" max="3" step="0.1" value="1"><output id="oSlump">1</output></div>
+      <div class="row"><label for="rWaves">Wellen</label><input id="rWaves" type="range" min="0" max="2" step="0.1" value="1"><output id="oWaves">1</output></div>
+      <div class="row"><label for="rPeriod">Tide (s)</label><input id="rPeriod" type="range" min="40" max="300" step="10" value="150"><output id="oPeriod">150</output></div>
+      <div class="btns">
+        <button id="bDay" type="button">Tagesstrand</button>
+        <button id="bNew" type="button">Zufallsstrand</button>
+        <button id="bFast" type="button">Zeit ×1</button>
+        <button id="bFlood" type="button">Flut jetzt</button>
+        <button id="bPause" type="button">Pause</button>
+        <button id="bSound" type="button">Ton aus</button>
+        <button id="bMusic" type="button">Musik: Gitarre</button>
+      </div>
+      <div class="seed" id="seedLbl"></div>
+    </div>
+  </div>
+
+  <div class="tools" role="toolbar" aria-label="Werkzeuge">
+    <button class="tool" data-tool="dig" aria-pressed="true" type="button">
+      <svg class="ico" viewBox="0 0 11 11" aria-hidden="true"><rect x="5" y="0" width="1" height="6" fill="#7a4a24"/><rect x="4" y="0" width="3" height="1" fill="#7a4a24"/><rect x="3" y="6" width="5" height="3" fill="#3f6fa8"/><rect x="4" y="9" width="3" height="1" fill="#3f6fa8"/><rect x="5" y="10" width="1" height="1" fill="#3f6fa8"/></svg>
+      Graben</button>
+    <button class="tool" data-tool="pile" aria-pressed="false" type="button">
+      <svg class="ico" viewBox="0 0 11 11" aria-hidden="true"><rect x="1" y="7" width="9" height="3" fill="#c79a58"/><rect x="2" y="5" width="7" height="2" fill="#d9b06c"/><rect x="4" y="3" width="3" height="2" fill="#e6c487"/></svg>
+      Häufen</button>
+    <button class="tool" data-tool="tower" aria-pressed="false" type="button">
+      <svg class="ico" viewBox="0 0 11 11" aria-hidden="true"><rect x="2" y="3" width="7" height="7" fill="#d9b06c"/><rect x="2" y="1" width="1" height="2" fill="#d9b06c"/><rect x="4" y="1" width="1" height="2" fill="#d9b06c"/><rect x="6" y="1" width="1" height="2" fill="#d9b06c"/><rect x="8" y="1" width="1" height="2" fill="#d9b06c"/><rect x="5" y="6" width="1" height="4" fill="#7a4a24"/></svg>
+      Turm</button>
+    <button class="small" id="bSheet" type="button" aria-expanded="false" aria-controls="sheet">
+      <svg class="ico" viewBox="0 0 11 11" aria-hidden="true"><rect x="1" y="2" width="9" height="1" fill="#2b1a14"/><rect x="1" y="5" width="9" height="1" fill="#2b1a14"/><rect x="1" y="8" width="9" height="1" fill="#2b1a14"/><rect x="3" y="1" width="2" height="3" fill="#d97757"/><rect x="6" y="4" width="2" height="3" fill="#d97757"/><rect x="2" y="7" width="2" height="3" fill="#d97757"/></svg>
+      Regler</button>
+  </div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+'use strict';
+// ---------- world ----------
+const W = 128, H = 136, N = W * H;      // sand cells (x across, y from dunes down to the sea)
+const VS = 1.5;                         // vertical exaggeration in the 3D view
+const IW = 180, IH = 290;               // internal render resolution (pixel look)
+const LOW = -1.0, HIGH = 1.9;
+const SEA_ROWS = 2;
+
+const b = new Float32Array(N), rk = new Float32Array(N), d = new Float32Array(N);
+const fL = new Float32Array(N), fR = new Float32Array(N), fT = new Float32Array(N), fB = new Float32Array(N);
+const vx = new Float32Array(N), vy = new Float32Array(N);
+const pk = new Float32Array(N); // packed sand (tower walls), 0..1
+const s = new Float32Array(N), s2 = new Float32Array(N), m = new Float32Array(N), dl = new Float32Array(N);
+const tmp = new Float32Array(N);
+let seabed = [], seaMask = new Uint8Array(N);
+
+const P = { flow: 3, ero: 1, slump: 1, waves: 1, period: 150 };
+let phase = 0.06, speed = 1, paused = false;
+let tool = 'dig', seed = 0, towers = [];
+let waves = [], nextWave = 3, waveNow = 0, clock = 0, seaNow = 0;
+
+// ---------- rng + noise ----------
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function makeNoise(rng) {
+  const p = new Uint8Array(512), g = new Float32Array(256);
+  for (let i = 0; i < 256; i++) { p[i] = i; g[i] = rng(); }
+  for (let i = 255; i > 0; i--) { const j = (rng() * (i + 1)) | 0; [p[i], p[j]] = [p[j], p[i]]; }
+  for (let i = 0; i < 256; i++) p[i + 256] = p[i];
+  const v = (x, y) => g[p[p[x & 255] + (y & 255)]];
+  const sm = t => t * t * (3 - 2 * t);
+  const n = (x, y) => {
+    const xi = Math.floor(x), yi = Math.floor(y), xf = sm(x - xi), yf = sm(y - yi);
+    const a = v(xi, yi), c = v(xi + 1, yi), e = v(xi, yi + 1), f = v(xi + 1, yi + 1);
+    return (a + (c - a) * xf) + ((e + (f - e) * xf) - (a + (c - a) * xf)) * yf;
+  };
+  return (x, y, oct = 4) => { let s = 0, amp = 0.5, fr = 1, norm = 0; for (let o = 0; o < oct; o++) { s += amp * n(x * fr, y * fr); norm += amp; amp *= 0.5; fr *= 2; } return s / norm; };
+}
+
+// ---------- beach generation ----------
+function levelAt(p) { return LOW + (HIGH - LOW) * (1 - Math.cos(2 * Math.PI * p)) / 2; }
+function generate(newSeed) {
+  seed = newSeed;
+  const rng = mulberry(seed), fbm = makeNoise(rng);
+  const creekOff = rng() * 100, creekDepth = 0.6 + rng() * 0.6, creekTop = 0.3 + rng() * 0.2;
+  rk.fill(-99); pk.fill(0); d.fill(0); s.fill(0); fL.fill(0); fR.fill(0); fT.fill(0); fB.fill(0); vx.fill(0); vy.fill(0);
+  for (let y = 0; y < H; y++) {
+    const yy = y / (H - 1), creekX = W * (0.2 + 0.6 * fbm(creekOff, y * 0.014, 3));
+    for (let x = 0; x < W; x++) {
+      let h = 5.5 - 8 * yy;
+      h += 2.2 * (fbm(x * 0.05, y * 0.05) - 0.5) * (1 - yy) * (1 - yy);
+      h += 0.5 * (fbm(x * 0.13 + 50, y * 0.13, 3) - 0.5);
+      h += 0.06 * Math.sin(y * 0.9 + 2 * fbm(x * 0.1, y * 0.05, 2));
+      if (yy > creekTop) { const w = Math.abs(x - creekX) / 3.5; if (w < 1) h -= creekDepth * (1 - w * w) * Math.min(1, (yy - creekTop) * 6); }
+      b[y * W + x] = h;
+    }
+  }
+  const nRocks = 4 + ((rng() * 5) | 0);
+  for (let r = 0; r < nRocks; r++) {
+    const cx = 7 + rng() * (W - 14), cy = H * (0.3 + rng() * 0.5), rad = 2.2 + rng() * 3, lift = 0.8 + rng() * 1.2;
+    for (let y = Math.floor(cy - rad - 3); y <= cy + rad + 3; y++) for (let x = Math.floor(cx - rad - 3); x <= cx + rad + 3; x++) {
+      if (x < 0 || y < 0 || x >= W || y >= H - SEA_ROWS) continue;
+      const dist = Math.hypot(x - cx, (y - cy) * 1.2) / (rad * (0.75 + 0.5 * fbm(x * 0.3, y * 0.3, 2)));
+      if (dist < 1) { const i = y * W + x; b[i] += lift * Math.sqrt(1 - dist * dist) + 0.2; rk[i] = b[i]; }
+    }
+  }
+  // open sea floor: everything below low water that is connected to the front edge
+  const mask = new Uint8Array(N), queue = [];
+  for (let x = 0; x < W; x++) { const i = (H - 1) * W + x; mask[i] = 1; queue.push(i); }
+  while (queue.length) {
+    const i = queue.pop(), x = i % W;
+    for (const j of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i - W, i + W]) if (j >= 0 && j < N && !mask[j] && b[j] < LOW + 0.2) { mask[j] = 1; queue.push(j); }
+  }
+  seabed = []; for (let i = 0; i < N; i++) if (mask[i]) seabed.push(i);
+  seaMask = mask;
+  const lvl = levelAt(phase);
+  for (let i = 0; i < N; i++) { d[i] = Math.max(0, lvl - b[i]); m[i] = b[i] < HIGH + 0.3 ? 0.75 : 0; }
+  resetDecor();
+}
+
+// ---------- water: virtual pipes ----------
+function flowStep(dt, sea) {
+  const g = 9.81, damp = 0.996;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x, h = b[i] + d[i];
+    let l = 0, r = 0, t = 0, o = 0;
+    if (x > 0) l = Math.max(0, fL[i] * damp + dt * g * (h - b[i - 1] - d[i - 1]));
+    if (x < W - 1) r = Math.max(0, fR[i] * damp + dt * g * (h - b[i + 1] - d[i + 1]));
+    if (y > 0) t = Math.max(0, fT[i] * damp + dt * g * (h - b[i - W] - d[i - W]));
+    if (y < H - 1) o = Math.max(0, fB[i] * damp + dt * g * (h - b[i + W] - d[i + W]));
+    const sum = l + r + t + o;
+    if (sum > 0) { const k = Math.min(1, d[i] / (sum * dt)); l *= k; r *= k; t *= k; o *= k; }
+    fL[i] = l; fR[i] = r; fT[i] = t; fB[i] = o;
+  }
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x;
+    const inL = x > 0 ? fR[i - 1] : 0, inR = x < W - 1 ? fL[i + 1] : 0;
+    const inT = y > 0 ? fB[i - W] : 0, inB = y < H - 1 ? fT[i + W] : 0;
+    const d0 = d[i];
+    let dn = d0 + dt * (inL + inR + inT + inB - fL[i] - fR[i] - fT[i] - fB[i]);
+    dn = Math.max(0, dn - 0.004 * dt);
+    d[i] = dn;
+    const da = (d0 + dn) / 2;
+    if (da > 0.01) {
+      const u = (inL - fL[i] + fR[i] - inR) / 2 / da, w = (inT - fT[i] + fB[i] - inB) / 2 / da;
+      vx[i] = u > 3 ? 3 : u < -3 ? -3 : u; vy[i] = w > 3 ? 3 : w < -3 ? -3 : w;
+    } else { vx[i] = 0; vy[i] = 0; }
+  }
+  for (let y = H - SEA_ROWS; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x; d[i] = Math.max(0, sea - b[i]); s[i] = 0; }
+  // permanent sea floor follows the sea level, so the open sea keeps up with the tide
+  for (const i of seabed) { const t = sea - b[i]; if (t > 0) d[i] += (t - d[i]) * 0.05; }
+}
+
+// ---------- hydraulic erosion ----------
+function erodeStep(dt) {
+  const Kc = 0.5, Ks = 0.012 * P.ero, Kd = 0.03;
+  if (Ks <= 0) return;
+  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+    const i = y * W + x;
+    if (d[i] < 0.004) { if (s[i] > 0) { b[i] += s[i]; s[i] = 0; } continue; }
+    const gx = (b[i + 1] - b[i - 1]) / 2, gy = (b[i + W] - b[i - W]) / 2, g2 = gx * gx + gy * gy;
+    const sinT = Math.max(0.08, Math.sqrt(g2 / (1 + g2)));
+    const sp = Math.hypot(vx[i], vy[i]);
+    const C = Math.min(0.35, Kc * sinT * sp * Math.min(1, d[i] * 4));
+    if (C > s[i]) { let a = Ks * (C - s[i]); a = Math.min(a, b[i] - rk[i]); if (a > 0) { b[i] -= a; s[i] += a; } }
+    else { const a = Kd * (s[i] - C); b[i] += a; s[i] -= a; }
+  }
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x;
+    let px = x - vx[i] * dt, py = y - vy[i] * dt;
+    px = px < 0 ? 0 : px > W - 1.001 ? W - 1.001 : px; py = py < 0 ? 0 : py > H - 1.001 ? H - 1.001 : py;
+    const x0 = px | 0, y0 = py | 0, fx = px - x0, fy = py - y0, j = y0 * W + x0;
+    s2[i] = (s[j] * (1 - fx) + s[j + 1] * fx) * (1 - fy) + (s[j + W] * (1 - fx) + s[j + W + 1] * fx) * fy;
+  }
+  s.set(s2);
+}
+
+// ---------- sand slumping (angle of repose depends on wetness) ----------
+function slump() {
+  if (P.slump <= 0) return;
+  dl.fill(0);
+  const pair = (i, j) => {
+    let diff = b[i] - b[j], hi = i, lo = j;
+    if (diff < 0) { diff = -diff; hi = j; lo = i; }
+    let T, k;
+    const dg = j - i !== 1 && j - i !== W && i - j !== 1 && i - j !== W ? 1.41 : 1;
+    if (d[hi] > 0.05 || d[lo] > 0.05) { T = 0.8 + pk[hi] * 1.5; k = 0.02; }   // soaked: slow collapse
+    else if (m[hi] > 0.25) { T = 2.2 + pk[hi] * 3; k = 0.15; }                 // damp: holds steep walls
+    else { T = 1.1; k = 0.15; }                                   // dry: trickles down
+    T *= dg;
+    if (diff > T) {
+      let a = k * P.slump * (diff - T) * 0.5;
+      a = Math.min(a, b[hi] - rk[hi]);
+      if (a > 0) { dl[hi] -= a; dl[lo] += a; }
+    }
+  };
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x;
+    if (x < W - 1) pair(i, i + 1);
+    if (y < H - 1) pair(i, i + W);
+    if (x < W - 1 && y < H - 1) pair(i, i + W + 1);
+    if (x > 0 && y < H - 1) pair(i, i + W - 1);
+  }
+  for (let i = 0; i < N; i++) b[i] += dl[i];
+}
+function moisture() {
+  for (let i = 0; i < N; i++) {
+    m[i] = d[i] > 0.03 ? 1 : Math.max(0, m[i] - 0.00003);
+    // soaking loosens packed sand, also right next to the water (the waves undercut the walls)
+    if (d[i] > 0.05) for (const j of [i, i - 1, i + 1, i - W, i + W]) if (j >= 0 && j < N && pk[j] > 0) pk[j] = Math.max(0, pk[j] - 0.004);
+  }
+}
+
+
+// ---------- tools: continuous strokes ----------
+const floorOf = i => Math.max(rk[i], -4);
+const inside = (x, y) => x >= 1 && y >= 1 && x < W - 1 && y < H - SEA_ROWS;
+let moved = 0;          // sand moved this frame (drives sound + particles)
+function forBox(x0, y0, x1, y1, pad, fn) {
+  const xa = Math.max(1, Math.floor(Math.min(x0, x1) - pad)), xb = Math.min(W - 2, Math.ceil(Math.max(x0, x1) + pad));
+  const ya = Math.max(1, Math.floor(Math.min(y0, y1) - pad)), yb = Math.min(H - 1 - SEA_ROWS, Math.ceil(Math.max(y0, y1) + pad));
+  for (let y = ya; y <= yb; y++) for (let x = xa; x <= xb; x++) fn(y * W + x, x, y);
+}
+// distance of (px,py) to segment, signed perpendicular offset, and position along it (unclamped)
+function seg(px, py, x0, y0, x1, y1) {
+  const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || 1e-6;
+  const t = ((px - x0) * dx + (py - y0) * dy) / (L * L), tc = t < 0 ? 0 : t > 1 ? 1 : t;
+  const qx = x0 + tc * dx, qy = y0 + tc * dy;
+  return [Math.hypot(px - qx, py - qy), (dx * (py - y0) - dy * (px - x0)) / L, t];
+}
+// gentle local smoothing so thrown sand settles into soft mounds instead of furrows
+function smoothBox(x0, y0, x1, y1, pad, k) {
+  const cells = [];
+  forBox(x0, y0, x1, y1, pad, (i, x, y) => {
+    if (x === 0 || x === W - 1 || y === 0) return;
+    tmp[i] = (b[i - 1] + b[i + 1] + b[i - W] + b[i + W]) / 4;
+    cells.push(i);
+  });
+  for (const i of cells) { const nb = b[i] + k * (tmp[i] - b[i]); b[i] = Math.max(nb, rk[i] > -50 ? Math.min(b[i], rk[i]) : -99); }
+}
+// spread sand along one side of a stroke as a soft berm
+function berm(x0, y0, x1, y1, side, off, amount) {
+  if (amount <= 0) return;
+  const cells = []; let sw = 0;
+  forBox(x0, y0, x1, y1, off + 3, (i, x, y) => {
+    const [, sd, t] = seg(x, y, x0, y0, x1, y1);
+    if (t < -0.3 || t > 1.3) return;
+    const e = sd * side - off, w = Math.exp(-e * e / 2.2);
+    if (w > 0.02) { cells.push([i, w]); sw += w; }
+  });
+  if (!sw) return;
+  for (const [i, w] of cells) { b[i] += amount * w / sw; m[i] = Math.max(m[i], 0.75); }
+}
+function digStroke(x0, y0, x1, y1) {
+  const R = 2.2, L = Math.hypot(x1 - x0, y1 - y0);
+  if (L < 0.02) return;
+  let left = 0, right = 0;
+  forBox(x0, y0, x1, y1, R, i => {
+    const x = i % W, y = (i / W) | 0, [dist, sd] = seg(x, y, x0, y0, x1, y1);
+    if (dist >= R) return;
+    const w = 1 - (dist / R) * (dist / R);
+    const a = Math.min(0.5 * w * L, b[i] - floorOf(i));
+    if (a <= 0) return;
+    b[i] -= a; m[i] = Math.max(m[i], 0.7); pk[i] = 0;
+    if (sd > 0.01) right += a; else if (sd < -0.01) left += a; else { left += a / 2; right += a / 2; }
+  });
+  berm(x0, y0, x1, y1, 1, R + 1.0, right); berm(x0, y0, x1, y1, -1, R + 1.0, left);
+  smoothBox(x0, y0, x1, y1, R + 4, 0.18);
+  moved += left + right;
+  throwSand(x1, y1, x1 - x0, y1 - y0, left + right, false);
+}
+function digHold(px, py, dt) {
+  const R = 2.2; let got = 0;
+  forBox(px, py, px, py, R, (i, x, y) => {
+    const r = Math.hypot(x - px, y - py); if (r >= R) return;
+    const a = Math.min(1.4 * dt * (1 - (r / R) * (r / R)), b[i] - floorOf(i));
+    if (a > 0) { b[i] -= a; got += a; m[i] = Math.max(m[i], 0.7); pk[i] = 0; }
+  });
+  if (got <= 0) return;
+  const ring = []; let sw = 0;
+  forBox(px, py, px, py, R + 2.5, (i, x, y) => {
+    const r = Math.hypot(x - px, y - py);
+    if (r >= R && r < R + 2.5) { const w = Math.sin(Math.PI * (r - R) / 2.5); ring.push([i, w]); sw += w; }
+  });
+  if (sw) for (const [i, w] of ring) { b[i] += got * w / sw; m[i] = Math.max(m[i], 0.75); }
+  else forBox(px, py, px, py, R, i => { b[i] += got / 16; });
+  smoothBox(px, py, px, py, R + 3, 0.1);
+  moved += got;
+  throwSand(px, py, 0, 0, got, false);
+}
+function pileStroke(x0, y0, x1, y1) {
+  const R0 = 2.0, R1 = 5.0, L = Math.hypot(x1 - x0, y1 - y0);
+  if (L < 0.02) return;
+  let got = 0;
+  forBox(x0, y0, x1, y1, R1, i => {
+    const x = i % W, y = (i / W) | 0, [dist] = seg(x, y, x0, y0, x1, y1);
+    if (dist < R0 || dist >= R1) return;
+    const a = Math.min(0.35 * Math.sin(Math.PI * (dist - R0) / (R1 - R0)) * L, b[i] - floorOf(i));
+    if (a > 0) { b[i] -= a; got += a; }
+  });
+  if (got <= 0) return;
+  const cells = []; let sw = 0;
+  forBox(x0, y0, x1, y1, R0 + 1, i => {
+    const x = i % W, y = (i / W) | 0, [dist] = seg(x, y, x0, y0, x1, y1);
+    const w = Math.exp(-dist * dist / 2.4); if (w > 0.03) { cells.push([i, w]); sw += w; }
+  });
+  for (const [i, w] of cells) { b[i] += got * w / sw; m[i] = Math.max(m[i], 0.8); }
+  smoothBox(x0, y0, x1, y1, R1, 0.12);
+  moved += got;
+  throwSand(x1, y1, 0, 0, got, true);
+}
+let lastEmpty = -9;
+function pileHold(px, py, dt) {
+  const R0 = 2.2, R1 = 5.5; let got = 0;
+  forBox(px, py, px, py, R1, (i, x, y) => {
+    const r = Math.hypot(x - px, y - py); if (r < R0 || r >= R1) return;
+    const a = Math.min(0.9 * dt * Math.sin(Math.PI * (r - R0) / (R1 - R0)), b[i] - floorOf(i));
+    if (a > 0) { b[i] -= a; got += a; }
+  });
+  if (got < 0.002) { if (clock - lastEmpty > 2) { lastEmpty = clock; toast('Hier ist kein Sand mehr'); } return; }
+  const cells = []; let sw = 0;
+  forBox(px, py, px, py, R0 + 0.6, (i, x, y) => {
+    const r = Math.hypot(x - px, y - py), w = Math.max(0, 1 - (r / (R0 + 0.6)) ** 2);
+    if (w > 0) { cells.push([i, w]); sw += w; }
+  });
+  for (const [i, w] of cells) { b[i] += got * w / sw; m[i] = Math.max(m[i], 0.8); }
+  smoothBox(px, py, px, py, R1, 0.06);
+  moved += got;
+  throwSand(px, py, 0, 0, got, true);
+}
+// tower: sand from around is packed into a bucket-shaped tower (leaves a moat)
+function tower(px, py) {
+  const cx = Math.round(px), cy = Math.round(py), R1 = 3.5, R2 = 4.2, TH = 4.0;
+  if (!inside(cx, cy)) return;
+  // fill up to one common height, so the top stays flat even on bumpy ground
+  let gsum = 0, gn = 0;
+  for (let y = cy - 3; y <= cy + 3; y++) for (let x = cx - 3; x <= cx + 3; x++) if (inside(x, y) && Math.hypot(x - cx, y - cy) < R1) { gsum += b[y * W + x]; gn++; }
+  const ground = gn ? gsum / gn : b[cy * W + cx];
+  const cells = []; let total = 0;
+  for (let y = cy - 5; y <= cy + 5; y++) for (let x = cx - 5; x <= cx + 5; x++) {
+    if (!inside(x, y)) continue;
+    const r = Math.hypot(x - cx, y - cy);
+    if (r >= R2) continue;
+    const a = Math.max(0, ground + TH * (r < R1 ? 1 : (R2 - r) / (R2 - R1)) - b[y * W + x]);
+    cells.push([y * W + x, a]); total += a;
+  }
+  const ring = []; let avail = 0;
+  for (let y = cy - 10; y <= cy + 10; y++) for (let x = cx - 10; x <= cx + 10; x++) {
+    if (!inside(x, y)) continue;
+    const r = Math.hypot(x - cx, y - cy); if (r < R2 || r >= R2 + 5) continue;
+    const i = y * W + x, c = pk[i] > 0.3 ? 0 : Math.max(0, Math.min(2.0 * Math.sin(Math.PI * (r - R2) / 5), b[i] - floorOf(i)));   // never take sand from another tower
+    if (c > 0) { ring.push([i, c]); avail += c; }
+  }
+  const got = Math.min(avail, total), f = got / total;
+  if (f < 0.3) { toast('Hier ist zu wenig Sand'); return; }
+  for (const [i, c] of ring) b[i] -= c * got / avail;
+  const ci = cy * W + cx, base = ground;
+  for (const [i, a] of cells) { b[i] += a * f; m[i] = Math.max(m[i], 0.9); pk[i] = 1; }
+  addTower({ i: ci, base, h: TH * f, x: cx, y: cy });
+  for (let k = 0; k < 24; k++) { const a = Math.random() * 6.283; spawn(cx + Math.cos(a) * 6, cy + Math.sin(a) * 6, -Math.cos(a) * 9, -Math.sin(a) * 9, 5); }
+  sfx('tower');
+  if (clock - lastPeek > 15 && Math.random() < 0.6) { lastPeek = clock; setTimeout(() => crabVisit({ side: screenX(cx, cy) < 0 ? -1 : 1 }), 700); }
+}
+
+// ---------- sand particles ----------
+const PMAX = 500, parts = [];
+function surf(x, y) { const xi = Math.max(0, Math.min(W - 1, Math.round(x))), yi = Math.max(0, Math.min(H - 1, Math.round(y))); return b[yi * W + xi]; }
+function spawn(x, y, vx0, vy0, vz) {
+  if (parts.length >= PMAX) parts.shift();
+  parts.push({ x, y, z: surf(x, y) + 0.3, vx: vx0, vy: vy0, vz, t: 0, dark: Math.random() < 0.5 });
+}
+let sprayAcc = 0;
+function throwSand(x, y, dx, dy, amount, inward) {
+  sprayAcc += amount * 1.5;
+  const L = Math.hypot(dx, dy) || 1;
+  while (sprayAcc > 1) {
+    sprayAcc -= 1;
+    if (inward) { const a = Math.random() * 6.283, r = 3 + Math.random() * 2.5; spawn(x + Math.cos(a) * r, y + Math.sin(a) * r, -Math.cos(a) * 7, -Math.sin(a) * 7, 4 + Math.random() * 2); }
+    else {
+      const side = Math.random() < 0.5 ? 1 : -1, nx = -dy / L * side, ny = dx / L * side;
+      const sp = 5 + Math.random() * 4, a = Math.random() * 6.283;
+      const ux = dx || dy ? nx : Math.cos(a), uy = dx || dy ? ny : Math.sin(a);
+      spawn(x + (Math.random() - 0.5) * 2, y + (Math.random() - 0.5) * 2, ux * sp + (Math.random() - 0.5) * 2, uy * sp + (Math.random() - 0.5) * 2, 5 + Math.random() * 3);
+    }
+  }
+}
+function partsUpdate(dt) {
+  for (let k = parts.length - 1; k >= 0; k--) {
+    const p = parts[k];
+    p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vz -= 28 * dt; p.z += p.vz * dt;
+    if (p.t > 1.2 || (p.vz < 0 && p.z < surf(p.x, p.y))) parts.splice(k, 1);
+  }
+}
+
+// ---------- sound: sand, sea, music ----------
+let ac = null, master = null, sfxBus = null, musicBus = null, white = null;
+let seaGain = null, sandGain = null, sandBP = null, soundOn = true, musicOn = true;
+function audioInit() {
+  if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
+  try {
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    master = ac.createGain(); master.gain.value = 0.8; master.connect(ac.destination);
+    sfxBus = ac.createGain(); sfxBus.gain.value = soundOn ? 1 : 0; sfxBus.connect(master);
+    musicBus = ac.createGain(); musicBus.gain.value = musicOn ? 0.55 : 0; musicBus.connect(master);
+    const len = ac.sampleRate * 2;
+    white = ac.createBuffer(1, len, ac.sampleRate);
+    const wch = white.getChannelData(0); for (let i = 0; i < len; i++) wch[i] = Math.random() * 2 - 1;
+    const brown = ac.createBuffer(1, len, ac.sampleRate), bch = brown.getChannelData(0);
+    let last = 0; for (let i = 0; i < len; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; bch[i] = last * 3.5; }
+    // sea: brown noise, low-passed, swelling with the waves
+    const sea = ac.createBufferSource(); sea.buffer = brown; sea.loop = true;
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 600;
+    seaGain = ac.createGain(); seaGain.gain.value = 0.15;
+    sea.connect(lp).connect(seaGain).connect(sfxBus); sea.start();
+    // sand: continuous scrape whose loudness follows how much sand moves
+    const sand = ac.createBufferSource(); sand.buffer = white; sand.loop = true;
+    sandBP = ac.createBiquadFilter(); sandBP.type = 'bandpass'; sandBP.frequency.value = 1000; sandBP.Q.value = 0.5;
+    const sandLP = ac.createBiquadFilter(); sandLP.type = 'lowpass'; sandLP.frequency.value = 3500;
+    sandGain = ac.createGain(); sandGain.gain.value = 0;
+    sand.connect(sandBP).connect(sandLP).connect(sandGain).connect(sfxBus); sand.start();
+    musicStart();
+  } catch (e) { ac = null; }
+}
+// tiny random noise grains on top of the scrape: sounds like individual sand grains
+function grain(t, loud) {
+  const src = ac.createBufferSource(); src.buffer = white;
+  const hp = ac.createBiquadFilter(); hp.type = 'bandpass'; hp.frequency.value = 2500 + Math.random() * 3000; hp.Q.value = 1.5;
+  const g = ac.createGain(), len = 0.006 + Math.random() * 0.012;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(loud * (0.3 + Math.random() * 0.7), t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+  src.connect(hp).connect(g).connect(sfxBus); src.start(t, Math.random() * 1.8); src.stop(t + len + 0.02);
+}
+let sandLevel = 0;
+function sandSound(dt) {
+  if (!ac) return;
+  const target = 1 - Math.exp(-moved * 0.6);
+  sandLevel += (target - sandLevel) * Math.min(1, dt * (target > sandLevel ? 25 : 8));
+  const t = ac.currentTime;
+  sandGain.gain.setTargetAtTime(sandLevel * 0.22, t, 0.03);
+  sandBP.frequency.setTargetAtTime((tool === 'pile' ? 650 : 1050) * (0.85 + Math.random() * 0.3), t, 0.04);
+  let n = sandLevel * 4 * Math.random() * 2;
+  while (n > 1 || Math.random() < n) { grain(t + Math.random() * 0.016, 0.08 + sandLevel * 0.12); n -= 1; if (n <= 0) break; }
+  seaGain.gain.setTargetAtTime(0.1 + waveNow * 0.5, t, 0.25);
+}
+function sfx(kind) {
+  if (!ac) return;
+  const t = ac.currentTime;
+  if (kind === 'tower') {
+    const o = ac.createOscillator(), og = ac.createGain();
+    o.frequency.setValueAtTime(160, t); o.frequency.exponentialRampToValueAtTime(60, t + 0.18);
+    og.gain.setValueAtTime(0.0001, t); og.gain.exponentialRampToValueAtTime(0.5, t + 0.01); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+    o.connect(og).connect(sfxBus); o.start(t); o.stop(t + 0.3);
+    for (let k = 0; k < 10; k++) grain(t + 0.02 + Math.random() * 0.15, 0.12);
+  }
+}
+// generative beach tune: light at low tide, a bit faster and darker while the water comes in
+const mtof = n => 440 * Math.pow(2, (n - 69) / 12);
+const CALM = [[48, [60, 64, 67]], [45, [57, 60, 64]], [41, [57, 60, 65]], [43, [55, 59, 62]]];   // C Am F G
+const TENSE = [[45, [57, 60, 64]], [41, [57, 60, 65]], [43, [55, 59, 62]], [40, [55, 59, 64]]];  // Am F G Em
+const PENTA = [69, 72, 74, 76, 79, 81, 84, 86, 88];
+let mStep = 0, mNext = 0, mTimer = 0, melIdx = 4, melRest = false, tension = 0, prog = CALM;
+const stepLen = () => 60 / (88 + 16 * tension) / 2;
+function musicStart() { guitarPrecompute(); mNext = ac.currentTime + 0.3; mTimer = setInterval(musicTick, 50); }
+function musicStep(step, t) { if (musicMode === 'guitar') guitarStep(step, t); else ukeStep(step, t); }
+function musicTick() {
+  if (!ac) return;
+  while (mNext < ac.currentTime + 0.2) { musicStep(mStep, mNext); mStep++; mNext += stepLen(); }
+}
+function tone(type, f, t, dur, gain, cutoff) {
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.value = f;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  if (cutoff) { const f2 = ac.createBiquadFilter(); f2.type = 'lowpass'; f2.frequency.value = cutoff; o.connect(f2).connect(g); } else o.connect(g);
+  g.connect(musicBus); o.start(t); o.stop(t + dur + 0.05);
+}
+function hat(t, gain) {
+  const src = ac.createBufferSource(); src.buffer = white;
+  const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 7000;
+  const g = ac.createGain();
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+  src.connect(hp).connect(g).connect(musicBus); src.start(t, Math.random()); src.stop(t + 0.07);
+}
+function ukeStep(step, t) {
+  const s8 = step % 8, barN = Math.floor(step / 8);
+  if (s8 === 0 && barN % 4 === 0) prog = tension > 0.55 ? TENSE : CALM;   // switch only at phrase start
+  const [root, chord] = prog[barN % 4], tense = prog === TENSE, L = stepLen();
+  const sw = s8 % 2 ? L * (0.18 - 0.1 * tension) : 0;
+  // bass: relaxed at ebb, driving eighths at flood
+  if (tense) { if (s8 !== 1 && s8 !== 5) tone('sine', mtof(root + (s8 === 3 || s8 === 7 ? 12 : 0)), t, 0.3, 0.22); }
+  else if (s8 === 0 || s8 === 5) tone('sine', mtof(s8 === 0 ? root : root + 7), t, 0.55, 0.32);
+  // soft kick only when the water is high
+  if (tension > 0.5 && (s8 === 0 || s8 === 4)) {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35 * tension, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+    o.connect(g).connect(musicBus); o.start(t); o.stop(t + 0.2);
+  }
+  // ukulele-ish strum
+  if ((tense ? [0, 2, 3, 4, 6, 7] : [0, 3, 4, 6]).includes(s8)) chord.forEach((n, k) => tone('triangle', mtof(n), t + sw + k * 0.014, 0.4, s8 === 0 ? 0.07 : 0.05, 2400));
+  // marimba melody
+  if (s8 === 0) melRest = Math.random() < 0.3 - 0.2 * tension;
+  if (!melRest && Math.random() < 0.4 + 0.25 * tension) {
+    melIdx = Math.max(0, Math.min(PENTA.length - 1, melIdx + [-2, -1, -1, 1, 1, 2][(Math.random() * 6) | 0]));
+    const f = mtof(PENTA[melIdx]);
+    tone('sine', f, t + sw, 0.45, 0.07); tone('sine', f * 3.93, t + sw, 0.12, 0.018);
+  }
+  // shaker (sixteenths at high water)
+  hat(t + sw, s8 % 2 ? 0.05 : 0.025);
+  if (tension > 0.6) hat(t + L / 2, 0.018);
+}
+// second tune: acoustic guitar (Karplus-Strong strings), fingerpicked at ebb, strummed at flood
+let musicMode = 'guitar';
+const ksCache = {};
+function ksBuffer(midi) {
+  if (ksCache[midi]) return ksCache[midi];
+  const sr = ac.sampleRate, f = mtof(midi), n = Math.max(2, Math.round(sr / f)), len = Math.floor(sr * 2.2);
+  const buf = ac.createBuffer(1, len, sr), out = buf.getChannelData(0), line = new Float32Array(n);
+  for (let i = 0; i < n; i++) line[i] = Math.random() * 2 - 1;
+  for (let k = 0; k < 2; k++) for (let i = 1; i < n; i++) line[i] = 0.5 * (line[i] + line[i - 1]);   // softer pick
+  const damp = 0.997 - Math.min(0.004, f / 300000);
+  for (let i = 0, p = 0; i < len; i++) { const q = (p + 1) % n, v = line[p]; out[i] = v; line[p] = damp * 0.5 * (v + line[q]); p = q; }
+  return (ksCache[midi] = buf);
+}
+function pluck(midi, t, gain, dur = 1.8) {
+  const s = ac.createBufferSource(), g = ac.createGain(), lp = ac.createBiquadFilter();
+  s.buffer = ksBuffer(midi); lp.type = 'lowpass'; lp.frequency.value = 3000;
+  g.gain.setValueAtTime(gain, t); g.gain.setTargetAtTime(0.0001, t + dur * 0.7, 0.15);
+  s.connect(lp).connect(g).connect(musicBus); s.start(t); s.stop(t + dur + 0.6);
+}
+const GCH = {
+  G: [43, 47, 50, 55, 59, 67], Em: [40, 47, 52, 55, 59, 64], C: [48, 52, 55, 60, 64], D: [50, 57, 62, 66], Am: [45, 52, 57, 60, 64],
+};
+const G_CALM = ['G', 'G', 'Em', 'Em', 'C', 'C', 'D', 'D'], G_TENSE = ['Em', 'C', 'G', 'D', 'Em', 'C', 'Am', 'D'];
+const G_LEAD = [67, 69, 71, 74, 76, 79, 81];
+let gProg = G_CALM, gLead = 3;
+function guitarPrecompute() { const all = new Set(); Object.values(GCH).forEach(c => c.forEach(n => all.add(n))); G_LEAD.forEach(n => all.add(n)); all.forEach(ksBuffer); }
+function guitarStep(step, t) {
+  const s8 = step % 8, barN = Math.floor(step / 8);
+  if (s8 === 0 && barN % 8 === 0) gProg = tension > 0.55 ? G_TENSE : G_CALM;
+  const ch = GCH[gProg[barN % 8]], L = stepLen(), tense = gProg === G_TENSE;
+  if (!tense) {
+    // Travis picking: thumb alternates bass, fingers pick the top strings in between
+    if (s8 % 2 === 0) pluck(ch[s8 % 4 === 0 ? 0 : 1], t, 0.32);
+    if (s8 === 0) pluck(ch[ch.length - 1], t + 0.005, 0.18);
+    if (s8 % 2 === 1) pluck(ch[ch.length - 1 - ((s8 >> 1) % 2)], t + L * 0.08, 0.16);
+    if (s8 % 2 === 1 && Math.random() < 0.18 + 0.2 * tension) {
+      gLead = Math.max(0, Math.min(G_LEAD.length - 1, gLead + [-1, -1, 1, 1, 2, -2][(Math.random() * 6) | 0]));
+      pluck(G_LEAD[gLead], t + L * 0.1, 0.2, 1.2);
+    }
+  } else {
+    // strumming with a muted "chuck" on 2 and 4
+    if ([0, 2, 3, 5, 6, 7].includes(s8)) {
+      const up = s8 % 2 === 1, notes = up ? [...ch].reverse().slice(0, 4) : ch;
+      notes.forEach((n, k) => pluck(n, t + k * 0.011, (up ? 0.09 : 0.13) * (s8 === 0 ? 1.2 : 1), 0.9));
+    }
+    if (s8 === 2 || s8 === 6) {
+      const src = ac.createBufferSource(); src.buffer = white;
+      const f = ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1400; f.Q.value = 0.8;
+      const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+      src.connect(f).connect(g).connect(musicBus); src.start(t, Math.random()); src.stop(t + 0.08);
+    }
+  }
+  if (tension > 0.5 && (s8 === 0 || s8 === 4)) {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.frequency.setValueAtTime(100, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.3 * tension, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+    o.connect(g).connect(musicBus); o.start(t); o.stop(t + 0.2);
+  }
+  if (tension > 0.35) hat(t + (s8 % 2 ? L * 0.1 : 0), (s8 % 2 ? 0.035 : 0.018) * tension);
+}
+// soft "plop" when a fish dives back in
+function plopSound() {
+  if (!ac) return;
+  const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(260, t); o.frequency.exponentialRampToValueAtTime(820, t + 0.07);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
+  o.connect(g).connect(sfxBus); o.start(t); o.stop(t + 0.13);
+  const src = ac.createBufferSource(); src.buffer = white;
+  const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700;
+  const ng = ac.createGain(); ng.gain.setValueAtTime(0.0001, t); ng.gain.exponentialRampToValueAtTime(0.05, t + 0.01); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+  src.connect(lp).connect(ng).connect(sfxBus); src.start(t, Math.random()); src.stop(t + 0.2);
+}
+function gullCry() {
+  if (!ac) return;
+  const t0 = ac.currentTime;
+  for (let k = 0; k < 2 + (Math.random() < 0.5 ? 1 : 0); k++) {
+    const t = t0 + k * 0.3, o = ac.createOscillator(), lfo = ac.createOscillator(), lg = ac.createGain(), bp = ac.createBiquadFilter(), g = ac.createGain();
+    o.type = 'triangle'; o.frequency.setValueAtTime(1550, t); o.frequency.exponentialRampToValueAtTime(1100, t + 0.24);
+    lfo.frequency.value = 28; lg.gain.value = 45; lfo.connect(lg).connect(o.frequency);
+    bp.type = 'bandpass'; bp.frequency.value = 1700; bp.Q.value = 2;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.045, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.26);
+    o.connect(bp).connect(g).connect(sfxBus); o.start(t); o.stop(t + 0.3); lfo.start(t); lfo.stop(t + 0.3);
+  }
+}
+
+// ---------- 3D scene ----------
+const cv = document.getElementById('cv');
+const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: false });
+renderer.setPixelRatio(1);
+renderer.setSize(IW, IH, false);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xbfe6f2);
+// camera: orbit around a point on the beach (two fingers: turn, pinch, move; buttons turn by 45°)
+const halfW = (W - 1) / 2;
+const HW0 = 31.5;
+const CAM0 = { yaw: 0, zoom: 1, tx: halfW, tz: H * 0.55 };
+const cam = { ...CAM0, pitch: 45 * Math.PI / 180, goalYaw: 0 };
+const camTarget = new THREE.Vector3();
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 900);
+function updateCamera() {
+  const hw = HW0 / cam.zoom, hh = hw * IH / IW;
+  camera.left = -hw; camera.right = hw; camera.top = hh; camera.bottom = -hh; camera.updateProjectionMatrix();
+  camTarget.set(cam.tx, 0.5, cam.tz);
+  camera.position.set(cam.tx + Math.sin(cam.yaw) * Math.cos(cam.pitch) * 350, 0.5 + Math.sin(cam.pitch) * 350, cam.tz + Math.cos(cam.yaw) * Math.cos(cam.pitch) * 350);
+  camera.lookAt(camTarget);
+}
+scene.add(new THREE.HemisphereLight(0xe4f4ff, 0xc9a56a, 0.62));
+const sun = new THREE.DirectionalLight(0xfff0d2, 0.72);
+sun.position.set(halfW - 70, 90, H / 2 + 45);
+sun.target.position.set(halfW, 0, H / 2);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -130, right: 130, top: 130, bottom: -130, near: 10, far: 360 });
+sun.shadow.bias = -0.0015;
+sun.shadow.normalBias = 0.05;
+scene.add(sun, sun.target);
+
+function gridGeometry(colorSize) {
+  const g = new THREE.BufferGeometry();
+  const pos = new Float32Array(N * 3), col = new Float32Array(N * colorSize);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x; pos[i * 3] = x; pos[i * 3 + 2] = y; }
+  const idx = [];
+  for (let y = 0; y < H - 1; y++) for (let x = 0; x < W - 1; x++) {
+    const a = y * W + x, c = a + 1, e = a + W, f = e + 1;
+    if ((x + y) & 1) idx.push(a, e, c, c, e, f); else idx.push(a, e, f, a, f, c);
+  }
+  g.setIndex(idx);
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(col, colorSize));
+  return g;
+}
+const terrainGeo = gridGeometry(3);
+const terrain = new THREE.Mesh(terrainGeo, new THREE.MeshLambertMaterial({ vertexColors: true }));
+terrain.castShadow = terrain.receiveShadow = true;
+terrain.frustumCulled = false;
+scene.add(terrain);
+const waterGeo = gridGeometry(4);
+const water = new THREE.Mesh(waterGeo, new THREE.MeshPhongMaterial({ vertexColors: true, flatShading: true, transparent: true, shininess: 60, specular: 0x6f9fb0, depthWrite: false }));
+water.receiveShadow = true;
+water.frustumCulled = false;
+water.renderOrder = 1;
+scene.add(water);
+// grain: fixed per-vertex brightness jitter so sand doesn't look like plastic
+const grainJ = new Float32Array(N);
+for (let i = 0; i < N; i++) grainJ[i] = 0.95 + Math.random() * 0.08;
+const C = h => new THREE.Color(h);
+const DRY = C('#efd59c'), WET = C('#b99260'), ROCK = C('#8d8790'), SANDUW = C('#a88654'), TANG = C('#5f5a32');
+const SHALLOW = C('#8fe0d8'), MID = C('#3fa9c2'), DEEP = C('#1d5f8c'), FOAM = C('#f4feff');
+// water colour by depth, written as rgba into `out` at `o`
+function waterRGBA(di, foam, out, o) {
+  let r, g, bl, a;
+  if (foam) { r = FOAM.r; g = FOAM.g; bl = FOAM.b; a = 0.85; }
+  else if (di < 0.3) { const t = di / 0.3; r = SHALLOW.r + (MID.r - SHALLOW.r) * t; g = SHALLOW.g + (MID.g - SHALLOW.g) * t; bl = SHALLOW.b + (MID.b - SHALLOW.b) * t; a = 0.45 + 0.35 * t; }
+  else { const t = Math.min(1, (di - 0.3) / 1.2); r = MID.r + (DEEP.r - MID.r) * t; g = MID.g + (DEEP.g - MID.g) * t; bl = MID.b + (DEEP.b - MID.b) * t; a = 0.8 + 0.18 * t; }
+  out[o] = r; out[o + 1] = g; out[o + 2] = bl; out[o + 3] = a;
+}
+// surroundings: sand beyond the play area (follows the edge heights) with the same sea on top
+const SM = 40, SB = 40, SF = 40;            // skirt margins: sides, back, front
+const SW = W + 2 * SM, SH = H + SB + SF, SN = SW * SH;
+const skirtGeo = new THREE.BufferGeometry();
+const skirtExtra = new Float32Array(SN), skirtJ = new Float32Array(SN);
+for (let k = 0; k < SN; k++) skirtJ[k] = 0.95 + Math.random() * 0.08;
+{
+  const pos = new Float32Array(SN * 3), idx = [];
+  const rng = mulberry(7), fbm = makeNoise(rng);
+  for (let j = 0; j < SH; j++) for (let i = 0; i < SW; i++) {
+    const k = j * SW + i, x = i - SM, z = j - SB;
+    pos[k * 3] = x; pos[k * 3 + 2] = z;
+    const dx = x < 0 ? -x : x > W - 1 ? x - (W - 1) : 0, dz = z < 0 ? -z : 0, dist = Math.hypot(dx, dz);
+    skirtExtra[k] = dz * 0.03 + 1.2 * (fbm(x * 0.05 + 9, z * 0.05 + 3) - 0.5) * Math.min(1, dist / 15) - (z > H - 1 ? (z - H + 1) * 0.06 : 0);
+  }
+  for (let j = 0; j < SH - 1; j++) for (let i = 0; i < SW - 1; i++) {
+    const x = i - SM, z = j - SB;
+    if (x >= 0 && x + 1 <= W - 1 && z >= 0 && z + 1 <= H - 1) continue;   // the play area draws itself
+    const a = j * SW + i, c = a + 1, e = a + SW, f = e + 1;
+    idx.push(a, e, f, a, f, c);
+  }
+  skirtGeo.setIndex(idx);
+  skirtGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  skirtGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(SN * 3), 3));
+}
+const skirt = new THREE.Mesh(skirtGeo, new THREE.MeshLambertMaterial({ vertexColors: true }));
+skirt.receiveShadow = true; skirt.frustumCulled = false;
+scene.add(skirt);
+const skirtWaterGeo = new THREE.BufferGeometry();
+skirtWaterGeo.setIndex(skirtGeo.index);
+skirtWaterGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(skirtGeo.attributes.position.array), 3));
+skirtWaterGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(SN * 4), 4));
+const skirtWater = new THREE.Mesh(skirtWaterGeo, water.material);
+skirtWater.frustumCulled = false; skirtWater.renderOrder = 1;
+scene.add(skirtWater);
+function updateSkirt() {
+  const p = skirtGeo.attributes.position.array, c = skirtGeo.attributes.color.array, tc = terrainGeo.attributes.color.array;
+  const wp = skirtWaterGeo.attributes.position.array, wc = skirtWaterGeo.attributes.color.array;
+  for (let j = 0; j < SH; j++) for (let i = 0; i < SW; i++) {
+    const k = j * SW + i, x = Math.max(0, Math.min(W - 1, i - SM)), z = Math.max(0, Math.min(H - 1, j - SB)), e = z * W + x;
+    const inside = i - SM === x && j - SB === z;
+    const h = b[e] + (inside ? 0 : skirtExtra[k]);
+    p[k * 3 + 1] = h * VS - (inside ? 0.02 : 0);
+    // water sheet is placed relative to the sea level (the mesh itself follows the tide)
+    const dep = inside ? d[e] : seaNow - h;
+    if (dep > 0.012) { wp[k * 3 + 1] = (h + dep - seaNow) * VS; waterRGBA(dep, false, wc, k * 4); }
+    else { wp[k * 3 + 1] = (h - seaNow) * VS - 0.6; wc[k * 4 + 3] = 0; }
+    if (inside) { c[k * 3] = tc[e * 3]; c[k * 3 + 1] = tc[e * 3 + 1]; c[k * 3 + 2] = tc[e * 3 + 2]; continue; }
+    const wet = Math.max(0, Math.min(1, (HIGH + 0.4 - h) / 0.8)), jj = skirtJ[k];
+    c[k * 3] = (DRY.r + (WET.r - DRY.r) * wet) * jj; c[k * 3 + 1] = (DRY.g + (WET.g - DRY.g) * wet) * jj; c[k * 3 + 2] = (DRY.b + (WET.b - DRY.b) * wet) * jj;
+  }
+  skirtGeo.attributes.position.needsUpdate = true; skirtGeo.attributes.color.needsUpdate = true;
+  skirtWaterGeo.attributes.position.needsUpdate = true; skirtWaterGeo.attributes.color.needsUpdate = true;
+  skirtGeo.computeVertexNormals();
+  let sum = 0; for (let i = 0; i < SW; i++) sum += p[i * 3 + 1];
+  backLand.position.y = sum / SW - 0.05;
+}
+// far dunes behind the skirt
+const backLand = new THREE.Mesh(new THREE.PlaneGeometry(900, 400), new THREE.MeshLambertMaterial({ color: 0xefd59c }));
+backLand.rotation.x = -Math.PI / 2; backLand.position.set(halfW, 0, -SB + 1.5 - 200); backLand.receiveShadow = true;
+scene.add(backLand);
+// open sea beyond the skirt
+const seaShape = new THREE.Shape([new THREE.Vector2(-400, -400), new THREE.Vector2(500, -400), new THREE.Vector2(500, 500), new THREE.Vector2(-400, 500)]);
+seaShape.holes.push(new THREE.Path([new THREE.Vector2(-SM + 0.5, -(H - 1 + SF - 0.5)), new THREE.Vector2(W - 1 + SM - 0.5, -(H - 1 + SF - 0.5)), new THREE.Vector2(W - 1 + SM - 0.5, SB - 0.5), new THREE.Vector2(-SM + 0.5, SB - 0.5)]));
+const ocean = new THREE.Mesh(new THREE.ShapeGeometry(seaShape), new THREE.MeshPhongMaterial({ color: 0x1d5f8c, shininess: 60, specular: 0x6f9fb0 }));
+ocean.rotation.x = -Math.PI / 2;
+scene.add(ocean);
+function updateMeshes() {
+  const tp = terrainGeo.attributes.position.array, tc = terrainGeo.attributes.color.array;
+  const wp = waterGeo.attributes.position.array, wc = waterGeo.attributes.color.array;
+  for (let i = 0; i < N; i++) {
+    const bi = b[i], di = d[i], j = grainJ[i];
+    tp[i * 3 + 1] = bi * VS;
+    let r, g, bl;
+    if (rk[i] > -50 && bi - rk[i] < 0.2) { r = ROCK.r; g = ROCK.g; bl = ROCK.b; }
+    else if (tang[i] && Math.abs(bi - tangB[i]) < 0.25 && di < 0.05) { r = TANG.r * 0.7 + WET.r * 0.3; g = TANG.g * 0.7 + WET.g * 0.3; bl = TANG.b * 0.7 + WET.b * 0.3; }
+    else {
+      if (tang[i]) tang[i] = 0;
+      const t = Math.max(0, Math.min(1, (m[i] - 0.2) / 0.45));
+      const base = di > 0.05 ? SANDUW : WET;
+      r = DRY.r + (base.r - DRY.r) * t; g = DRY.g + (base.g - DRY.g) * t; bl = DRY.b + (base.b - DRY.b) * t;
+    }
+    tc[i * 3] = r * j; tc[i * 3 + 1] = g * j; tc[i * 3 + 2] = bl * j;
+    // water surface (sunk below the sand where dry, so the shoreline cuts cleanly)
+    const wet = di > 0.012;
+    wp[i * 3 + 1] = wet ? (bi + di) * VS + 0.02 : bi * VS - 0.5;
+    if (wet) { const sp = Math.abs(vx[i]) + Math.abs(vy[i]); waterRGBA(di, (sp > 1.5 && di < 0.8) || (waveNow > 0.15 && di < 0.1 && sp > 0.4), wc, i * 4); }
+    else wc[i * 4 + 3] = 0;
+  }
+  terrainGeo.attributes.position.needsUpdate = true; terrainGeo.attributes.color.needsUpdate = true;
+  terrainGeo.computeVertexNormals();
+  waterGeo.attributes.position.needsUpdate = true; waterGeo.attributes.color.needsUpdate = true;
+  if (frame++ % 20 === 0) updateSkirt();
+  skirtWater.position.y = seaNow * VS + 0.02;
+  ocean.position.y = seaNow * VS + 0.02;
+}
+let frame = 0;
+
+
+// particles
+const pGeo = new THREE.BufferGeometry();
+pGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(PMAX * 3), 3));
+pGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(PMAX * 3), 3));
+const pts = new THREE.Points(pGeo, new THREE.PointsMaterial({ size: 1.6, sizeAttenuation: false, vertexColors: true }));
+pts.frustumCulled = false; scene.add(pts);
+const PC1 = C('#e6c98b'), PC2 = C('#a98557'), PC3 = C('#f4feff');
+function partsDraw() {
+  const p = pGeo.attributes.position.array, c = pGeo.attributes.color.array;
+  parts.forEach((q, k) => { p[k * 3] = q.x; p[k * 3 + 1] = q.z * VS; p[k * 3 + 2] = q.y; const cc = q.foam ? PC3 : q.dark ? PC2 : PC1; c[k * 3] = cc.r; c[k * 3 + 1] = cc.g; c[k * 3 + 2] = cc.b; });
+  pGeo.setDrawRange(0, parts.length);
+  pGeo.attributes.position.needsUpdate = true; pGeo.attributes.color.needsUpdate = true;
+}
+// working ring under the finger
+const RING_N = 40, ringGeo = new THREE.BufferGeometry();
+ringGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(RING_N * 3), 3));
+const ring = new THREE.Points(ringGeo, new THREE.PointsMaterial({ size: 1.4, sizeAttenuation: false, color: 0xffffff, transparent: true, opacity: 0.8, depthTest: false }));
+ring.frustumCulled = false; ring.renderOrder = 3; scene.add(ring);
+function ringDraw() {
+  ring.visible = !!(pointer && tool !== 'tower');
+  if (!ring.visible) return;
+  const R = tool === 'dig' ? 2.2 : 5.2, p = ringGeo.attributes.position.array;
+  for (let k = 0; k < RING_N; k++) {
+    const a = k / RING_N * 6.283, x = pointer.wx + Math.cos(a) * R, y = pointer.wy + Math.sin(a) * R;
+    p[k * 3] = x; p[k * 3 + 1] = (surf(x, y) + Math.max(0, d[Math.max(0, Math.min(N - 1, Math.round(y) * W + Math.round(x)))])) * VS + 0.1; p[k * 3 + 2] = y;
+  }
+  ringGeo.attributes.position.needsUpdate = true;
+}
+// tower flags
+const poleGeo = new THREE.BoxGeometry(0.3, 4.5, 0.3), flagGeo = new THREE.BoxGeometry(2.2, 1.3, 0.1);
+const poleMat = new THREE.MeshLambertMaterial({ color: 0x6b4423 }), flagMat = new THREE.MeshLambertMaterial({ color: 0xe2483d });
+// a tower stands while its middle and its walls (radius 2.4) are still high enough
+function towerUp(t) {
+  const lim = t.base + 0.55 * t.h;
+  if (b[t.i] < lim) return false;
+  for (let k = 0; k < 8; k++) {
+    const x = Math.round(t.x + Math.cos(k * Math.PI / 4) * 2.4), z = Math.round(t.y + Math.sin(k * Math.PI / 4) * 2.4);
+    if (x >= 0 && z >= 0 && x < W && z < H && b[z * W + x] < lim) return false;
+  }
+  return true;
+}
+function addTower(t) {
+  const g = new THREE.Group(), pole = new THREE.Mesh(poleGeo, poleMat), flag = new THREE.Mesh(flagGeo, flagMat);
+  pole.position.y = 2.25; flag.position.set(1.2, 3.85, 0); pole.castShadow = flag.castShadow = true;
+  g.add(pole, flag); scene.add(g); t.g = g; t.flag = flag; towers.push(t);
+}
+function towersDraw() {
+  for (const t of towers) {
+    const up = towerUp(t);
+    t.g.visible = up;
+    t.g.position.set(t.x, b[t.i] * VS, t.y);
+    t.flag.rotation.y = Math.sin(clock * 3 + t.x) * 0.35;
+  }
+}
+function resetDecor() {
+  for (const t of towers) scene.remove(t.g);
+  towers = []; parts.length = 0;
+  if (typeof clearShells === 'function') clearShells();
+}
+
+// ---------- pixel sprites ----------
+function pixTexture(rows, cols) {
+  const c = document.createElement('canvas'); c.width = rows[0].length; c.height = rows.length;
+  const x = c.getContext('2d');
+  rows.forEach((row, r) => [...row].forEach((ch, k) => { if (cols[ch]) { x.fillStyle = cols[ch]; x.fillRect(k, r, 1, 1); } }));
+  const tex = new THREE.CanvasTexture(c); tex.magFilter = tex.minFilter = THREE.NearestFilter;
+  return tex;
+}
+function pixSprite(tex, w, h, scale) {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, alphaTest: 0.5 }));
+  s.center.set(0.5, 0); s.scale.set(w * scale, h * scale, 1); s.visible = false;
+  scene.add(s); return s;
+}
+
+// ---------- crab: peeks in from the side of the screen, greets, and leaves; turns back at obstacles ----------
+const CRAB = [
+  '..ooooooooo..',
+  '..ooooooooo..',
+  '..ooKoooKoo..',
+  '..ooKoooKoo..',
+  'ooooooooooooo',
+  'ooooooooooooo',
+  '..ddddddddd..',
+  '..o.o...o.o..',
+  '..o.o...o.o..',
+];
+const CRAB_COL = { o: '#d97757', d: '#b85f42', K: '#2b1a14' };
+const crabTex = {};
+function crabTexture(o) {
+  const key = [o.step, o.wink, o.wave, o.scratch, o.blink, o.mirror].map(Number).join('');
+  if (crabTex[key]) return crabTex[key];
+  const g = CRAB.map(r => r.split(''));
+  if (o.step) { g[7] = '..o.o...o.o..'.split(''); g[8] = '.o..o...o..o.'.split(''); }
+  if (o.blink) { g[2][4] = 'o'; g[2][8] = 'o'; }
+  if (o.wink) { g[2][4] = 'o'; g[3][3] = 'K'; g[3][4] = 'K'; g[3][5] = 'K'; }
+  if (o.wave) { g[5][11] = '.'; g[5][12] = '.'; g[4][12] = '.'; g[3][11] = 'o'; g[2][12] = 'o'; g[1][12] = 'o'; }
+  if (o.scratch) { g[4][11] = '.'; g[4][12] = '.'; g[5][11] = '.'; g[5][12] = '.'; g[3][11] = 'o'; g[2][11] = 'o'; g[1][11] = 'o'; g[0][11] = 'o'; g[0][10] = 'd'; g[2][4] = 'o'; g[2][8] = 'o'; }
+  if (o.mirror) g.forEach(r => r.reverse());
+  return (crabTex[key] = pixTexture(g.map(r => r.join('')), CRAB_COL));
+}
+const crabSprite = pixSprite(crabTexture({}), 13, 9, 0.6);
+const projV = new THREE.Vector3();
+const screenX = (x, z) => projV.set(x, hAt(x, z), z).project(camera).x;
+const camRight = () => [Math.cos(cam.yaw), -Math.sin(cam.yaw)];
+let crab = null, lastPeek = -99, nextVisit = 14;
+function cellOf(x, z) { const xi = Math.round(x), zi = Math.round(z); return xi < 1 || zi < 1 || xi > W - 2 || zi > H - 2 ? -1 : zi * W + xi; }
+function crabVisit(opts = {}) {
+  if (crab) return false;
+  for (let k = 0; k < 14; k++) {
+    const side = opts.side || (Math.random() < 0.5 ? -1 : 1);
+    const p = pickNDC(side * 1.14, -0.15 + Math.random() * 0.7);
+    if (!p) continue;
+    const [rx, rz] = camRight(), dx = -side * rx, dz = -side * rz;
+    const a = cellOf(p[0], p[1]), c = cellOf(p[0] + dx * 9, p[1] + dz * 9);
+    if (a < 0 || c < 0 || d[a] > 0.01 || d[c] > 0.01) continue;
+    crab = { mode: 'in', x: p[0], z: p[1], dx, dz, t: 0, walked: 0, goal: 7 + Math.random() * 7, paused: false, cheer: !!opts.cheer, life: 0 };
+    return true;
+  }
+  return false;
+}
+function crabUpdate(dt) {
+  if (!crab) { crabSprite.visible = false; if (clock > nextVisit) { crabVisit(); nextVisit = clock + 22 + Math.random() * 25; } return; }
+  crab.t += dt; crab.life += dt;
+  const o = { mirror: false };
+  let lift = 0;
+  const walk = crab.mode === 'in' || crab.mode === 'out';
+  if (walk) {
+    const sgn = crab.mode === 'in' ? 1 : -1, v = (crab.mode === 'in' ? 2.2 : 2.6) * dt;
+    o.step = ((crab.t * 6) | 0) % 2 === 1; lift = Math.abs(Math.sin(crab.t * 9.4)) * 0.25;
+    if (crab.mode === 'in') {
+      const here = cellOf(crab.x, crab.z), ahead = cellOf(crab.x + crab.dx * 3, crab.z + crab.dz * 3);
+      if (ahead < 0 || here < 0 || d[ahead] > 0.04 || Math.abs(b[ahead] - b[here]) > 0.8) { crab.mode = 'scratch'; crab.t = 0; }
+      else if (!crab.paused && crab.walked > 3) { crab.mode = 'look'; crab.t = 0; crab.paused = true; }
+      else if (crab.walked > crab.goal) { crab.mode = 'greet'; crab.t = 0; }
+    }
+    if (crab.mode === 'in' || crab.mode === 'out') { crab.x += crab.dx * v * sgn; crab.z += crab.dz * v * sgn; crab.walked += v; }
+    if (crab.mode === 'out' && (Math.abs(screenX(crab.x, crab.z)) > 1.2 || cellOf(crab.x, crab.z) < 0 || crab.life > 40)) { crab = null; crabSprite.visible = false; return; }
+  } else if (crab.mode === 'look') {
+    o.blink = crab.t > 0.5 && crab.t < 0.65;
+    if (crab.t > 1.1) { crab.mode = 'in'; crab.t = 0; }
+  } else if (crab.mode === 'greet') {
+    const t = crab.t;
+    if (crab.cheer) { lift = Math.abs(Math.sin(t * 8)) * 1.2; o.wave = ((t * 4) | 0) % 2 === 0; if (t > 3.2) { crab.mode = 'out'; crab.t = 0; } }
+    else {
+      o.blink = t > 0.4 && t < 0.55;
+      o.wave = t > 0.9 && t < 2.3 && ((t * 3.5) | 0) % 2 === 0;
+      o.wink = t > 2.7 && t < 3.15;
+      if (t > 3.5 && t < 3.9) lift = Math.sin((t - 3.5) / 0.4 * Math.PI) * 0.9;
+      if (t > 4.4) { crab.mode = 'out'; crab.t = 0; }
+    }
+  } else if (crab.mode === 'scratch') {
+    o.scratch = crab.t > 0.3 && ((crab.t * 4) | 0) % 2 === 0;
+    if (crab.t > 2.8) { crab.mode = 'out'; crab.t = 0; }
+  }
+  crabSprite.material.map = crabTexture(o);
+  crabSprite.position.set(crab.x, hAt(crab.x, crab.z) + 0.3 + lift * VS, crab.z);
+  crabSprite.visible = true;
+}
+
+// ---------- seagull: flies over now and then, sometimes lands and steals a shell ----------
+const GULL_COL = { w: '#f7f7f2', g: '#9aa3ad', K: '#222222', y: '#f2b233' };
+const gullTex = {
+  up: pixTexture(['g...........g', 'ww.........ww', '.www.....www.', '...wwwywww...', '.....www.....'], GULL_COL),
+  down: pixTexture(['.............', '...wwwywww...', '.wwww.w.wwww.', 'gw....w....wg', '.............'], GULL_COL),
+  stand: pixTexture(['...ww....', '..wwKy...', '..www....', '.wwwww...', 'ggwwwww..', '.ggwwww..', '..wwww...', '...y.y...', '...y.y...'], GULL_COL),
+  peck: pixTexture(['.........', '.........', '..www....', '.wwwww...', 'ggwwwwww.', '.ggwwwwKy', '..wwww...', '...y.y...', '...y.y...'], GULL_COL),
+};
+const gullSprite = pixSprite(gullTex.up, 13, 5, 0.55);
+let gull = null, nextGull = 40;
+function gullStart() {
+  let target = null, shell = null;
+  if (shells.length && Math.random() < 0.75) { shell = shells[(Math.random() * shells.length) | 0]; target = [shell.x + 1.2, shell.y]; }
+  else { const p = pickNDC(-0.6 + Math.random() * 1.2, -0.1 + Math.random() * 0.6); if (p && d[cellOf(p[0], p[1])] < 0.01) target = p; }
+  if (!target || cellOf(target[0], target[1]) < 0) return;
+  const [rx, rz] = camRight(), side = Math.random() < 0.5 ? -1 : 1;
+  gull = { mode: 'fly', t: 0, sx: target[0] + side * rx * 45, sz: target[1] + side * rz * 45, sy: hAt(target[0], target[1]) + 16 * VS, tx: target[0], tz: target[1], shell, side };
+  gullCry();
+}
+function gullUpdate(dt) {
+  if (!gull) { gullSprite.visible = false; if (clock > nextGull) { nextGull = clock + 35 + Math.random() * 40; gullStart(); } return; }
+  gull.t += dt;
+  const g = gull, ground = hAt(g.tx, g.tz) + 0.2;
+  let x, y, z, tex = ((g.t * 6) | 0) % 2 ? gullTex.down : gullTex.up, w = 13, h = 5;
+  if (g.mode === 'fly' || g.mode === 'leave') {
+    const dur = 3.2, u = Math.min(1, g.t / dur), e = g.mode === 'fly' ? 1 - (1 - u) * (1 - u) : u * u;
+    const [ax, az, ay, bx, bz, by] = g.mode === 'fly' ? [g.sx, g.sz, g.sy, g.tx, g.tz, ground] : [g.tx, g.tz, ground, g.ex, g.ez, g.ey];
+    x = ax + (bx - ax) * e; z = az + (bz - az) * e; y = ay + (by - ay) * e + Math.sin(u * Math.PI) * 2;
+    if (u >= 1) {
+      if (g.mode === 'leave') { gull = null; gullSprite.visible = false; return; }
+      g.mode = 'stand'; g.t = 0;
+    }
+  } else {
+    x = g.tx; z = g.tz; y = ground; w = 9; h = 9;
+    tex = gullTex.stand;
+    const wet = d[cellOf(g.tx, g.tz)] > 0.04;
+    if (g.shell && shells.includes(g.shell) && g.t > 1.2 && g.t < 1.8) {
+      tex = gullTex.peck;
+      if (g.t > 1.5) { scene.remove(g.shell.s); shells.splice(shells.indexOf(g.shell), 1); g.shell = null; gullCry(); }
+    }
+    if (g.t > 2.6 || wet) {
+      const [rx, rz] = camRight();
+      Object.assign(g, { mode: 'leave', t: 0, ex: g.tx - g.side * rx * 45, ez: g.tz - g.side * rz * 45, ey: ground + 18 * VS });
+    }
+  }
+  if (gullSprite.material.map !== tex) gullSprite.material.map = tex;
+  gullSprite.scale.set(w * 0.55, h * 0.55, 1);
+  gullSprite.position.set(x, y, z);
+  gullSprite.visible = true;
+}
+
+// ---------- drift line: seaweed where the last high water turned ----------
+const wetCyc = new Uint8Array(N), tang = new Uint8Array(N), tangB = new Float32Array(N);
+function tangInit() {
+  tang.fill(0);
+  for (let i = 0; i < N; i++) if (b[i] > HIGH - 0.03 && b[i] < HIGH + 0.08 && Math.random() < 0.5) { tang[i] = 1; tangB[i] = b[i]; }
+}
+function tangFromCycle() {
+  tang.fill(0);
+  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+    const i = y * W + x;
+    if (wetCyc[i] && (!wetCyc[i - 1] || !wetCyc[i + 1] || !wetCyc[i - W] || !wetCyc[i + W]) && Math.random() < 0.5) { tang[i] = 1; tangB[i] = b[i]; }
+  }
+  wetCyc.fill(0);
+}
+
+// ---------- fish jumping at high water ----------
+const FISH = ['...bbbb..t', '.bbbbbbbtt', 'bKbwwwwbtt', '.bwwwwbb.t', '...bbbb...'];
+const FISH_COL = { b: '#5f9fca', t: '#3f78a3', w: '#d6eef8', K: '#1d2a33' };
+const fishTex = [pixTexture(FISH, FISH_COL), pixTexture(FISH.map(r => [...r].reverse().join('')), FISH_COL)];
+const fishSprite = pixSprite(fishTex[0], 10, 5, 0.5);
+fishSprite.center.set(0.5, 0.5);
+let fish = null, nextFish = 8;
+function fishSpot() {
+  for (let k = 0; k < 40; k++) {
+    const x = (2 + Math.random() * (W - 4)) | 0, y = (H * 0.4 + Math.random() * H * 0.55) | 0, i = y * W + x;
+    if (d[i] > 0.8) return [x, y, b[i] + d[i]];
+  }
+  return null;
+}
+function fishUpdate(dt) {
+  if (!fish) {
+    fishSprite.visible = false;
+    if (clock > nextFish && tension > 0.45) {
+      nextFish = clock + 5 + Math.random() * 9;
+      const s = fishSpot();
+      if (s) { const dir = Math.random() < 0.5 ? 1 : -1; fish = { x: s[0], y: s[1], z0: s[2], dir, t: 0, dur: 1 + Math.random() * 0.3, h: 2.5 + Math.random() * 1.5, dist: 5 + Math.random() * 3 }; splash(fish.x, fish.y, fish.z0, false); }
+    }
+    return;
+  }
+  fish.t += dt;
+  const u = fish.t / fish.dur;
+  if (u >= 1) { splash(fish.x + fish.dir * fish.dist, fish.y, fish.z0, true); fish = null; fishSprite.visible = false; return; }
+  const x = fish.x + fish.dir * fish.dist * u, z = fish.z0 + fish.h * 4 * u * (1 - u);
+  fishSprite.material.map = fishTex[fish.dir > 0 ? 1 : 0];
+  fishSprite.material.rotation = Math.atan2(fish.h * 4 * (1 - 2 * u) * VS * 0.35, fish.dist) * fish.dir;
+  fishSprite.position.set(x, z * VS, fish.y);
+  fishSprite.visible = true;
+}
+function splash(x, y, z, sound) {
+  for (let k = 0; k < (sound ? 14 : 6); k++) { const a = Math.random() * 6.283, s = 2 + Math.random() * 3; parts.push({ x, y, z, vx: Math.cos(a) * s, vy: Math.sin(a) * s, vz: 6 + Math.random() * 5, t: 0, dark: false, foam: true }); }
+  if (sound) plopSound();
+}
+
+// ---------- shells left behind by the falling tide ----------
+const SHELLS = [
+  [['.www.', 'wpwpw', 'wpwpw', '.www.'], { w: '#fbeee6', p: '#f2b8b0' }],
+  [['.ccc.', 'ceeec', 'ceeec', '..c..'], { c: '#e9d9c4', e: '#c9ad8c' }],
+  [['..s..', '.sss.', 'sssts', '.sss.'], { s: '#d8c0e8', t: '#9b7fb5' }],
+  [['.pppp', 'ppwpp', 'pppp.'], { p: '#f6c6a6', w: '#fff3e8' }],
+].map(([rows, cols]) => [pixTexture(rows, cols), rows[0].length, rows.length]);
+const shells = [];
+let nextShell = 0;
+function shellsUpdate(dt) {
+  const falling = phase > 0.55 && phase < 0.97;
+  if (falling && !mission && clock > nextShell && shells.length < 5) {
+    nextShell = clock + 3 + Math.random() * 5;
+    for (let k = 0; k < 60; k++) {
+      const x = 2 + ((Math.random() * (W - 4)) | 0), y = 4 + ((Math.random() * (H - 12)) | 0), i = y * W + x;
+      if (k < 40 && !tang[i]) continue;
+      if (d[i] < 0.005 && b[i] > seaNow + 0.15 && pk[i] === 0) {
+        const [tex, w, h] = SHELLS[(Math.random() * SHELLS.length) | 0];
+        const s = pixSprite(tex, w, h, 0.38); s.visible = true;
+        shells.push({ x: x + Math.random() - 0.5, y: y + Math.random() - 0.5, s });
+        break;
+      }
+    }
+  }
+  for (let k = shells.length - 1; k >= 0; k--) {
+    const sh = shells[k], i = Math.round(sh.y) * W + Math.round(sh.x);
+    if (d[i] > 0.12 && Math.random() < dt * 1.5) { scene.remove(sh.s); shells.splice(k, 1); continue; }   // washed away
+    sh.s.position.set(sh.x, surf(sh.x, sh.y) * VS + 0.05, sh.y);
+  }
+}
+function clearShells() { for (const sh of shells) scene.remove(sh.s); shells.length = 0; }
+
+// ---------- picking: march the view ray until it hits the sand ----------
+const rayO = new THREE.Vector3(), rayD = new THREE.Vector3();
+function hAt(x, z) {
+  const x0 = Math.max(0, Math.min(W - 2, Math.floor(x))), z0 = Math.max(0, Math.min(H - 2, Math.floor(z)));
+  const fx = Math.max(0, Math.min(1, x - x0)), fz = Math.max(0, Math.min(1, z - z0)), i = z0 * W + x0;
+  return ((b[i] * (1 - fx) + b[i + 1] * fx) * (1 - fz) + (b[i + W] * (1 - fx) + b[i + W + 1] * fx) * fz) * VS;
+}
+function pick(clientX, clientY) {
+  const r = cv.getBoundingClientRect();
+  return pickNDC((clientX - r.left) / r.width * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+}
+function pickNDC(nx, ny) {
+  rayO.set(nx, ny, -1).unproject(camera);
+  camera.getWorldDirection(rayD);
+  let prev = null;
+  for (let t = 0; t < 600; t += 0.4) {
+    const x = rayO.x + rayD.x * t, y = rayO.y + rayD.y * t, z = rayO.z + rayD.z * t;
+    if (x < 0 || x > W - 1 || z < 0 || z > H - 1) { prev = null; continue; }
+    if (y <= hAt(x, z)) {
+      if (prev) { // refine between prev and now
+        let lo = t - 0.4, hi = t;
+        for (let k = 0; k < 6; k++) { const mid = (lo + hi) / 2; if (rayO.y + rayD.y * mid <= hAt(rayO.x + rayD.x * mid, rayO.z + rayD.z * mid)) hi = mid; else lo = mid; }
+        return [rayO.x + rayD.x * hi, rayO.z + rayD.z * hi];
+      }
+      return [x, z];
+    }
+    prev = true;
+  }
+  return null;
+}
+
+// ---------- UI ----------
+const $ = id => document.getElementById(id);
+let toastTimer = 0;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2200); }
+function fit() {
+  const r = $('stage').getBoundingClientRect();
+  const w = Math.max(IW, Math.min(r.width - 8, (r.height - 8) * IW / IH));
+  cv.style.width = Math.floor(w) + 'px'; cv.style.height = Math.floor(w * IH / IW) + 'px';
+}
+new ResizeObserver(fit).observe($('stage'));
+document.querySelectorAll('.tool').forEach(btn => btn.addEventListener('click', () => {
+  audioInit();
+  tool = btn.dataset.tool;
+  document.querySelectorAll('.tool').forEach(o => o.setAttribute('aria-pressed', String(o === btn)));
+}));
+$('bSheet').addEventListener('click', () => { const sh = $('sheet'); sh.hidden = !sh.hidden; $('bSheet').setAttribute('aria-expanded', String(!sh.hidden)); });
+const bind = (id, key, out) => { const el = $(id); el.addEventListener('input', () => { P[key] = parseFloat(el.value); $(out).textContent = el.value; }); };
+bind('rFlow', 'flow', 'oFlow'); bind('rEro', 'ero', 'oEro'); bind('rSlump', 'slump', 'oSlump'); bind('rWaves', 'waves', 'oWaves'); bind('rPeriod', 'period', 'oPeriod');
+$('bNew').addEventListener('click', () => newBeach(false));
+$('bDay').addEventListener('click', () => newBeach(true));
+$('bFast').addEventListener('click', () => { speed = speed === 1 ? 4 : 1; $('bFast').textContent = 'Zeit ×' + speed; });
+$('bFlood').addEventListener('click', () => { if (phase < 0.35) phase = 0.35; });
+$('bPause').addEventListener('click', () => { paused = !paused; $('bPause').textContent = paused ? 'Weiter' : 'Pause'; });
+$('bSound').addEventListener('click', () => { soundOn = !soundOn; if (sfxBus) sfxBus.gain.value = soundOn ? 1 : 0; $('bSound').textContent = soundOn ? 'Ton aus' : 'Ton an'; });
+$('bMusic').addEventListener('click', () => {
+  audioInit();
+  if (musicOn && musicMode === 'guitar') musicMode = 'uke'; else if (musicOn) musicOn = false; else { musicOn = true; musicMode = 'guitar'; }
+  if (musicBus) musicBus.gain.value = musicOn ? 0.55 : 0;
+  $('bMusic').textContent = 'Musik: ' + (musicOn ? (musicMode === 'guitar' ? 'Gitarre' : 'Ukulele') : 'aus');
+});
+
+// pointer: one finger works the sand, two fingers turn / zoom / move the view
+let pointer = null, gesture = null;
+const touches = new Map();
+function gestureState() {
+  const [a, c] = [...touches.values()];
+  return { ang: Math.atan2(c.y - a.y, c.x - a.x), dist: Math.hypot(c.x - a.x, c.y - a.y), mx: (a.x + c.x) / 2, my: (a.y + c.y) / 2 };
+}
+function panBy(dx, dy) {
+  const r = cv.getBoundingClientRect(), k = (camera.right - camera.left) / r.width;
+  const rx = Math.cos(cam.yaw), rz = -Math.sin(cam.yaw), fx = -Math.sin(cam.yaw), fz = -Math.cos(cam.yaw);
+  cam.tx = Math.max(0, Math.min(W - 1, cam.tx - rx * dx * k + fx * dy * k / Math.sin(cam.pitch)));
+  cam.tz = Math.max(0, Math.min(H - 1, cam.tz - rz * dx * k + fz * dy * k / Math.sin(cam.pitch)));
+}
+cv.addEventListener('pointerdown', e => {
+  audioInit();
+  cv.setPointerCapture(e.pointerId);
+  touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (e.button === 2 || touches.size === 2) {   // second finger (or right mouse): view gesture, the stroke stops
+    pointer = null;
+    gesture = touches.size === 2 ? gestureState() : { mouse: true, x: e.clientX, y: e.clientY };
+    return;
+  }
+  if (touches.size > 2 || gesture) return;
+  const p = pick(e.clientX, e.clientY);
+  if (!p || (mission && mission.state === 'intro')) return;
+  if (tryCollectShell(p[0], p[1])) return;
+  if (tool === 'tower') { tower(p[0], p[1]); return; }
+  pointer = { id: e.pointerId, wx: p[0], wy: p[1], cx: e.clientX, cy: e.clientY, still: 0 };
+});
+cv.addEventListener('pointermove', e => {
+  if (touches.has(e.pointerId)) touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (gesture) {
+    if (gesture.mouse) { cam.yaw += (e.clientX - gesture.x) * 0.01; cam.goalYaw = cam.yaw; gesture.x = e.clientX; gesture.y = e.clientY; return; }
+    if (touches.size < 2) return;
+    const g = gestureState();
+    let da = g.ang - gesture.ang; if (da > Math.PI) da -= 2 * Math.PI; if (da < -Math.PI) da += 2 * Math.PI;
+    cam.yaw -= da; cam.goalYaw = cam.yaw;
+    cam.zoom = Math.max(1, Math.min(3, cam.zoom * g.dist / gesture.dist));
+    panBy(g.mx - gesture.mx, g.my - gesture.my);
+    gesture = g;
+    return;
+  }
+  if (!pointer || e.pointerId !== pointer.id) return;
+  if (Math.hypot(e.clientX - pointer.cx, e.clientY - pointer.cy) < 3) return;
+  const p = pick(e.clientX, e.clientY);
+  if (!p) return;
+  pointer.cx = e.clientX; pointer.cy = e.clientY;
+  let [x0, y0] = [pointer.wx, pointer.wy];
+  const L = Math.hypot(p[0] - x0, p[1] - y0), n = Math.max(1, Math.ceil(L / 1.5));
+  if (L > 20) { pointer.wx = p[0]; pointer.wy = p[1]; return; }
+  for (let k = 1; k <= n; k++) {
+    const x1 = pointer.wx + (p[0] - pointer.wx) * k / n, y1 = pointer.wy + (p[1] - pointer.wy) * k / n;
+    if (tool === 'dig') digStroke(x0, y0, x1, y1); else pileStroke(x0, y0, x1, y1);
+    x0 = x1; y0 = y1;
+  }
+  pointer.wx = p[0]; pointer.wy = p[1]; pointer.still = 0;
+});
+const up = e => {
+  touches.delete(e.pointerId);
+  if (pointer && e.pointerId === pointer.id) pointer = null;
+  if (gesture && (gesture.mouse || touches.size < 2)) gesture = touches.size ? { wait: true } : null;
+  if (gesture && gesture.wait && !touches.size) gesture = null;
+};
+cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+cv.addEventListener('contextmenu', e => e.preventDefault());
+cv.addEventListener('wheel', e => { e.preventDefault(); cam.zoom = Math.max(1, Math.min(3, cam.zoom * Math.exp(-e.deltaY * 0.0015))); }, { passive: false });
+$('bRotL').addEventListener('click', () => { cam.goalYaw -= Math.PI / 4; });
+$('bRotR').addEventListener('click', () => { cam.goalYaw += Math.PI / 4; });
+$('bHome').addEventListener('click', () => { Object.assign(cam, { zoom: CAM0.zoom, tx: CAM0.tx, tz: CAM0.tz }); cam.goalYaw = Math.round(cam.yaw / (2 * Math.PI)) * 2 * Math.PI; });
+
+function newBeach(daily) {
+  if (mission) { mission = null; clearMissionProps(); $('mcard').hidden = true; $('mresult').hidden = true; P.period = parseFloat($('rPeriod').value); }
+  const now = new Date(), dayLabel = now.getDate() + '.' + (now.getMonth() + 1) + '.' + now.getFullYear();
+  phase = 0.06; crab = null; gull = null; fish = null;
+  generate(daily ? now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate() : (Math.random() * 1e6) | 0);
+  tangInit(); wetCyc.fill(0);
+  $('seedLbl').textContent = daily ? 'Tagesstrand vom ' + dayLabel : 'Zufallsstrand #' + seed;
+  if (frame > 0) toast(daily ? 'Tagesstrand' : 'Neuer Strand');
+}
+function tideLabel(p) {
+  if (p < 0.12 || p > 0.92) return 'Ebbe';
+  if (p < 0.43) return 'Flut kommt';
+  if (p < 0.57) return 'Hochwasser';
+  return 'Wasser geht';
+}
+function hud() {
+  const lvl = levelAt(phase), toHigh = Math.ceil(((0.5 - phase + 1) % 1) * P.period / speed);
+  $('tideLbl').textContent = tideLabel(phase) + (phase < 0.43 || phase > 0.57 ? ' · Hochwasser in ' + Math.floor(toHigh / 60) + ':' + String(toHigh % 60).padStart(2, '0') : '');
+  $('tideBar').style.width = ((lvl - LOW) / (HIGH - LOW) * 100).toFixed(1) + '%';
+}
+function highWater() {
+  if (mission && mission.state === 'run' && mission.ms.onHighWater) mission.ms.onHighWater();
+  if (!towers.length) return;
+  const standing = towers.filter(towerUp);
+  for (const t of towers) if (!standing.includes(t)) scene.remove(t.g);
+  towers = standing;
+  if (standing.length) { toast(standing.length === 1 ? 'Ein Turm hält das Hochwasser!' : standing.length + ' Türme halten das Hochwasser!'); crabVisit({ cheer: true }); }
+  else toast('Das Meer hat alle Türme geholt');
+}
+
+// ---------- shells can be picked up by tapping ----------
+let shellCount = 0;
+function tryCollectShell(x, z) {
+  let best = -1, bd = 1.8;
+  shells.forEach((sh, k) => { const dd = Math.hypot(sh.x - x, sh.y - z); if (dd < bd) { bd = dd; best = k; } });
+  if (best < 0) return false;
+  const sh = shells[best];
+  scene.remove(sh.s); shells.splice(best, 1); shellCount++;
+  for (let k = 0; k < 10; k++) { const a = Math.random() * 6.283; parts.push({ x: sh.x, y: sh.y, z: surf(sh.x, sh.y) + 0.3, vx: Math.cos(a) * 3, vy: Math.sin(a) * 3, vz: 5 + Math.random() * 3, t: 0, foam: true }); }
+  plingSound();
+  if (!mission) toast(shellCount === 1 ? 'Eine Muschel gefunden!' : shellCount + ' Muscheln gefunden!');
+  return true;
+}
+function plingSound() {
+  if (!ac) return;
+  const t = ac.currentTime;
+  [1320, 1760].forEach((f, k) => {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t + k * 0.07); g.gain.exponentialRampToValueAtTime(0.09, t + k * 0.07 + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + k * 0.07 + 0.35);
+    o.connect(g).connect(sfxBus); o.start(t + k * 0.07); o.stop(t + k * 0.07 + 0.4);
+  });
+}
+function addShell(x, z) {
+  const [tex, w, h] = SHELLS[(Math.random() * SHELLS.length) | 0];
+  const s = pixSprite(tex, w, h, 0.38); s.visible = true;
+  shells.push({ x, y: z, s });
+}
+
+// ---------- mission props: marker ring with pennant, towel, fish in a pool ----------
+const MK_N = 56, mkGeo = new THREE.BufferGeometry();
+mkGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(MK_N * 3), 3));
+const mkPts = new THREE.Points(mkGeo, new THREE.PointsMaterial({ size: 2, sizeAttenuation: false, color: 0xff8a3d }));
+mkPts.frustumCulled = false; mkPts.visible = false; scene.add(mkPts);
+const pennant = new THREE.Group();
+{
+  const pole = new THREE.Mesh(poleGeo, poleMat), flag = new THREE.Mesh(flagGeo, new THREE.MeshLambertMaterial({ color: 0xffc23d }));
+  pole.position.y = 2.25; flag.position.set(1.2, 3.85, 0); pole.castShadow = flag.castShadow = true;
+  pennant.add(pole, flag); pennant.visible = false; scene.add(pennant);
+}
+let marker = null;   // { x, z, r, pennant }
+function markerDraw() {
+  mkPts.visible = !!marker; pennant.visible = !!(marker && marker.pennant);
+  if (!marker) return;
+  const p = mkGeo.attributes.position.array;
+  for (let k = 0; k < MK_N; k++) {
+    const a = k / MK_N * 6.283 + clock * 0.3, x = marker.x + Math.cos(a) * marker.r, z = marker.z + Math.sin(a) * marker.r;
+    p[k * 3] = x; p[k * 3 + 1] = hAt(x, z) + 0.15; p[k * 3 + 2] = z;
+  }
+  mkGeo.attributes.position.needsUpdate = true;
+  if (marker.pennant) { pennant.position.set(marker.x, hAt(marker.x, marker.z), marker.z); pennant.children[1].rotation.y = Math.sin(clock * 3) * 0.35; }
+}
+const towelTex = pixTexture(['rrwwbbwwrr', 'rrwwbbwwrr', 'rrwwbbwwrr', 'rrwwbbwwrr', 'rrwwbbwwrr', 'rrwwbbwwrr', 'rrwwbbwwrr', 'rrwwbbwwrr'], { r: '#e2483d', w: '#fbf6ea', b: '#3f78c8' });
+const towel = new THREE.Mesh(new THREE.PlaneGeometry(4, 6), new THREE.MeshLambertMaterial({ map: towelTex }));
+towel.rotation.x = -Math.PI / 2; towel.receiveShadow = true; towel.visible = false; scene.add(towel);
+const poolFish = pixSprite(fishTex[0], 10, 5, 0.38);
+poolFish.center.set(0.5, 0.5);
+
+// ---------- missions ----------
+const $m = id => document.getElementById(id);
+let mission = null, mDone = [];
+try { mDone = JSON.parse(localStorage.getItem('beach:done') || '[]'); } catch (e) { mDone = []; }
+function saveDone() { try { localStorage.setItem('beach:done', JSON.stringify(mDone)); } catch (e) {} }
+// find a spot in the middle stripe of the beach where the sand has height `hb`
+function spotAtHeight(hb, rng, check) {
+  for (let k = 0; k < 80; k++) {
+    const x = Math.round(W / 2 + (rng() - 0.5) * 30);
+    for (let z = 8; z < H - 8; z++) {
+      const i = z * W + x;
+      if (b[i] <= hb) {
+        let ok = true;
+        for (let dz = -7; dz <= 7 && ok; dz++) for (let dx = -7; dx <= 7; dx++) if (rk[(z + dz) * W + x + dx] > -50) { ok = false; break; }
+        if (ok && check) ok = check(x, z);
+        if (ok) return [x, z];
+        break;
+      }
+    }
+  }
+  return [W >> 1, H >> 1];
+}
+function lookAt(x, z) { Object.assign(cam, { tx: x, tz: Math.min(H - 30, z + 8), zoom: 1.15 }); cam.goalYaw = cam.yaw = 0; }
+function seaReachable(start) {
+  const seen = new Uint8Array(N), st = [start]; seen[start] = 1;
+  let n = 0;
+  while (st.length && n < 30000) {
+    const i = st.pop(); n++;
+    if (seaMask[i] || i >= (H - 3) * W) return true;
+    const x = i % W;
+    for (const j of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, i - W, i + W]) if (j >= 0 && j < N && !seen[j] && d[j] > 0.02) { seen[j] = 1; st.push(j); }
+  }
+  return false;
+}
+const MISSIONS = [
+  {
+    id: 'shells', title: 'Muschelsuche', text: 'Sammle 8 Muscheln, bevor die Möwe oder die Flut sie holen. Tippe sie einfach an.',
+    phase: 0.28,
+    setup(rng) {
+      const [cx, cz] = spotAtHeight(0.4, rng);
+      for (let k = 0; k < 12; k++) {
+        for (let t = 0; t < 40; t++) {
+          const x = cx + (rng() - 0.5) * 50, z = cz + (rng() - 0.5) * 40, i = cellOf(x, z);
+          if (i >= 0 && d[i] < 0.01 && b[i] > levelAt(this.phase) + 0.2 && b[i] < HIGH) { addShell(x, z); break; }
+        }
+      }
+      shellCount = 0; nextGull = clock + 5; this.gullEvery = 6;
+      lookAt(cx, cz - 4);
+    },
+    update() {
+      if (!gull && nextGull > clock + this.gullEvery) nextGull = clock + this.gullEvery;
+      if (shellCount >= 8) return 'win';
+      if (shellCount + shells.length < 8) return 'fail';
+    },
+    status() { return 'Muscheln: ' + shellCount + ' von 8'; },
+    fail: 'Die Möwe war schneller. Nochmal?',
+  },
+  {
+    id: 'fish', title: 'Rette den Fisch', text: 'Der kleine Fisch steckt im Tümpel fest, und das Wasser versickert. Grab ihm einen Kanal bis zum Meer!',
+    phase: 0.9,
+    setup(rng) {
+      const [px, pz] = spotAtHeight(1.3, rng), R = 4;
+      const rim = b[pz * W + px] + 0.25;
+      this.pool = [];
+      for (let z = pz - 7; z <= pz + 7; z++) for (let x = px - 7; x <= px + 7; x++) {
+        const i = z * W + x, r = Math.hypot(x - px, z - pz);
+        if (r < R) { b[i] = Math.min(b[i], rim - 1.1 * (1 - (r / R) ** 2) - 0.15); this.pool.push(i); }
+        else if (r < R + 2.5) b[i] = Math.max(b[i], rim + 0.15 * (1 - (r - R) / 2.5));
+      }
+      for (const i of this.pool) { d[i] = Math.max(0, rim - 0.1 - b[i]); m[i] = 1; }
+      this.full = this.pool.reduce((s, i) => s + d[i], 0);
+      this.px = px; this.pz = pz; this.left = 1;
+      lookAt(px, pz);
+    },
+    update(dt) {
+      for (const i of this.pool) if (d[i] > 0) d[i] = Math.max(0, d[i] - 0.03 * dt);
+      this.left = this.pool.reduce((s, i) => s + d[i], 0) / this.full;
+      const c = this.pz * W + this.px, wob = this.left < 0.15;
+      poolFish.visible = true;
+      const a = clock * (wob ? 0 : 1.3), fx = this.px + Math.cos(a) * 1.6, fz = this.pz + Math.sin(a) * 1.2;
+      poolFish.material.map = fishTex[Math.sin(a) > 0 ? 0 : 1];
+      poolFish.material.rotation = wob ? Math.sin(clock * 14) * 0.5 : 0;
+      poolFish.position.set(fx, (b[c] + d[c]) * VS + 0.25, fz);
+      if (((clock * 2) | 0) !== this.tick) { this.tick = (clock * 2) | 0; if (d[c] > 0.03 && seaReachable(c)) return 'win'; }
+      if (this.left < 0.06) return 'fail';
+    },
+    status() { return 'Wasser im Tümpel: ' + Math.round(this.left * 100) + ' %'; },
+    win() { poolFish.visible = false; splash(this.px, this.pz, b[this.pz * W + this.px] + 0.5, true); },
+    fail: 'Der Fisch braucht schneller einen Weg zum Meer. Nochmal?',
+  },
+  {
+    id: 'moat', title: 'Wasser für den Burggraben', text: 'Die Burg oben am Strand wünscht sich Wasser im Graben. Leite das Meer bis zur gelben Fahne!',
+    phase: 0.06,
+    setup(rng) {
+      // the flag sits clearly above the highest waves, so the water only gets there through a channel
+      const [mx, mz] = spotAtHeight(HIGH + 1.7, rng, (x, z) => { for (let dz = -3; dz <= 3; dz++) for (let dx = -3; dx <= 3; dx++) if (b[(z + dz) * W + x + dx] < HIGH + 1.4) return false; return true; });
+      tower(mx, mz - 9);
+      marker = { x: mx, z: mz, r: 1.8, pennant: true };
+      this.cells = []; for (let z = mz - 1; z <= mz + 1; z++) for (let x = mx - 1; x <= mx + 1; x++) this.cells.push(z * W + x);
+      lookAt(mx, mz);
+    },
+    update() {
+      const wet = this.cells.reduce((s, i) => s + d[i], 0) / this.cells.length;
+      if (wet > 0.04) return 'win';
+      if (phase > 0.62 && phase < 0.9) return 'fail';
+    },
+    status() { return phase < 0.5 ? 'Hochwasser kommt in ' + Math.ceil((0.5 - phase) * P.period / speed) + ' s' : 'Das Wasser geht zurück …'; },
+    fail: 'Das Wasser kam nicht bis zur Fahne. Grab den Kanal bis ganz hin!',
+  },
+  {
+    id: 'towel', title: 'Handtuch trocken halten', text: 'Das Handtuch liegt zu nah am Wasser. Bau einen Damm, damit es bei Hochwasser trocken bleibt!',
+    phase: 0.06,
+    setup(rng) {
+      const [tx, tz] = spotAtHeight(HIGH - 0.45, rng);
+      this.cells = []; let sum = 0;
+      for (let z = tz - 3; z <= tz + 3; z++) for (let x = tx - 2; x <= tx + 2; x++) { this.cells.push(z * W + x); sum += b[z * W + x]; }
+      const flat = sum / this.cells.length;
+      for (const i of this.cells) { b[i] = flat; pk[i] = 1; m[i] = 0.9; }
+      this.tx = tx; this.tz = tz; this.flat = flat; this.wetT = 0;
+      towel.visible = true; towel.position.set(tx, flat * VS + 0.06, tz);
+      lookAt(tx, tz);
+    },
+    update(dt) {
+      for (const i of this.cells) b[i] = this.flat;   // the towel keeps its sand in place
+      towel.position.y = this.flat * VS + 0.06;
+      const wet = this.cells.some(i => d[i] > 0.03);
+      this.wetT = wet ? this.wetT + dt : 0;
+      if (this.wetT > 0.4) return 'fail';
+      if (phase > 0.6 && phase < 0.9) return 'win';
+    },
+    status() { return phase < 0.5 ? 'Hochwasser kommt in ' + Math.ceil((0.5 - phase) * P.period / speed) + ' s' : 'Hält der Damm?'; },
+    fail: 'Platsch, das Handtuch ist nass. Ein höherer Damm hilft!',
+  },
+  {
+    id: 'castle', title: 'Burg gegen die Flut', text: 'Bau im orangen Kreis zwei Türme, die bei Hochwasser noch stehen. Ohne Schutzmauer wird das schwer!',
+    phase: 0.06,
+    setup(rng) {
+      const [cx, cz] = spotAtHeight(HIGH - 1.4, rng);
+      marker = { x: cx, z: cz, r: 7, pennant: false };
+      this.cx = cx; this.cz = cz;
+      lookAt(cx, cz);
+    },
+    onHighWater() {
+      const ok = towers.filter(t => Math.hypot(t.x - this.cx, t.y - this.cz) < 7.5 && towerUp(t)).length >= 2;
+      this.result = ok ? 'win' : 'fail';
+    },
+    update() { return this.result; },
+    status() {
+      const n = towers.filter(t => Math.hypot(t.x - this.cx, t.y - this.cz) < 7.5).length;
+      return (n ? n + (n === 1 ? ' Turm' : ' Türme') + ' im Kreis · ' : 'Noch kein Turm im Kreis · ') + (phase < 0.5 ? 'Hochwasser in ' + Math.ceil((0.5 - phase) * P.period / speed) + ' s' : '');
+    },
+    fail: 'Die Flut hat die Burg geholt. Versuch eine Mauer davor!',
+  },
+];
+function clearMissionProps() {
+  marker = null; towel.visible = false; poolFish.visible = false;
+}
+function showMenu() {
+  mission = null; clearMissionProps();
+  $m('mcard').hidden = true; $m('mresult').hidden = true;
+  const list = $m('mlist'); list.innerHTML = '';
+  MISSIONS.forEach((ms, k) => {
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'mbtn';
+    btn.innerHTML = '<span class="mnum">' + (k + 1) + '</span><span class="mtitle"></span><span class="mok">' + (mDone.includes(ms.id) ? '★' : '') + '</span>';
+    btn.querySelector('.mtitle').textContent = ms.title;
+    btn.addEventListener('click', () => startMission(k));
+    list.appendChild(btn);
+  });
+  $m('menu').hidden = false;
+  paused = false;
+}
+function startMission(k) {
+  audioInit();
+  const ms = MISSIONS[k];
+  $m('menu').hidden = true; $m('mresult').hidden = true;
+  clearMissionProps();
+  phase = ms.phase; crab = null; gull = null; fish = null; speed = 1; P.period = 180;
+  generate(9100 + k * 37);
+  tangInit(); wetCyc.fill(0);
+  ms.result = null; ms.tick = -1;
+  ms.setup(mulberry(77 + k));
+  mission = { k, ms, state: 'intro' };
+  $m('mtitle').textContent = ms.title; $m('mtext').textContent = ms.text; $m('mstatus').textContent = '';
+  $m('mgo').hidden = false; $m('mtext').hidden = false; $m('mcard').hidden = false;
+  paused = true;
+  $m('seedLbl').textContent = 'Mission ' + (k + 1);
+}
+function missionUpdate(dt) {
+  if (!mission || mission.state !== 'run') return;
+  const r = mission.ms.update(dt);
+  $m('mstatus').textContent = mission.ms.status();
+  if (r === 'win' || r === 'fail') missionEnd(r);
+}
+function missionEnd(r) {
+  const ms = mission.ms;
+  mission.state = r;
+  if (r === 'win') {
+    if (ms.win) ms.win();
+    if (!mDone.includes(ms.id)) { mDone.push(ms.id); saveDone(); }
+    crab = null; crabVisit({ cheer: true });
+    $m('rtitle').textContent = 'Geschafft!';
+    $m('rtext').textContent = mission.k + 1 < MISSIONS.length ? 'Super gemacht. Bereit für die nächste Mission?' : 'Du hast alle Missionen geschafft!';
+    $m('rnext').hidden = mission.k + 1 >= MISSIONS.length;
+  } else {
+    poolFish.visible = false;
+    $m('rtitle').textContent = 'Oh nein!';
+    $m('rtext').textContent = ms.fail;
+    $m('rnext').hidden = true;
+  }
+  setTimeout(() => { if (mission && mission.state === r) $m('mresult').hidden = false; }, r === 'win' ? 1800 : 600);
+}
+function freePlay() {
+  $m('menu').hidden = true; mission = null; clearMissionProps();
+  $m('mcard').hidden = true; $m('mresult').hidden = true;
+  P.period = parseFloat($m('rPeriod').value);
+  newBeach(true);
+  Object.assign(cam, { zoom: CAM0.zoom, tx: CAM0.tx, tz: CAM0.tz }); cam.goalYaw = cam.yaw;
+  paused = false;
+}
+$m('mgo').addEventListener('click', () => { audioInit(); mission.state = 'run'; $m('mgo').hidden = true; $m('mtext').hidden = true; paused = false; });
+$m('bFree').addEventListener('click', () => { audioInit(); freePlay(); });
+$m('bMenu').addEventListener('click', showMenu);
+$m('rretry').addEventListener('click', () => startMission(mission.k));
+$m('rnext').addEventListener('click', () => startMission(mission.k + 1));
+$m('rmenu').addEventListener('click', showMenu);
+
+// ---------- main loop ----------
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  moved = 0;
+  if (!paused) {
+    clock += dt;
+    const prev = phase;
+    phase = (phase + dt * speed / P.period) % 1;
+    if (prev < 0.5 && phase >= 0.5) highWater();
+    if (clock > nextWave) { waves.push({ t: 0, amp: (0.2 + Math.random() * 0.35) * P.waves, dur: 1.4 + Math.random() }); nextWave = clock + 3 + Math.random() * 4; }
+    waveNow = 0;
+    waves = waves.filter(w => { w.t += dt; if (w.t > w.dur) return false; waveNow += w.amp * Math.sin(Math.PI * w.t / w.dur); return true; });
+    const sea = levelAt(phase) + waveNow + 0.05 * Math.sin(clock * 1.3) * P.waves;
+    if (pointer) {
+      pointer.still += dt;
+      if (pointer.still > 0.15) { if (tool === 'dig') digHold(pointer.wx, pointer.wy, dt); else if (tool === 'pile') pileHold(pointer.wx, pointer.wy, dt); }
+    }
+    for (let k = 0; k < P.flow; k++) { flowStep(0.08, sea); erodeStep(0.08); }
+    slump(); moisture(); crabUpdate(dt);
+    seaNow = sea;
+    if (phase > 0.3 && phase < 0.7) for (let i = 0; i < N; i++) if (d[i] > 0.02) wetCyc[i] = 1;
+    if (prev < 0.72 && phase >= 0.72) tangFromCycle();
+    tension += (Math.max(0, Math.min(1, (levelAt(phase) - LOW) / (HIGH - LOW))) - tension) * Math.min(1, dt * 0.5);
+    fishUpdate(dt); shellsUpdate(dt); gullUpdate(dt); missionUpdate(dt);
+  }
+  partsUpdate(dt);
+  sandSound(dt);
+  cam.yaw += (cam.goalYaw - cam.yaw) * Math.min(1, dt * 8); updateCamera();
+  updateMeshes(); partsDraw(); ringDraw(); towersDraw(); markerDraw();
+  renderer.render(scene, camera);
+  hud();
+  requestAnimationFrame(loop);
+}
+
+newBeach(true);
+fit();
+showMenu();
+setTimeout(() => crabVisit({ side: 1 }), 2500);
+requestAnimationFrame(loop);
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+})();
+</script>
+
+</body>
+</html>
