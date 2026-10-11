@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f4ea">
+  <meta name="description" content="Tastenabenteuer: Spielerisch und Schritt für Schritt blind tippen lernen.">
+  <title>Tastenabenteuer – Blind tippen lernen</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#start" aria-label="Tastenabenteuer Startseite"><span class="brand-icon">✳</span><span>Tasten<br><strong>abenteuer</strong></span></a>
+      <div class="side-label">DEINE REISE</div>
+      <nav class="main-nav" aria-label="Hauptnavigation">
+        <button class="nav-link active" data-view="home"><span>⌂</span> Übersicht</button>
+        <button class="nav-link" data-view="missions"><span>▦</span> Missionen</button>
+        <button class="nav-link" data-view="focus"><span>✳</span> Buchstabenwahl</button>
+        <button class="nav-link" data-view="progress"><span>◷</span> Fortschritt</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="mini-note"><span class="sparkle">✦</span><strong>Dein Tempo zählt.</strong><br>5 Minuten üben ist schon ein Erfolg.</div>
+        <div class="save-note"><span class="save-dot"></span> Fortschritt auf diesem Gerät gespeichert</div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar"><div class="crumb">TASTENABENTEUER <span>/</span> <b id="crumb-current">ÜBERSICHT</b></div><div class="top-right"><span class="layout-chip">⌘ Mac · Deutsch</span><span class="avatar" aria-label="Spieler">★</span></div></header>
+
+      <section id="view-home" class="view active" aria-labelledby="home-title">
+        <div class="hero">
+          <div class="hero-content"><span class="eyebrow"><span class="pulse-dot"></span> DEIN NÄCHSTES ABENTEUER</span><h1 id="home-title">Deine Finger können<br><em>mehr als du denkst.</em></h1><p>Tippe echte Wörter statt Zeichenrätsel. Schau auf den Bildschirm, finde deinen Rhythmus und werde mit jeder Mission sicherer.</p><button id="hero-start" class="primary-button">Mission starten <span>↗</span></button><div class="hero-small">Eine Runde dauert nur etwa 2 Minuten</div></div>
+          <div class="hero-art" aria-hidden="true"><div class="sun"></div><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="floating-key key-f">E</div><div class="floating-key key-j">N</div><div class="floating-key key-star">✳</div><div class="hill hill-back"></div><div class="hill hill-front"></div><div class="art-caption">TIPP DICH<br>AUF DEINEN WEG <span>↗</span></div></div>
+        </div>
+        <div class="section-heading"><div><span class="section-kicker">DEIN COCKPIT</span><h2>So läuft’s bei dir</h2></div><button class="text-link" data-view="progress">Alle Auswertungen <span>↗</span></button></div>
+        <div class="stats-grid"><div class="stat-card"><span class="stat-icon coral">↗</span><span class="stat-label">MISSIONEN GESCHAFFT</span><strong id="home-completed">0 <small>/ 10</small></strong><span class="stat-foot">Jeder Schritt zählt</span></div><div class="stat-card"><span class="stat-icon lilac">◎</span><span class="stat-label">BESTE GENAUIGKEIT</span><strong id="home-accuracy">—</strong><span class="stat-foot">Richtig tippen zuerst</span></div><div class="stat-card"><span class="stat-icon yellow">⚡</span><span class="stat-label">BESTES TEMPO</span><strong id="home-speed">—</strong><span class="stat-foot">Anschläge pro Minute</span></div></div>
+        <div class="lower-grid"><div class="next-card"><div class="card-top"><span class="section-kicker">ALS NÄCHSTES</span><span class="round-icon">→</span></div><div class="next-card-body"><div class="mission-badge" id="next-number">01</div><div><h3 id="next-title">Kleine Wörter, großer Anfang</h3><p id="next-description">Vier Tasten, schon fünf echte Wörter.</p></div></div><div class="track"><div id="home-track"></div></div><button id="next-button" class="dark-button">Los geht’s <span>↗</span></button></div><div class="tip-card"><div class="tip-illustration" aria-hidden="true"><span>E</span><span>N</span></div><span class="section-kicker">KLEINER TIPP</span><h3>Ein Wort ist ein Weg.</h3><p>Lies erst das ganze Wort. Dann lass deine Finger den Weg über die Tasten finden – ohne nach unten zu schauen.</p></div></div>
+      </section>
+
+      <section id="view-missions" class="view" aria-labelledby="missions-title"><div class="page-intro"><span class="section-kicker">DEINE ROUTE</span><h1 id="missions-title">Zehn kleine Abenteuer.</h1><p>Jede Mission hat vier kurze Etappen. Du übst wichtige Wörter mehrfach in neuen Sätzen, bevor weitere Tasten dazukommen.</p></div><div id="mission-grid" class="mission-grid"></div></section>
+
+      <section id="view-focus" class="view" aria-labelledby="focus-title"><div class="page-intro"><span class="section-kicker">DEIN WORTLABOR</span><h1 id="focus-title">Wähle deine Buchstaben.</h1><p>Such dir ein bis drei Buchstaben aus. Du übst passende Wörter mehrfach in kurzen, echten Sätzen. Das Wortlabor ist jederzeit offen.</p></div><div class="focus-layout"><div class="focus-picker"><div class="focus-card-heading"><span class="section-kicker">BUCHSTABENWAHL</span><span id="focus-count">0 / 3 gewählt</span></div><div id="focus-letters" class="focus-letters" role="group" aria-label="Buchstaben auswählen"></div><p class="focus-hint">Wähle erst einen Buchstaben. Du kannst später weitere dazunehmen.</p></div><div class="focus-preview"><span class="section-kicker">DEINE WÖRTER</span><h2 id="focus-preview-title">Welchen Buchstaben üben wir?</h2><p id="focus-preview-copy">Wähle links einen Buchstaben aus. Hier siehst du, welche Wörter dich erwarten.</p><div id="focus-words" class="focus-words"></div><button id="focus-start" class="dark-button" disabled>Wörter üben <span>↗</span></button><span class="focus-duration">Drei kurze Sätze pro Buchstabe · ohne Zeitdruck</span></div></div></section>
+
+      <section id="view-progress" class="view" aria-labelledby="progress-title"><div class="page-intro"><span class="section-kicker">DEIN FORTSCHRITT</span><h1 id="progress-title">Schau, wie weit du bist.</h1><p>Hier siehst du deine Übungsrunden. Genauigkeit ist dein wichtigster Wert.</p></div><div class="progress-summary"><div class="summary-main"><span class="section-kicker">DEINE BISHERIGE REISE</span><strong id="progress-count">0</strong><span>Übungsrunden geschafft</span></div><div class="summary-side"><div><span>Ø Genauigkeit</span><strong id="progress-avg-accuracy">—</strong></div><div><span>Ø Tempo</span><strong id="progress-avg-speed">—</strong></div><div><span>Geübte Minuten</span><strong id="progress-minutes">0</strong></div></div></div><div class="section-heading history-heading"><div><span class="section-kicker">DEINE LETZTEN RUNDEN</span><h2>So entwickelst du dich</h2></div></div><div id="history" class="history"></div><p class="privacy-note">ⓘ Dein Fortschritt bleibt nur in diesem Browser auf diesem Gerät. Wenn Browserdaten gelöscht werden, geht er verloren.</p></section>
+
+      <section id="view-play" class="view" aria-labelledby="play-title"><div class="play-top"><button id="exit-play" class="back-button">← Zurück</button><span id="play-step" class="play-step">MISSION 01 / 10</span></div><div class="play-heading"><div><span class="section-kicker" id="play-newkeys">NEUE TASTEN · A E I N</span><h1 id="play-title">Kleine Wörter, großer Anfang</h1><p id="play-instruction">Lies das Wort und finde seine Bewegung auf der Tastatur.</p></div><div class="play-progress-ring"><span id="round-progress">0%</span><small>GESCHAFFT</small></div></div><div class="play-panel"><div class="play-panel-top"><span><i class="live-dot"></i> DEINE TIPPSTRECKE</span><span id="round-counter">0 / 0 ZEICHEN</span></div><div id="target-text" class="target-text" aria-label="Zu tippender Text"></div><div id="typing-prompt" class="typing-prompt">Hier klicken oder einfach lostippen <span>↗</span></div><textarea id="typing-input" aria-label="Hier tippen" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="text"></textarea><div class="live-stats"><div><span>GENAUIGKEIT</span><strong id="live-accuracy">100%</strong></div><div><span>TEMPO</span><strong id="live-speed">0 <small>APM</small></strong></div><div><span>FEHLER</span><strong id="live-errors">0</strong></div></div></div><div class="keyboard-wrap"><div class="keyboard-heading"><span>TASTATUR-KOMPASS</span><span>Die nächste Taste leuchtet auf ↓</span></div><div id="keyboard" class="keyboard"></div><div class="keyboard-note">Tipp: Lass die Hände auf der Tastatur ruhen. Ein Fehler ist okay – einfach weiter.</div></div></section>
+
+      <section id="view-result" class="view" aria-labelledby="result-title"><div class="result-wrap"><div class="result-art" aria-hidden="true">✳</div><span class="section-kicker" id="result-kicker">MISSION GESCHAFFT</span><h1 id="result-title">Das war stark!</h1><p id="result-message">Du hast deine Tippstrecke geschafft.</p><div class="result-stats"><div><strong id="result-accuracy">—</strong><span>GENAUIGKEIT</span></div><div><strong id="result-speed">—</strong><span>ANSCHLÄGE / MIN</span></div><div><strong id="result-errors">—</strong><span>FEHLER</span></div></div><div class="result-actions"><button id="result-primary" class="primary-button">Nächste Mission <span>↗</span></button><button id="result-repeat" class="subtle-button">Nochmal üben</button></div><button id="result-home" class="under-button">Zur Übersicht</button></div></section>
+    </main>
+  </div>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
